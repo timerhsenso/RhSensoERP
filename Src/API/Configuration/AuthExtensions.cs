@@ -8,14 +8,23 @@ using RhSensoERP.Infrastructure.Auth;
 
 namespace RhSensoERP.API.Configuration;
 
+/// <summary>
+/// Extensões para configuração de autenticação JWT
+/// </summary>
 public static class AuthExtensions
 {
+    /// <summary>
+    /// Configura autenticação JWT com suporte a chaves RSA (produção) e simétricas (desenvolvimento)
+    /// </summary>
+    /// <param name="services">Coleção de serviços</param>
+    /// <param name="cfg">Configuração da aplicação</param>
+    /// <returns>Coleção de serviços para encadeamento</returns>
     public static IServiceCollection AddJwtAuth(this IServiceCollection services, IConfiguration cfg)
     {
         services.Configure<JwtOptions>(cfg.GetSection("Jwt"));
 
         var jwt = cfg.GetSection("Jwt").Get<JwtOptions>() ?? new();
-        
+
         // Para desenvolvimento, usar chave simétrica se as chaves PEM não estiverem configuradas
         SecurityKey key;
         if (string.IsNullOrEmpty(jwt.PublicKeyPem) || jwt.PublicKeyPem.Contains("...paste"))
