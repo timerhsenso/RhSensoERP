@@ -16,11 +16,17 @@
     <PackageReference Include="Moq" />
     <PackageReference Include="FluentAssertions" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+    <!-- REMOVER: <PackageReference Include="Microsoft.AspNetCore.Http" /> -->
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\Src\Core\RhSensoERP.Core.csproj" />
     <ProjectReference Include="..\..\Src\Application\RhSensoERP.Application.csproj" />
+    <ProjectReference Include="..\..\Src\Infrastructure\RhSensoERP.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Middlewares\" />
   </ItemGroup>
 
 </Project>

@@ -33,5 +33,10 @@
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.1" />
     <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.7" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.7" />
+
+<!-- ADICIONAR estas versões corretas: -->
+<PackageVersion Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
+<PackageVersion Include="Microsoft.Extensions.Options" Version="8.0.1" />
+
   </ItemGroup>
 </Project>
