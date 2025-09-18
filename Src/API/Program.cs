@@ -8,6 +8,8 @@
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.RateLimiting;
 
 // Configurações customizadas
 using RhSensoERP.API.Configuration;
@@ -19,9 +21,6 @@ using RhSensoERP.Infrastructure.Persistence;
 using RhSensoERP.Infrastructure.Persistence.Interceptors;
 using RhSensoERP.Infrastructure.Repositories;
 using RhSensoERP.Infrastructure.Services;
-
-using System.Threading.RateLimiting;
-using Microsoft.AspNetCore.RateLimiting;
 
 // Configuração inicial com Serilog
 var builder = WebApplication.CreateBuilder(args)
@@ -98,8 +97,6 @@ builder.Services.AddJwtAuth(cfg);
 
 #endregion
 
-
-
 #region Rate Limiting
 
 /// <summary>
@@ -154,7 +151,7 @@ builder.Services.AddRateLimiter(options =>
     };
 });
 
-#endregion Rate Limiting
+#endregion
 
 #region Repositórios e Unidade de Trabalho
 
@@ -199,6 +196,13 @@ builder.Services.AddScoped<RhSensoERP.Application.Security.Auth.Services.ILegacy
 /// </summary>
 builder.Services.AddTransient<ExceptionHandlingMiddleware>();
 
+/// <summary>
+/// Middleware de headers de segurança
+/// - Adiciona headers de proteção contra XSS, clickjacking, etc.
+/// - Remove headers que revelam informações do servidor
+/// </summary>
+builder.Services.AddTransient<SecurityHeadersMiddleware>();
+
 #endregion
 
 #region Health Checks
@@ -215,17 +219,28 @@ builder.Services.AddHealthChecks()
 #endregion
 
 // --------------------------------------------------------------------------------------
-// CONFIGURAÇÃO DO PIPELINE HTTP
+// CONSTRUÇÃO DA APLICAÇÃO
 // --------------------------------------------------------------------------------------
 
 var app = builder.Build();
 
-#region Middlewares de Tratamento
+// --------------------------------------------------------------------------------------
+// CONFIGURAÇÃO DO PIPELINE HTTP (ORDEM É CRÍTICA!)
+// --------------------------------------------------------------------------------------
+
+#region Middlewares de Tratamento (Primeira Camada)
 
 /// <summary>
 /// Middleware de exceções deve ser o primeiro para capturar todos os erros
 /// </summary>
 app.UseMiddleware<ExceptionHandlingMiddleware>();
+
+/// <summary>
+/// Headers de segurança devem ser aplicados cedo no pipeline
+/// - Protege contra XSS, clickjacking, content sniffing
+/// - Remove headers que revelam informações do servidor
+/// </summary>
+app.UseMiddleware<SecurityHeadersMiddleware>();
 
 /// <summary>
 /// Logs estruturados de todas as requisições HTTP
@@ -254,10 +269,16 @@ app.UseAuthorization();
 
 #endregion
 
+#region Rate Limiting
+
 /// <summary>
-/// Rate limiting deve vir após autenticação
+/// Rate limiting deve vir após autenticação para permitir identificação por usuário
+/// - Política global: 100 req/min por IP
+/// - Política login: 5 tentativas por 15min por IP
 /// </summary>
 app.UseRateLimiter();
+
+#endregion
 
 #region Documentação
 
