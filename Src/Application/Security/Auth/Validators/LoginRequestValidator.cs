@@ -18,7 +18,7 @@ public class LoginRequestValidator : AbstractValidator<LoginRequestDto>
 
         RuleFor(x => x.Senha)
             .NotEmpty().WithMessage("Senha é obrigatória")
-            .MinimumLength(4).WithMessage("Senha deve ter no mínimo 4 caracteres")
+            .MinimumLength(3).WithMessage("Senha deve ter no mínimo 4 caracteres")
             .MaximumLength(50).WithMessage("Senha deve ter no máximo 50 caracteres");
     }
 }
