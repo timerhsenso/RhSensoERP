@@ -3,6 +3,7 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
   <ItemGroup>
+    <!-- Packages existentes -->
     <PackageVersion Include="AutoMapper" Version="12.0.1" />
     <PackageVersion Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
     <PackageVersion Include="FluentValidation.AspNetCore" Version="11.3.0" />
@@ -20,5 +21,17 @@
     <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="7.6.1" />
     <PackageVersion Include="Microsoft.AspNetCore.Cryptography.KeyDerivation" Version="8.0.7" />
     <PackageVersion Include="MediatR" Version="12.2.0" />
+    <PackageVersion Include="Microsoft.AspNetCore.RateLimiting" Version="8.0.0" />
+    
+    <!-- Packages para testes -->
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.10.0" />
+    <PackageVersion Include="xunit" Version="2.8.1" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="2.8.1" />
+    <PackageVersion Include="coverlet.collector" Version="6.0.2" />
+    <PackageVersion Include="Moq" Version="4.20.70" />
+    <PackageVersion Include="FluentAssertions" Version="6.12.0" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.1" />
+    <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.7" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.7" />
   </ItemGroup>
 </Project>
