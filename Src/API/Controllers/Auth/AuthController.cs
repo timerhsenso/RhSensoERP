@@ -1,7 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using RhSensoERP.Application.Security.Auth.Services;
+using Microsoft.AspNetCore.RateLimiting;
 using RhSensoERP.Application.Security.Auth.DTOs;
+using RhSensoERP.Application.Security.Auth.Services;
 using RhSensoERP.Core.Shared;
 
 namespace RhSensoERP.API.Controllers.Auth;
@@ -25,6 +26,7 @@ public class AuthController : ControllerBase
     /// Login no sistema legacy
     /// </summary>
     [HttpPost("login")]
+    [EnableRateLimiting("login")] // ADICIONAR ESTA LINHA
     [ProducesResponseType(typeof(ApiResponse<LoginResponse>), 200)]
     [ProducesResponseType(typeof(ApiResponse<object>), 400)]
     public async Task<ActionResult<ApiResponse<LoginResponse>>> Login(

@@ -20,6 +20,9 @@ using RhSensoERP.Infrastructure.Persistence.Interceptors;
 using RhSensoERP.Infrastructure.Repositories;
 using RhSensoERP.Infrastructure.Services;
 
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.RateLimiting;
+
 // Configuração inicial com Serilog
 var builder = WebApplication.CreateBuilder(args)
     .AddSerilogLogging(); // Adiciona logging estruturado
@@ -94,6 +97,64 @@ builder.Services.AddDbContext<AppDbContext>(opt =>
 builder.Services.AddJwtAuth(cfg);
 
 #endregion
+
+
+
+#region Rate Limiting
+
+/// <summary>
+/// Configuração de Rate Limiting para proteger contra ataques de força bruta
+/// </summary>
+builder.Services.AddRateLimiter(options =>
+{
+    // Política global - 100 requests por minuto por IP
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: partition => new FixedWindowRateLimiterOptions
+            {
+                AutoReplenishment = true,
+                PermitLimit = 100,
+                Window = TimeSpan.FromMinutes(1),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 10
+            }));
+
+    // Política específica para login - 5 tentativas por 15 minutos por IP
+    options.AddPolicy("login", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: partition => new FixedWindowRateLimiterOptions
+            {
+                AutoReplenishment = true,
+                PermitLimit = 5,
+                Window = TimeSpan.FromMinutes(15),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0 // Sem fila para login - rejeita imediatamente
+            }));
+
+    // Resposta quando rate limit é atingido
+    options.OnRejected = async (context, token) =>
+    {
+        context.HttpContext.Response.StatusCode = 429;
+
+        if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
+        {
+            context.HttpContext.Response.Headers.RetryAfter =
+                ((int)retryAfter.TotalSeconds).ToString();
+        }
+
+        await context.HttpContext.Response.WriteAsync("""
+            {
+                "success": false,
+                "message": "Muitas tentativas. Tente novamente mais tarde.",
+                "data": null
+            }
+            """, token);
+    };
+});
+
+#endregion Rate Limiting
 
 #region Repositórios e Unidade de Trabalho
 
@@ -192,6 +253,11 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 #endregion
+
+/// <summary>
+/// Rate limiting deve vir após autenticação
+/// </summary>
+app.UseRateLimiter();
 
 #region Documentação
 
