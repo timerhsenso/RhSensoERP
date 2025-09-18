@@ -1,5 +1,7 @@
 ﻿using RhSensoERP.Core.Abstractions.Entities;
 
+namespace RhSensoERP.Core.Security.Entities;
+
 public class BotaoFuncao : BaseEntity
 {
     public string CdFuncao { get; set; } = string.Empty;

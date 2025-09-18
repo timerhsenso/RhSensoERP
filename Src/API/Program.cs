@@ -1,180 +1,256 @@
-// Program.cs
+// Program.cs - RhSensoERP API
 // --------------------------------------------------------------------------------------
-// Este arquivo configura e inicializa a sua API ASP.NET Core.
-// Cada bloco abaixo está comentado para explicar exatamente o que faz.
+// Arquivo principal de configuração da API ASP.NET Core 8
+// Configurado para trabalhar com sistema legacy existente (tabelas tuse1, usrh1, etc.)
+// Implementa Clean Architecture com autenticação JWT baseada em permissões granulares
 // --------------------------------------------------------------------------------------
 
-using FluentValidation;
 using Microsoft.EntityFrameworkCore;
-using MediatR;
 using Serilog;
-
-// Health checks (básico e custom)
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
-// Suas namespaces (extensões/infra/serviços/etc.)
-using RhSensoERP.API.Configuration;                  // Métodos de extensão: AddSerilogLogging, AddSwaggerDocs, AddDefaultCors, UseDefaultCors
-using RhSensoERP.API.Middlewares;                    // ExceptionHandlingMiddleware
-using RhSensoERP.Application.Auth;                   // AddJwtAuth
-using RhSensoERP.Application.Common.Extensions;      // AutoMapperExtensions
-using RhSensoERP.Application.Common.Interfaces;      // ICurrentUserService
-using RhSensoERP.Application.Security.Users.Services;// IUserService, UserService
-using RhSensoERP.Application.Security.Users.Validators; // UserCreateValidator (FluentValidation)
-using RhSensoERP.Core.Abstractions.Interfaces;       // IRepository<>, IUnitOfWork
-using RhSensoERP.Infrastructure.Logging;             // Configurações Serilog (se houver)
-using RhSensoERP.Infrastructure.Persistence;         // AppDbContext
-using RhSensoERP.Infrastructure.Persistence.Interceptors; // AuditSaveChangesInterceptor
-using RhSensoERP.Infrastructure.Repositories;        // EfRepository<>, UnitOfWork
-using RhSensoERP.Infrastructure.Services;            // CurrentUserService
+// Configurações customizadas
+using RhSensoERP.API.Configuration;
+using RhSensoERP.API.Middlewares;
+using RhSensoERP.Application.Common.Interfaces;
+using RhSensoERP.Core.Abstractions.Interfaces;
+using RhSensoERP.Infrastructure.Logging;
+using RhSensoERP.Infrastructure.Persistence;
+using RhSensoERP.Infrastructure.Persistence.Interceptors;
+using RhSensoERP.Infrastructure.Repositories;
+using RhSensoERP.Infrastructure.Services;
 
+// Configuração inicial com Serilog
 var builder = WebApplication.CreateBuilder(args)
-    // Liga Serilog no host para logs estruturados (console/arquivo, etc.)
-    .AddSerilogLogging();
+    .AddSerilogLogging(); // Adiciona logging estruturado
 
-// Atalho local para appsettings/environment
+// Atalho para configuração
 var cfg = builder.Configuration;
 
 // --------------------------------------------------------------------------------------
-// 1) Serviços (Dependency Injection)
+// CONFIGURAÇÃO DE SERVIÇOS (DEPENDENCY INJECTION)
 // --------------------------------------------------------------------------------------
 
-// MVC Controllers (descoberta de controllers e model-binding)
+#region Controladores e API
+
+/// <summary>
+/// Configuração de controllers MVC para endpoints da API
+/// </summary>
 builder.Services.AddControllers();
 
-// Habilita descoberta de endpoints (para Swagger/OpenAPI e Minimal APIs)
+/// <summary>
+/// Habilita descoberta automática de endpoints para OpenAPI/Swagger
+/// </summary>
 builder.Services.AddEndpointsApiExplorer();
 
-// Documentação Swagger (extensão sua)
+/// <summary>
+/// Configuração do Swagger com autenticação JWT
+/// </summary>
 builder.Services.AddSwaggerDocs();
 
-// ----------------------------------
-// CORS (extensão sua)
-// ----------------------------------
-// Adiciona uma política padrão de CORS (origens, métodos e headers permitidos)
-// A configuração real fica dentro do método AddDefaultCors (provavelmente lê do appsettings).
+#endregion
+
+#region CORS
+
+/// <summary>
+/// Política de CORS para permitir acesso de origens específicas
+/// Configurações no appsettings.json em Cors:AllowedOrigins
+/// </summary>
 builder.Services.AddDefaultCors(cfg);
 
-// ----------------------------------
-// DbContext + Acessórios
-// ----------------------------------
-builder.Services.AddHttpContextAccessor(); // Permite acessar HttpContext em serviços (ex.: pegar usuário logado)
+#endregion
 
-// Interceptor de auditoria (grava CreatedBy/UpdatedAt, etc.)
+#region Banco de Dados
+
+/// <summary>
+/// Acesso ao HttpContext para auditoria e obtenção do usuário atual
+/// </summary>
+builder.Services.AddHttpContextAccessor();
+
+/// <summary>
+/// Interceptor para auditoria automática de criação e atualização de registros
+/// </summary>
 builder.Services.AddScoped<AuditSaveChangesInterceptor>();
 
-// Registra o EF Core apontando para SQL Server
+/// <summary>
+/// Contexto do Entity Framework Core configurado para SQL Server
+/// - NoTracking por padrão para melhor performance em consultas
+/// - Connection string configurada via User Secrets em desenvolvimento
+/// </summary>
 builder.Services.AddDbContext<AppDbContext>(opt =>
     opt.UseSqlServer(cfg.GetConnectionString("Default"))
-       // Por padrão, evita rastreamento (melhora performance em leituras). Em comandos de escrita,
-       // você pode sobrescrever para Tracking quando necessário.
        .UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking));
 
-// ----------------------------------
-// Autenticação/JWT (extensão sua)
-// ----------------------------------
+#endregion
+
+#region Autenticação e Autorização
+
+/// <summary>
+/// Configuração de autenticação JWT com suporte a:
+/// - Chaves simétricas para desenvolvimento
+/// - Chaves RSA para produção
+/// - Políticas dinâmicas de autorização baseadas em permissões
+/// </summary>
 builder.Services.AddJwtAuth(cfg);
 
-// ----------------------------------
-// DI – Core / Infra
-// ----------------------------------
-// Repositório genérico (CRUD base) via EF
+#endregion
+
+#region Repositórios e Unidade de Trabalho
+
+/// <summary>
+/// Repositório genérico para operações CRUD básicas
+/// Implementa padrão Repository com EF Core
+/// </summary>
 builder.Services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));
 
-// Unidade de trabalho (commit/transação)
+/// <summary>
+/// Unidade de trabalho para controle transacional
+/// </summary>
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
-// Serviço que expõe o "usuário atual" (claims, Id, etc.)
+/// <summary>
+/// Serviço para obter dados do usuário atual logado
+/// Extrai informações do JWT (claims, tenant, etc.)
+/// </summary>
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 
-// ----------------------------------
-// MediatR + Pipeline
-// ----------------------------------
-// Registra handlers/requests/notifications do MediatR na assembly alvo
-builder.Services.AddMediatR(cfg =>
-{
-    // Descobre handlers a partir de um tipo conhecido (qualquer tipo da sua camada Application serve)
-    cfg.RegisterServicesFromAssemblyContaining<RhSensoERP.Application.Security.Users.Queries.GetUserByIdQuery>();
+#endregion
 
-    // Adiciona comportamento de validação (FluentValidation) no pipeline dos requests do MediatR
-    cfg.AddOpenBehavior(typeof(RhSensoERP.Application.Common.Behaviors.ValidationBehavior<,>));
-});
+#region Serviços de Autenticação Legacy
 
-// ----------------------------------
-// FluentValidation
-// ----------------------------------
-// Scaneia validators na assembly onde está o UserCreateValidator
-builder.Services.AddValidatorsFromAssemblyContaining<UserCreateValidator>();
+/// <summary>
+/// Serviço de autenticação que trabalha com o sistema legacy
+/// - Validação contra tabela tuse1 (usuários)
+/// - Carregamento de permissões via usrh1, hbrh1 (grupos/funções)
+/// - Funções de verificação: CheckHabilitacao, CheckBotao, CheckRestricao
+/// </summary>
+builder.Services.AddScoped<RhSensoERP.Application.Security.Auth.Services.ILegacyAuthService, RhSensoERP.Infrastructure.Services.LegacyAuthService>();
 
-// ----------------------------------
-// AutoMapper
-// ----------------------------------
-// Configura AutoMapper com todos os perfis de mapeamento
-builder.Services.AddAutoMapperProfiles();
+#endregion
 
-// ----------------------------------
-// Serviços (Application)
-// ----------------------------------
-builder.Services.AddScoped<IUserService, UserService>();
+#region Middlewares
 
-// ----------------------------------
-// Middlewares customizados
-// ----------------------------------
+/// <summary>
+/// Middleware global para tratamento de exceções
+/// - Captura ValidationException (FluentValidation)
+/// - Padroniza respostas de erro em formato JSON
+/// - Logs estruturados de erros
+/// </summary>
 builder.Services.AddTransient<ExceptionHandlingMiddleware>();
 
-// ----------------------------------
-// Health Checks
-// ----------------------------------
-// 1) Health check "self" (sempre OK se a pipeline subir).
-// 2) Health check de banco usando o próprio AppDbContext (sem pacotes de terceiros).
+#endregion
+
+#region Health Checks
+
+/// <summary>
+/// Monitoramento de saúde da aplicação
+/// - Self check: verifica se a API está respondendo
+/// - Database check: testa conectividade com SQL Server
+/// </summary>
 builder.Services.AddHealthChecks()
-    .AddCheck("self", () => HealthCheckResult.Healthy("API up"))
+    .AddCheck("self", () => HealthCheckResult.Healthy("API operacional"))
     .AddCheck<DatabaseHealthCheck>("database");
 
+#endregion
+
 // --------------------------------------------------------------------------------------
-// 2) Build do app e Pipeline HTTP
+// CONFIGURAÇÃO DO PIPELINE HTTP
 // --------------------------------------------------------------------------------------
+
 var app = builder.Build();
 
-// Middleware global de tratamento de exceção (captura erros, retorna 500 com JSON padronizado)
+#region Middlewares de Tratamento
+
+/// <summary>
+/// Middleware de exceções deve ser o primeiro para capturar todos os erros
+/// </summary>
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
-// Logs de requisição Serilog (método de extensão do Serilog.AspNetCore)
+/// <summary>
+/// Logs estruturados de todas as requisições HTTP
+/// </summary>
 app.UseSerilogRequestLogging();
 
-// Aplica política CORS padrão (deve vir antes dos endpoints)
+#endregion
+
+#region CORS
+
+/// <summary>
+/// Aplica política de CORS - deve vir antes dos endpoints
+/// </summary>
 app.UseDefaultCors();
 
-// Autenticação e Autorização
+#endregion
+
+#region Autenticação e Autorização
+
+/// <summary>
+/// Pipeline de autenticação e autorização
+/// Ordem é importante: Authentication antes de Authorization
+/// </summary>
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Swagger apenas em Development (evita exibir em produção, a menos que deseje)
+#endregion
+
+#region Documentação
+
+/// <summary>
+/// Swagger UI disponível apenas em ambiente de desenvolvimento
+/// Acesso via: https://localhost:57148/swagger
+/// </summary>
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "RhSensoERP API v1");
+        c.RoutePrefix = "swagger";
+        c.DocumentTitle = "RhSensoERP API - Documentação";
+    });
 }
 
-// ----------------------------------
-// Mapas de endpoints
-// ----------------------------------
+#endregion
 
-// Endpoint de Health Check:
-// - /health -> retorna 200 (Healthy) se API e DB estiverem OK.
-// - .AllowAnonymous() garante acesso público mesmo com autenticação global.
+#region Mapeamento de Endpoints
+
+/// <summary>
+/// Health check endpoint público
+/// GET /health - retorna status da API e conectividade do banco
+/// </summary>
 app.MapHealthChecks("/health").AllowAnonymous();
 
-// Controllers (rotas de API tradicionais)
+/// <summary>
+/// Mapeamento automático de todos os controllers
+/// Inclui controllers de Auth (/api/v1/auth/*) e Security (/api/v1/security/*)
+/// </summary>
 app.MapControllers();
 
-// Sobe a aplicação (bloqueante)
+#endregion
+
+// --------------------------------------------------------------------------------------
+// INICIALIZAÇÃO DA APLICAÇÃO
+// --------------------------------------------------------------------------------------
+
+/// <summary>
+/// Inicia a aplicação de forma bloqueante
+/// API estará disponível em:
+/// - HTTPS: https://localhost:57148
+/// - HTTP: http://localhost:57149
+/// </summary>
 app.Run();
 
+// ======================================================================================
+// HEALTH CHECK CUSTOMIZADO PARA BANCO DE DADOS
+// ======================================================================================
 
-// ======================================================================================
-// HEALTH CHECK CUSTOM (DB) — Implementação simples SEM pacotes externos
-// Tenta executar um "SELECT 1" no banco. Se funcionar, considera "Healthy".
-// ======================================================================================
+/// <summary>
+/// Health check que verifica conectividade com o banco de dados
+/// Executa um SELECT 1 simples para validar:
+/// - Conectividade de rede
+/// - Credenciais válidas
+/// - Banco de dados online e acessível
+/// </summary>
 file sealed class DatabaseHealthCheck : IHealthCheck
 {
     private readonly AppDbContext _db;
@@ -184,21 +260,27 @@ file sealed class DatabaseHealthCheck : IHealthCheck
         _db = db;
     }
 
+    /// <summary>
+    /// Executa verificação de saúde do banco de dados
+    /// </summary>
+    /// <param name="context">Contexto da verificação</param>
+    /// <param name="cancellationToken">Token de cancelamento</param>
+    /// <returns>Resultado indicando se o banco está saudável</returns>
     public async Task<HealthCheckResult> CheckHealthAsync(
         HealthCheckContext context,
         CancellationToken cancellationToken = default)
     {
         try
         {
-            // Usa o provedor EF Core para executar um comando simples.
-            // É leve e suficiente para verificar conectividade/credenciais/DB online.
+            // Executa query simples para testar conectividade
+            // Se funcionar, o banco está operacional
             await _db.Database.ExecuteSqlRawAsync("SELECT 1", cancellationToken);
-            return HealthCheckResult.Healthy("Database reachable");
+            return HealthCheckResult.Healthy("Banco de dados acessível e operacional");
         }
         catch (Exception ex)
         {
-            // Qualquer erro de conexão/timeouts/credenciais cai aqui.
-            return HealthCheckResult.Unhealthy("Database unreachable", ex);
+            // Qualquer erro indica problema de conectividade/credenciais/disponibilidade
+            return HealthCheckResult.Unhealthy("Falha na conectividade com banco de dados", ex);
         }
     }
 }

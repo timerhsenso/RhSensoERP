@@ -1,5 +1,6 @@
 ﻿using RhSensoERP.Core.Abstractions.Entities;
-using System;
+
+namespace RhSensoERP.Core.Security.Entities;
 
 public class Sistema : BaseEntity
 {

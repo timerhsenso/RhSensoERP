@@ -1,6 +1,3 @@
-﻿using static System.Net.Mime.MediaTypeNames;
-
-/ src / Application / Security / Auth / DTOs / AuthDTOs.cs
 namespace RhSensoERP.Application.Security.Auth.DTOs;
 
 public record AuthResult(
@@ -29,14 +26,14 @@ public record UserGroup(string CdGrUser, string CdSistema);
 
 public record UserPermission(
     string CdSistema,
-    string CdGrUser,
+    string CdGrUser, 
     string CdFuncao,
     string CdAcoes,
     char CdRestric);
 
 public class UserPermissions
 {
-    public UserSessionData UserData { get; set; } = null!;
+    public UserSessionData? UserData { get; set; }
     public List<UserGroup> Groups { get; set; } = new();
     public List<UserPermission> Permissions { get; set; } = new();
 }

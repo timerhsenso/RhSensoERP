@@ -1,5 +1,7 @@
 ﻿using RhSensoERP.Core.Abstractions.Entities;
 
+namespace RhSensoERP.Core.Security.Entities;
+
 public class GrupoFuncao : BaseEntity
 {
     public string CdGrUser { get; set; } = string.Empty;

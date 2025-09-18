@@ -19,4 +19,7 @@
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
 		<PackageReference Include="Serilog.AspNetCore" />
 	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="Controllers\Security\" />
+	</ItemGroup>
 </Project>

@@ -1,6 +1,6 @@
-﻿using RhSensoERP.Application.Security.Auth.DTOs;
+using RhSensoERP.Application.Security.Auth.DTOs;
 
-namespace RhSensoERP.Application.Security.Users.Services;
+namespace RhSensoERP.Application.Security.Auth.Services;
 
 public interface ILegacyAuthService
 {

@@ -10,10 +10,10 @@ public class UserConfig : IEntityTypeConfiguration<User>
     {
         b.ToTable("tuse1", schema: "dbo");
 
-        // Chave primária usando cdusuario (não o Guid Id)
+        // Chave primÃ¡ria usando cdusuario
         b.HasKey(x => x.CdUsuario);
 
-        // Mapeamento de propriedades
+        // Mapeamento APENAS das colunas que existem na tuse1
         b.Property(x => x.CdUsuario).HasColumnName("cdusuario").HasMaxLength(30).IsRequired();
         b.Property(x => x.DcUsuario).HasColumnName("dcusuario").HasMaxLength(50).IsRequired();
         b.Property(x => x.SenhaUser).HasColumnName("senhauser").HasMaxLength(20);
@@ -30,7 +30,22 @@ public class UserConfig : IEntityTypeConfiguration<User>
         b.Property(x => x.IdFuncionario).HasColumnName("idfuncionario");
         b.Property(x => x.FlNaoRecebeEmail).HasColumnName("flnaorecebeemail").HasMaxLength(1);
 
-        // Índice único no Id (Guid)
-        b.HasIndex(x => x.Id).IsUnique().HasDatabaseName("UK_tuse1_id");
+        // IGNORAR TODAS as propriedades de auditoria que nÃ£o existem na tabela legacy
+        b.Ignore(x => x.TenantId);
+        b.Ignore(x => x.IsDeleted);
+        b.Ignore(x => x.CreatedAt);
+        b.Ignore(x => x.CreatedBy);
+        b.Ignore(x => x.UpdatedAt);
+        b.Ignore(x => x.UpdatedBy);
+
+        // Ignorar propriedades de conveniÃªncia
+        b.Ignore(x => x.Username);
+        b.Ignore(x => x.DisplayName);
+        b.Ignore(x => x.Email);
+        b.Ignore(x => x.Active);
+        b.Ignore(x => x.PasswordHash);
+
+        // Ãndices
+        b.HasIndex(x => x.Id).IsUnique();
     }
 }
