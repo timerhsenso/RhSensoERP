@@ -1,9 +1,12 @@
+using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using RhSensoERP.Application.Security.Auth.DTOs;
 using RhSensoERP.Application.Security.Auth.Services;
 using RhSensoERP.Core.Shared;
+using RhSensoERP.Application.Security.Auth.DTOs;
+using FluentValidation;
 
 namespace RhSensoERP.API.Controllers.Auth;
 
@@ -26,27 +29,39 @@ public class AuthController : ControllerBase
     /// Login no sistema legacy
     /// </summary>
     [HttpPost("login")]
-    [EnableRateLimiting("login")] // ADICIONAR ESTA LINHA
-    [ProducesResponseType(typeof(ApiResponse<LoginResponse>), 200)]
+    [EnableRateLimiting("login")]
+    [ProducesResponseType(typeof(ApiResponse<LoginResponseDto>), 200)]
     [ProducesResponseType(typeof(ApiResponse<object>), 400)]
-    public async Task<ActionResult<ApiResponse<LoginResponse>>> Login(
-        [FromBody] LoginRequest request, 
-        CancellationToken ct)
+    public async Task<ActionResult<ApiResponse<LoginResponseDto>>> Login(
+    [FromBody] LoginRequestDto request,
+    [FromServices] IValidator<LoginRequestDto> validator,
+    CancellationToken ct)
     {
+        // Validar entrada
+        var validationResult = await validator.ValidateAsync(request, ct);
+        if (!validationResult.IsValid)
+        {
+            var errors = validationResult.Errors
+                .GroupBy(x => x.PropertyName)
+                .ToDictionary(g => g.Key, g => g.Select(x => x.ErrorMessage).ToArray());
+
+            return BadRequest(ApiResponse<object>.Fail("Dados de entrada inválidos", errors));
+        }
+
         var result = await _authService.AuthenticateAsync(request.CdUsuario, request.Senha, ct);
-        
+
         if (!result.Success)
             return BadRequest(ApiResponse<object>.Fail(result.ErrorMessage!));
 
         var permissions = await _authService.GetUserPermissionsAsync(request.CdUsuario, ct);
-        
-        var response = new LoginResponse(
+
+        var response = new LoginResponseDto(
             result.AccessToken!,
             result.UserData!,
             permissions.Groups,
             permissions.Permissions);
 
-        return Ok(ApiResponse<LoginResponse>.Ok(response));
+        return Ok(ApiResponse<LoginResponseDto>.Ok(response));
     }
 
     /// <summary>

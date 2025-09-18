@@ -5,22 +5,23 @@
 // Implementa Clean Architecture com autenticação JWT baseada em permissões granulares
 // --------------------------------------------------------------------------------------
 
-using Microsoft.EntityFrameworkCore;
-using Serilog;
-using Microsoft.Extensions.Diagnostics.HealthChecks;
-using System.Threading.RateLimiting;
+using FluentValidation;
 using Microsoft.AspNetCore.RateLimiting;
-
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 // Configurações customizadas
 using RhSensoERP.API.Configuration;
 using RhSensoERP.API.Middlewares;
 using RhSensoERP.Application.Common.Interfaces;
+using RhSensoERP.Application.Security.Auth.Validators;
 using RhSensoERP.Core.Abstractions.Interfaces;
 using RhSensoERP.Infrastructure.Logging;
 using RhSensoERP.Infrastructure.Persistence;
 using RhSensoERP.Infrastructure.Persistence.Interceptors;
 using RhSensoERP.Infrastructure.Repositories;
 using RhSensoERP.Infrastructure.Services;
+using Serilog;
+using System.Threading.RateLimiting;
 
 // Configuração inicial com Serilog
 var builder = WebApplication.CreateBuilder(args)
@@ -39,6 +40,17 @@ var cfg = builder.Configuration;
 /// Configuração de controllers MVC para endpoints da API
 /// </summary>
 builder.Services.AddControllers();
+
+/// <summary>
+/// Configuração de controllers MVC para endpoints da API
+/// </summary>
+builder.Services.AddControllers();
+
+/// <summary>
+/// Validação automática com FluentValidation
+/// Registra todos os validadores do assembly da Application
+/// </summary>
+builder.Services.AddValidatorsFromAssemblyContaining<LoginRequestValidator>();
 
 /// <summary>
 /// Habilita descoberta automática de endpoints para OpenAPI/Swagger
