@@ -5,9 +5,20 @@ using RhSensoERP.Application.Security.Auth.DTOs;
 
 namespace RhSensoERP.Tests.Unit.DTOs;
 
+/// <summary>
+/// Testes da classe <c>AuthDTOsTests</c>.
+/// Este arquivo documenta o objetivo de cada teste e o resultado esperado, sem alterar a lógica.
+/// </summary>
+/// <remarks>
+/// Local: Tests/RhSensoERP.Tests.Unit/DTOs/AuthDTOsTests.cs
+/// Diretrizes: nome claro de teste; Arrange-Act-Assert explícito; asserts específicos.
+/// </remarks>
 public class AuthDTOsTests
 {
     [Fact]
+/// <summary>
+/// Loginrequestdto shouldcreatecorrectly.
+/// </summary>
     public void LoginRequestDto_ShouldCreateCorrectly()
     {
         // Arrange & Act
@@ -19,6 +30,9 @@ public class AuthDTOsTests
     }
 
     [Fact]
+/// <summary>
+/// Authresult sucesso shouldhavecorrectproperties.
+/// </summary>
     public void AuthResult_Success_ShouldHaveCorrectProperties()
     {
         // Arrange
@@ -35,6 +49,9 @@ public class AuthDTOsTests
     }
 
     [Fact]
+/// <summary>
+/// Authresult failure shouldhavecorrectproperties.
+/// </summary>
     public void AuthResult_Failure_ShouldHaveCorrectProperties()
     {
         // Arrange & Act
@@ -48,6 +65,9 @@ public class AuthDTOsTests
     }
 
     [Fact]
+/// <summary>
+/// Usersessiondata shouldcreatecorrectly.
+/// </summary>
     public void UserSessionData_ShouldCreateCorrectly()
     {
         // Arrange

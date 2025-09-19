@@ -10,12 +10,23 @@ namespace RhSensoERP.Tests.Unit.Modules.Auth;
 /// Testes unitários do fluxo de autenticação via ILegacyAuthService (mockado).
 /// Verifica sucesso e falha sem tocar infraestrutura (DB/JWT reais).
 /// </summary>
+/// <summary>
+/// Testes da classe <c>LoginCommandHandlerTests</c>.
+/// Este arquivo documenta o objetivo de cada teste e o resultado esperado, sem alterar a lógica.
+/// </summary>
+/// <remarks>
+/// Local: Tests/RhSensoERP.Tests.Unit/Modules/Auth/LoginCommandHandlerTests.cs
+/// Diretrizes: nome claro de teste; Arrange-Act-Assert explícito; asserts específicos.
+/// </remarks>
 public class LoginCommandHandlerTests
 {
     /// <summary>
     /// Sucesso: AuthenticateAsync retorna token e dados do usuário quando credenciais são válidas.
     /// </summary>
     [Fact]
+/// <summary>
+/// Deve call autenticar e retornar sucesso quando credentials are válido.
+/// </summary>
     public async Task Should_Call_Authenticate_And_Return_Success_When_Credentials_Are_Valid()
     {
         // Arrange
@@ -57,6 +68,9 @@ public class LoginCommandHandlerTests
     /// Falha: AuthenticateAsync retorna erro quando a senha é inválida.
     /// </summary>
     [Fact]
+/// <summary>
+/// Deve retornar falha quando credentials are inválido.
+/// </summary>
     public async Task Should_Return_Fail_When_Credentials_Are_Invalid()
     {
         // Arrange

@@ -8,9 +8,20 @@ using RhSensoERP.Infrastructure.Services;
 
 namespace RhSensoERP.Tests.Unit.Services;
 
+/// <summary>
+/// Testes da classe <c>CurrentUserServiceTests</c>.
+/// Este arquivo documenta o objetivo de cada teste e o resultado esperado, sem alterar a lógica.
+/// </summary>
+/// <remarks>
+/// Local: Tests/RhSensoERP.Tests.Unit/Services/CurrentUserServiceTests.cs
+/// Diretrizes: nome claro de teste; Arrange-Act-Assert explícito; asserts específicos.
+/// </remarks>
 public class CurrentUserServiceTests
 {
     [Fact]
+/// <summary>
+/// Userid withauthenticateduser shouldreturncorrectid.
+/// </summary>
     public void UserId_WithAuthenticatedUser_ShouldReturnCorrectId()
     {
         // Arrange
@@ -36,6 +47,9 @@ public class CurrentUserServiceTests
     }
 
     [Fact]
+/// <summary>
+/// Tenantid withvalidtenantclaim shouldreturncorrectid.
+/// </summary>
     public void TenantId_WithValidTenantClaim_ShouldReturnCorrectId()
     {
         // Arrange
@@ -61,6 +75,9 @@ public class CurrentUserServiceTests
     }
 
     [Fact]
+/// <summary>
+/// Tenantid withinvalidtenantclaim shouldreturnnull.
+/// </summary>
     public void TenantId_WithInvalidTenantClaim_ShouldReturnNull()
     {
         // Arrange
@@ -85,6 +102,9 @@ public class CurrentUserServiceTests
     }
 
     [Fact]
+/// <summary>
+/// Userid withnohttpcontext shouldreturnnull.
+/// </summary>
     public void UserId_WithNoHttpContext_ShouldReturnNull()
     {
         // Arrange

@@ -4,9 +4,20 @@ using RhSensoERP.Core.Shared;
 
 namespace RhSensoERP.Tests.Unit.Core;
 
+/// <summary>
+/// Testes da classe <c>ApiResponseTests</c>.
+/// Este arquivo documenta o objetivo de cada teste e o resultado esperado, sem alterar a lógica.
+/// </summary>
+/// <remarks>
+/// Local: Tests/RhSensoERP.Tests.Unit/Core/ApiResponseTests.cs
+/// Diretrizes: nome claro de teste; Arrange-Act-Assert explícito; asserts específicos.
+/// </remarks>
 public class ApiResponseTests
 {
     [Fact]
+/// <summary>
+/// Ok withdata shouldcreatesuccessresponse.
+/// </summary>
     public void Ok_WithData_ShouldCreateSuccessResponse()
     {
         // Arrange
@@ -23,6 +34,9 @@ public class ApiResponseTests
     }
 
     [Fact]
+/// <summary>
+/// Ok withdataandmessage shouldincludeboth.
+/// </summary>
     public void Ok_WithDataAndMessage_ShouldIncludeBoth()
     {
         // Arrange
@@ -40,6 +54,9 @@ public class ApiResponseTests
     }
 
     [Fact]
+/// <summary>
+/// Falha withmessage shouldcreatefailureresponse.
+/// </summary>
     public void Fail_WithMessage_ShouldCreateFailureResponse()
     {
         // Arrange
@@ -56,6 +73,9 @@ public class ApiResponseTests
     }
 
     [Fact]
+/// <summary>
+/// Falha withvalidationerrors shouldincludeerrors.
+/// </summary>
     public void Fail_WithValidationErrors_ShouldIncludeErrors()
     {
         // Arrange
@@ -77,6 +97,9 @@ public class ApiResponseTests
     }
 
     [Fact]
+/// <summary>
+/// Apiresponse shouldworkwithdifferenttypes.
+/// </summary>
     public void ApiResponse_ShouldWorkWithDifferentTypes()
     {
         // Arrange & Act

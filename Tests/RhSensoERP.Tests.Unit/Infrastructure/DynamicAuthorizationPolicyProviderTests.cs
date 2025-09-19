@@ -8,9 +8,20 @@ namespace RhSensoERP.Tests.Unit.Infrastructure;
 /// Garante que o provedor dinâmico cria uma policy contendo PermissionRequirement
 /// com a permissão solicitada (e.g., "SEG.USUARIO.LER").
 /// </summary>
+/// <summary>
+/// Testes da classe <c>DynamicAuthorizationPolicyProviderTests</c>.
+/// Este arquivo documenta o objetivo de cada teste e o resultado esperado, sem alterar a lógica.
+/// </summary>
+/// <remarks>
+/// Local: Tests/RhSensoERP.Tests.Unit/Infrastructure/DynamicAuthorizationPolicyProviderTests.cs
+/// Diretrizes: nome claro de teste; Arrange-Act-Assert explícito; asserts específicos.
+/// </remarks>
 public class DynamicAuthorizationPolicyProviderTests
 {
     [Fact]
+/// <summary>
+/// Getpolicyasync Deve create policy with permissionrequirement.
+/// </summary>
     public async Task GetPolicyAsync_Should_Create_Policy_With_PermissionRequirement()
     {
         // Arrange

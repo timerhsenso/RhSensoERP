@@ -10,6 +10,14 @@ using RhSensoERP.Infrastructure.Auth;
 
 namespace RhSensoERP.Tests.Unit.Services;
 
+/// <summary>
+/// Testes da classe <c>JwtTokenServiceTests</c>.
+/// Este arquivo documenta o objetivo de cada teste e o resultado esperado, sem alterar a lógica.
+/// </summary>
+/// <remarks>
+/// Local: Tests/RhSensoERP.Tests.Unit/Services/JwtTokenServiceTests.cs
+/// Diretrizes: nome claro de teste; Arrange-Act-Assert explícito; asserts específicos.
+/// </remarks>
 public class JwtTokenServiceTests
 {
     private readonly JwtTokenService _jwtService;
@@ -30,6 +38,9 @@ public class JwtTokenServiceTests
     }
 
     [Fact]
+/// <summary>
+/// Createaccesstoken shouldgeneratevalidtoken.
+/// </summary>
     public void CreateAccessToken_ShouldGenerateValidToken()
     {
         // Arrange
@@ -54,6 +65,9 @@ public class JwtTokenServiceTests
     }
 
     [Fact]
+/// <summary>
+/// Createaccesstoken shouldsetcorrectexpiration.
+/// </summary>
     public void CreateAccessToken_ShouldSetCorrectExpiration()
     {
         // Arrange
@@ -76,6 +90,9 @@ public class JwtTokenServiceTests
     [InlineData("")]
     [InlineData("user123")]
     [InlineData("admin@company.com")]
+/// <summary>
+/// Createaccesstoken withdifferentuserids shouldwork.
+/// </summary>
     public void CreateAccessToken_WithDifferentUserIds_ShouldWork(string userId)
     {
         // Arrange

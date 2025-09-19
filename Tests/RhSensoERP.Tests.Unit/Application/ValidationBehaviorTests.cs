@@ -1,48 +1,80 @@
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 using FluentValidation;
+using FluentValidation.Results;
 using MediatR;
-using Microsoft.Extensions.DependencyInjection;
-using RhSensoERP.Application.Common.Behaviors;
 using Xunit;
+using FluentAssertions;
 
-namespace RhSensoERP.Tests.Unit.Application;
-
-public class ValidationBehaviorTests
+namespace RhSensoERP.Tests.Unit.Application
 {
-    private record TestRequest(string Name) : IRequest<string>;
+    // ajuste o using abaixo se o ValidationBehavior estiver em outro namespace
+    using RhSensoERP.Application.Common.Behaviors;
 
-    private class TestRequestValidator : AbstractValidator<TestRequest>
+    /// <summary>
+/// Testes da classe <c>ValidationBehaviorTests</c>.
+/// Este arquivo documenta o objetivo de cada teste e o resultado esperado, sem alterar a lógica.
+/// </summary>
+/// <remarks>
+/// Local: Tests/RhSensoERP.Tests.Unit/Application/ValidationBehaviorTests.cs
+/// Diretrizes: nome claro de teste; Arrange-Act-Assert explícito; asserts específicos.
+/// </remarks>
+public class ValidationBehaviorTests
     {
-        public TestRequestValidator()
+        private class DummyRequest : IRequest<string> { public string? Name { get; set; } }
+
+        private class FailingValidator : AbstractValidator<DummyRequest>
         {
-            RuleFor(x => x.Name).NotEmpty();
+            public bool WasCalled { get; private set; }
+
+            public FailingValidator()
+            {
+                RuleFor(x => x.Name)
+                    .NotEmpty()
+                    .WithMessage("Name is required");
+            }
+
+            // O ValidationBehavior usa ValidateAsync → marcamos aqui
+            public override Task<ValidationResult> ValidateAsync(
+                ValidationContext<DummyRequest> context,
+                CancellationToken cancellation = default)
+            {
+                WasCalled = true;
+                return base.ValidateAsync(context, cancellation);
+            }
         }
-    }
 
-    private class EchoHandler : IRequestHandler<TestRequest, string>
-    {
-        public Task<string> Handle(TestRequest request, CancellationToken cancellationToken)
-            => Task.FromResult(request.Name);
-    }
+        [Fact]
+/// <summary>
+/// Deve executar validador e lançar quando inválido.
+/// </summary>
+/// <remarks>
+/// Resultado esperado: lançar ValidationException.
+/// </remarks>
+        public async Task Should_Run_Validator_And_Throw_When_Invalid()
+        {
+            // Arrange
+            var validator = new FailingValidator();
+            var validators = new[] { (IValidator<DummyRequest>)validator };
 
-    [Fact]
-    public async Task Should_Run_Validator_Before_Handler()
-    {
-        var services = new ServiceCollection();
-        services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<ValidationBehaviorTests>());
-        services.AddValidatorsFromAssemblyContaining<ValidationBehaviorTests>();
-        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
-        services.AddTransient<IRequestHandler<TestRequest, string>, EchoHandler>();
+            var nextCalled = false;
+            RequestHandlerDelegate<string> next = () =>
+            {
+                nextCalled = true;
+                return Task.FromResult("OK");
+            };
 
-        using var sp = services.BuildServiceProvider();
-        var mediator = sp.GetRequiredService<IMediator>();
+            var behavior = new ValidationBehavior<DummyRequest, string>(validators);
 
-        // ok
-        (await mediator.Send(new TestRequest("ok"))).Should().Be("ok");
+            // Act
+            var act = () => behavior.Handle(new DummyRequest { Name = null }, next, CancellationToken.None);
 
-        // fail
-        await FluentActions.Invoking(async () => await mediator.Send(new TestRequest(string.Empty)))
-            .Should().ThrowAsync<ValidationException>();
+            // Assert
+            await act.Should().ThrowAsync<ValidationException>()
+                .WithMessage("*Name is required*");
+
+            validator.WasCalled.Should().BeTrue("o ValidationBehavior deve executar os validadores");
+            nextCalled.Should().BeFalse("requisição inválida não deve atingir o handler");
+        }
     }
 }

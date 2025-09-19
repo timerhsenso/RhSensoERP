@@ -21,6 +21,14 @@ namespace RhSensoERP.Tests.Unit.Common;
 /// - Substitui ILegacyAuthService por uma implementação fake previsível.
 /// - Garante EnsureCreated() no AppDbContext (sem migrations nos testes).
 /// </summary>
+/// <summary>
+/// Testes da classe <c>CustomWebApplicationFactory</c>.
+/// Este arquivo documenta o objetivo de cada teste e o resultado esperado, sem alterar a lógica.
+/// </summary>
+/// <remarks>
+/// Local: Tests/RhSensoERP.Tests.Unit/Common/CustomWebApplicationFactory.cs
+/// Diretrizes: nome claro de teste; Arrange-Act-Assert explícito; asserts específicos.
+/// </remarks>
 public class CustomWebApplicationFactory : WebApplicationFactory<Program>
 {
     private SqliteConnection? _connection;
