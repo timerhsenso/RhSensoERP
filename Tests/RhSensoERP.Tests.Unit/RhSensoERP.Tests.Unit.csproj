@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -11,22 +11,31 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit" />
-    <PackageReference Include="xunit.runner.visualstudio" />
-    <PackageReference Include="coverlet.collector" />
-    <PackageReference Include="Moq" />
+    <PackageReference Include="xunit.runner.visualstudio">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="coverlet.collector">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+
     <PackageReference Include="FluentAssertions" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
-    <!-- REMOVER: <PackageReference Include="Microsoft.AspNetCore.Http" /> -->
+    <PackageReference Include="Moq" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
+    <PackageReference Include="Microsoft.Data.Sqlite" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\Src\Core\RhSensoERP.Core.csproj" />
     <ProjectReference Include="..\..\Src\Application\RhSensoERP.Application.csproj" />
     <ProjectReference Include="..\..\Src\Infrastructure\RhSensoERP.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Src\API\RhSensoERP.API.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Middlewares\" />
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 
 </Project>

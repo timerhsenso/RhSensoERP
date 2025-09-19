@@ -382,4 +382,6 @@ file sealed class DatabaseHealthCheck : IHealthCheck
             return HealthCheckResult.Unhealthy("Falha na conectividade com banco de dados", ex);
         }
     }
+
+    
 }
