@@ -15,30 +15,39 @@ using RhSensoERP.API;
 
 namespace RhSensoERP.Tests.Unit.Common;
 
-// WebApplicationFactory configurada para testes de API
+/// <summary>
+/// Fábrica para hospedar a API em memória durante os testes de integração.
+/// - Usa SQLite In-Memory com conexão aberta (evita dispose prematuro).
+/// - Substitui ILegacyAuthService por uma implementação fake previsível.
+/// - Garante EnsureCreated() no AppDbContext (sem migrations nos testes).
+/// </summary>
 public class CustomWebApplicationFactory : WebApplicationFactory<Program>
 {
     private SqliteConnection? _connection;
 
+    /// <summary>
+    /// Configura o host de testes: EF Core com SQLite In-Memory e substituições de serviços.
+    /// </summary>
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.ConfigureServices(services =>
         {
-            // Remover AppDbContext real (SQL Server) se existir
+            // Remove o AppDbContext real (SQL Server) se registrado
             var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<AppDbContext>));
             if (descriptor is not null) services.Remove(descriptor);
 
-            // Criar e manter uma conexão SQLite em memória aberta durante os testes
+            // Conexão SQLite in-memory mantida aberta durante toda a execução dos testes
             _connection = new SqliteConnection("DataSource=:memory:");
             _connection.Open();
 
+            // Registra o DbContext com a conexão em memória
             services.AddDbContext<AppDbContext>(opt => opt.UseSqlite(_connection));
 
-            // Substituir ILegacyAuthService por um mock simples baseado em DI
+            // Substitui autenticação por fake service para cenários controlados
             services.RemoveAll<ILegacyAuthService>();
             services.AddSingleton<ILegacyAuthService>(sp => new FakeLegacyAuthService());
 
-            // Garantir que o banco foi criado
+            // Garante que o schema foi criado antes de rodar os testes
             var sp = services.BuildServiceProvider();
             using var scope = sp.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -46,6 +55,9 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
         });
     }
 
+    /// <summary>
+    /// Fecha e descarta a conexão em memória ao finalizar os testes.
+    /// </summary>
     protected override void Dispose(bool disposing)
     {
         base.Dispose(disposing);
@@ -56,13 +68,17 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
         }
     }
 
-    // Serviço fake básico para testes de API
+    /// <summary>
+    /// Implementação fake de ILegacyAuthService para testes.
+    /// Retorna sucesso quando (user, senha) = (admin, 123456); caso contrário, falha.
+    /// </summary>
     private sealed class FakeLegacyAuthService : ILegacyAuthService
     {
         public Task<AuthResult> AuthenticateAsync(string cdusuario, string senha, CancellationToken ct = default)
         {
             if (cdusuario == "admin" && senha == "123456")
             {
+                // Constrói um usuário mínimo válido para os cenários de teste
                 var user = new UserSessionData(
                     cdusuario,           // CdUsuario
                     "Administrador",     // DcUsuario
@@ -95,6 +111,7 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
             return Task.FromResult(new UserPermissions
             {
                 UserData = user,
+                // Groups e Permissions podem ser populados se o teste exigir
             });
         }
 

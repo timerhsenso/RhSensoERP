@@ -1,0 +1,6 @@
+<!-- O csproj real fica na sua solução.
+Este arquivo costuma conter:
+- PackageReference sem 'Version' (Central Package Management cuida das versões)
+- ProjectReference para Core, Application, Infrastructure e API
+- FrameworkReference Microsoft.AspNetCore.App para melhor IntelliSense -->
+
