@@ -247,35 +247,35 @@ var app = builder.Build();
 /// </summary>
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
-/// <summary>
-/// Headers de segurança devem ser aplicados cedo no pipeline
-/// - Protege contra XSS, clickjacking, content sniffing
-/// - Remove headers que revelam informações do servidor
-/// </summary>
+// <summary>
+// Headers de segurança devem ser aplicados cedo no pipeline
+// - Protege contra XSS, clickjacking, content sniffing
+// - Remove headers que revelam informações do servidor
+// </summary>
 app.UseMiddleware<SecurityHeadersMiddleware>();
 
-/// <summary>
-/// Logs estruturados de todas as requisições HTTP
-/// </summary>
+// <summary>
+// Logs estruturados de todas as requisições HTTP
+// </summary>
 app.UseSerilogRequestLogging();
 
 #endregion
 
 #region CORS
 
-/// <summary>
-/// Aplica política de CORS - deve vir antes dos endpoints
-/// </summary>
+// <summary>
+// Aplica política de CORS - deve vir antes dos endpoints
+// </summary>
 app.UseDefaultCors();
 
 #endregion
 
 #region Autenticação e Autorização
 
-/// <summary>
-/// Pipeline de autenticação e autorização
-/// Ordem é importante: Authentication antes de Authorization
-/// </summary>
+// <summary>
+// Pipeline de autenticação e autorização
+// Ordem é importante: Authentication antes de Authorization
+// </summary>
 app.UseAuthentication();
 app.UseAuthorization();
 
