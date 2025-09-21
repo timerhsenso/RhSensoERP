@@ -2,31 +2,44 @@ using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Options;
+using RhSensoERP.Application.Auth;
 using RhSensoERP.Application.Security.Auth.DTOs;
 using RhSensoERP.Application.Security.Auth.Services;
+using RhSensoERP.Application.Security.Auth.Validators;
+using RhSensoERP.Core.Security.Auth;
 using RhSensoERP.Core.Shared;
 
 namespace RhSensoERP.API.Controllers.Auth;
 
 /// <summary>
-/// Autenticação usando sistema legacy existente
+/// Autenticação multi-estratégia (OnPrem, SaaS, Windows)
+/// Usa o padrão Strategy para suportar diferentes modos de autenticação
 /// </summary>
 [ApiController]
 [Route("api/v1/auth")]
 [Produces("application/json")]
 public class AuthController : ControllerBase
 {
-    private readonly ILegacyAuthService _authService;
+    private readonly IAuthenticationService _authService;
+    private readonly ILegacyAuthService _legacyAuthService;
+    private readonly AuthOptions _authOptions;
     private readonly ILogger<AuthController> _logger;
 
-    public AuthController(ILegacyAuthService authService, ILogger<AuthController> logger)
+    public AuthController(
+        IAuthenticationService authService,
+        ILegacyAuthService legacyAuthService,
+        IOptionsMonitor<AuthOptions> authOptions,
+        ILogger<AuthController> logger)
     {
         _authService = authService;
+        _legacyAuthService = legacyAuthService;
+        _authOptions = authOptions.CurrentValue;
         _logger = logger;
     }
 
     /// <summary>
-    /// Login no sistema legacy com logs de segurança
+    /// Login usando estratégia configurada (OnPrem, SaaS ou Windows)
     /// </summary>
     [HttpPost("login")]
     [EnableRateLimiting("login")]
@@ -40,7 +53,7 @@ public class AuthController : ControllerBase
         var startTime = DateTime.UtcNow;
         var ipAddress = GetClientIpAddress();
         var userAgent = Request.Headers.UserAgent.ToString();
-        var sessionId = Guid.NewGuid().ToString("N")[..8]; // ID curto para correlação
+        var sessionId = Guid.NewGuid().ToString("N")[..8];
 
         // Log da tentativa de login
         using var loginScope = _logger.BeginScope(new Dictionary<string, object>
@@ -49,11 +62,12 @@ public class AuthController : ControllerBase
             ["IPAddress"] = ipAddress,
             ["UserAgent"] = userAgent,
             ["Usuario"] = request.CdUsuario,
+            ["AuthMode"] = _authOptions.Mode.ToString(),
             ["Timestamp"] = startTime
         });
 
-        _logger.LogInformation("Tentativa de login iniciada para usuário {Usuario} de IP {IPAddress}",
-            request.CdUsuario, ipAddress);
+        _logger.LogInformation("Tentativa de login iniciada para usuário {Usuario} de IP {IPAddress} usando modo {AuthMode}",
+            request.CdUsuario, ipAddress, _authOptions.Mode);
 
         try
         {
@@ -71,39 +85,41 @@ public class AuthController : ControllerBase
                 return BadRequest(ApiResponse<object>.Fail("Dados de entrada inválidos", errors));
             }
 
-            // Tentativa de autenticação
-            var result = await _authService.AuthenticateAsync(request.CdUsuario, request.Senha, ct);
+            // Converte para o novo formato
+            var loginRequest = new LoginRequest(request.CdUsuario, request.Senha);
+
+            // Executa autenticação usando o novo sistema de estratégias
+            var result = await _authService.AuthenticateAsync(loginRequest, ct);
             var duration = DateTime.UtcNow - startTime;
 
             if (!result.Success)
             {
                 // Log de falha de autenticação
-                _logger.LogWarning("Login FALHADO para usuário {Usuario} de IP {IPAddress} em {Duration}ms: {Motivo}",
-                    request.CdUsuario, ipAddress, duration.TotalMilliseconds, result.ErrorMessage);
+                _logger.LogWarning("Login FALHADO para usuário {Usuario} de IP {IPAddress} em {Duration}ms via {Provider}: {Motivo}",
+                    request.CdUsuario, ipAddress, duration.TotalMilliseconds, result.Provider, result.ErrorMessage);
 
                 // Log de segurança para análise de padrões
-                _logger.LogInformation("SECURITY_EVENT: LOGIN_FAILED | User: {Usuario} | IP: {IPAddress} | UserAgent: {UserAgent} | Reason: {Motivo}",
-                    request.CdUsuario, ipAddress, userAgent, result.ErrorMessage);
+                _logger.LogInformation("SECURITY_EVENT: LOGIN_FAILED | User: {Usuario} | IP: {IPAddress} | UserAgent: {UserAgent} | Provider: {Provider} | Reason: {Motivo}",
+                    request.CdUsuario, ipAddress, userAgent, result.Provider, result.ErrorMessage);
 
                 return BadRequest(ApiResponse<object>.Fail(result.ErrorMessage!));
             }
 
-            // Carregar permissões
-            var permissions = await _authService.GetUserPermissionsAsync(request.CdUsuario, ct);
-
+            // Sucesso - montar resposta
             var response = new LoginResponseDto(
                 result.AccessToken!,
                 result.UserData!,
-                permissions.Groups,
-                permissions.Permissions);
+                result.Groups ?? new List<UserGroup>(),
+                result.Permissions ?? new List<UserPermission>());
 
             // Log de sucesso
-            _logger.LogInformation("Login SUCESSO para usuário {Usuario} de IP {IPAddress} em {Duration}ms",
-                request.CdUsuario, ipAddress, duration.TotalMilliseconds);
+            _logger.LogInformation("Login SUCESSO para usuário {Usuario} de IP {IPAddress} em {Duration}ms via {Provider}",
+                request.CdUsuario, ipAddress, duration.TotalMilliseconds, result.Provider);
 
             // Log de segurança para auditoria
-            _logger.LogInformation("SECURITY_EVENT: LOGIN_SUCCESS | User: {Usuario} | IP: {IPAddress} | UserAgent: {UserAgent} | Groups: {Groups}",
-                request.CdUsuario, ipAddress, userAgent, string.Join(",", permissions.Groups.Select(g => g.CdGrUser)));
+            _logger.LogInformation("SECURITY_EVENT: LOGIN_SUCCESS | User: {Usuario} | IP: {IPAddress} | UserAgent: {UserAgent} | Provider: {Provider} | Groups: {Groups}",
+                request.CdUsuario, ipAddress, userAgent, result.Provider,
+                string.Join(",", result.Groups?.Select(g => g.CdGrUser) ?? new string[0]));
 
             return Ok(ApiResponse<LoginResponseDto>.Ok(response));
         }
@@ -123,7 +139,67 @@ public class AuthController : ControllerBase
     }
 
     /// <summary>
-    /// Verifica habilitação com log de auditoria
+    /// Login forçando uma estratégia específica (para testes ou casos especiais)
+    /// </summary>
+    [HttpPost("login/{mode}")]
+    [EnableRateLimiting("login")]
+    [ProducesResponseType(typeof(ApiResponse<LoginResponseDto>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<object>), 400)]
+    public async Task<ActionResult<ApiResponse<LoginResponseDto>>> LoginWithMode(
+        [FromRoute] string mode,
+        [FromBody] LoginRequestDto request,
+        [FromServices] IValidator<LoginRequestDto> validator,
+        CancellationToken ct)
+    {
+        _logger.LogInformation("Login com modo forçado {Mode} para usuário {Usuario}", mode, request.CdUsuario);
+
+        try
+        {
+            // Validação de entrada
+            var validationResult = await validator.ValidateAsync(request, ct);
+            if (!validationResult.IsValid)
+            {
+                var errors = validationResult.Errors
+                    .GroupBy(x => x.PropertyName)
+                    .ToDictionary(g => g.Key, g => g.Select(x => x.ErrorMessage).ToArray());
+
+                return BadRequest(ApiResponse<object>.Fail("Dados de entrada inválidos", errors));
+            }
+
+            // Parse do modo
+            if (!Enum.TryParse<AuthMode>(mode, true, out var authMode))
+            {
+                return BadRequest(ApiResponse<object>.Fail($"Modo de autenticação '{mode}' inválido. Valores aceitos: OnPrem, SaaS, Windows"));
+            }
+
+            // Converte para o novo formato
+            var loginRequest = new LoginRequest(request.CdUsuario, request.Senha);
+
+            // Executa autenticação com modo específico
+            var result = await _authService.AuthenticateAsync(loginRequest, authMode, ct);
+
+            if (!result.Success)
+            {
+                return BadRequest(ApiResponse<object>.Fail(result.ErrorMessage!));
+            }
+
+            var response = new LoginResponseDto(
+                result.AccessToken!,
+                result.UserData!,
+                result.Groups ?? new List<UserGroup>(),
+                result.Permissions ?? new List<UserPermission>());
+
+            return Ok(ApiResponse<LoginResponseDto>.Ok(response));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro durante login com modo {Mode} para usuário {Usuario}", mode, request.CdUsuario);
+            return StatusCode(500, ApiResponse<object>.Fail("Erro interno do servidor"));
+        }
+    }
+
+    /// <summary>
+    /// Verifica habilitação com log de auditoria (mantém compatibilidade)
     /// </summary>
     [HttpGet("check-habilitacao")]
     [Authorize]
@@ -144,8 +220,8 @@ public class AuthController : ControllerBase
 
         try
         {
-            var permissions = await _authService.GetUserPermissionsAsync(cdusuario, ct);
-            var hasAccess = _authService.CheckHabilitacao(cdsistema, cdfuncao, permissions);
+            var permissions = await _legacyAuthService.GetUserPermissionsAsync(cdusuario, ct);
+            var hasAccess = _legacyAuthService.CheckHabilitacao(cdsistema, cdfuncao, permissions);
 
             // Log de auditoria de permissões
             _logger.LogInformation("SECURITY_EVENT: PERMISSION_CHECK | User: {Usuario} | IP: {IPAddress} | Sistema: {Sistema} | Funcao: {Funcao} | Resultado: {Resultado}",
@@ -166,6 +242,41 @@ public class AuthController : ControllerBase
 
             return StatusCode(500, ApiResponse<object>.Fail("Erro interno do servidor"));
         }
+    }
+
+    /// <summary>
+    /// Endpoint de informações sobre a configuração atual de autenticação
+    /// </summary>
+    [HttpGet("info")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(ApiResponse<object>), 200)]
+    public ActionResult<ApiResponse<object>> GetAuthInfo()
+    {
+        var info = new
+        {
+            CurrentMode = _authOptions.Mode.ToString(),
+            AvailableModes = Enum.GetNames<AuthMode>(),
+            Configuration = new
+            {
+                OnPrem = new
+                {
+                    UserTable = _authOptions.OnPrem.UserTable,
+                    AllowPasswordReset = _authOptions.OnPrem.AllowPasswordReset
+                },
+                SaaS = new
+                {
+                    RequireEmailConfirmed = _authOptions.SaaS.RequireEmailConfirmed,
+                    AllowSelfRegistration = _authOptions.SaaS.AllowSelfRegistration
+                },
+                Windows = new
+                {
+                    RequireDomainMembership = _authOptions.Windows.RequireDomainMembership,
+                    FallbackToLocal = _authOptions.Windows.FallbackToLocal
+                }
+            }
+        };
+
+        return Ok(ApiResponse<object>.Ok(info, "Informações de autenticação"));
     }
 
     /// <summary>
