@@ -116,4 +116,39 @@ public class WindowsOptions
     /// Nível de confiança: "Full", "Partial"
     /// </summary>
     public string TrustLevel { get; set; } = "Full";
+
+    /// <summary>
+    /// Domínio padrão quando não especificado pelo usuário
+    /// </summary>
+    public string DefaultDomain { get; set; } = Environment.UserDomainName;
+
+    /// <summary>
+    /// Endereço do Domain Controller principal
+    /// </summary>
+    public string? DomainController { get; set; }
+
+    /// <summary>
+    /// Lista de domínios permitidos para autenticação
+    /// </summary>
+    public List<string> AllowedDomains { get; set; } = new();
+
+    /// <summary>
+    /// Caminho LDAP para consultas no Active Directory
+    /// </summary>
+    public string? LdapPath { get; set; }
+
+    /// <summary>
+    /// Base DN para pesquisas LDAP
+    /// </summary>
+    public string? SearchBase { get; set; }
+
+    /// <summary>
+    /// Timeout para operações de autenticação Windows (em segundos)
+    /// </summary>
+    public int TimeoutSeconds { get; set; } = 30;
+
+    /// <summary>
+    /// Habilita cache de credenciais validadas (em minutos)
+    /// </summary>
+    public int CacheValidCredentialsMinutes { get; set; } = 5;
 }

@@ -273,7 +273,10 @@ public class AuthController : ControllerBase
                 Windows = new
                 {
                     RequireDomainMembership = _authOptions.Windows.RequireDomainMembership,
-                    FallbackToLocal = _authOptions.Windows.FallbackToLocal
+                    FallbackToLocal = _authOptions.Windows.FallbackToLocal,
+                    DefaultDomain = _authOptions.Windows.DefaultDomain,
+                    AllowedDomains = _authOptions.Windows.AllowedDomains,
+                    DomainController = _authOptions.Windows.DomainController
                 }
             }
         };
