@@ -47,7 +47,37 @@ public enum AuthMode
 public record LoginRequest(
     string? UserOrEmail,
     string? Password,
-    string? Domain = null);
+    string? Domain = null)
+{
+    /// <summary>
+    /// Para Windows Auth: combina domínio e usuário no formato DOMAIN\user
+    /// </summary>
+    public string GetFullUsername()
+    {
+        if (!string.IsNullOrWhiteSpace(Domain) && !string.IsNullOrWhiteSpace(UserOrEmail))
+        {
+            return $"{Domain}\\{UserOrEmail}";
+        }
+        return UserOrEmail ?? string.Empty;
+    }
+
+    /// <summary>
+    /// Cria LoginRequest a partir de string no formato DOMAIN\user
+    /// </summary>
+    public static LoginRequest FromDomainUser(string domainUser, string? password = null)
+    {
+        if (string.IsNullOrWhiteSpace(domainUser))
+            return new LoginRequest(null, password);
+
+        var parts = domainUser.Split('\\', 2);
+        if (parts.Length == 2)
+        {
+            return new LoginRequest(parts[1], password, parts[0]);
+        }
+
+        return new LoginRequest(domainUser, password);
+    }
+};
 
 /// <summary>
 /// Resultado da autenticação por estratégia

@@ -85,8 +85,9 @@ public class AuthController : ControllerBase
                 return BadRequest(ApiResponse<object>.Fail("Dados de entrada inválidos", errors));
             }
 
-            // Converte para o novo formato
-            var loginRequest = new LoginRequest(request.CdUsuario, request.Senha);
+            // Converte para o novo formato, processando domínio se necessário
+            var (user, password, domain) = request.GetAuthData();
+            var loginRequest = new LoginRequest(user, password, domain);
 
             // Executa autenticação usando o novo sistema de estratégias
             var result = await _authService.AuthenticateAsync(loginRequest, ct);
@@ -172,8 +173,9 @@ public class AuthController : ControllerBase
                 return BadRequest(ApiResponse<object>.Fail($"Modo de autenticação '{mode}' inválido. Valores aceitos: OnPrem, SaaS, Windows"));
             }
 
-            // Converte para o novo formato
-            var loginRequest = new LoginRequest(request.CdUsuario, request.Senha);
+            // Converte para o novo formato, processando domínio se necessário
+            var (user, password, domain) = request.GetAuthData();
+            var loginRequest = new LoginRequest(user, password, domain);
 
             // Executa autenticação com modo específico
             var result = await _authService.AuthenticateAsync(loginRequest, authMode, ct);
