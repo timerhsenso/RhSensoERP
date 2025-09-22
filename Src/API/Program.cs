@@ -230,6 +230,38 @@ builder.Services.AddHealthChecks()
 
 #endregion
 
+
+// =====================================================================================
+// ADICIONAR ESTA SEÇÃO NO Program.cs LOGO APÓS A SEÇÃO #endregion Repositórios e Unidade de Trabalho
+// =====================================================================================
+
+#region Repositórios e Serviços SaaS
+
+/// <summary>
+/// Repositório específico para usuários SaaS
+/// Implementa operações CRUD específicas para sistema multi-tenant
+/// </summary>
+builder.Services.AddScoped<RhSensoERP.Core.Security.SaaS.ISaasUserRepository, RhSensoERP.Infrastructure.Repositories.SaasUserRepository>();
+
+/// <summary>
+/// Serviço de negócio para usuários SaaS
+/// Implementa lógica de autenticação, registro e gestão de tokens SaaS
+/// </summary>
+builder.Services.AddScoped<RhSensoERP.Application.Security.SaaS.ISaasUserService, RhSensoERP.Infrastructure.Services.SaasUserService>();
+
+/// <summary>
+/// Estratégia de autenticação SaaS
+/// Já registrada em AddJwtAuth, mas garantindo disponibilidade para injeção direta
+/// </summary>
+builder.Services.AddScoped<RhSensoERP.Infrastructure.Auth.Strategies.SaasAuthStrategy>();
+
+#endregion
+
+// =====================================================================================
+// IMPORTANTE: Esta seção deve ser adicionada ANTES da linha "var app = builder.Build();"
+// =====================================================================================
+
+
 // --------------------------------------------------------------------------------------
 // CONSTRUÇÃO DA APLICAÇÃO
 // --------------------------------------------------------------------------------------

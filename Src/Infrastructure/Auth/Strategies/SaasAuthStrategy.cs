@@ -1,4 +1,8 @@
-﻿using Microsoft.IdentityModel.Tokens;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
+using RhSensoERP.Application.Auth;
+using RhSensoERP.Core.Security.Auth;
 using RhSensoERP.Core.Security.Entities;
 using RhSensoERP.Core.Security.SaaS;
 using System.IdentityModel.Tokens.Jwt;
@@ -6,20 +10,141 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace RhSensoERP.Infrastructure.Security;
+namespace RhSensoERP.Infrastructure.Auth.Strategies;
 
-public class SaasAuthStrategy
+/// <summary>
+/// Estratégia de autenticação SaaS com JWT e validação de senha segura
+/// Implementa IAuthStrategy para integração com sistema unificado
+/// </summary>
+public class SaasAuthStrategy : IAuthStrategy
 {
-    private readonly string _jwtSecret;
-    private readonly string _issuer;
-    private readonly string _audience;
+    private readonly ISaasUserRepository _userRepository;
+    private readonly AuthOptions _authOptions;
+    private readonly JwtOptions _jwtOptions;
+    private readonly ILogger<SaasAuthStrategy> _logger;
 
-    public SaasAuthStrategy(string jwtSecret, string issuer, string audience)
+    public AuthMode Mode => AuthMode.SaaS;
+
+    public SaasAuthStrategy(
+        ISaasUserRepository userRepository,
+        IOptionsMonitor<AuthOptions> authOptions,
+        IOptionsMonitor<JwtOptions> jwtOptions,
+        ILogger<SaasAuthStrategy> logger)
     {
-        _jwtSecret = jwtSecret ?? throw new ArgumentNullException(nameof(jwtSecret));
-        _issuer = issuer ?? throw new ArgumentNullException(nameof(issuer));
-        _audience = audience ?? throw new ArgumentNullException(nameof(audience));
+        _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
+        _authOptions = authOptions.CurrentValue;
+        _jwtOptions = jwtOptions.CurrentValue;
+        _logger = logger;
     }
+
+    /// <summary>
+    /// Executa autenticação SaaS
+    /// </summary>
+    public async Task<AuthStrategyResult> AuthenticateAsync(LoginRequest request, CancellationToken ct = default)
+    {
+        try
+        {
+            _logger.LogDebug("Iniciando autenticação SaaS para email {Email}", request.UserOrEmail);
+
+            // Validação básica
+            if (string.IsNullOrWhiteSpace(request.UserOrEmail) || string.IsNullOrWhiteSpace(request.Password))
+            {
+                return new AuthStrategyResult(
+                    Success: false,
+                    ErrorMessage: "Email e senha são obrigatórios",
+                    UserKey: null,
+                    DisplayName: null,
+                    Provider: "SaaS");
+            }
+
+            // Buscar usuário por email
+            var user = await _userRepository.GetByEmailAsync(request.UserOrEmail!);
+            if (user == null)
+            {
+                _logger.LogWarning("Usuário SaaS não encontrado para email {Email}", request.UserOrEmail);
+                return new AuthStrategyResult(
+                    Success: false,
+                    ErrorMessage: "Credenciais inválidas",
+                    UserKey: null,
+                    DisplayName: null,
+                    Provider: "SaaS");
+            }
+
+            // Verificar se usuário pode fazer login
+            if (!user.CanLogin)
+            {
+                var reason = !user.IsActive ? "inativo" :
+                           !user.EmailConfirmed ? "email não confirmado" :
+                           user.IsLocked ? "temporariamente bloqueado" : "não autorizado";
+
+                _logger.LogWarning("Login SaaS negado para {Email}: usuário {Reason}", request.UserOrEmail, reason);
+
+                return new AuthStrategyResult(
+                    Success: false,
+                    ErrorMessage: $"Usuário {reason}",
+                    UserKey: null,
+                    DisplayName: null,
+                    Provider: "SaaS");
+            }
+
+            // Validar senha
+            var isPasswordValid = IsPasswordValid(request.Password!, user.PasswordHash, user.PasswordSalt);
+            if (!isPasswordValid)
+            {
+                _logger.LogWarning("Senha inválida para usuário SaaS {Email}", request.UserOrEmail);
+
+                // Incrementar tentativas de login
+                user.IncrementLoginAttempts();
+                await _userRepository.UpdateAsync(user);
+
+                return new AuthStrategyResult(
+                    Success: false,
+                    ErrorMessage: "Credenciais inválidas",
+                    UserKey: null,
+                    DisplayName: null,
+                    Provider: "SaaS");
+            }
+
+            // Sucesso - atualizar último login
+            user.UpdateLastLogin();
+            await _userRepository.UpdateAsync(user);
+
+            _logger.LogInformation("Autenticação SaaS bem-sucedida para {Email}", user.Email);
+
+            return new AuthStrategyResult(
+                Success: true,
+                ErrorMessage: null,
+                UserKey: user.Email,
+                DisplayName: user.FullName,
+                Provider: "SaaS",
+                TenantId: user.TenantId,
+                AdditionalData: new Dictionary<string, object>
+                {
+                    ["UserId"] = user.Id,
+                    ["Email"] = user.Email,
+                    ["FullName"] = user.FullName,
+                    ["TenantId"] = user.TenantId,
+                    ["EmailConfirmed"] = user.EmailConfirmed,
+                    ["LastLoginAt"] = user.LastLoginAt,
+                    ["User"] = user // Para uso no serviço
+                });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro interno durante autenticação SaaS para {Email}", request.UserOrEmail);
+
+            return new AuthStrategyResult(
+                Success: false,
+                ErrorMessage: "Erro interno do servidor",
+                UserKey: null,
+                DisplayName: null,
+                Provider: "SaaS");
+        }
+    }
+
+    // ========================================
+    // MÉTODOS AUXILIARES PARA AUTENTICAÇÃO SAAS
+    // ========================================
 
     /// <summary>
     /// Cria hash da senha com salt único
@@ -55,23 +180,24 @@ public class SaasAuthStrategy
     public string GenerateToken(SaasUser user)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
-        var key = Encoding.ASCII.GetBytes(_jwtSecret);
+        var key = Encoding.ASCII.GetBytes(GetSigningKey());
 
         var claims = new[]
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new Claim(ClaimTypes.Email, user.Email),
-            new Claim(ClaimTypes.Name, user.Name),
+            new Claim(ClaimTypes.Name, user.FullName),
             new Claim("tenant_id", user.TenantId.ToString()),
-            new Claim("user_type", "saas")
+            new Claim("user_type", "saas"),
+            new Claim("email_confirmed", user.EmailConfirmed.ToString().ToLowerInvariant())
         };
 
         var tokenDescriptor = new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity(claims),
-            Expires = DateTime.UtcNow.AddHours(1),
-            Issuer = _issuer,
-            Audience = _audience,
+            Expires = DateTime.UtcNow.AddMinutes(_authOptions.SaaS.TokenExpirationMinutes),
+            Issuer = _jwtOptions.Issuer,
+            Audience = _jwtOptions.Audience,
             SigningCredentials = new SigningCredentials(
                 new SymmetricSecurityKey(key),
                 SecurityAlgorithms.HmacSha256Signature)
@@ -100,16 +226,16 @@ public class SaasAuthStrategy
         try
         {
             var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(_jwtSecret);
+            var key = Encoding.ASCII.GetBytes(GetSigningKey());
 
             var validationParameters = new TokenValidationParameters
             {
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKey = new SymmetricSecurityKey(key),
                 ValidateIssuer = true,
-                ValidIssuer = _issuer,
+                ValidIssuer = _jwtOptions.Issuer,
                 ValidateAudience = true,
-                ValidAudience = _audience,
+                ValidAudience = _jwtOptions.Audience,
                 ValidateLifetime = true,
                 ClockSkew = TimeSpan.Zero
             };
@@ -121,6 +247,18 @@ public class SaasAuthStrategy
         {
             return null;
         }
+    }
+
+    // ========================================
+    // MÉTODOS PRIVADOS
+    // ========================================
+
+    /// <summary>
+    /// Obtém chave de assinatura - usa SecretKey para desenvolvimento
+    /// </summary>
+    private string GetSigningKey()
+    {
+        return _jwtOptions.SecretKey ?? "RhSensoERP-Super-Secret-Key-For-Development-Only-2024!";
     }
 
     /// <summary>
