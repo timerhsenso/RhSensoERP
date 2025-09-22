@@ -15,6 +15,7 @@ using RhSensoERP.API.Middlewares;
 using RhSensoERP.Application.Common.Interfaces;
 using RhSensoERP.Application.Security.Auth.Validators;
 using RhSensoERP.Core.Abstractions.Interfaces;
+using RhSensoERP.Core.Abstractions.Services;
 using RhSensoERP.Infrastructure.Logging;
 using RhSensoERP.Infrastructure.Persistence;
 using RhSensoERP.Infrastructure.Persistence.Interceptors;
@@ -256,6 +257,10 @@ builder.Services.AddScoped<RhSensoERP.Application.Security.SaaS.ISaasUserService
 builder.Services.AddScoped<RhSensoERP.Infrastructure.Auth.Strategies.SaasAuthStrategy>();
 
 #endregion
+
+
+builder.Services.AddScoped<IEmailService, EmailService>();
+
 
 // =====================================================================================
 // IMPORTANTE: Esta seção deve ser adicionada ANTES da linha "var app = builder.Build();"

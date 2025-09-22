@@ -1,4 +1,5 @@
 ﻿using RhSensoERP.Core.Common;
+using RhSensoERP.Core.Shared;
 
 namespace RhSensoERP.Application.Security.SaaS;
 
@@ -19,7 +20,7 @@ public interface ISaasUserService
     /// </summary>
     /// <param name="request">Dados de registro</param>
     /// <returns>Resultado do registro</returns>
-    Task<Result<SaasRegistrationResponse>> RegisterAsync(SaasRegistrationRequest request);
+    Task<ServiceResult<SaasRegistrationResponse>> RegisterAsync(SaasRegistrationRequest request);
 
     /// <summary>
     /// Renova token de acesso usando refresh token
@@ -27,6 +28,9 @@ public interface ISaasUserService
     /// <param name="request">Refresh token</param>
     /// <returns>Novo token de acesso</returns>
     Task<Result<SaasAuthenticationResponse>> RefreshTokenAsync(RefreshTokenRequest request);
+
+    Task<ServiceResult<ConfirmEmailResponse>> ConfirmEmailAsync(ConfirmEmailRequest request);
+    Task<ServiceResult<object>> ResendConfirmationEmailAsync(ResendConfirmationRequest request);
 }
 
 /// <summary>
@@ -58,18 +62,6 @@ public record SaasRegistrationRequest
     public required string Email { get; init; }
     public required string Password { get; init; }
     public required Guid TenantId { get; init; }
-}
-
-/// <summary>
-/// Response do registro SaaS
-/// </summary>
-public record SaasRegistrationResponse
-{
-    public required Guid Id { get; init; }
-    public required string Name { get; init; }
-    public required string Email { get; init; }
-    public required Guid TenantId { get; init; }
-    public required DateTime CreatedAt { get; init; }
 }
 
 /// <summary>
