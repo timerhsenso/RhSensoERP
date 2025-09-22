@@ -19,5 +19,7 @@
 		<PackageReference Include="System.DirectoryServices.AccountManagement" />
 		<PackageReference Include="System.DirectoryServices" />
 		<PackageReference Include="Serilog.AspNetCore" />
+		<PackageReference Include="MailKit" />
+		<PackageReference Include="MimeKit" />
 	</ItemGroup>
 </Project>
