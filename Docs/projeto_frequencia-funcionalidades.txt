@@ -1,0 +1,453 @@
+Sistema de Frequência (Controle de Ponto) — Especificação Funcional & Técnica
+
+Documento de referência para um sistema de frequência profissional, escalável e robusto, com foco em segurança, conformidade legal, performance e experiência do usuário.
+Stack sugerida: .NET 8 (ASP.NET Core) + SQL Server 2019+ + AdminLTE/Bootstrap (Web) + MAUI/Flutter (Mobile) + Redis/RabbitMQ/Elastic (opcional).
+
+1) Visão Geral
+
+Objetivo: Registrar, calcular e auditar a jornada de trabalho de colaboradores em diferentes modelos (presencial, remoto, híbrido) com alto nível de segurança, integridade e automação.
+
+Público-alvo (personas):
+
+Colaborador: registrar ponto; consultar espelho.
+
+Gestor: ver equipe, aprovar justificativas, acompanhar KPIs.
+
+RH/DP: parametrizar regras, fechar folha, auditar registros.
+
+Admin/Infra: configurar integrações, monitorar saúde do sistema.
+
+Benefícios-chave:
+
+Redução de fraudes (QR efêmero, IP/VPN, geofencing, biometria).
+
+Menos retrabalho: cálculo automático + integração com folha/ERP.
+
+Confiabilidade jurídica (trilha de auditoria completa).
+
+Escalabilidade (concorrência alta; totem + mobile + web).
+
+2) Escopo Funcional
+2.1 Registro de Ponto (Multicanal)
+
+Totem (Kiosk) com QR dinâmico (challenge rotativo) e/ou biometria.
+
+App Mobile (GPS, selfie/biometria, geofencing).
+
+Web (com restrição de IP/VPN).
+
+Home Office: fluxo específico com políticas (geofence/VPN, device binding).
+
+Por que: flexibilidade operacional + segurança antifraude.
+Como: endpoints REST dedicados (/scan, /checkin, /checkout), tokens efêmeros por usuário.
+
+2.2 Gestão de Escalas e Jornadas
+
+Escalas fixas, turnos, revezamentos, plantões.
+
+Tolerâncias (adiantamento/atraso), intervalos, banco de horas.
+
+Calendário de feriados/folgas, regras por sindicato/contrato.
+
+Por que: ponto só faz sentido comparado à escala.
+Como: entidades Escala, Turno, FuncionarioEscala, serviços de cálculo.
+
+2.3 Cálculo & Fechamento
+
+Cálculo de horas (normais, extras, noturnas), atrasos, saldo banco de horas.
+
+Consolidação por período (fechamento mensal/semanal).
+
+Reprocessamento sob demanda e em background (jobs).
+
+Por que: automatiza rotina de RH; reduz erros manuais.
+Como: serviços assíncronos (Quartz/Hangfire), tabelas de consolidação.
+
+2.4 Justificativas & Workflow
+
+Solicitações (esquecimento, médico, viagem).
+
+Fluxo de aprovação (gestor → RH), níveis e SLAs.
+
+Motivos padronizados + anexos.
+
+Por que: trata exceções com rastreabilidade.
+Como: entidade SolicitacaoAjuste, estados (Aberta/Em análise/Aprovada/Rejeitada).
+
+2.5 Relatórios & Dashboard
+
+KPIs em tempo real (presenças, atrasos, extras, ausências).
+
+Espelho de ponto, exportação (PDF/Excel).
+
+Filtros por período, lotação, cargo, time.
+
+Por que: visibilidade operacional e compliance.
+Como: DataTables + Chart.js/Highcharts; endpoints de analytics.
+
+2.6 Integrações
+
+Folha de pagamento (ADP, TOTVS, Senior, SAP, Domínio) via API/arquivos.
+
+SSO/AD/Azure AD (OpenID Connect) e diretório de usuários.
+
+Webhooks (quando fechar período / nova justificativa / alerta SLA).
+
+Por que: elimina tarefas repetitivas; integra no ecossistema.
+Como: ExportService, PayrollAdapter por provedor, IExporterStrategy.
+
+2.7 Auditoria & Compliance
+
+Log completo por batida (IP, user-agent, deviceId, geolocalização, kiosk).
+
+Hash das batidas (cadeia imutável por período) e assinatura opcional.
+
+Trilhas de revisão (quem aprovou, quando, motivo).
+
+Por que: prova de integridade e conformidade.
+Como: AuditLog, AttendanceHashChain (SHA-256 + salt), AuditService.
+
+3) Requisitos Não-Funcionais
+Categoria	Requisitos
+Segurança	MFA opcional; JWT/Cookies; tokens efêmeros; IP/VPN; geofence; rate limiting; CSP; HTTPS/TLS; secrets seguros.
+Escalabilidade	Stateless nos serviços de API; cache Redis; fila (RabbitMQ/Kafka) para cálculos; particionamento por empresa (multi-tenant).
+Disponibilidade	Health checks; readiness/liveness; retry policies (Polly); replicação/backup DB; observabilidade (logs/metrics/tracing).
+Performance	P95 < 300ms para operações de leitura; registro de ponto < 1s end-to-end.
+Confiabilidade	Idempotência nos endpoints de checkin/checkout; transações consistentes.
+Manutenibilidade	Clean Architecture; testes (unit/integration/e2e); documentação viva (Swagger/MD).
+Conformidade (BR)	Alinhar Portarias MTE 1510/2009 e 373/2011 quando houver REP; LGPD (minimização, consentimento, base legal, DPO).
+4) Arquitetura (Visão Macro)
+
+Camadas (Clean Architecture):
+
+Domain/Core: entidades, agregados, value objects, invariantes.
+
+Application: casos de uso, validações (FluentValidation), portas (interfaces).
+
+Infrastructure: EF Core, repositórios, serviços externos (fila, cache, biometria, e-mail, storage).
+
+API/Web: controllers, DTOs, autenticação/autorização, filtros/middlewares, Swagger.
+
+Componentes complementares:
+
+Cache: Redis (token efêmero, sessão de check-in).
+
+Fila: RabbitMQ/Kafka (cálculo em lote, reprocessamento, notificações).
+
+Observabilidade: Serilog + Elastic/Seq; OpenTelemetry (tracing/metrics).
+
+Deploy: Docker/K8s (preferencial) ou IIS no início; CI/CD (GitHub Actions/Azure DevOps).
+
+5) Modelo de Dados (Entidades Principais)
+
+Nomes ilustrativos; adapte à sua convenção (ex.: IdSaas para multi-tenant).
+
+Pessoas & Organização
+
+Funcionario (Id, Nomatric, Nome, Cpf, Email, LotacaoId, CargoId, Ativo, IdSaas)
+
+Lotacao (Id, Nome, EmpresaId, IdSaas)
+
+Empresa (Id, Nome, Cnpj, FusoHorario, IdSaas)
+
+Jornada
+
+Escala (Id, Nome, Tipo, Tolerancias, IdSaas)
+
+Turno (Id, EscalaId, Inicio, Fim, IntervalosJson, NoturnoBool)
+
+FuncionarioEscala (Id, FuncionarioId, EscalaId, VigenciaIni, VigenciaFim)
+
+Ponto & Sessões
+
+Kiosk (Id, Nome, Local, AllowedCidrsJson, RequiresVpn, Ativo)
+
+KioskChallenge (Id, KioskId, Code, CreatedAt, ExpiresAt, Ativo)
+
+CheckInSession (Id, UserId, KioskId, ChallengeCode, PersonalTokenHash, CreatedAt, ExpiresAt, RedeemedAt, Status, Ip, UserAgent, DeviceId)
+
+AttendanceRecord (Id, UserId, KioskId?, Timestamp, Tipo [Entrada/Saída/Intervalo], Fonte [QR/Web/Mobile/Biometria], Latitude?, Longitude?, HashChainPrev, HashSelf)
+
+AttendanceClosure (Id, PeriodoIni, PeriodoFim, EmpresaId, HashRoot, FechadoPorUserId, FechadoEm)
+
+Justificativas
+
+SolicitacaoAjuste (Id, UserId, Periodo, Tipo, Motivo, Anexos, Estado, CriadoEm)
+
+Aprovacao (Id, SolicitacaoId, AprovadorId, Decisao, Observacao, Data)
+
+Config & Integrações
+
+ParametroFolha (Id, EmpresaId, Provedor, ConfigJson)
+
+ExportacaoFolha (Id, Periodo, Provedor, Status, ArquivoPath/Url)
+
+6) Endpoints (Exemplos REST)
+
+Autenticação
+
+POST /api/auth/login → JWT/Cookie
+
+POST /api/auth/mfa/verify
+
+POST /api/auth/logout
+
+Totem & Registro
+
+GET /api/kiosk/{kioskId}/qr → PNG/URL com challenge rotativo
+
+GET /api/scan?kiosk=K1&c=CHALLENGE (Auth obrigatória) → cria CheckInSession + personalToken (TTL 30–60s)
+
+POST /api/checkin { sessionId, personalToken, lat?, lon?, deviceId? }
+
+POST /api/checkout { sessionId, personalToken }
+
+POST /api/checkin/home (fluxo HO com políticas específicas)
+
+Jornadas & Cálculo
+
+GET /api/escala/{id} / POST /api/escala
+
+POST /api/attendance/recalc { periodo, empresaId }
+
+POST /api/attendance/closure { periodo }
+
+Justificativas & Aprovação
+
+POST /api/ajustes
+
+POST /api/ajustes/{id}/aprovar
+
+POST /api/ajustes/{id}/rejeitar
+
+Relatórios & Dashboard
+
+GET /api/reports/espelho?userId&periodo=...
+
+GET /api/reports/kpi?empresaId&periodo=...
+
+GET /api/reports/export?tipo=excel|pdf&...
+
+Admin/Infra
+
+GET /health / GET /health/ready
+
+GET /metrics (Prometheus/OpenTelemetry)
+
+7) Segurança (Camadas)
+
+Identidade: ASP.NET Identity/Keycloak/AAD + políticas por papel/perfil.
+
+MFA opcional: TOTP (Authy/MS Authenticator) ou e-mail/SMS para sensíveis.
+
+Tokens efêmeros: personalToken por sessão (single-use, TTL curto, atrelado ao usuário + kiosk/challenge).
+
+Antifraude: validação IP (CIDR), VPN obrigatória, geofence, device binding, selfie/biometria (mobile).
+
+Rate limiting: por usuário, IP e endpoint sensível (registro, login, scan).
+
+Criptografia: TLS; hashing (PBKDF2/BCrypt) para senhas; SHA-256 + salt em trilhas de ponto.
+
+LGPD: minimização de dados; consentimento/legítimo interesse; retenção; anonimização quando aplicável.
+
+8) Fluxo QR Seguro (Totem + Token Efêmero)
+
+Resumo: O QR do totem não contém o passe de ponto. Ele só leva ao challenge. Após o scan, o servidor cria uma CheckInSession e entrega um personalToken de uso único e TTL curto. Foto do QR é inútil.
+
+Sequência:
+
+Totem exibe QR -> /scan?kiosk=K1&c=CHALLENGE_ABC (challenge troca a cada 15–30s via SignalR).
+
+Usuário escaneia (logado) → GET /scan valida challenge e retorna { sessionId, personalToken }.
+
+App chama POST /checkin com token → backend valida (token, TTL, IP/VPN/geo) → grava AttendanceRecord → redeem da sessão.
+
+Concorrência: múltiplos usuários simultâneos criam sessões independentes, sem conflito.
+
+9) Experiência do Usuário
+
+Colaborador (Web/App):
+
+“Bater ponto” (1 clique), histórico diário, espelho do período, status da escala, saldo banco de horas (se aplicável).
+
+Gestor:
+
+Dashboard do time, pendências de aprovação, alertas (atrasos, faltas), exportações rápidas.
+
+RH/DP:
+
+Parametrizações, encerramentos, integrações, auditoria completa, reprocessamentos guiados.
+
+Acessibilidade:
+
+Atalhos, contraste, responsividade, i18n.
+
+10) Observabilidade & Operação
+
+Logs estruturados (Serilog): correlação por TraceId; níveis por ambiente.
+
+Métricas: tempo de resposta, taxa de erro, throughput de checkins, fila de cálculos, jobs pendentes.
+
+Tracing distribuído: OpenTelemetry → Jaeger/Zipkin.
+
+Alertas: SLA de APIs, falhas de exportação, fila congestionada, job com erro.
+
+Health Checks: DB, cache, fila, storage, dependências externas.
+
+11) Testes & Qualidade
+
+Unitários: casos de uso (checkin, cálculo, validações).
+
+Integração: repositórios EF, adapters de folha, fila/cache.
+
+Contrato: Swagger/OpenAPI + testes de contrato (Pact).
+
+E2E (Cypress/Playwright): fluxos-chave (totem→scan→checkin; justificativa→aprovação).
+
+Carga & Stress: simular picos (início de turno).
+
+Segurança: teste de rate limit, replay, idempotência, geofence bypass.
+
+12) Roadmap
+
+MVP (0–3 meses)
+
+Registro de ponto (Totem QR + Web) com tokens efêmeros.
+
+Escalas básicas, dashboard simples, espelho de ponto, export CSV/Excel.
+
+Auditoria mínima, health checks, logs estruturados.
+
+V2 (3–6 meses)
+
+Mobile com GPS + selfie; workflow de justificativas; banco de horas.
+
+Cálculo automático (extra/noturno/atraso); reprocessamentos; integrações iniciais de folha.
+
+Painéis de RH/gestor + relatórios avançados.
+
+V3 (6–12 meses)
+
+Biometria facial/digital (SDK/fornecedor).
+
+Hash chain por período + assinatura; auditoria avançada.
+
+Multi-empresa (SaaS) completo; billing; SSO corporativo.
+
+13) KPIs & SLAs
+
+Disponibilidade API: ≥ 99,9% (mês).
+
+Tempo médio de registro (E2E): ≤ 1s (P95).
+
+Taxa de erro de checkin: ≤ 0,1%.
+
+Tempo de reprocessamento de período: ≤ 15 min / 1k colaboradores.
+
+Aprovações dentro do SLA: ≥ 95% em 48h.
+
+14) Riscos & Mitigações
+Risco	Mitigação
+Reuso de QR (fraude)	Token efêmero por usuário + TTL curto + políticas IP/VPN/geo.
+Picos simultâneos (início de turno)	Scale-out, cache, idempotência, fila assíncrona.
+Erros de cálculo complexos	Testes abrangentes + regras por sindicato parametrizáveis + feature flags.
+Integrações frágeis	Adapters por provedor + filas + retries + DLQ.
+Privacidade (LGPD)	Minimização/cofificação de dados; base legal; retenção; DPO.
+15) Padrões & Boas Práticas
+
+Clean Architecture (separação de domínios e infra).
+
+DTOs & Validators (FluentValidation).
+
+Idempotency Keys em checkin/checkout.
+
+Feature Flags para ativar módulos (ex.: biometria).
+
+Infra como código (Terraform/Bicep) e CI/CD.
+
+Documentação viva (Swagger, README por módulo).
+
+16) Exemplo de Fluxo — Check-in Totem (Pseudocódigo)
+// GET /scan?kiosk=K1&c=CH
+[Authorize]
+public async Task<IResult> Scan(string kiosk, string c, IUserContext user, IChallengeService svc)
+{
+    var ok = await svc.ValidateChallengeAsync(kiosk, c);
+    if (!ok) return Results.BadRequest("Challenge inválido/expirado.");
+
+    var session = await svc.CreateSessionAsync(user.Id, kiosk, c); // salva PersonalTokenHash (single-use)
+    return Results.Ok(new { session.Id, session.PersonalToken });  // token TTL 60s
+}
+
+// POST /checkin
+public async Task<IResult> CheckIn(CheckInDto dto, IUserContext user, IPolicyService pol, IAttendanceService att)
+{
+    var sess = await att.GetSessionAsync(dto.SessionId);
+    if (!att.ValidatePersonalToken(sess, dto.PersonalToken)) return Results.Unauthorized();
+
+    if (!await pol.ValidateNetworkAsync(user, HttpContext)) return Results.Forbid();
+    if (!await pol.ValidateGeoAsync(user, dto.Lat, dto.Lon)) return Results.Forbid();
+    if (!await pol.RateLimitAsync(user.Id)) return Results.StatusCode(429);
+
+    var record = await att.RegisterAsync(user.Id, sess.KioskId, Tipo.Entrada, dto.Lat, dto.Lon);
+    await att.RedeemSessionAsync(sess.Id);
+
+    return Results.Ok(new { record.Id, record.Timestamp, msg = "Ponto registrado." });
+}
+
+17) Tabelas (SQL – exemplo resumido)
+CREATE TABLE AttendanceRecord (
+  Id UNIQUEIDENTIFIER PRIMARY KEY,
+  UserId UNIQUEIDENTIFIER NOT NULL,
+  KioskId UNIQUEIDENTIFIER NULL,
+  Timestamp DATETIME2 NOT NULL,
+  Tipo TINYINT NOT NULL,              -- 0=Entrada,1=Saida,2=Intervalo
+  Fonte TINYINT NOT NULL,             -- 0=QR,1=Web,2=Mobile,3=Biometria
+  Latitude DECIMAL(9,6) NULL,
+  Longitude DECIMAL(9,6) NULL,
+  HashChainPrev VARBINARY(64) NULL,
+  HashSelf VARBINARY(64) NOT NULL,
+  CreatedAt DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME()
+);
+
+18) Configurações & Políticas (exemplos)
+{
+  "Attendance": {
+    "TokenTtlSeconds": 60,
+    "ScanChallengeTtlSeconds": 30,
+    "RateLimit": { "WindowSeconds": 120, "MaxRequests": 1 },
+    "GeoFence": { "Enabled": true, "RadiusMeters": 200 },
+    "Network": {
+      "RequireVpn": true,
+      "AllowedCidrs": ["10.0.0.0/8","192.168.0.0/16"]
+    }
+  }
+}
+
+19) Glossário
+
+Kiosk/Totem: Ponto físico (TV/Tablet/Terminal) que exibe o QR/challenge.
+
+Challenge: Código de curta duração exibido pelo totem.
+
+PersonalToken: Token efêmero, único por usuário/sessão, usado para registrar o ponto.
+
+Hash Chain: Encadeamento criptográfico para integridade dos registros no período.
+
+20) Próximos Passos (para iniciar o projeto)
+
+Criar solução base (Clean Architecture) com módulos Domain, Application, Infrastructure, API.
+
+Entidades mínimas: Funcionario, Escala, AttendanceRecord, Kiosk, CheckInSession.
+
+Autenticação (Identity/SSO) + endpoints scan/checkin/checkout.
+
+Totem Web com QRCoder + SignalR (rotação do challenge).
+
+Observabilidade (Serilog + health checks).
+
+Testes unitários para checkin (token único, TTL, rate limit).
+
+MVP de dashboard e espelho de ponto.
+
+Este .md pode ser versionado no repositório (/docs/spec-frequencia.md) e servir de base para issues/epics no seu board. Se quiser, eu já converto isso em histórias de usuário + critérios de aceite e uma checklist de tarefas para dar start no desenvolvimento.
