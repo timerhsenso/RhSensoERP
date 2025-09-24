@@ -3,6 +3,11 @@ using RhSensoERP.Core.Security.Entities;
 using RhSensoERP.Infrastructure.Persistence.Configurations.Security;
 using RhSensoERP.Infrastructure.Persistence.Interceptors;
 
+// >>> ADIÇÕES RHU
+using RhSensoERP.Core.RHU.Entities;
+using RhSensoERP.Infrastructure.Persistence.Configurations.RHU;
+// <<< ADIÇÕES RHU
+
 namespace RhSensoERP.Infrastructure.Persistence;
 
 /// <summary>
@@ -22,7 +27,7 @@ public class AppDbContext : DbContext
     }
 
     // ========================================
-    // ENTIDADES LEGACY (Sistema OnPrem)
+    // ENTIDADES LEGACY (Sistema OnPrem) - SECURITY
     // ========================================
 
     /// <summary>
@@ -59,6 +64,49 @@ public class AppDbContext : DbContext
     /// Permissões grupo-função (tabela hbrh1)
     /// </summary>
     public DbSet<GrupoFuncao> GruposFuncoes => Set<GrupoFuncao>();
+
+    // ========================================
+    // ENTIDADES LEGACY (Sistema OnPrem) - RHU
+    // ========================================
+
+    /// <summary>Empresas (contem as empresas)</summary>
+    public DbSet<Empresa> Empresas => Set<Empresa>();
+
+    /// <summary>Filiais (contem as filiais)</summary>
+    public DbSet<Filial> Filiais => Set<Filial>();
+
+    /// <summary>Situações (contem as situações cadastrais)</summary>
+    public DbSet<Situacao> Situacoes => Set<Situacao>();
+
+    /// <summary>Motivos de afastamento (contem os motivos de afastamento)</summary>
+    public DbSet<MotivoAfastamento> MotivosAfastamento => Set<MotivoAfastamento>();
+
+    /// <summary>Cargos (contem os cargos)</summary>
+    public DbSet<Cargo> Cargos => Set<Cargo>();
+
+    /// <summary>Municípios (contem os municípios)</summary>
+    public DbSet<Municipio> Municipios => Set<Municipio>();
+
+    /// <summary>Calendário Municipal (contem os feriados municipais)</summary>
+    public DbSet<CalendarioMunicipal> CalendariosMunicipais => Set<CalendarioMunicipal>();
+
+    /// <summary>Afastamentos (contem os afastamentos de colaboradores)</summary>
+    public DbSet<Afastamento> Afastamentos => Set<Afastamento>();
+
+    /// <summary>Programação de Férias (contem as programações de férias)</summary>
+    public DbSet<FeriasProgramacao> FeriasProgramacoes => Set<FeriasProgramacao>();
+
+    /// <summary>Ficha Financeira (contem os lançamentos da ficha financeira)</summary>
+    public DbSet<FichaFinanceira> FichasFinanceiras => Set<FichaFinanceira>();
+
+    /// <summary>Lançamentos Calculados (contem os lançamentos calculados)</summary>
+    public DbSet<LancamentoCalculado> LancamentosCalculados => Set<LancamentoCalculado>();
+
+    /// <summary>Verbas (contem as verbas/contas)</summary>
+    public DbSet<Verba> Verbas => Set<Verba>();
+
+    /// <summary>Centros de Custo (contem os centros de custo)</summary>
+    public DbSet<CentroCusto> CentrosCusto => Set<CentroCusto>();
 
     // ========================================
     // ENTIDADES SAAS (Sistema Multi-tenant)
@@ -107,9 +155,8 @@ public class AppDbContext : DbContext
         base.OnModelCreating(modelBuilder);
 
         // ========================================
-        // CONFIGURAÇÕES LEGACY
+        // CONFIGURAÇÕES LEGACY - SECURITY
         // ========================================
-
         modelBuilder.ApplyConfiguration(new UserConfig());
         modelBuilder.ApplyConfiguration(new SistemaConfig());
         modelBuilder.ApplyConfiguration(new FuncaoConfig());
@@ -119,9 +166,26 @@ public class AppDbContext : DbContext
         modelBuilder.ApplyConfiguration(new GrupoFuncaoConfig());
 
         // ========================================
+        // CONFIGURAÇÕES LEGACY - RHU
+        // (Certifique-se de ter as classes *Configuration* no namespace RHU)
+        // ========================================
+        modelBuilder.ApplyConfiguration(new EmpresaConfiguration());
+        modelBuilder.ApplyConfiguration(new FilialConfiguration());
+        modelBuilder.ApplyConfiguration(new SituacaoConfiguration());
+        modelBuilder.ApplyConfiguration(new MotivoAfastamentoConfiguration());
+        modelBuilder.ApplyConfiguration(new CargoConfiguration());
+        modelBuilder.ApplyConfiguration(new MunicipioConfiguration());
+        modelBuilder.ApplyConfiguration(new CalendarioMunicipalConfiguration());
+        modelBuilder.ApplyConfiguration(new AfastamentoConfiguration());
+        modelBuilder.ApplyConfiguration(new FeriasProgramacaoConfiguration());
+        modelBuilder.ApplyConfiguration(new FichaFinanceiraConfiguration());
+        modelBuilder.ApplyConfiguration(new LancamentoCalculadoConfiguration());
+        modelBuilder.ApplyConfiguration(new VerbaConfiguration());
+        modelBuilder.ApplyConfiguration(new CentroCustoConfiguration());
+
+        // ========================================
         // CONFIGURAÇÕES SAAS
         // ========================================
-
         modelBuilder.ApplyConfiguration(new SaasTenantConfig());
         modelBuilder.ApplyConfiguration(new SaasUserConfig());
         modelBuilder.ApplyConfiguration(new SaasInvitationConfig());
@@ -136,6 +200,12 @@ public class AppDbContext : DbContext
         // Filtros para entidades legacy ativas
         modelBuilder.Entity<User>().HasQueryFilter(x => x.FlAtivo == 'S');
         modelBuilder.Entity<Sistema>().HasQueryFilter(x => x.Ativo);
+
+        // OBS: Caso os warnings sobre filtros e navegabilidades continuem
+        // (Sistema sendo lado requerido em relações com Funcao/GrupoDeUsuario),
+        // avalie:
+        // 1) Tornar a navegação opcional, OU
+        // 2) Definir filtros compatíveis nos dois lados da relação.
     }
 
     // ========================================

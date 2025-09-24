@@ -368,12 +368,12 @@ app.MapControllers();
 // INICIALIZAÇÃO DA APLICAÇÃO
 // --------------------------------------------------------------------------------------
 
-/// <summary>
-/// Inicia a aplicação de forma bloqueante
-/// API estará disponível em:
-/// - HTTPS: https://localhost:57148
-/// - HTTP: http://localhost:57149
-/// </summary>
+/*
+ Inicia a aplicação de forma bloqueante
+ API estará disponível em:
+ - HTTPS: https://localhost:57148
+ - HTTP: http://localhost:57149
+*/
 app.Run();
 
 // ======================================================================================

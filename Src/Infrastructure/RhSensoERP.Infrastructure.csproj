@@ -22,4 +22,8 @@
 		<PackageReference Include="MailKit" />
 		<PackageReference Include="MimeKit" />
 	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="Persistence\Configurations\FRE\" />
+	  <Folder Include="Persistence\Configurations\RHU\" />
+	</ItemGroup>
 </Project>
