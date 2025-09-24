@@ -1,28 +1,31 @@
-using RhSensoERP.Core.Abstractions.Entities;
+using System;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
-namespace RhSensoERP.Core.FRE.Entities
+namespace RhSensoERP.Core.FRE.Entities;
+
+/// <summary>Tabela de jornadas por ano (qtd de horas por mês). Tabela: jtpa1</summary>
+[Table("jtpa1")]
+public class Jtpa1
 {
-    /// <summary>
-    /// Tabela <b>jtpa1</b> — contém a <b>quantidade de horas por mês</b> por tipo de jornada/turma.
-    /// </summary>
-    public class JornadaTipoAno : BaseEntity
-    {
-        public int CdEmpresa { get; set; }
-        public int CdFilial { get; set; }
-        public string TpJornada { get; set; } = string.Empty;
-        public string AaJornada { get; set; } = string.Empty; // char(4)
-        public double? Janeiro { get; set; }
-        public double? Fevereiro { get; set; }
-        public double? Marco { get; set; }
-        public double? Abril { get; set; }
-        public double? Maio { get; set; }
-        public double? Junho { get; set; }
-        public double? Julho { get; set; }
-        public double? Agosto { get; set; }
-        public double? Setembro { get; set; }
-        public double? Outubro { get; set; }
-        public double? Novembro { get; set; }
-        public double? Dezembro { get; set; }
-        public System.Guid? IdFilial { get; set; }
-    }
+    [Column("cdempresa")] public int CdEmpresa { get; set; }
+    [Column("cdfilial")] public int CdFilial { get; set; }
+    [Column("tpjornada"), StringLength(1)] public string TpJornada { get; set; } = string.Empty;
+    [Column("aajornada"), StringLength(4)] public string AaJornada { get; set; } = string.Empty;
+
+    [Column("janeiro")] public double? Janeiro { get; set; }
+    [Column("fevereiro")] public double? Fevereiro { get; set; }
+    [Column("marco")] public double? Marco { get; set; }
+    [Column("abril")] public double? Abril { get; set; }
+    [Column("maio")] public double? Maio { get; set; }
+    [Column("junho")] public double? Junho { get; set; }
+    [Column("julho")] public double? Julho { get; set; }
+    [Column("agosto")] public double? Agosto { get; set; }
+    [Column("setembro")] public double? Setembro { get; set; }
+    [Column("outubro")] public double? Outubro { get; set; }
+    [Column("novembro")] public double? Novembro { get; set; }
+    [Column("dezembro")] public double? Dezembro { get; set; }
+
+    [Column("id")] public Guid Id { get; set; }
+    [Column("idfilial")] public Guid? IdFilial { get; set; }
 }

@@ -1,18 +1,16 @@
-using RhSensoERP.Core.Abstractions.Entities;
+using System;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
-namespace RhSensoERP.Core.FRE.Entities
+namespace RhSensoERP.Core.FRE.Entities;
+
+/// <summary>Períodos de compensação vinculados ao cabeçalho. Tabela: COMP2</summary>
+[Table("COMP2")]
+public class Comp2
 {
-    /// <summary>
-    /// Tabela <b>COMP2</b> — contém as <b>janelas/intervalos</b> de compensação (detalhe da COMP1).
-    /// </summary>
-    public class CompensacaoJanela : BaseEntity
-    {
-        public int IdComp { get; set; }             // FK Compensacao
-        public System.DateTime Inicio { get; set; } // PK composta
-        public System.DateTime Fim { get; set; }
-        public int TpOcorr { get; set; }
-        public string CdMotOc { get; set; } = string.Empty;   // char(4)
-
-        public virtual Compensacao Compensacao { get; set; } = null!;
-    }
+    [Column("IDCOMP")] public int IdComp { get; set; }
+    [Column("INICIO")] public DateTime Inicio { get; set; }
+    [Column("FIM")] public DateTime Fim { get; set; }
+    [Column("TPOCORR")] public int TpOcorr { get; set; }
+    [Column("CDMOTOC"), StringLength(4)] public string CdMotoc { get; set; } = string.Empty;
 }

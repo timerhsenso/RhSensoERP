@@ -1,19 +1,35 @@
-using RhSensoERP.Core.Abstractions.Entities;
+using System;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
-namespace RhSensoERP.Core.FRE.Entities
+namespace RhSensoERP.Core.FRE.Entities;
+
+/// <summary>
+/// Vincula motivos de ocorrência às filiais (escopo por empresa/filial).
+/// Tabela: mfre2
+/// </summary>
+[Table("mfre2")]
+public class Mfre2
 {
-    /// <summary>
-    /// Tabela <b>mfre2</b> — contém o <b>escopo por empresa/filial</b> dos motivos de ocorrência (mfre1).
-    /// </summary>
-    public class MotivoOcorrenciaFrequenciaEmpresa : BaseEntity
-    {
-        public string CdMotOc { get; set; } = string.Empty;
-        public int TpOcorr { get; set; }
-        public int CdEmpresa { get; set; }
-        public int CdFilial { get; set; }
-        public System.Guid? IdFilial { get; set; }
-        public System.Guid? IdMotivo { get; set; }
+    [Key]
+    [Column("id")]
+    public Guid Id { get; set; }
 
-        public virtual MotivoOcorrenciaFrequencia Motivo { get; set; } = null!;
-    }
+    [Column("cdmotoc"), StringLength(4)]
+    public string CdMotoc { get; set; } = string.Empty;
+
+    [Column("tpocorr")]
+    public int TpOcorr { get; set; }
+
+    [Column("cdempresa")]
+    public int CdEmpresa { get; set; }
+
+    [Column("cdfilial")]
+    public int CdFilial { get; set; }
+
+    [Column("idfilial")]
+    public Guid? IdFilial { get; set; }
+
+    [Column("idmotivosdeocorrenciafrequencia")]
+    public Guid? IdMotivosDeOcorrenciaFrequencia { get; set; }
 }

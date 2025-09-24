@@ -1,55 +1,54 @@
-using RhSensoERP.Core.Abstractions.Entities;
+using System;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
-namespace RhSensoERP.Core.FRE.Entities
+namespace RhSensoERP.Core.FRE.Entities;
+
+/// <summary>Lançamentos de frequência (ocorrências) diárias. Tabela: freq1</summary>
+[Table("freq1")]
+public class Freq1
 {
-    /// <summary>
-    /// Tabela <b>freq1</b> — contém as <b>ocorrências de frequência</b> (faltas, atrasos, HE, abonos).
-    /// PK composta: NoMatric, CdEmpresa, CdFilial, DtOcorr, HhIniOcor, TpOcorr.
-    /// </summary>
-    public class Frequencia : BaseEntity
-    {
-        public string NoMatric { get; set; } = string.Empty;
-        public int CdEmpresa { get; set; }
-        public int CdFilial { get; set; }
-        public System.DateTime DtOcorr { get; set; }
-        public int TpOcorr { get; set; }
-        public string CdMotOc { get; set; } = string.Empty;
-        public System.DateTime HhIniOcor { get; set; }
-        public System.DateTime HhFimOcor { get; set; }
-        public System.DateTime DtFrequen { get; set; }
-        public int? QtHorOcor { get; set; }
-        public int? QtAbonada { get; set; }
-        public int? FlAprovHe { get; set; }
-        public int? FlExporta { get; set; }
-        public int? QtAdicion { get; set; }
-        public string? TxOcorr { get; set; }
-        public string? CdCcCusRes { get; set; }
-        public string? CdUsuario { get; set; }
-        public System.DateTime? DtUltMov { get; set; }
-        public System.DateTime? DtTroca { get; set; }
-        public string? NoMatTroc { get; set; }
-        public string? CdUsAprHe { get; set; }
-        public string? NoProcesso { get; set; }
-        public int Importado { get; set; }
-        public int ContraPesoTroca { get; set; }
-        public int FaltouDia { get; set; }
-        public int FlBancoHoras { get; set; }
-        public int QtMinDescFds { get; set; }
-        public string? CdMotOcDefault { get; set; }
-        public int? IdBancoHoras { get; set; }
-        public int FlHePj { get; set; }
-        public System.DateTime? HhIniTroca { get; set; }
-        public string? CdUsuarioAceito { get; set; }
-        public string? CdUsuarioAutoriza { get; set; }
-        public string? CodJustific { get; set; }
-        public System.DateTime? DtAceito { get; set; }
-        public System.DateTime? DtAutoriza { get; set; }
-        public int? FlAceito { get; set; }
-        public int? FlAlmoco { get; set; }
-        public int? FlAutorizado { get; set; }
-        public System.Guid? IdMotivosDeOcorrenciaFrequencia { get; set; }
-
-        /// <summary> Navegação: motivo/ocorrência. </summary>
-        public virtual MotivoOcorrenciaFrequencia Motivo { get; set; } = null!;
-    }
+    [Column("nomatric"), StringLength(8)] public string NoMatric { get; set; } = string.Empty;
+    [Column("cdempresa")] public int CdEmpresa { get; set; }
+    [Column("cdfilial")] public int CdFilial { get; set; }
+    [Column("dtocorr")] public DateTime DtOcorr { get; set; }
+    [Column("tpocorr")] public int TpOcorr { get; set; }
+    [Column("cdmotoc"), StringLength(4)] public string CdMotoc { get; set; } = string.Empty;
+    [Column("hhiniocor")] public DateTime HhIniOcor { get; set; }
+    [Column("hhfimocor")] public DateTime HhFimOcor { get; set; }
+    [Column("dtfrequen")] public DateTime DtFrequen { get; set; }
+    [Column("qthorocor")] public int? QtHorOcor { get; set; }
+    [Column("qtabonada")] public int? QtAbonada { get; set; }
+    [Column("flaprovhe")] public int? FlAprovHe { get; set; }
+    [Column("flexporta")] public int? FlExporta { get; set; }
+    [Column("qtadicion")] public int? QtAdicion { get; set; }
+    [Column("txocorr"), StringLength(80)] public string? TxOcorr { get; set; }
+    [Column("cdccusres"), StringLength(5)] public string? CdCcUsRes { get; set; }
+    [Column("cdusuario"), StringLength(20)] public string? CdUsuario { get; set; }
+    [Column("dtultmov")] public DateTime? DtUltMov { get; set; }
+    [Column("dttroca")] public DateTime? DtTroca { get; set; }
+    [Column("nomattroc"), StringLength(8)] public string? NoMatTroc { get; set; }
+    [Column("cdusaprhe"), StringLength(20)] public string? CdUsAprHe { get; set; }
+    [Column("noprocesso"), StringLength(6)] public string? NoProcesso { get; set; }
+    [Column("IMPORTADO")] public int Importado { get; set; }
+    [Column("CONTRAPESOTROCA")] public int ContraPesoTroca { get; set; }
+    [Column("FALTOUDIA")] public int FaltouDia { get; set; }
+    [Column("FLBANCOHORAS")] public int FlBancoHoras { get; set; }
+    [Column("QTMINDESCFDS")] public int QtMinDescFds { get; set; }
+    [Column("HHINIOCOR_OLD"), StringLength(4)] public string? HhIniOcorOld { get; set; }
+    [Column("HHFIMOCOR_OLD"), StringLength(4)] public string? HhFimOcorOld { get; set; }
+    [Column("CDMOTOCDEFAULT"), StringLength(4)] public string? CdMotocDefault { get; set; }
+    [Column("IDBANCOHORAS")] public int? IdBancoHoras { get; set; }
+    [Column("FLHEPJ")] public int FlHePj { get; set; }
+    [Column("HHINITROCA")] public DateTime? HhIniTroca { get; set; }
+    [Column("id")] public Guid Id { get; set; }
+    [Column("cdusuarioaceito"), StringLength(20)] public string? CdUsuarioAceito { get; set; }
+    [Column("cdusuarioautoriza"), StringLength(30)] public string? CdUsuarioAutoriza { get; set; }
+    [Column("cod_justific"), StringLength(4)] public string? CodJustific { get; set; }
+    [Column("dtaceito")] public DateTime? DtAceito { get; set; }
+    [Column("DTautoriza")] public DateTime? DtAutoriza { get; set; }
+    [Column("flaceito")] public int? FlAceito { get; set; }
+    [Column("flalmoco")] public int? FlAlmoco { get; set; }
+    [Column("flautorizado")] public int? FlAutorizado { get; set; }
+    [Column("idmotivosdeocorrenciafrequencia")] public Guid? IdMotivosDeOcorrenciaFrequencia { get; set; }
 }

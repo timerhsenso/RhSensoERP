@@ -356,10 +356,10 @@ if (app.Environment.IsDevelopment())
 /// </summary>
 app.MapHealthChecks("/health").AllowAnonymous();
 
-/// <summary>
+/*
 /// Mapeamento automático de todos os controllers
 /// Inclui controllers de Auth (/api/v1/auth/*) e Security (/api/v1/security/*)
-/// </summary>
+*/
 app.MapControllers();
 
 #endregion

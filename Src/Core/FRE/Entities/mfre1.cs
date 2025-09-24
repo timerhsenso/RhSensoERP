@@ -1,30 +1,27 @@
-using RhSensoERP.Core.Abstractions.Entities;
-using System.Collections.Generic;
+using System;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
-namespace RhSensoERP.Core.FRE.Entities
+namespace RhSensoERP.Core.FRE.Entities;
+
+/// <summary>Motivos de ocorrência de frequência. Tabela: mfre1</summary>
+[Table("mfre1")]
+public class Mfre1
 {
-    /// <summary>
-    /// Tabela <b>mfre1</b> — contém os <b>motivos de ocorrência</b> de frequência (faltas, atrasos, etc.).
-    /// PK real na origem: TpOcorr + CdMotOc.
-    /// </summary>
-    public class MotivoOcorrenciaFrequencia : BaseEntity
-    {
-        public string CdMotOc { get; set; } = string.Empty; // char(4)
-        public int TpOcorr { get; set; }                    // int
-        public string? DcMotOc { get; set; }               // varchar(40)
-        public int? FlMovimen { get; set; }
-        public string? CdConta { get; set; }               // char(4)
-        public int? FlTpFal { get; set; }
-        public int? FlExtra { get; set; }
-        public int? FlFlAnj { get; set; }
-        public int? FlTroca { get; set; }
-        public int? FlRegraHe { get; set; }
-        public int FlBancoHoras { get; set; }
-        public int? TpOcorrLink { get; set; }
-        public string? CdMotOcLink { get; set; }
-        public System.Guid? IdMotivoPai { get; set; }
-        public System.Guid? IdVerba { get; set; }
-
-        public virtual ICollection<MotivoOcorrenciaFrequenciaEmpresa> EscoposEmpresa { get; set; } = new List<MotivoOcorrenciaFrequenciaEmpresa>();
-    }
+    [Column("cdmotoc"), StringLength(4)] public string CdMotoc { get; set; } = string.Empty;
+    [Column("tpocorr")] public int TpOcorr { get; set; }
+    [Column("dcmotoc"), StringLength(40)] public string? DcMotoc { get; set; }
+    [Column("flmovimen")] public int? FlMovimen { get; set; }
+    [Column("cdconta"), StringLength(4)] public string? CdConta { get; set; }
+    [Column("fltpfal")] public int? FlTpFal { get; set; }
+    [Column("flextra")] public int? FlExtra { get; set; }
+    [Column("flflanj")] public int? FlFlAnj { get; set; }
+    [Column("FLTROCA")] public int? FlTroca { get; set; }
+    [Column("FLREGRAHE")] public int? FlRegraHe { get; set; }
+    [Column("FLBANCOHORAS")] public int FlBancoHoras { get; set; }
+    [Column("TPOCORRLINK")] public int? TpOcorrLink { get; set; }
+    [Column("CDMOTOCLINK"), StringLength(4)] public string? CdMotocLink { get; set; }
+    [Column("id")] public Guid Id { get; set; }
+    [Column("idmotivosdeocorrenciafrequenciapai")] public Guid? IdMotivosDeOcorrenciaFrequenciaPai { get; set; }
+    [Column("idverba")] public Guid? IdVerba { get; set; }
 }

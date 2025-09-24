@@ -1,23 +1,41 @@
-using RhSensoERP.Core.Abstractions.Entities;
-using System.Collections.Generic;
+using System;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
-namespace RhSensoERP.Core.FRE.Entities
+namespace RhSensoERP.Core.FRE.Entities;
+
+/// <summary>
+/// Cabeçalho de compensação de horas.
+/// Tabela: COMP1
+/// </summary>
+[Table("COMP1")]
+public class Comp1
 {
-    /// <summary>
-    /// Tabela <b>COMP1</b> — contém a <b>configuração de compensações</b> (escopo).
-    /// </summary>
-    public class Compensacao : BaseEntity
-    {
-        public int Id { get; set; }  // PK
-        public int? CdEmpresa { get; set; }
-        public int? CdFilial { get; set; }
-        public string? CdCcusto { get; set; }       // char(5)
-        public string Motivo { get; set; } = string.Empty; // varchar(150)
-        public string? TpJornada { get; set; }      // char(1)
-        public string? CdTurma { get; set; }        // char(2)
-        public string? CdCargHor { get; set; }      // char(2)
-        public System.DateTime DtUltAlt { get; set; }
+    [Key]
+    [Column("ID")]
+    public int Id { get; set; }
 
-        public virtual ICollection<CompensacaoJanela> Janelas { get; set; } = new List<CompensacaoJanela>();
-    }
+    [Column("CDEMPRESA")]
+    public int? CdEmpresa { get; set; }
+
+    [Column("CDFILIAL")]
+    public int? CdFilial { get; set; }
+
+    [Column("CDCCUSTO"), StringLength(5)]
+    public string? CdCcusto { get; set; }
+
+    [Column("MOTIVO"), StringLength(150)]
+    public string Motivo { get; set; } = string.Empty;
+
+    [Column("TPJORNADA"), StringLength(1)]
+    public string? TpJornada { get; set; }
+
+    [Column("CDTURMA"), StringLength(2)]
+    public string? CdTurma { get; set; }
+
+    [Column("CDCARGHOR"), StringLength(2)]
+    public string? CdCargHor { get; set; }
+
+    [Column("DTULTALT")]
+    public DateTime DtUltAlt { get; set; }
 }

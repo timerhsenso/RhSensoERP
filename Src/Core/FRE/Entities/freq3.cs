@@ -1,16 +1,32 @@
-using RhSensoERP.Core.Abstractions.Entities;
+using System;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
-namespace RhSensoERP.Core.FRE.Entities
+namespace RhSensoERP.Core.FRE.Entities;
+
+/// <summary>
+/// Controle de processamento diário de frequência por filial.
+/// Tabela: freq3
+/// </summary>
+[Table("freq3")]
+public class Freq3
 {
-    /// <summary>
-    /// Tabela <b>freq3</b> — contém o <b>resumo de fechamento</b> da frequência por empresa/filial e referência.
-    /// </summary>
-    public class Frequencia3 : BaseEntity
-    {
-        public int CdEmpresa { get; set; }
-        public int CdFilial { get; set; }
-        public System.DateTime DtFrequen { get; set; }
-        public int FlFreq { get; set; }
-        public System.Guid IdFilial { get; set; }
-    }
+    [Key]
+    [Column("id")]
+    public Guid Id { get; set; }
+
+    [Column("cdempresa")]
+    public int CdEmpresa { get; set; }
+
+    [Column("cdfilial")]
+    public int CdFilial { get; set; }
+
+    [Column("dtfrequen")]
+    public DateTime DtFrequen { get; set; }
+
+    [Column("flfreq")]
+    public int FlFreq { get; set; }
+
+    [Column("idfilial")]
+    public Guid? IdFilial { get; set; }
 }

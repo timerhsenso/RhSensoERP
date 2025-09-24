@@ -1,24 +1,16 @@
-// Auto-generated EF Core configuration for FRE module.
-// Maps exactly to legacy table names via ToTable("...") and sets keys, FKs, sizes, and nullability.
-// Review column types (HasColumnType) as needed to match your specific RDBMS.
-
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using RhSensoERP.Core.FRE.Entities;
 
 namespace RhSensoERP.Infrastructure.Persistence.Configurations.FRE
 {
-    /// <summary>
-    /// Configuração da tabela jornada — jornada mensal por tipo.
-    /// </summary>
-    public class JornadaConfiguration : IEntityTypeConfiguration<Jornada>
+    /// <summary>Fluent mapping para Jornada (tabela jornada).</summary>
+    public sealed class JornadaConfiguration : IEntityTypeConfiguration<Jornada>
     {
         public void Configure(EntityTypeBuilder<Jornada> b)
         {
             b.ToTable("jornada");
-            b.HasKey(x => new { x.CdEmpresa, x.CdFilial, x.TpJornada, x.Ano, x.Mes });
-
-            b.Property(x => x.TpJornada).HasMaxLength(1).IsRequired();
+            b.HasKey(e => new { e.CdEmpresa, e.CdFilial, e.TpJornada, e.Ano, e.Mes });
         }
     }
 }

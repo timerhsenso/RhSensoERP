@@ -4,12 +4,12 @@ using RhSensoERP.Core.FRE.Entities;
 
 namespace RhSensoERP.Infrastructure.Persistence.Configurations.FRE
 {
-    /// <summary>Fluent mapping para BancoHoras (tabela BancoHoras).</summary>
-    public sealed class BancoHorasConfiguration : IEntityTypeConfiguration<BancoHoras>
+    /// <summary>Fluent mapping para Freq3 (tabela freq3).</summary>
+    public sealed class Freq3Configuration : IEntityTypeConfiguration<Freq3>
     {
-        public void Configure(EntityTypeBuilder<BancoHoras> b)
+        public void Configure(EntityTypeBuilder<Freq3> b)
         {
-            b.ToTable("BancoHoras");
+            b.ToTable("freq3");
             b.HasKey(e => new { e.Id });
         }
     }
