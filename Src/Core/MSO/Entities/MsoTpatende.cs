@@ -4,7 +4,7 @@ using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace RhSensoERP.Domain.MSO.Entities
+namespace RhSensoERP.Core.MSO.Entities
 {
     [Table("mso_tpatende", Schema = "dbo")]
     public class MsoTpatende
