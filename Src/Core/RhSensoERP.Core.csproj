@@ -5,6 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
   <ItemGroup>
+    <Folder Include="FRE\DTOs\" />
     <Folder Include="FRE\Entities\" />
   </ItemGroup>
 </Project>

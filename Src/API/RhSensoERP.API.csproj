@@ -25,6 +25,7 @@
 		<PackageReference Include="Serilog.AspNetCore" />
 	</ItemGroup>
 	<ItemGroup>
+	  <Folder Include="Controllers\FRE\" />
 	  <Folder Include="Controllers\RHU\" />
 	</ItemGroup>
 </Project>
