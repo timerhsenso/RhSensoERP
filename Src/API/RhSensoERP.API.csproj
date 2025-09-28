@@ -27,5 +27,6 @@
 	<ItemGroup>
 	  <Folder Include="Controllers\FRE\" />
 	  <Folder Include="Controllers\RHU\" />
+	  <Folder Include="logs\" />
 	</ItemGroup>
 </Project>

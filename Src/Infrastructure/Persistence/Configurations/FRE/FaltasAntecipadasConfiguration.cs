@@ -5,6 +5,8 @@ using RhSensoERP.Core.FRE.Entities;
 namespace RhSensoERP.Infrastructure.Persistence.Configurations.FRE
 {
     /// <summary>Fluent mapping para FaltasAntecipadas (tabela FALTASANTECIPADAS).</summary>
+    /// /*
+    /*
     public sealed class FaltasAntecipadasConfiguration : IEntityTypeConfiguration<FaltasAntecipadas>
     {
         public void Configure(EntityTypeBuilder<FaltasAntecipadas> b)
@@ -13,4 +15,5 @@ namespace RhSensoERP.Infrastructure.Persistence.Configurations.FRE
             b.HasKey(e => new { e.Id });
         }
     }
+    */
 }

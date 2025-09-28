@@ -5,7 +5,8 @@ using RhSensoERP.Core.FRE.Entities;
 namespace RhSensoERP.Infrastructure.Persistence.Configurations.FRE
 {
     /// <summary>Fluent mapping para BancoHoras (tabela BancoHoras).</summary>
-    public sealed class BancoHorasConfiguration : IEntityTypeConfiguration<BancoHoras>
+    /*
+     * public sealed class BancoHorasConfiguration : IEntityTypeConfiguration<BancoHoras>
     {
         public void Configure(EntityTypeBuilder<BancoHoras> b)
         {
@@ -13,4 +14,5 @@ namespace RhSensoERP.Infrastructure.Persistence.Configurations.FRE
             b.HasKey(e => new { e.Id });
         }
     }
+    */
 }
