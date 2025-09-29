@@ -14,6 +14,8 @@ namespace RhSensoERP.API.Controllers.SaaS;
 [ApiController]
 [Route("api/v1/saas")]
 [Produces("application/json")]
+[ApiExplorerSettings(GroupName = "SEG")]
+
 public class SaasController : ControllerBase
 {
     private readonly ISaasUserService _saasUserService;

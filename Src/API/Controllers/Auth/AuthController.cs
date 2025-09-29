@@ -19,6 +19,8 @@ namespace RhSensoERP.API.Controllers.Auth;
 [ApiController]
 [Route("api/v1/auth")]
 [Produces("application/json")]
+[ApiExplorerSettings(GroupName = "SEG")]
+
 public class AuthController : ControllerBase
 {
     private readonly IAuthenticationService _authService;
@@ -305,5 +307,194 @@ public class AuthController : ControllerBase
 
         // Fallback para IP da conexão direta
         return HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+    }
+
+    /// <summary>
+    /// Lista todas as permissões/habilitações do usuário logado
+    /// </summary>
+    [HttpGet("my-permissions")]
+    [Authorize]
+    [ProducesResponseType(typeof(ApiResponse<UserPermissions>), 200)]
+    [ProducesResponseType(401)]
+    public async Task<ActionResult<ApiResponse<UserPermissions>>> GetMyPermissions(
+        CancellationToken ct)
+    {
+        var cdusuario = User.Identity?.Name;
+        var ipAddress = GetClientIpAddress();
+
+        if (string.IsNullOrEmpty(cdusuario))
+        {
+            _logger.LogWarning("Tentativa de listar permissões sem usuário autenticado de IP {IPAddress}",
+                ipAddress);
+            return Unauthorized();
+        }
+
+        try
+        {
+            var permissions = await _legacyAuthService.GetUserPermissionsAsync(cdusuario, ct);
+
+            _logger.LogInformation(
+                "SECURITY_EVENT: PERMISSIONS_LIST | User: {Usuario} | IP: {IPAddress} | TotalPermissions: {Total} | TotalGroups: {Groups}",
+                cdusuario, ipAddress, permissions.Permissions.Count, permissions.Groups.Count);
+
+            return Ok(ApiResponse<UserPermissions>.Ok(
+                permissions,
+                $"{permissions.Permissions.Count} permissão(ões) em {permissions.Groups.Count} grupo(s)"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Erro ao listar permissões para usuário {Usuario} de IP {IPAddress}",
+                cdusuario, ipAddress);
+
+            return StatusCode(500, ApiResponse<object>.Fail("Erro ao buscar permissões"));
+        }
+    }
+
+    /// <summary>
+    /// Lista permissões agrupadas por sistema
+    /// </summary>
+    [HttpGet("my-permissions/by-system")]
+    [Authorize]
+    [ProducesResponseType(typeof(ApiResponse<Dictionary<string, List<UserPermission>>>), 200)]
+    public async Task<ActionResult<ApiResponse<Dictionary<string, List<UserPermission>>>>> GetMyPermissionsBySystem(
+        CancellationToken ct)
+    {
+        var cdusuario = User.Identity?.Name;
+
+        if (string.IsNullOrEmpty(cdusuario))
+        {
+            return Unauthorized();
+        }
+
+        try
+        {
+            var permissions = await _legacyAuthService.GetUserPermissionsAsync(cdusuario, ct);
+
+            var groupedPermissions = permissions.Permissions
+                .GroupBy(p => p.CdSistema)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.ToList());
+
+            _logger.LogInformation(
+                "Permissões agrupadas por sistema para usuário {Usuario}: {TotalSystems} sistema(s)",
+                cdusuario, groupedPermissions.Count);
+
+            return Ok(ApiResponse<Dictionary<string, List<UserPermission>>>.Ok(
+                groupedPermissions,
+                $"Permissões organizadas em {groupedPermissions.Count} sistema(s)"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao listar permissões agrupadas para usuário {Usuario}", cdusuario);
+            return StatusCode(500, ApiResponse<object>.Fail("Erro ao buscar permissões"));
+        }
+    }
+
+    /// <summary>
+    /// Lista apenas os grupos do usuário
+    /// </summary>
+    [HttpGet("my-groups")]
+    [Authorize]
+    [ProducesResponseType(typeof(ApiResponse<List<UserGroup>>), 200)]
+    public async Task<ActionResult<ApiResponse<List<UserGroup>>>> GetMyGroups(
+        CancellationToken ct)
+    {
+        var cdusuario = User.Identity?.Name;
+
+        if (string.IsNullOrEmpty(cdusuario))
+        {
+            return Unauthorized();
+        }
+
+        try
+        {
+            var permissions = await _legacyAuthService.GetUserPermissionsAsync(cdusuario, ct);
+
+            _logger.LogInformation(
+                "Grupos listados para usuário {Usuario}: {TotalGroups} grupo(s)",
+                cdusuario, permissions.Groups.Count);
+
+            return Ok(ApiResponse<List<UserGroup>>.Ok(
+                permissions.Groups,
+                $"{permissions.Groups.Count} grupo(s) encontrado(s)"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao listar grupos para usuário {Usuario}", cdusuario);
+            return StatusCode(500, ApiResponse<object>.Fail("Erro ao buscar grupos"));
+        }
+    }
+
+    /// <summary>
+    /// Verifica se o usuário possui uma ação específica em uma função
+    /// Ações: I=Incluir, A=Alterar, E=Excluir, C=Consultar
+    /// </summary>
+    [HttpGet("my-permissions/check-action")]
+    [Authorize]
+    [ProducesResponseType(typeof(ApiResponse<object>), 200)]
+    public async Task<ActionResult<ApiResponse<object>>> CheckMyAction(
+        [FromQuery] string cdsistema,
+        [FromQuery] string cdfuncao,
+        [FromQuery] char acao,
+        CancellationToken ct)
+    {
+        var cdusuario = User.Identity?.Name;
+
+        if (string.IsNullOrEmpty(cdusuario))
+        {
+            return Unauthorized();
+        }
+
+        if (!new[] { 'I', 'A', 'E', 'C' }.Contains(char.ToUpper(acao)))
+        {
+            return BadRequest(ApiResponse<object>.Fail("Ação inválida. Use: I (Incluir), A (Alterar), E (Excluir) ou C (Consultar)"));
+        }
+
+        try
+        {
+            var permissions = await _legacyAuthService.GetUserPermissionsAsync(cdusuario, ct);
+            var hasPermission = _legacyAuthService.CheckBotao(cdsistema, cdfuncao, acao, permissions);
+            var restricao = _legacyAuthService.CheckRestricao(cdsistema, cdfuncao, permissions);
+
+            var result = new
+            {
+                HasPermission = hasPermission,
+                Action = acao,
+                Sistema = cdsistema,
+                Funcao = cdfuncao,
+                Restricao = restricao,
+                RestricaoDescription = restricao == 'S' ? "Sem restrição (acesso total)" : "Normal (restrição padrão)"
+            };
+
+            _logger.LogInformation(
+                "SECURITY_EVENT: ACTION_CHECK | User: {Usuario} | Sistema: {Sistema} | Funcao: {Funcao} | Acao: {Acao} | Resultado: {Resultado}",
+                cdusuario, cdsistema, cdfuncao, acao, hasPermission ? "PERMITIDO" : "NEGADO");
+
+            return Ok(ApiResponse<object>.Ok(result, hasPermission ? "Ação permitida" : "Ação negada"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao verificar ação para usuário {Usuario}", cdusuario);
+            return StatusCode(500, ApiResponse<object>.Fail("Erro ao verificar ação"));
+        }
+    }
+
+    /// <summary>
+    /// [DEBUG] Verifica as claims do token atual
+    /// </summary>
+    [HttpGet("debug-token")]
+    [Authorize]
+    public ActionResult<object> DebugToken()
+    {
+        return Ok(new
+        {
+            IsAuthenticated = User.Identity?.IsAuthenticated,
+            Username = User.Identity?.Name,
+            AuthenticationType = User.Identity?.AuthenticationType,
+            NameClaimType = User.Identity is System.Security.Claims.ClaimsIdentity ci ? ci.NameClaimType : null,
+            AllClaims = User.Claims.Select(c => new { c.Type, c.Value }).ToList()
+        });
     }
 }

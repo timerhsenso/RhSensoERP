@@ -16,6 +16,8 @@ namespace RhSensoERP.API.Controllers.RHU
     [ApiController]
     [Route("api/v1/rhu/[controller]")]
     [Produces("application/json")]
+    [ApiExplorerSettings(GroupName = "RHU")]
+
     public class VerbaController : ControllerBase
     {
         private readonly AppDbContext _db;

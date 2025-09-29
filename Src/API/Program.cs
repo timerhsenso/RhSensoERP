@@ -9,6 +9,8 @@ using FluentValidation;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.OpenApi.Models;
+
 // Configurações customizadas
 using RhSensoERP.API.Configuration;
 using RhSensoERP.API.Middlewares;
@@ -23,13 +25,25 @@ using RhSensoERP.Infrastructure.Repositories;
 using RhSensoERP.Infrastructure.Services;
 using Serilog;
 using System.Threading.RateLimiting;
+using Microsoft.OpenApi.Models;
 
-// Configuração inicial com Serilog
+
+// ConfiguraÃ§Ã£o inicial com Serilog
 var builder = WebApplication.CreateBuilder(args)
     .AddSerilogLogging(); // Adiciona logging estruturado
 
-// Atalho para configuração
+// ========================================
+// LIMPAR MAPEAMENTO AUTOMÃTICO DE CLAIMS
+// ========================================
+// O ASP.NET Core por padrão mapeia "sub" para um namespace longo.
+// Limpamos isso para usar as claims JWT padrão (RFC 7519)
+System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler.DefaultMapInboundClaims = false;
+
+
+// Atalho para configuraÃ§Ã£o
 var cfg = builder.Configuration;
+
 
 // --------------------------------------------------------------------------------------
 // CONFIGURAÇÃO DE SERVIÇOS (DEPENDENCY INJECTION)
@@ -58,9 +72,9 @@ builder.Services.AddValidatorsFromAssemblyContaining<LoginRequestValidator>();
 /// </summary>
 builder.Services.AddEndpointsApiExplorer();
 
-/// <summary>
+/* <summary>
 /// Configuração do Swagger com autenticação JWT
-/// </summary>
+  </summary>*/
 builder.Services.AddSwaggerDocs();
 
 #endregion
@@ -77,14 +91,14 @@ builder.Services.AddDefaultCors(cfg);
 
 #region Banco de Dados
 
-/// <summary>
+/* <summary>
 /// Acesso ao HttpContext para auditoria e obtenção do usuário atual
-/// </summary>
+  </summary> */
 builder.Services.AddHttpContextAccessor();
 
-/// <summary>
+/* <summary>
 /// Interceptor para auditoria automática de criação e atualização de registros
-/// </summary>
+   </summary> */
 builder.Services.AddScoped<AuditSaveChangesInterceptor>();
 
 /// <summary>
@@ -100,21 +114,23 @@ builder.Services.AddDbContext<AppDbContext>(opt =>
 
 #region Autenticação e Autorização
 
-/// <summary>
+/* 
+///<summary>
 /// Configuração de autenticação JWT com suporte a:
 /// - Chaves simétricas para desenvolvimento
 /// - Chaves RSA para produção
 /// - Políticas dinâmicas de autorização baseadas em permissões
 /// </summary>
+*/
 builder.Services.AddJwtAuth(cfg);
 
 #endregion
 
 #region Rate Limiting
 
-/// <summary>
+/* <summary>
 /// Configuração de Rate Limiting para proteger contra ataques de força bruta
-/// </summary>
+  </summary> */
 builder.Services.AddRateLimiter(options =>
 {
     // Política global - 100 requests por minuto por IP
@@ -168,63 +184,68 @@ builder.Services.AddRateLimiter(options =>
 
 #region Repositórios e Unidade de Trabalho
 
+/*
 /// <summary>
 /// Repositório genérico para operações CRUD básicas
 /// Implementa padrão Repository com EF Core
 /// </summary>
+*/
 builder.Services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));
 
-/// <summary>
+/* <summary>
 /// Unidade de trabalho para controle transacional
-/// </summary>
+  </summary> */
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
-/// <summary>
+/* <summary>
 /// Serviço para obter dados do usuário atual logado
 /// Extrai informações do JWT (claims, tenant, etc.)
-/// </summary>
+   </summary> */
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 
 #endregion
 
 #region Serviços de Autenticação Legacy
 
+/*
 /// <summary>
 /// Serviço de autenticação que trabalha com o sistema legacy
 /// - Validação contra tabela tuse1 (usuários)
 /// - Carregamento de permissões via usrh1, hbrh1 (grupos/funções)
 /// - Funções de verificação: CheckHabilitacao, CheckBotao, CheckRestricao
 /// </summary>
+/// */
 builder.Services.AddScoped<RhSensoERP.Application.Security.Auth.Services.ILegacyAuthService, RhSensoERP.Infrastructure.Services.LegacyAuthService>();
 
 #endregion
 
 #region Middlewares
 
-/// <summary>
+/*// <summary>
 /// Middleware global para tratamento de exceções
 /// - Captura ValidationException (FluentValidation)
 /// - Padroniza respostas de erro em formato JSON
 /// - Logs estruturados de erros
-/// </summary>
+/// </summary> */
 builder.Services.AddTransient<ExceptionHandlingMiddleware>();
 
+/*
 /// <summary>
 /// Middleware de headers de segurança
 /// - Adiciona headers de proteção contra XSS, clickjacking, etc.
 /// - Remove headers que revelam informações do servidor
-/// </summary>
+/// </summary> */
 builder.Services.AddTransient<SecurityHeadersMiddleware>();
 
 #endregion
 
 #region Health Checks
 
-/// <summary>
+/*// <summary>
 /// Monitoramento de saúde da aplicação
 /// - Self check: verifica se a API está respondendo
 /// - Database check: testa conectividade com SQL Server
-/// </summary>
+/// </summary> */
 builder.Services.AddHealthChecks()
     .AddCheck("self", () => HealthCheckResult.Healthy("API operacional"))
     .AddCheck<DatabaseHealthCheck>("database");
@@ -238,22 +259,22 @@ builder.Services.AddHealthChecks()
 
 #region Repositórios e Serviços SaaS
 
-/// <summary>
+/*// <summary>
 /// Repositório específico para usuários SaaS
 /// Implementa operações CRUD específicas para sistema multi-tenant
-/// </summary>
+/// </summary>*/
 builder.Services.AddScoped<RhSensoERP.Core.Security.SaaS.ISaasUserRepository, RhSensoERP.Infrastructure.Repositories.SaasUserRepository>();
 
-/// <summary>
+/*// <summary>
 /// Serviço de negócio para usuários SaaS
 /// Implementa lógica de autenticação, registro e gestão de tokens SaaS
-/// </summary>
+/// </summary>*/
 builder.Services.AddScoped<RhSensoERP.Application.Security.SaaS.ISaasUserService, RhSensoERP.Infrastructure.Services.SaasUserService>();
 
-/// <summary>
+/*// <summary>
 /// Estratégia de autenticação SaaS
 /// Já registrada em AddJwtAuth, mas garantindo disponibilidade para injeção direta
-/// </summary>
+/// </summary>*/
 builder.Services.AddScoped<RhSensoERP.Infrastructure.Auth.Strategies.SaasAuthStrategy>();
 
 #endregion
@@ -279,16 +300,20 @@ var app = builder.Build();
 
 #region Middlewares de Tratamento (Primeira Camada)
 
+/*
 /// <summary>
 /// Middleware de exceções deve ser o primeiro para capturar todos os erros
 /// </summary>
+*/
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
+/*
 // <summary>
 // Headers de segurança devem ser aplicados cedo no pipeline
 // - Protege contra XSS, clickjacking, content sniffing
 // - Remove headers que revelam informações do servidor
 // </summary>
+*/
 app.UseMiddleware<SecurityHeadersMiddleware>();
 
 // <summary>
@@ -299,20 +324,23 @@ app.UseSerilogRequestLogging();
 #endregion
 
 #region CORS
-
+/*
 // <summary>
 // Aplica política de CORS - deve vir antes dos endpoints
 // </summary>
+*/
 app.UseDefaultCors();
 
 #endregion
 
 #region Autenticação e Autorização
 
+/*
 // <summary>
 // Pipeline de autenticação e autorização
 // Ordem é importante: Authentication antes de Authorization
 // </summary>
+*/
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -330,30 +358,48 @@ app.UseRateLimiter();
 #endregion
 
 #region Documentação
-
+/*
 /// <summary>
 /// Swagger UI disponível apenas em ambiente de desenvolvimento
 /// Acesso via: https://localhost:57148/swagger
 /// </summary>
+/// */
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
+
     app.UseSwaggerUI(c =>
     {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "RhSensoERP API v1");
-        c.RoutePrefix = "swagger";
+        // RHU
+        c.SwaggerEndpoint("/swagger/RHU/swagger.json", "Recursos Humanos (RHU)");
+
+        // SEG
+        c.SwaggerEndpoint("/swagger/SEG/swagger.json", "Segurança (SEG)");
+
+        // FRE
+        c.SwaggerEndpoint("/swagger/FRE/swagger.json", "Frequência (FRE)");
+
+        // se quiser manter um geral (opcional)
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "RhSensoERP API v1 - Geral");
+
+        // Configurações visuais
+        c.RoutePrefix = "swagger"; // abre em /swagger
         c.DocumentTitle = "RhSensoERP API - Documentação";
+
+        c.DocExpansion(Swashbuckle.AspNetCore.SwaggerUI.DocExpansion.None);
+
     });
 }
 
 #endregion
 
 #region Mapeamento de Endpoints
-
+/*
 /// <summary>
 /// Health check endpoint público
 /// GET /health - retorna status da API e conectividade do banco
 /// </summary>
+*/
 app.MapHealthChecks("/health").AllowAnonymous();
 
 /*
