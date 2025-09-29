@@ -8,7 +8,8 @@ using RhSensoERP.Infrastructure.Persistence;
 using RhSensoERP.Core.Shared;
 using RhSensoERP.Core.Abstractions.Paging;
 using RhSensoERP.Core.RHU.Entities;
-using RhSensoERP.Core.RHU.DTOs;
+using RhSensoERP.Application.RHU.DTOs;
+
 
 namespace RhSensoERP.API.Controllers.RHU
 {
