@@ -1,4 +1,5 @@
 ﻿// src/API/Controllers/SEG/FuncaoController.cs
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RhSensoERP.Application.SEG.DTOs;
 using RhSensoERP.Application.SEG.Interfaces;
@@ -7,6 +8,11 @@ namespace RhSensoERP.API.Controllers.SEG;
 
 [ApiController]
 [Route("api/seg/[controller]")]
+[Authorize] // ✅ Requer autenticação JWT
+[Produces("application/json")]
+[ApiExplorerSettings(GroupName = "SEG")]
+
+
 public class FuncaoController : ControllerBase
 {
     private readonly IFuncaoService _funcaoService;

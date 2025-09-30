@@ -32,7 +32,7 @@ public class FuncaoService : IFuncaoService
                 DcFuncao = f.DcFuncao,
                 DcModulo = f.DcModulo,
                 DescricaoModulo = f.DescricaoModulo,
-                NomeSistema = f.Sistema.NmSistema
+                NomeSistema = f.Sistema.DcSistema // CORRIGIDO: usar DcSistema ao invés de NmSistema
             })
             .ToListAsync();
     }
@@ -52,7 +52,7 @@ public class FuncaoService : IFuncaoService
             DcFuncao = funcao.DcFuncao,
             DcModulo = funcao.DcModulo,
             DescricaoModulo = funcao.DescricaoModulo,
-            NomeSistema = funcao.Sistema?.NmSistema
+            NomeSistema = funcao.Sistema?.DcSistema // CORRIGIDO: usar DcSistema ao invés de NmSistema
         };
     }
 
@@ -69,7 +69,7 @@ public class FuncaoService : IFuncaoService
                 DcFuncao = f.DcFuncao,
                 DcModulo = f.DcModulo,
                 DescricaoModulo = f.DescricaoModulo,
-                NomeSistema = f.Sistema.NmSistema
+                NomeSistema = f.Sistema.DcSistema // CORRIGIDO: usar DcSistema ao invés de NmSistema
             })
             .ToListAsync();
     }
@@ -132,7 +132,7 @@ public class FuncaoService : IFuncaoService
 
         if (funcao == null) return false;
 
-        // Validar se há dependências (corrigido para BotoesFuncao sem 's')
+        // Validar se há dependências
         var temBotoes = await _context.BotoesFuncao
             .AnyAsync(b => b.CdFuncao == cdFuncao && b.CdSistema == cdSistema);
 
