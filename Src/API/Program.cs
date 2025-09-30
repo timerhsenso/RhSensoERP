@@ -249,9 +249,6 @@ builder.Services.AddHealthChecks()
 #endregion
 
 
-// =====================================================================================
-// ADICIONAR ESTA SEÇÃO NO Program.cs LOGO APÓS A SEÇÃO #endregion Repositórios e Unidade de Trabalho
-// =====================================================================================
 
 #region Repositórios e Serviços SaaS
 
@@ -288,9 +285,6 @@ builder.Services.AddScoped<RhSensoERP.Application.SEG.Interfaces.IFuncaoService,
 builder.Services.AddScoped<IEmailService, EmailService>();
 
 
-// =====================================================================================
-// IMPORTANTE: Esta seção deve ser adicionada ANTES da linha "var app = builder.Build();"
-// =====================================================================================
 
 
 // --------------------------------------------------------------------------------------

@@ -13,7 +13,7 @@ public class GrupoDeUsuarioConfig : IEntityTypeConfiguration<GrupoDeUsuario>
     public void Configure(EntityTypeBuilder<GrupoDeUsuario> b)
     {
         // Mapear para tabela gurh1
-        b.ToTable("gurh1", schema: "dbo");
+        b.ToTable("gurh1");
 
         // Chave primária COMPOSTA: (cdsistema, cdgruser)
         b.HasKey(x => new { x.CdSistema, x.CdGrUser });

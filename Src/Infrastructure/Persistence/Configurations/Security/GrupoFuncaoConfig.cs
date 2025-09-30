@@ -13,7 +13,7 @@ public class GrupoFuncaoConfig : IEntityTypeConfiguration<GrupoFuncao>
     public void Configure(EntityTypeBuilder<GrupoFuncao> b)
     {
         // Mapear para tabela hbrh1
-        b.ToTable("hbrh1", schema: "dbo");
+        b.ToTable("hbrh1");
 
         // Chave primária: Id (uniqueidentifier)
         b.HasKey(x => x.Id);
