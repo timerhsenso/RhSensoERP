@@ -2,48 +2,44 @@
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using RhSensoERP.Core.Security.Entities;
 
-namespace RhSensoERP.Infrastructure.Persistence.Configurations.Security;
-
-/// <summary>
-/// Configuração EF Core para entidade Sistema → tabela tsistema
-/// Baseada no script SQL: bd_rhu_copenor.dbo.tsistema
-/// </summary>
-public class SistemaConfig : IEntityTypeConfiguration<Sistema>
+namespace RhSensoERP.Infrastructure.Persistence.Configurations.Security
 {
-    public void Configure(EntityTypeBuilder<Sistema> b)
+    /// <summary>
+    /// Mapeamento EF Core para a tabela dbo.tsistema.
+    /// </summary>
+    public sealed class SistemaConfig : IEntityTypeConfiguration<Sistema>
     {
-        // Mapear para tabela tsistema
-        b.ToTable("tsistema", schema: "dbo");
+        public void Configure(EntityTypeBuilder<Sistema> b)
+        {
+            b.ToTable("tsistema", "dbo");
 
-        // Chave primária: cdsistema (char(10) NOT NULL)
-        b.HasKey(x => x.CdSistema);
+            b.HasKey(x => x.CdSistema);
 
-        // Mapeamento exato das colunas do banco
-        b.Property(x => x.CdSistema)
-            .HasColumnName("cdsistema")
-            .HasColumnType("char(10)")      // Exatamente como no banco
-            .IsRequired();
+            b.Property(x => x.CdSistema)
+                .HasColumnName("cdsistema")
+                .HasColumnType("char(10)")
+                .IsRequired();
 
-        b.Property(x => x.DcSistema)
-            .HasColumnName("dcsistema")
-            .HasColumnType("varchar(60)")   // Exatamente como no banco (60, não 100)
-            .IsRequired();
+            b.Property(x => x.DcSistema)
+                .HasColumnName("dcsistema")
+                .HasColumnType("varchar(60)")
+                .IsRequired();
 
-        b.Property(x => x.Ativo)
-            .HasColumnName("ativo")
-            .HasColumnType("bit")           // Exatamente como no banco
-            .IsRequired()
-            .HasDefaultValue(true);         // DEFAULT ((1))
+            b.Property(x => x.Ativo)
+                .HasColumnName("ativo")
+                .HasColumnType("bit")
+                .HasDefaultValue(true)
+                .IsRequired();
 
-        // IGNORAR propriedades que não existem na tabela legacy
-        b.Ignore(x => x.Id);              // BaseEntity.Id não existe em tsistema
+            // Se BaseEntity tiver campos que NÃO existem em tsistema:
+            b.Ignore(x => x.Id);          // mantém o legado limpo
+            // b.Ignore(x => x.TenantId); b.Ignore(x => x.CreatedAt); etc., se existirem
 
-        // Relacionamentos (configuraremos quando fizer Funcao)
-        b.HasMany(x => x.Funcoes)
-            .WithOne(x => x.Sistema)
-            .HasForeignKey(x => x.CdSistema)
-            .HasPrincipalKey(x => x.CdSistema);
-
-        // Constraint já existe no banco: pk_tsistema_cdsistema
+            // Relacionamento com Função (se aplicável)
+            b.HasMany(x => x.Funcoes)
+             .WithOne(x => x.Sistema!)
+             .HasForeignKey(x => x.CdSistema)
+             .OnDelete(DeleteBehavior.Restrict);
+        }
     }
 }

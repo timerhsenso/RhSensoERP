@@ -56,10 +56,6 @@ var cfg = builder.Configuration;
 /// </summary>
 builder.Services.AddControllers();
 
-/// <summary>
-/// Configuração de controllers MVC para endpoints da API
-/// </summary>
-builder.Services.AddControllers();
 
 /// <summary>
 /// Validação automática com FluentValidation
@@ -279,6 +275,15 @@ builder.Services.AddScoped<RhSensoERP.Infrastructure.Auth.Strategies.SaasAuthStr
 
 #endregion
 
+#region Serviços de Domínio - SEG (Segurança)
+
+/// <summary>
+/// Serviços de negócio para módulo de Segurança
+/// </summary>
+builder.Services.AddScoped<RhSensoERP.Application.SEG.Interfaces.IFuncaoService,
+                           RhSensoERP.Infrastructure.Services.SEG.FuncaoService>();
+
+#endregion
 
 builder.Services.AddScoped<IEmailService, EmailService>();
 

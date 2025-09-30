@@ -3,9 +3,9 @@ using RhSensoERP.Application.SEG.DTOs;
 
 namespace RhSensoERP.Application.SEG.Validators
 {
-    public sealed class SistemaUpsertValidator : AbstractValidator<SistemaUpsertDto>
+    public sealed class SistemaValidator : AbstractValidator<SistemaUpsertDto>
     {
-        public SistemaUpsertValidator()
+        public SistemaValidator()
         {
             RuleFor(x => x.CdSistema)
                 .NotEmpty().WithMessage("Código do sistema é obrigatório.")
@@ -14,8 +14,6 @@ namespace RhSensoERP.Application.SEG.Validators
             RuleFor(x => x.DcSistema)
                 .NotEmpty().WithMessage("Descrição do sistema é obrigatória.")
                 .MaximumLength(60).WithMessage("Descrição do sistema deve ter no máximo 60 caracteres.");
-
-            // Ativo é bool (default true) — nenhuma regra adicional necessária
         }
     }
 }

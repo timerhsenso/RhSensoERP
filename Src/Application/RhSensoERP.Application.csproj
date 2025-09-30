@@ -18,5 +18,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Common\Extensions\" />
+    <Folder Include="Common\Interfaces\Repositories\SEG\" />
+    <Folder Include="SEG\Services\Interfaces\" />
   </ItemGroup>
 </Project>

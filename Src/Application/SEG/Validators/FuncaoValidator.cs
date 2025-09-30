@@ -1,7 +1,7 @@
 ﻿// RhSensoERP.Application/Validators/FuncaoValidator.cs
 using FluentValidation;
-using RhSensoERP.Application.DTOs.Funcao;
-
+//using RhSensoERP.Application.DTOs.Funcao;
+using RhSensoERP.Application.SEG.DTOs;
 namespace RhSensoERP.Application.Validators;
 
 public class CreateFuncaoDTOValidator : AbstractValidator<CreateFuncaoDTO>

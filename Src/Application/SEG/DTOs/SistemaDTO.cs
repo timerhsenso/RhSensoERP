@@ -1,4 +1,4 @@
-namespace RhSensoERP.Application.SEG.DTOs
+﻿namespace RhSensoERP.Application.SEG.DTOs
 {
     public sealed class SistemaDto
     {

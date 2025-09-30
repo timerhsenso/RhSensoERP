@@ -1,13 +1,18 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RhSensoERP.Application.SEG.DTOs;
-using RhSensoERP.Application.SEG.Services.Interfaces;
+using RhSensoERP.Application.SEG.Interfaces;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using RhSensoERP.Core.Security.Entities;
 
-namespace RhSensoERP.API.Controllers.SEG
+
+namespace RhSensoERP.API.Controllers.SEG;
 {
     [ApiController]
     [Route("api/seg/sistemas")]
-    [Authorize]
+    [Authorize] // mantenha conforme seu projeto
     public sealed class SistemaController : ControllerBase
     {
         private readonly ISistemaService _service;

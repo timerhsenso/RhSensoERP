@@ -1,6 +1,9 @@
 using RhSensoERP.Application.SEG.DTOs;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
-namespace RhSensoERP.Application.SEG.Services.Interfaces
+namespace RhSensoERP.Application.SEG.Interfaces
 {
     public interface ISistemaService
     {

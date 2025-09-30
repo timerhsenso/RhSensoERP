@@ -25,5 +25,6 @@
 	<ItemGroup>
 	  <Folder Include="Persistence\Configurations\FRE\" />
 	  <Folder Include="Persistence\Configurations\RHU\" />
+	  <Folder Include="Persistence\Repositories\SEG\" />
 	</ItemGroup>
 </Project>
