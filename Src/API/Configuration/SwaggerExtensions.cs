@@ -15,13 +15,6 @@ public static class SwaggerExtensions
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen(c =>
         {
-            // Documentação por módulo
-            c.SwaggerDoc("RHU", new OpenApiInfo
-            {
-                Title = "Recursos Humanos (RHU)",
-                Version = "v1",
-                Description = "Módulo de Recursos Humanos"
-            });
 
             c.SwaggerDoc("SEG", new OpenApiInfo
             {
@@ -30,11 +23,26 @@ public static class SwaggerExtensions
                 Description = "Módulo de Segurança e Autenticação"
             });
 
+            // Documentação por módulo
+            c.SwaggerDoc("RHU", new OpenApiInfo
+            {
+                Title = "Recursos Humanos (RHU)",
+                Version = "v1",
+                Description = "Módulo de Recursos Humanos"
+            });
+
             c.SwaggerDoc("FRE", new OpenApiInfo
             {
                 Title = "Frequência (FRE)",
                 Version = "v1",
                 Description = "Módulo de Controle de Frequência"
+            });
+
+            c.SwaggerDoc("MSO", new OpenApiInfo
+            {
+                Title = "Frequência (FRE)",
+                Version = "v1",
+                Description = "Módulo de Saúde Ocupacional"
             });
 
             c.SwaggerDoc("v1", new OpenApiInfo
