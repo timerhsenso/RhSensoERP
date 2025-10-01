@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.Extensions.Options;
 using Polly;
 using Polly.Extensions.Http;
 using RhSensoWeb.Configuration;
@@ -78,22 +77,6 @@ public static class ServiceCollectionExtensions
                         // Por exemplo, verificar se não expirou ou se não foi revogado
                     };
                 });
-
-        return services;
-    }
-
-    /// <summary>
-    /// Configura logging com Serilog
-    /// </summary>
-    public static IServiceCollection AddCustomLogging(this IServiceCollection services, IConfiguration configuration)
-    {
-        Log.Logger = new LoggerConfiguration()
-            .ReadFrom.Configuration(configuration)
-            .Enrich.FromLogContext()
-            .Enrich.WithProperty("Application", "RhSensoWeb")
-            .CreateLogger();
-
-        services.AddSerilog();
 
         return services;
     }
