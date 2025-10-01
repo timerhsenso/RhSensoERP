@@ -10,12 +10,13 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.OpenApi.Models;
-
+using Microsoft.OpenApi.Models;
 // Configurações customizadas
 using RhSensoERP.API.Configuration;
 using RhSensoERP.API.Middlewares;
 using RhSensoERP.Application.Common.Interfaces;
 using RhSensoERP.Application.Security.Auth.Validators;
+using RhSensoERP.Application.SEG.Interfaces;
 using RhSensoERP.Core.Abstractions.Interfaces;
 using RhSensoERP.Core.Abstractions.Services;
 using RhSensoERP.Infrastructure.Logging;
@@ -23,9 +24,9 @@ using RhSensoERP.Infrastructure.Persistence;
 using RhSensoERP.Infrastructure.Persistence.Interceptors;
 using RhSensoERP.Infrastructure.Repositories;
 using RhSensoERP.Infrastructure.Services;
+using RhSensoERP.Infrastructure.Services.SEG;
 using Serilog;
 using System.Threading.RateLimiting;
-using Microsoft.OpenApi.Models;
 
 
 // ConfiguraÃ§Ã£o inicial com Serilog
@@ -285,6 +286,8 @@ builder.Services.AddScoped<RhSensoERP.Application.SEG.Interfaces.IFuncaoService,
 builder.Services.AddScoped<IEmailService, EmailService>();
 
 
+// Serviços SEG
+//builder.Services.AddScoped<IBotaoFuncaoService, BotaoFuncaoService>();
 
 
 // --------------------------------------------------------------------------------------
