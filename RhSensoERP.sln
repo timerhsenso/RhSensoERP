@@ -17,6 +17,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{9E518064
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RhSensoERP.Tests.Unit", "Tests\RhSensoERP.Tests.Unit\RhSensoERP.Tests.Unit.csproj", "{CF0AAE2A-02FF-4C22-BF22-4B7C86160091}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RhSensoWeb", "Src\RhSensoWeb\RhSensoWeb.csproj", "{FC7789FA-2D13-1103-A1B3-F23FF7DB2CA3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -87,6 +89,18 @@ Global
 		{CF0AAE2A-02FF-4C22-BF22-4B7C86160091}.Release|x64.Build.0 = Release|Any CPU
 		{CF0AAE2A-02FF-4C22-BF22-4B7C86160091}.Release|x86.ActiveCfg = Release|Any CPU
 		{CF0AAE2A-02FF-4C22-BF22-4B7C86160091}.Release|x86.Build.0 = Release|Any CPU
+		{FC7789FA-2D13-1103-A1B3-F23FF7DB2CA3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FC7789FA-2D13-1103-A1B3-F23FF7DB2CA3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FC7789FA-2D13-1103-A1B3-F23FF7DB2CA3}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{FC7789FA-2D13-1103-A1B3-F23FF7DB2CA3}.Debug|x64.Build.0 = Debug|Any CPU
+		{FC7789FA-2D13-1103-A1B3-F23FF7DB2CA3}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{FC7789FA-2D13-1103-A1B3-F23FF7DB2CA3}.Debug|x86.Build.0 = Debug|Any CPU
+		{FC7789FA-2D13-1103-A1B3-F23FF7DB2CA3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FC7789FA-2D13-1103-A1B3-F23FF7DB2CA3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FC7789FA-2D13-1103-A1B3-F23FF7DB2CA3}.Release|x64.ActiveCfg = Release|Any CPU
+		{FC7789FA-2D13-1103-A1B3-F23FF7DB2CA3}.Release|x64.Build.0 = Release|Any CPU
+		{FC7789FA-2D13-1103-A1B3-F23FF7DB2CA3}.Release|x86.ActiveCfg = Release|Any CPU
+		{FC7789FA-2D13-1103-A1B3-F23FF7DB2CA3}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

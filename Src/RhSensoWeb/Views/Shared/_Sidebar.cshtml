@@ -1,0 +1,248 @@
+@using RhSensoWeb.Extensions
+
+<nav class="mt-2">
+    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+        
+        <!-- Dashboard -->
+        <li class="nav-item">
+            <a href="@Url.Action("Index", "Home")" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" && ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")">
+                <i class="nav-icon fas fa-tachometer-alt"></i>
+                <p>Dashboard</p>
+            </a>
+        </li>
+
+        <!-- Segurança -->
+        @if (User.HasPermission("SEG.SEG_USUARIOS.C") || User.HasPermission("SEG.SEG_FUNCOES.C") || User.HasPermission("SEG.SEG_SISTEMAS.C"))
+        {
+            <li class="nav-item @(ViewContext.RouteData.Values["area"]?.ToString() == "SEG" ? "menu-open" : "")">
+                <a href="#" class="nav-link @(ViewContext.RouteData.Values["area"]?.ToString() == "SEG" ? "active" : "")">
+                    <i class="nav-icon fas fa-shield-alt"></i>
+                    <p>
+                        Segurança
+                        <i class="right fas fa-angle-left"></i>
+                    </p>
+                </a>
+                <ul class="nav nav-treeview">
+                    @if (User.HasPermission("SEG.SEG_USUARIOS.C"))
+                    {
+                        <li class="nav-item">
+                            <a href="@Url.Action("Index", "Usuarios", new { area = "SEG" })" 
+                               class="nav-link @(ViewContext.RouteData.Values["area"]?.ToString() == "SEG" && ViewContext.RouteData.Values["controller"]?.ToString() == "Usuarios" ? "active" : "")">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Usuários</p>
+                            </a>
+                        </li>
+                    }
+                    
+                    @if (User.HasPermission("SEG.SEG_FUNCOES.C"))
+                    {
+                        <li class="nav-item">
+                            <a href="@Url.Action("Index", "Funcoes", new { area = "SEG" })" 
+                               class="nav-link @(ViewContext.RouteData.Values["area"]?.ToString() == "SEG" && ViewContext.RouteData.Values["controller"]?.ToString() == "Funcoes" ? "active" : "")">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Funções</p>
+                            </a>
+                        </li>
+                    }
+                    
+                    @if (User.HasPermission("SEG.SEG_SISTEMAS.C"))
+                    {
+                        <li class="nav-item">
+                            <a href="@Url.Action("Index", "Sistemas", new { area = "SEG" })" 
+                               class="nav-link @(ViewContext.RouteData.Values["area"]?.ToString() == "SEG" && ViewContext.RouteData.Values["controller"]?.ToString() == "Sistemas" ? "active" : "")">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Sistemas</p>
+                            </a>
+                        </li>
+                    }
+                </ul>
+            </li>
+        }
+
+        <!-- Recursos Humanos -->
+        @if (User.HasPermission("RHU.RHU_FUNCIONARIOS.C") || User.HasPermission("RHU.RHU_AFASTAMENTOS.C") || User.HasPermission("RHU.RHU_FERIAS.C"))
+        {
+            <li class="nav-item @(ViewContext.RouteData.Values["area"]?.ToString() == "RHU" ? "menu-open" : "")">
+                <a href="#" class="nav-link @(ViewContext.RouteData.Values["area"]?.ToString() == "RHU" ? "active" : "")">
+                    <i class="nav-icon fas fa-users"></i>
+                    <p>
+                        Recursos Humanos
+                        <i class="right fas fa-angle-left"></i>
+                    </p>
+                </a>
+                <ul class="nav nav-treeview">
+                    @if (User.HasPermission("RHU.RHU_FUNCIONARIOS.C"))
+                    {
+                        <li class="nav-item">
+                            <a href="@Url.Action("Index", "Funcionarios", new { area = "RHU" })" 
+                               class="nav-link @(ViewContext.RouteData.Values["area"]?.ToString() == "RHU" && ViewContext.RouteData.Values["controller"]?.ToString() == "Funcionarios" ? "active" : "")">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Funcionários</p>
+                            </a>
+                        </li>
+                    }
+                    
+                    @if (User.HasPermission("RHU.RHU_AFASTAMENTOS.C"))
+                    {
+                        <li class="nav-item">
+                            <a href="@Url.Action("Index", "Afastamentos", new { area = "RHU" })" 
+                               class="nav-link @(ViewContext.RouteData.Values["area"]?.ToString() == "RHU" && ViewContext.RouteData.Values["controller"]?.ToString() == "Afastamentos" ? "active" : "")">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Afastamentos</p>
+                            </a>
+                        </li>
+                    }
+                    
+                    @if (User.HasPermission("RHU.RHU_FERIAS.C"))
+                    {
+                        <li class="nav-item">
+                            <a href="@Url.Action("Index", "Ferias", new { area = "RHU" })" 
+                               class="nav-link @(ViewContext.RouteData.Values["area"]?.ToString() == "RHU" && ViewContext.RouteData.Values["controller"]?.ToString() == "Ferias" ? "active" : "")">
+                                <i class="far fa-circle nav-icon"></i>
+                                <p>Férias</p>
+                            </a>
+                        </li>
+                    }
+                    
+                    <!-- Submenu Cadastros -->
+                    <li class="nav-item">
+                        <a href="#" class="nav-link">
+                            <i class="far fa-circle nav-icon"></i>
+                            <p>
+                                Cadastros
+                                <i class="right fas fa-angle-left"></i>
+                            </p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                            @if (User.HasPermission("RHU.RHU_EMPRESAS.C"))
+                            {
+                                <li class="nav-item">
+                                    <a href="@Url.Action("Index", "Empresas", new { area = "RHU" })" class="nav-link">
+                                        <i class="far fa-dot-circle nav-icon"></i>
+                                        <p>Empresas</p>
+                                    </a>
+                                </li>
+                            }
+                            
+                            @if (User.HasPermission("RHU.RHU_FILIAIS.C"))
+                            {
+                                <li class="nav-item">
+                                    <a href="@Url.Action("Index", "Filiais", new { area = "RHU" })" class="nav-link">
+                                        <i class="far fa-dot-circle nav-icon"></i>
+                                        <p>Filiais</p>
+                                    </a>
+                                </li>
+                            }
+                            
+                            @if (User.HasPermission("RHU.RHU_CARGOS.C"))
+                            {
+                                <li class="nav-item">
+                                    <a href="@Url.Action("Index", "Cargos", new { area = "RHU" })" class="nav-link">
+                                        <i class="far fa-dot-circle nav-icon"></i>
+                                        <p>Cargos</p>
+                                    </a>
+                                </li>
+                            }
+                            
+                            @if (User.HasPermission("RHU.RHU_CENTROS_CUSTO.C"))
+                            {
+                                <li class="nav-item">
+                                    <a href="@Url.Action("Index", "CentrosCusto", new { area = "RHU" })" class="nav-link">
+                                        <i class="far fa-dot-circle nav-icon"></i>
+                                        <p>Centros de Custo</p>
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    </li>
+                </ul>
+            </li>
+        }
+
+        <!-- SaaS (Multi-tenant) -->
+        @if (User.HasPermission("SAAS.SAAS_TENANTS.C") && User.GetUserType() == "ADMIN")
+        {
+            <li class="nav-item @(ViewContext.RouteData.Values["area"]?.ToString() == "SaaS" ? "menu-open" : "")">
+                <a href="#" class="nav-link @(ViewContext.RouteData.Values["area"]?.ToString() == "SaaS" ? "active" : "")">
+                    <i class="nav-icon fas fa-cloud"></i>
+                    <p>
+                        SaaS
+                        <i class="right fas fa-angle-left"></i>
+                    </p>
+                </a>
+                <ul class="nav nav-treeview">
+                    <li class="nav-item">
+                        <a href="@Url.Action("Index", "Tenants", new { area = "SaaS" })" 
+                           class="nav-link @(ViewContext.RouteData.Values["area"]?.ToString() == "SaaS" && ViewContext.RouteData.Values["controller"]?.ToString() == "Tenants" ? "active" : "")">
+                            <i class="far fa-circle nav-icon"></i>
+                            <p>Tenants</p>
+                        </a>
+                    </li>
+                </ul>
+            </li>
+        }
+
+        <!-- Separador -->
+        <li class="nav-header">FERRAMENTAS</li>
+
+        <!-- Relatórios -->
+        <li class="nav-item">
+            <a href="#" class="nav-link">
+                <i class="nav-icon fas fa-chart-bar"></i>
+                <p>
+                    Relatórios
+                    <i class="right fas fa-angle-left"></i>
+                </p>
+            </a>
+            <ul class="nav nav-treeview">
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="far fa-circle nav-icon"></i>
+                        <p>Funcionários</p>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <i class="far fa-circle nav-icon"></i>
+                        <p>Folha de Pagamento</p>
+                    </a>
+                </li>
+            </ul>
+        </li>
+
+        <!-- Configurações -->
+        <li class="nav-item">
+            <a href="#" class="nav-link">
+                <i class="nav-icon fas fa-cogs"></i>
+                <p>Configurações</p>
+            </a>
+        </li>
+
+        <!-- Ajuda -->
+        <li class="nav-item">
+            <a href="#" class="nav-link">
+                <i class="nav-icon fas fa-question-circle"></i>
+                <p>Ajuda</p>
+            </a>
+        </li>
+
+        <!-- Separador -->
+        <li class="nav-header">INFORMAÇÕES</li>
+
+        <!-- Informações do Sistema -->
+        <li class="nav-item">
+            <div class="nav-link">
+                <i class="nav-icon fas fa-info-circle text-info"></i>
+                <p class="text-sm">
+                    <strong>Empresa:</strong> @User.GetCompanyCode()<br>
+                    <strong>Filial:</strong> @User.GetBranchCode()<br>
+                    @if (!string.IsNullOrEmpty(User.GetSaasId()))
+                    {
+                        <strong>Tenant:</strong> @User.GetSaasId()<br>
+                    }
+                    <strong>Versão:</strong> 1.0.0
+                </p>
+            </div>
+        </li>
+    </ul>
+</nav>

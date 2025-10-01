@@ -1,0 +1,59 @@
+@{
+    var controller = ViewContext.RouteData.Values["controller"]?.ToString();
+    var action = ViewContext.RouteData.Values["action"]?.ToString();
+    var area = ViewContext.RouteData.Values["area"]?.ToString();
+    
+    var pageTitle = ViewData["Title"]?.ToString() ?? "Página";
+    var pageSubtitle = ViewData["Subtitle"]?.ToString();
+    var pageIcon = ViewData["Icon"]?.ToString() ?? "fas fa-home";
+}
+
+<div class="row mb-2">
+    <div class="col-sm-6">
+        <h1 class="m-0">
+            <i class="@pageIcon mr-2"></i>
+            @pageTitle
+            @if (!string.IsNullOrEmpty(pageSubtitle))
+            {
+                <small class="text-muted">@pageSubtitle</small>
+            }
+        </h1>
+    </div>
+    <div class="col-sm-6">
+        <ol class="breadcrumb float-sm-right">
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Index", "Home")">
+                    <i class="fas fa-home"></i> Dashboard
+                </a>
+            </li>
+            
+            @if (!string.IsNullOrEmpty(area))
+            {
+                <li class="breadcrumb-item">
+                    @switch (area)
+                    {
+                        case "SEG":
+                            <i class="fas fa-shield-alt"></i> <text>Segurança</text>
+                            break;
+                        case "RHU":
+                            <i class="fas fa-users"></i> <text>Recursos Humanos</text>
+                            break;
+                        case "SaaS":
+                            <i class="fas fa-cloud"></i> <text>SaaS</text>
+                            break;
+                        default:
+                            @area
+                            break;
+                    }
+                </li>
+            }
+            
+            @if (controller != "Home" || action != "Index")
+            {
+                <li class="breadcrumb-item active">
+                    @pageTitle
+                </li>
+            }
+        </ol>
+    </div>
+</div>

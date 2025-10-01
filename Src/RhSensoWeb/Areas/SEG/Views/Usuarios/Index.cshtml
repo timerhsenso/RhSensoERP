@@ -1,0 +1,451 @@
+@using RhSensoWeb.Extensions
+@{
+    ViewData["Title"] = "Usuários";
+    ViewData["Subtitle"] = "Gerenciamento de usuários do sistema";
+    ViewData["Icon"] = "fas fa-users";
+}
+
+<!-- Botões de ação -->
+<div class="row mb-3">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-users mr-2"></i>
+                            Usuários do Sistema
+                        </h5>
+                        <small class="text-muted">Gerencie usuários, permissões e acessos</small>
+                    </div>
+                    <div>
+                        <a href="@Url.Action("Create")" class="btn btn-primary" permission="SEG.SEG_USUARIOS.I">
+                            <i class="fas fa-plus mr-2"></i>Novo Usuário
+                        </a>
+                        <button type="button" class="btn btn-secondary" onclick="reloadTable()">
+                            <i class="fas fa-sync-alt mr-2"></i>Atualizar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="row mb-3">
+    <div class="col-12">
+        <div class="card collapsed-card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-filter mr-2"></i>Filtros
+                </h3>
+                <div class="card-tools">
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body" style="display: none;">
+                <form id="filtrosForm">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="filtroNome">Nome</label>
+                                <input type="text" class="form-control" id="filtroNome" name="nome" placeholder="Nome do usuário">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="filtroEmail">Email</label>
+                                <input type="email" class="form-control" id="filtroEmail" name="email" placeholder="Email do usuário">
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label for="filtroTipo">Tipo</label>
+                                <select class="form-control" id="filtroTipo" name="tipo">
+                                    <option value="">Todos</option>
+                                    <option value="ADMIN">Administrador</option>
+                                    <option value="USER">Usuário</option>
+                                    <option value="GUEST">Convidado</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label for="filtroStatus">Status</label>
+                                <select class="form-control" id="filtroStatus" name="status">
+                                    <option value="">Todos</option>
+                                    <option value="S">Ativo</option>
+                                    <option value="N">Inativo</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label>&nbsp;</label>
+                                <div class="d-block">
+                                    <button type="button" class="btn btn-primary btn-block" onclick="aplicarFiltros()">
+                                        <i class="fas fa-search mr-2"></i>Filtrar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="limparFiltros()">
+                                <i class="fas fa-eraser mr-2"></i>Limpar Filtros
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabela de usuários -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-list mr-2"></i>Lista de Usuários
+                </h3>
+                <div class="card-tools">
+                    <div class="btn-group" id="usuariosTable_buttons"></div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table id="usuariosTable" class="table table-bordered table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Código</th>
+                                <th>Nome</th>
+                                <th>Email</th>
+                                <th>Tipo</th>
+                                <th>Status</th>
+                                <th>Empresa</th>
+                                <th>Último Login</th>
+                                <th width="120">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Dados carregados via AJAX -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para alterar senha -->
+<div class="modal fade" id="modalAlterarSenha" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-key mr-2"></i>Alterar Senha
+                </h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <form id="formAlterarSenha">
+                <div class="modal-body">
+                    <input type="hidden" id="usuarioIdSenha" name="usuarioId">
+                    <div class="form-group">
+                        <label for="novaSenha">Nova Senha</label>
+                        <input type="password" class="form-control" id="novaSenha" name="novaSenha" 
+                               minlength="6" required placeholder="Digite a nova senha">
+                        <small class="form-text text-muted">A senha deve ter pelo menos 6 caracteres</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="confirmarSenha">Confirmar Senha</label>
+                        <input type="password" class="form-control" id="confirmarSenha" name="confirmarSenha" 
+                               minlength="6" required placeholder="Confirme a nova senha">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save mr-2"></i>Alterar Senha
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let usuariosTable;
+        
+        $(document).ready(function() {
+            // Inicializar DataTable
+            inicializarDataTable();
+            
+            // Configurar formulário de alterar senha
+            configurarFormularioSenha();
+        });
+        
+        function inicializarDataTable() {
+            usuariosTable = $('#usuariosTable').DataTable({
+                processing: true,
+                serverSide: true,
+                responsive: true,
+                language: {
+                    url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/pt-BR.json'
+                },
+                ajax: {
+                    url: '@Url.Action("GetData")',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: function(d) {
+                        // Adicionar filtros aos dados
+                        d.nome = $('#filtroNome').val();
+                        d.email = $('#filtroEmail').val();
+                        d.tipo = $('#filtroTipo').val();
+                        d.status = $('#filtroStatus').val();
+                        
+                        return JSON.stringify(d);
+                    },
+                    error: function(xhr, error, thrown) {
+                        console.error('Erro no DataTable:', error);
+                        toastr.error('Erro ao carregar usuários');
+                    }
+                },
+                columns: [
+                    { data: 'cdUsuario', name: 'CdUsuario' },
+                    { data: 'dcUsuario', name: 'DcUsuario' },
+                    { data: 'emailUsuario', name: 'EmailUsuario' },
+                    { 
+                        data: 'tpUsuario', 
+                        name: 'TpUsuario',
+                        render: function(data) {
+                            const tipos = {
+                                'ADMIN': '<span class="badge badge-danger">Administrador</span>',
+                                'USER': '<span class="badge badge-primary">Usuário</span>',
+                                'GUEST': '<span class="badge badge-secondary">Convidado</span>'
+                            };
+                            return tipos[data] || data;
+                        }
+                    },
+                    { 
+                        data: 'flAtivo', 
+                        name: 'FlAtivo',
+                        render: function(data, type, row) {
+                            if (data === 'S') {
+                                return '<span class="badge badge-success">Ativo</span>';
+                            } else {
+                                return '<span class="badge badge-danger">Inativo</span>';
+                            }
+                        }
+                    },
+                    { data: 'cdEmpresa', name: 'CdEmpresa' },
+                    { 
+                        data: 'dtUltimoLogin', 
+                        name: 'DtUltimoLogin',
+                        render: function(data) {
+                            if (data) {
+                                return new Date(data).toLocaleString('pt-BR');
+                            }
+                            return 'Nunca';
+                        }
+                    },
+                    {
+                        data: null,
+                        orderable: false,
+                        searchable: false,
+                        render: function(data, type, row) {
+                            let actions = '<div class="btn-group" role="group">';
+                            
+                            // Visualizar
+                            @if (User.HasPermission("SEG.SEG_USUARIOS.C"))
+                            {
+                                <text>
+                                actions += '<a href="@Url.Action("Details")/' + row.cdUsuario + '" class="btn btn-info btn-sm" title="Visualizar">';
+                                actions += '<i class="fas fa-eye"></i>';
+                                actions += '</a>';
+                                </text>
+                            }
+                            
+                            // Editar
+                            @if (User.HasPermission("SEG.SEG_USUARIOS.A"))
+                            {
+                                <text>
+                                actions += '<a href="@Url.Action("Edit")/' + row.cdUsuario + '" class="btn btn-warning btn-sm" title="Editar">';
+                                actions += '<i class="fas fa-edit"></i>';
+                                actions += '</a>';
+                                
+                                // Alterar senha
+                                actions += '<button type="button" class="btn btn-primary btn-sm" onclick="alterarSenha(\'' + row.cdUsuario + '\', \'' + row.dcUsuario + '\')" title="Alterar Senha">';
+                                actions += '<i class="fas fa-key"></i>';
+                                actions += '</button>';
+                                
+                                // Toggle status
+                                if (row.flAtivo === 'S') {
+                                    actions += '<button type="button" class="btn btn-secondary btn-sm" onclick="toggleStatus(\'' + row.cdUsuario + '\', false)" title="Desativar">';
+                                    actions += '<i class="fas fa-user-slash"></i>';
+                                    actions += '</button>';
+                                } else {
+                                    actions += '<button type="button" class="btn btn-success btn-sm" onclick="toggleStatus(\'' + row.cdUsuario + '\', true)" title="Ativar">';
+                                    actions += '<i class="fas fa-user-check"></i>';
+                                    actions += '</button>';
+                                }
+                                </text>
+                            }
+                            
+                            // Excluir
+                            @if (User.HasPermission("SEG.SEG_USUARIOS.E"))
+                            {
+                                <text>
+                                actions += '<button type="button" class="btn btn-danger btn-sm" onclick="excluirUsuario(\'' + row.cdUsuario + '\', \'' + row.dcUsuario + '\')" title="Excluir">';
+                                actions += '<i class="fas fa-trash"></i>';
+                                actions += '</button>';
+                                </text>
+                            }
+                            
+                            actions += '</div>';
+                            return actions;
+                        }
+                    }
+                ],
+                dom: 'Bfrtip',
+                buttons: [
+                    {
+                        extend: 'excel',
+                        text: '<i class="fas fa-file-excel"></i> Excel',
+                        className: 'btn btn-success btn-sm'
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="fas fa-file-pdf"></i> PDF',
+                        className: 'btn btn-danger btn-sm'
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="fas fa-print"></i> Imprimir',
+                        className: 'btn btn-info btn-sm'
+                    }
+                ],
+                pageLength: 25,
+                lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, 'Todos']]
+            });
+            
+            // Mover botões para o header
+            usuariosTable.buttons().container().appendTo('#usuariosTable_buttons');
+        }
+        
+        function aplicarFiltros() {
+            usuariosTable.ajax.reload();
+        }
+        
+        function limparFiltros() {
+            $('#filtrosForm')[0].reset();
+            usuariosTable.ajax.reload();
+        }
+        
+        function reloadTable() {
+            usuariosTable.ajax.reload();
+        }
+        
+        function alterarSenha(cdUsuario, dcUsuario) {
+            $('#usuarioIdSenha').val(cdUsuario);
+            $('#modalAlterarSenha .modal-title').html('<i class="fas fa-key mr-2"></i>Alterar Senha - ' + dcUsuario);
+            $('#modalAlterarSenha').modal('show');
+        }
+        
+        function configurarFormularioSenha() {
+            $('#formAlterarSenha').on('submit', function(e) {
+                e.preventDefault();
+                
+                const novaSenha = $('#novaSenha').val();
+                const confirmarSenha = $('#confirmarSenha').val();
+                
+                if (novaSenha !== confirmarSenha) {
+                    toastr.error('As senhas não coincidem');
+                    return;
+                }
+                
+                if (novaSenha.length < 6) {
+                    toastr.error('A senha deve ter pelo menos 6 caracteres');
+                    return;
+                }
+                
+                const usuarioId = $('#usuarioIdSenha').val();
+                
+                $.post('@Url.Action("AlterarSenha")', {
+                    id: usuarioId,
+                    novaSenha: novaSenha
+                })
+                .done(function(response) {
+                    if (response.success) {
+                        toastr.success(response.message);
+                        $('#modalAlterarSenha').modal('hide');
+                        $('#formAlterarSenha')[0].reset();
+                    } else {
+                        toastr.error(response.message);
+                    }
+                })
+                .fail(function() {
+                    toastr.error('Erro ao alterar senha');
+                });
+            });
+        }
+        
+        function toggleStatus(cdUsuario, ativo) {
+            const acao = ativo ? 'ativar' : 'desativar';
+            
+            RhSensoWeb.modal.confirm(
+                `Tem certeza que deseja ${acao} este usuário?`,
+                function() {
+                    $.post('@Url.Action("ToggleStatus")', {
+                        id: cdUsuario,
+                        ativo: ativo
+                    })
+                    .done(function(response) {
+                        if (response.success) {
+                            toastr.success(response.message);
+                            usuariosTable.ajax.reload(null, false);
+                        } else {
+                            toastr.error(response.message);
+                        }
+                    })
+                    .fail(function() {
+                        toastr.error('Erro ao alterar status do usuário');
+                    });
+                },
+                'Confirmar Ação'
+            );
+        }
+        
+        function excluirUsuario(cdUsuario, dcUsuario) {
+            RhSensoWeb.modal.confirm(
+                `Tem certeza que deseja excluir o usuário "${dcUsuario}"?<br><br><strong>Esta ação não pode ser desfeita!</strong>`,
+                function() {
+                    $.post('@Url.Action("Delete")', {
+                        id: cdUsuario,
+                        __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                    })
+                    .done(function(response) {
+                        if (response.success) {
+                            toastr.success(response.message);
+                            usuariosTable.ajax.reload();
+                        } else {
+                            toastr.error(response.message);
+                        }
+                    })
+                    .fail(function() {
+                        toastr.error('Erro ao excluir usuário');
+                    });
+                },
+                'Confirmar Exclusão'
+            );
+        }
+    </script>
+}

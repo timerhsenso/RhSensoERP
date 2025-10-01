@@ -1,0 +1,298 @@
+@model RhSensoWeb.Models.Auth.LoginViewModel
+@{
+    ViewData["Title"] = "Login";
+    Layout = null; // Layout específico para login
+}
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - RhSensoERP</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .login-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 0;
+            overflow: hidden;
+            max-width: 900px;
+            width: 100%;
+            margin: 20px;
+        }
+        
+        .login-left {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 60px 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        
+        .login-right {
+            padding: 60px 40px;
+        }
+        
+        .logo {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        
+        .logo i {
+            margin-right: 10px;
+        }
+        
+        .welcome-text {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+        
+        .form-floating {
+            margin-bottom: 20px;
+        }
+        
+        .form-control {
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 12px 15px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        
+        .btn-login {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 12px 30px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: white;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            color: white;
+        }
+        
+        .btn-login:disabled {
+            opacity: 0.6;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .form-check {
+            margin: 20px 0;
+        }
+        
+        .form-check-input:checked {
+            background-color: #667eea;
+            border-color: #667eea;
+        }
+        
+        .alert {
+            border-radius: 10px;
+            border: none;
+            margin-bottom: 20px;
+        }
+        
+        .loading-spinner {
+            display: none;
+        }
+        
+        .loading .loading-spinner {
+            display: inline-block;
+        }
+        
+        .loading .btn-text {
+            display: none;
+        }
+        
+        @@media (max-width: 768px) {
+            .login-left {
+                padding: 40px 20px;
+            }
+            
+            .login-right {
+                padding: 40px 20px;
+            }
+            
+            .logo {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="row g-0 h-100">
+            <!-- Lado esquerdo - Branding -->
+            <div class="col-lg-6 login-left">
+                <div class="logo">
+                    <i class="fas fa-users-cog"></i>
+                    RhSensoERP
+                </div>
+                <div class="welcome-text">
+                    <h4>Bem-vindo de volta!</h4>
+                    <p>Sistema integrado de gestão de recursos humanos. Faça login para acessar sua conta e gerenciar sua empresa com eficiência.</p>
+                </div>
+            </div>
+            
+            <!-- Lado direito - Formulário -->
+            <div class="col-lg-6 login-right">
+                <div class="text-center mb-4">
+                    <h3 class="fw-bold text-dark">Fazer Login</h3>
+                    <p class="text-muted">Entre com suas credenciais</p>
+                </div>
+                
+                <!-- Mensagem de erro -->
+                @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+                {
+                    <div class="alert alert-danger" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        @Model.ErrorMessage
+                    </div>
+                }
+                
+                <!-- Formulário de login -->
+                <form asp-action="Login" asp-controller="Auth" method="post" id="loginForm">
+                    <input type="hidden" asp-for="ReturnUrl" />
+                    
+                    <!-- Campo Usuário -->
+                    <div class="form-floating">
+                        <input asp-for="CdUsuario" class="form-control" id="floatingUser" placeholder="Usuário" required>
+                        <label for="floatingUser">
+                            <i class="fas fa-user me-2"></i>Usuário
+                        </label>
+                        <span asp-validation-for="CdUsuario" class="text-danger"></span>
+                    </div>
+                    
+                    <!-- Campo Senha -->
+                    <div class="form-floating">
+                        <input asp-for="Senha" class="form-control" id="floatingPassword" placeholder="Senha" required>
+                        <label for="floatingPassword">
+                            <i class="fas fa-lock me-2"></i>Senha
+                        </label>
+                        <span asp-validation-for="Senha" class="text-danger"></span>
+                    </div>
+                    
+                    <!-- Campo Domínio (opcional) -->
+                    <div class="form-floating">
+                        <input asp-for="Dominio" class="form-control" id="floatingDomain" placeholder="Domínio (opcional)">
+                        <label for="floatingDomain">
+                            <i class="fas fa-globe me-2"></i>Domínio (opcional)
+                        </label>
+                        <span asp-validation-for="Dominio" class="text-danger"></span>
+                    </div>
+                    
+                    <!-- Lembrar-me -->
+                    <div class="form-check">
+                        <input asp-for="RememberMe" class="form-check-input" id="rememberMe">
+                        <label class="form-check-label" for="rememberMe">
+                            Lembrar-me por 30 dias
+                        </label>
+                    </div>
+                    
+                    <!-- Botão de login -->
+                    <button type="submit" class="btn btn-login" id="loginBtn">
+                        <span class="btn-text">
+                            <i class="fas fa-sign-in-alt me-2"></i>Entrar
+                        </span>
+                        <span class="loading-spinner">
+                            <i class="fas fa-spinner fa-spin me-2"></i>Entrando...
+                        </span>
+                    </button>
+                </form>
+                
+                <!-- Links adicionais -->
+                <div class="text-center mt-4">
+                    <small class="text-muted">
+                        Problemas para acessar? Entre em contato com o suporte técnico.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginForm = document.getElementById('loginForm');
+            const loginBtn = document.getElementById('loginBtn');
+            const userInput = document.getElementById('floatingUser');
+            
+            // Focar no campo usuário
+            userInput.focus();
+            
+            // Adicionar loading no submit
+            loginForm.addEventListener('submit', function() {
+                loginBtn.classList.add('loading');
+                loginBtn.disabled = true;
+                
+                // Remover loading após 10 segundos (timeout)
+                setTimeout(function() {
+                    loginBtn.classList.remove('loading');
+                    loginBtn.disabled = false;
+                }, 10000);
+            });
+            
+            // Enter para submeter
+            document.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    loginForm.submit();
+                }
+            });
+            
+            // Validação em tempo real
+            const inputs = document.querySelectorAll('.form-control');
+            inputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    if (this.value.trim()) {
+                        this.classList.add('is-valid');
+                        this.classList.remove('is-invalid');
+                    } else {
+                        this.classList.remove('is-valid');
+                        if (this.hasAttribute('required')) {
+                            this.classList.add('is-invalid');
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+    
+    @section Scripts {
+        @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    }
+</body>
+</html>

@@ -1,0 +1,382 @@
+@using RhSensoWeb.Extensions
+@{
+    ViewData["Title"] = "Dashboard";
+    ViewData["Icon"] = "fas fa-tachometer-alt";
+    
+    var userSession = User.GetUserSession();
+}
+
+<!-- Info boxes -->
+<div class="row">
+    <div class="col-12 col-sm-6 col-md-3">
+        <div class="info-box">
+            <span class="info-box-icon bg-info elevation-1">
+                <i class="fas fa-users"></i>
+            </span>
+            <div class="info-box-content">
+                <span class="info-box-text">Funcionários</span>
+                <span class="info-box-number">
+                    1,410
+                    <small>%</small>
+                </span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-12 col-sm-6 col-md-3">
+        <div class="info-box mb-3">
+            <span class="info-box-icon bg-danger elevation-1">
+                <i class="fas fa-user-times"></i>
+            </span>
+            <div class="info-box-content">
+                <span class="info-box-text">Afastamentos</span>
+                <span class="info-box-number">23</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="clearfix hidden-md-up"></div>
+    
+    <div class="col-12 col-sm-6 col-md-3">
+        <div class="info-box mb-3">
+            <span class="info-box-icon bg-success elevation-1">
+                <i class="fas fa-calendar-check"></i>
+            </span>
+            <div class="info-box-content">
+                <span class="info-box-text">Férias Aprovadas</span>
+                <span class="info-box-number">156</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-12 col-sm-6 col-md-3">
+        <div class="info-box mb-3">
+            <span class="info-box-icon bg-warning elevation-1">
+                <i class="fas fa-exclamation-triangle"></i>
+            </span>
+            <div class="info-box-content">
+                <span class="info-box-text">Pendências</span>
+                <span class="info-box-number">12</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main row -->
+<div class="row">
+    <!-- Left col -->
+    <section class="col-lg-7 connectedSortable">
+        
+        <!-- Gráfico de Funcionários por Departamento -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-chart-pie mr-1"></i>
+                    Funcionários por Departamento
+                </h3>
+                <div class="card-tools">
+                    <ul class="nav nav-pills ml-auto">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#revenue-chart" data-toggle="tab">Área</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#sales-chart" data-toggle="tab">Donut</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="tab-content p-0">
+                    <div class="chart tab-pane active" id="revenue-chart" style="position: relative; height: 300px;">
+                        <canvas id="revenue-chart-canvas" height="300" style="height: 300px;"></canvas>
+                    </div>
+                    <div class="chart tab-pane" id="sales-chart" style="position: relative; height: 300px;">
+                        <canvas id="sales-chart-canvas" height="300" style="height: 300px;"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Últimas Atividades -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-history mr-1"></i>
+                    Últimas Atividades
+                </h3>
+            </div>
+            <div class="card-body">
+                <ul class="timeline">
+                    <li class="time-label">
+                        <span class="bg-danger">
+                            Hoje
+                        </span>
+                    </li>
+                    <li>
+                        <i class="fas fa-user bg-info"></i>
+                        <div class="timeline-item">
+                            <span class="time"><i class="far fa-clock"></i> 2 min</span>
+                            <h3 class="timeline-header"><a href="#">João Silva</a> foi cadastrado</h3>
+                            <div class="timeline-body">
+                                Novo funcionário adicionado ao sistema - Departamento: TI
+                            </div>
+                        </div>
+                    </li>
+                    <li>
+                        <i class="fas fa-calendar bg-success"></i>
+                        <div class="timeline-item">
+                            <span class="time"><i class="far fa-clock"></i> 5 min</span>
+                            <h3 class="timeline-header"><a href="#">Maria Santos</a> solicitou férias</h3>
+                            <div class="timeline-body">
+                                Período: 15/11/2024 a 29/11/2024 (15 dias)
+                            </div>
+                        </div>
+                    </li>
+                    <li>
+                        <i class="fas fa-user-times bg-warning"></i>
+                        <div class="timeline-item">
+                            <span class="time"><i class="far fa-clock"></i> 15 min</span>
+                            <h3 class="timeline-header"><a href="#">Pedro Costa</a> registrou afastamento</h3>
+                            <div class="timeline-body">
+                                Motivo: Atestado médico - 3 dias
+                            </div>
+                        </div>
+                    </li>
+                    <li>
+                        <i class="far fa-clock bg-gray"></i>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+    </section>
+    
+    <!-- Right col -->
+    <section class="col-lg-5 connectedSortable">
+        
+        <!-- Informações do Usuário -->
+        <div class="card bg-gradient-info">
+            <div class="card-header border-0">
+                <h3 class="card-title">
+                    <i class="fas fa-user mr-1"></i>
+                    Bem-vindo, @userSession.DcUsuario!
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-12">
+                        <p class="text-light">
+                            <strong>Email:</strong> @userSession.EmailUsuario<br>
+                            <strong>Tipo:</strong> @userSession.TpUsuario<br>
+                            <strong>Empresa:</strong> @userSession.CdEmpresa<br>
+                            <strong>Filial:</strong> @userSession.CdFilial<br>
+                            <strong>Último Login:</strong> @userSession.LoginTime.ToString("dd/MM/yyyy HH:mm")
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Ações Rápidas -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-bolt mr-1"></i>
+                    Ações Rápidas
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    @if (User.HasPermission("SEG.SEG_USUARIOS.I"))
+                    {
+                        <div class="col-6 mb-3">
+                            <a href="@Url.Action("Create", "Usuarios", new { area = "SEG" })" class="btn btn-primary btn-block">
+                                <i class="fas fa-user-plus"></i><br>
+                                Novo Usuário
+                            </a>
+                        </div>
+                    }
+                    
+                    @if (User.HasPermission("RHU.RHU_FUNCIONARIOS.I"))
+                    {
+                        <div class="col-6 mb-3">
+                            <a href="@Url.Action("Create", "Funcionarios", new { area = "RHU" })" class="btn btn-success btn-block">
+                                <i class="fas fa-user-tie"></i><br>
+                                Novo Funcionário
+                            </a>
+                        </div>
+                    }
+                    
+                    @if (User.HasPermission("RHU.RHU_AFASTAMENTOS.I"))
+                    {
+                        <div class="col-6 mb-3">
+                            <a href="@Url.Action("Create", "Afastamentos", new { area = "RHU" })" class="btn btn-warning btn-block">
+                                <i class="fas fa-user-clock"></i><br>
+                                Novo Afastamento
+                            </a>
+                        </div>
+                    }
+                    
+                    @if (User.HasPermission("RHU.RHU_FERIAS.I"))
+                    {
+                        <div class="col-6 mb-3">
+                            <a href="@Url.Action("Create", "Ferias", new { area = "RHU" })" class="btn btn-info btn-block">
+                                <i class="fas fa-calendar-plus"></i><br>
+                                Programar Férias
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+        
+        <!-- Calendário -->
+        <div class="card bg-gradient-success">
+            <div class="card-header border-0">
+                <h3 class="card-title">
+                    <i class="far fa-calendar-alt"></i>
+                    Calendário
+                </h3>
+            </div>
+            <div class="card-body pt-0">
+                <div id="calendar" style="width: 100%"></div>
+            </div>
+        </div>
+        
+        <!-- Notificações -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-bell mr-1"></i>
+                    Notificações Recentes
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">Férias pendentes de aprovação</h6>
+                            <p class="mb-1 text-muted">3 solicitações aguardando</p>
+                        </div>
+                        <span class="badge badge-warning badge-pill">3</span>
+                    </div>
+                    
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">Documentos vencendo</h6>
+                            <p class="mb-1 text-muted">ASO e exames médicos</p>
+                        </div>
+                        <span class="badge badge-danger badge-pill">5</span>
+                    </div>
+                    
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">Aniversariantes do mês</h6>
+                            <p class="mb-1 text-muted">Funcionários fazendo aniversário</p>
+                        </div>
+                        <span class="badge badge-info badge-pill">8</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+    </section>
+</div>
+
+@section Scripts {
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script>
+        $(document).ready(function() {
+            
+            // Gráfico de Área - Funcionários por Departamento
+            const areaChartCanvas = $('#revenue-chart-canvas').get(0).getContext('2d');
+            const areaChart = new Chart(areaChartCanvas, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
+                    datasets: [
+                        {
+                            label: 'Admissões',
+                            backgroundColor: 'rgba(60,141,188,0.9)',
+                            borderColor: 'rgba(60,141,188,0.8)',
+                            pointRadius: false,
+                            pointColor: '#3b8bba',
+                            pointStrokeColor: 'rgba(60,141,188,1)',
+                            pointHighlightFill: '#fff',
+                            pointHighlightStroke: 'rgba(60,141,188,1)',
+                            data: [28, 48, 40, 19, 86, 27, 90, 45, 32, 67, 23, 41]
+                        },
+                        {
+                            label: 'Demissões',
+                            backgroundColor: 'rgba(210, 214, 222, 1)',
+                            borderColor: 'rgba(210, 214, 222, 1)',
+                            pointRadius: false,
+                            pointColor: 'rgba(210, 214, 222, 1)',
+                            pointStrokeColor: '#c1c7d1',
+                            pointHighlightFill: '#fff',
+                            pointHighlightStroke: 'rgba(220,220,220,1)',
+                            data: [65, 59, 80, 81, 56, 55, 40, 32, 25, 43, 18, 29]
+                        }
+                    ]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        },
+                        y: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Gráfico de Donut - Funcionários por Departamento
+            const donutChartCanvas = $('#sales-chart-canvas').get(0).getContext('2d');
+            const donutChart = new Chart(donutChartCanvas, {
+                type: 'doughnut',
+                data: {
+                    labels: ['TI', 'RH', 'Financeiro', 'Vendas', 'Operações'],
+                    datasets: [{
+                        data: [700, 500, 400, 600, 300],
+                        backgroundColor: ['#f56954', '#00a65a', '#f39c12', '#00c0ef', '#3c8dbc']
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+            
+            // Simular dados em tempo real
+            setInterval(function() {
+                // Atualizar números das info boxes com animação
+                $('.info-box-number').each(function() {
+                    const current = parseInt($(this).text());
+                    const variation = Math.floor(Math.random() * 10) - 5;
+                    const newValue = Math.max(0, current + variation);
+                    $(this).text(newValue);
+                });
+            }, 30000); // Atualizar a cada 30 segundos
+            
+        });
+    </script>
+}

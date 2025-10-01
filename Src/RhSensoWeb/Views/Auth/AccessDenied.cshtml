@@ -1,0 +1,91 @@
+@{
+    ViewData["Title"] = "Acesso Negado";
+}
+
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="error-page text-center">
+                <div class="error-content">
+                    <div class="error-icon mb-4">
+                        <i class="fas fa-ban text-danger" style="font-size: 5rem;"></i>
+                    </div>
+                    
+                    <h1 class="error-title text-danger mb-3">
+                        Acesso Negado
+                    </h1>
+                    
+                    <p class="error-message text-muted mb-4">
+                        Você não tem permissão para acessar esta página ou recurso.
+                    </p>
+                    
+                    <div class="error-details mb-4">
+                        <div class="alert alert-warning" role="alert">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Código:</strong> 403 - Forbidden<br>
+                            <strong>Usuário:</strong> @User.Identity?.Name<br>
+                            <strong>Horário:</strong> @DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss")
+                        </div>
+                    </div>
+                    
+                    <div class="error-actions">
+                        <a href="@Url.Action("Index", "Home")" class="btn btn-primary me-2">
+                            <i class="fas fa-home me-2"></i>Voltar ao Início
+                        </a>
+                        
+                        <button type="button" class="btn btn-secondary" onclick="history.back()">
+                            <i class="fas fa-arrow-left me-2"></i>Página Anterior
+                        </button>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <small class="text-muted">
+                            Se você acredita que deveria ter acesso a esta página, 
+                            entre em contato com o administrador do sistema.
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .error-page {
+        padding: 60px 20px;
+        min-height: 60vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .error-content {
+        max-width: 500px;
+    }
+    
+    .error-icon {
+        animation: pulse 2s infinite;
+    }
+    
+    @@keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+    
+    .error-title {
+        font-size: 2.5rem;
+        font-weight: bold;
+    }
+    
+    .error-message {
+        font-size: 1.1rem;
+        line-height: 1.6;
+    }
+    
+    .btn {
+        border-radius: 8px;
+        padding: 10px 20px;
+        font-weight: 500;
+    }
+</style>
