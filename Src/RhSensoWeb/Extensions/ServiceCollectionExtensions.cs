@@ -6,6 +6,7 @@ using RhSensoWeb.Configuration;
 using RhSensoWeb.Services;
 using RhSensoWeb.Services.Interfaces;
 using Serilog;
+using System.Net;
 
 namespace RhSensoWeb.Extensions;
 
@@ -72,9 +73,6 @@ public static class ServiceCollectionExtensions
                             await context.HttpContext.SignOutAsync();
                             return;
                         }
-
-                        // Aqui você pode adicionar validação adicional do token
-                        // Por exemplo, verificar se não expirou ou se não foi revogado
                     };
                 });
 
@@ -83,40 +81,61 @@ public static class ServiceCollectionExtensions
 
     /// <summary>
     /// Política de retry para HttpClient
+    /// ✅ CORRIGIDO: Apenas erros transitórios (5xx, timeout, network errors)
+    /// ❌ NÃO faz retry em 4xx (Bad Request, Unauthorized, Forbidden)
     /// </summary>
     private static IAsyncPolicy<HttpResponseMessage> GetRetryPolicy()
     {
         return HttpPolicyExtensions
-            .HandleTransientHttpError()
-            .OrResult(msg => !msg.IsSuccessStatusCode)
+            .HandleTransientHttpError() // 5xx e network errors
+            .OrResult(msg => msg.StatusCode == HttpStatusCode.RequestTimeout) // 408
+            .OrResult(msg => msg.StatusCode == HttpStatusCode.TooManyRequests) // 429 (rate limit)
             .WaitAndRetryAsync(
                 retryCount: 3,
                 sleepDurationProvider: retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),
                 onRetry: (outcome, timespan, retryCount, context) =>
                 {
-                    Log.Warning("Tentativa {RetryCount} em {Delay}ms para {RequestUri}",
-                        retryCount, timespan.TotalMilliseconds, context.GetValueOrDefault("RequestUri"));
+                    var statusCode = outcome.Result?.StatusCode.ToString() ?? "NetworkError";
+                    var requestUri = context.GetValueOrDefault("RequestUri")?.ToString() ?? "Unknown";
+
+                    Log.Warning(
+                        "Retry {RetryCount}/3 após {Delay}ms | Status: {StatusCode} | URI: {RequestUri}",
+                        retryCount,
+                        timespan.TotalMilliseconds,
+                        statusCode,
+                        requestUri
+                    );
                 });
     }
 
     /// <summary>
     /// Política de circuit breaker para HttpClient
+    /// ✅ CORRIGIDO: Apenas erros transitórios
     /// </summary>
     private static IAsyncPolicy<HttpResponseMessage> GetCircuitBreakerPolicy()
     {
         return HttpPolicyExtensions
             .HandleTransientHttpError()
+            .OrResult(msg => msg.StatusCode == HttpStatusCode.RequestTimeout)
             .CircuitBreakerAsync(
                 handledEventsAllowedBeforeBreaking: 5,
                 durationOfBreak: TimeSpan.FromSeconds(30),
                 onBreak: (exception, duration) =>
                 {
-                    Log.Warning("Circuit breaker aberto por {Duration}ms devido a: {Exception}",
-                        duration.TotalMilliseconds, exception.Exception?.Message ?? exception.Result?.StatusCode.ToString());
+                    var statusCode = exception.Result?.StatusCode.ToString() ?? "NetworkError";
+                    Log.Warning(
+                        "⚡ Circuit Breaker ABERTO por {Duration}s | Motivo: {StatusCode}",
+                        duration.TotalSeconds,
+                        statusCode
+                    );
                 },
                 onReset: () =>
                 {
-                    Log.Information("Circuit breaker resetado");
+                    Log.Information("✅ Circuit Breaker RESETADO - API voltou ao normal");
+                },
+                onHalfOpen: () =>
+                {
+                    Log.Information("⚠️ Circuit Breaker SEMI-ABERTO - Testando API...");
                 });
     }
 
@@ -127,6 +146,14 @@ public static class ServiceCollectionExtensions
     {
         services.AddCors(options =>
         {
+            options.AddPolicy("DevelopmentPolicy", builder =>
+            {
+                builder.WithOrigins("https://localhost:7227", "http://localhost:7227")
+                       .AllowAnyMethod()
+                       .AllowAnyHeader()
+                       .AllowCredentials();
+            });
+
             options.AddDefaultPolicy(builder =>
             {
                 builder.AllowAnyOrigin()
@@ -167,8 +194,6 @@ public static class ServiceCollectionExtensions
     /// </summary>
     public static IServiceCollection AddCustomHealthChecks(this IServiceCollection services, IConfiguration configuration)
     {
-        var apiSettings = configuration.GetSection("ApiSettings").Get<ApiSettings>();
-
         services.AddHealthChecks()
                 .AddCheck("self", () => Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Healthy());
 

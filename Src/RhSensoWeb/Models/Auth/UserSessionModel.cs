@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Security.Claims;
 
 namespace RhSensoWeb.Models.Auth;
@@ -11,13 +12,19 @@ public class UserSessionModel
     public string DcUsuario { get; set; } = string.Empty;
     public string EmailUsuario { get; set; } = string.Empty;
     public string TpUsuario { get; set; } = string.Empty;
-    public char FlAtivo { get; set; }
-    public string? CdEmpresa { get; set; }
-    public string? CdFilial { get; set; }
+    public char FlAtivo { get; set; } = 'N';
+
+    // INTEIROS padronizados
+    public int CdEmpresa { get; set; }
+    public int CdFilial { get; set; }
+
     public string? IdSaas { get; set; }
     public string AccessToken { get; set; } = string.Empty;
+
+    // Use os DTOs já existentes no seu projeto (não redefina aqui)
     public List<UserGroupDto> Groups { get; set; } = new();
     public List<UserPermissionDto> Permissions { get; set; } = new();
+
     public DateTime LoginTime { get; set; }
     public DateTime LastActivity { get; set; }
 
@@ -29,47 +36,40 @@ public class UserSessionModel
         var claims = new List<Claim>
         {
             new(ClaimTypes.NameIdentifier, CdUsuario),
-            new(ClaimTypes.Name, DcUsuario),
-            new(ClaimTypes.Email, EmailUsuario),
-            new("TpUsuario", TpUsuario),
-            new("FlAtivo", FlAtivo.ToString()),
-            new("AccessToken", AccessToken),
-            new("LoginTime", LoginTime.ToString("O")),
-            new("LastActivity", LastActivity.ToString("O"))
+            new(ClaimTypes.Name,          DcUsuario),
+            new(ClaimTypes.Email,         EmailUsuario),
+            new("TpUsuario",              TpUsuario),
+            new("FlAtivo",                FlAtivo.ToString()),
+            new("AccessToken",            AccessToken),
+            new("LoginTime",              LoginTime.ToString("O")),
+            new("LastActivity",           LastActivity.ToString("O")),
+
+            // Empresa/Filial inteiros gravados como string
+            new("CdEmpresa",              CdEmpresa.ToString()),
+            new("CdFilial",               CdFilial.ToString())
         };
 
-        // Adicionar empresa e filial se existirem
-        if (!string.IsNullOrEmpty(CdEmpresa))
-            claims.Add(new Claim("CdEmpresa", CdEmpresa));
-
-        if (!string.IsNullOrEmpty(CdFilial))
-            claims.Add(new Claim("CdFilial", CdFilial));
-
-        if (!string.IsNullOrEmpty(IdSaas))
+        if (!string.IsNullOrWhiteSpace(IdSaas))
             claims.Add(new Claim("IdSaas", IdSaas));
 
-        // Adicionar grupos
-        foreach (var group in Groups)
+        // Grupos
+        foreach (var g in Groups)
         {
-            claims.Add(new Claim("Group", group.CdGrUser));
+            if (!string.IsNullOrWhiteSpace(g.CdGrUser))
+                claims.Add(new Claim("Group", g.CdGrUser));
         }
 
-        // Adicionar permissões
-        foreach (var permission in Permissions)
+        // Permissões
+        foreach (var p in Permissions)
         {
-            claims.Add(new Claim("Permission", permission.PermissionKey));
-            
-            if (permission.CanInclude)
-                claims.Add(new Claim($"Permission:{permission.PermissionKey}:I", "true"));
-            
-            if (permission.CanUpdate)
-                claims.Add(new Claim($"Permission:{permission.PermissionKey}:A", "true"));
-            
-            if (permission.CanDelete)
-                claims.Add(new Claim($"Permission:{permission.PermissionKey}:E", "true"));
-            
-            if (permission.CanConsult)
-                claims.Add(new Claim($"Permission:{permission.PermissionKey}:C", "true"));
+            if (string.IsNullOrWhiteSpace(p.PermissionKey)) continue;
+
+            claims.Add(new Claim("Permission", p.PermissionKey));
+
+            if (p.CanInclude) claims.Add(new Claim($"Permission:{p.PermissionKey}:I", "true"));
+            if (p.CanUpdate) claims.Add(new Claim($"Permission:{p.PermissionKey}:A", "true"));
+            if (p.CanDelete) claims.Add(new Claim($"Permission:{p.PermissionKey}:E", "true"));
+            if (p.CanConsult) claims.Add(new Claim($"Permission:{p.PermissionKey}:C", "true"));
         }
 
         return claims;
@@ -86,43 +86,50 @@ public class UserSessionModel
             DcUsuario = principal.FindFirst(ClaimTypes.Name)?.Value ?? string.Empty,
             EmailUsuario = principal.FindFirst(ClaimTypes.Email)?.Value ?? string.Empty,
             TpUsuario = principal.FindFirst("TpUsuario")?.Value ?? string.Empty,
-            FlAtivo = char.Parse(principal.FindFirst("FlAtivo")?.Value ?? "N"),
-            CdEmpresa = principal.FindFirst("CdEmpresa")?.Value,
-            CdFilial = principal.FindFirst("CdFilial")?.Value,
+            FlAtivo = char.TryParse(principal.FindFirst("FlAtivo")?.Value, out var fl) ? fl : 'N',
             IdSaas = principal.FindFirst("IdSaas")?.Value,
             AccessToken = principal.FindFirst("AccessToken")?.Value ?? string.Empty
         };
 
-        // Parse das datas
+        // Empresa / Filial (int) — se não houver claim válida, fica 0
+        if (int.TryParse(principal.FindFirst("CdEmpresa")?.Value, out var emp))
+            model.CdEmpresa = emp;
+        else
+            model.CdEmpresa = 0;
+
+        if (int.TryParse(principal.FindFirst("CdFilial")?.Value, out var fil))
+            model.CdFilial = fil;
+        else
+            model.CdFilial = 0;
+
+        // Datas
         if (DateTime.TryParse(principal.FindFirst("LoginTime")?.Value, out var loginTime))
             model.LoginTime = loginTime;
 
         if (DateTime.TryParse(principal.FindFirst("LastActivity")?.Value, out var lastActivity))
             model.LastActivity = lastActivity;
 
-        // Recuperar grupos
+        // Grupos
         model.Groups = principal.FindAll("Group")
             .Select(c => new UserGroupDto { CdGrUser = c.Value })
             .ToList();
 
-        // Recuperar permissões
-        var permissionClaims = principal.FindAll("Permission")
-            .Where(c => !c.Type.Contains(":"))
+        // Permissões
+        var keys = principal.FindAll("Permission")
             .Select(c => c.Value)
             .Distinct();
 
-        foreach (var permissionKey in permissionClaims)
+        foreach (var key in keys)
         {
-            var permission = new UserPermissionDto
+            var perm = new UserPermissionDto
             {
-                PermissionKey = permissionKey,
-                CanInclude = principal.HasClaim($"Permission:{permissionKey}:I", "true"),
-                CanUpdate = principal.HasClaim($"Permission:{permissionKey}:A", "true"),
-                CanDelete = principal.HasClaim($"Permission:{permissionKey}:E", "true"),
-                CanConsult = principal.HasClaim($"Permission:{permissionKey}:C", "true")
+                PermissionKey = key,
+                CanInclude = principal.HasClaim($"Permission:{key}:I", "true"),
+                CanUpdate = principal.HasClaim($"Permission:{key}:A", "true"),
+                CanDelete = principal.HasClaim($"Permission:{key}:E", "true"),
+                CanConsult = principal.HasClaim($"Permission:{key}:C", "true")
             };
-
-            model.Permissions.Add(permission);
+            model.Permissions.Add(perm);
         }
 
         return model;
@@ -136,7 +143,7 @@ public class UserSessionModel
         var permission = Permissions.FirstOrDefault(p => p.PermissionKey == permissionKey);
         if (permission == null) return false;
 
-        return action.ToUpper() switch
+        return action.ToUpperInvariant() switch
         {
             "I" => permission.CanInclude,
             "A" => permission.CanUpdate,

@@ -1,7 +1,7 @@
 @model RhSensoWeb.Models.Auth.LoginViewModel
 @{
     ViewData["Title"] = "Login";
-    Layout = null; // Layout específico para login
+    Layout = null;
 }
 
 <!DOCTYPE html>
@@ -10,7 +10,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - RhSensoERP</title>
-    
+
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
@@ -25,7 +25,7 @@
             justify-content: center;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-        
+
         .login-container {
             background: rgba(255, 255, 255, 0.95);
             border-radius: 20px;
@@ -37,7 +37,7 @@
             width: 100%;
             margin: 20px;
         }
-        
+
         .login-left {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -48,31 +48,41 @@
             align-items: center;
             text-align: center;
         }
-        
+
         .login-right {
             padding: 60px 40px;
         }
-        
+
         .logo {
             font-size: 2.5rem;
             font-weight: bold;
             margin-bottom: 20px;
         }
-        
-        .logo i {
-            margin-right: 10px;
-        }
-        
+
+            .logo i {
+                margin-right: 10px;
+            }
+
         .welcome-text {
             font-size: 1.1rem;
             opacity: 0.9;
             line-height: 1.6;
         }
-        
+
+        .auth-mode-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            margin-top: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
         .form-floating {
             margin-bottom: 20px;
         }
-        
+
         .form-control {
             border: 2px solid #e9ecef;
             border-radius: 10px;
@@ -80,12 +90,12 @@
             font-size: 1rem;
             transition: all 0.3s ease;
         }
-        
-        .form-control:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-        }
-        
+
+            .form-control:focus {
+                border-color: #667eea;
+                box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+            }
+
         .btn-login {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border: none;
@@ -97,55 +107,55 @@
             width: 100%;
             transition: all 0.3s ease;
         }
-        
-        .btn-login:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-            color: white;
-        }
-        
-        .btn-login:disabled {
-            opacity: 0.6;
-            transform: none;
-            box-shadow: none;
-        }
-        
+
+            .btn-login:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+                color: white;
+            }
+
+            .btn-login:disabled {
+                opacity: 0.6;
+                transform: none;
+                box-shadow: none;
+            }
+
         .form-check {
             margin: 20px 0;
         }
-        
+
         .form-check-input:checked {
             background-color: #667eea;
             border-color: #667eea;
         }
-        
+
         .alert {
             border-radius: 10px;
             border: none;
             margin-bottom: 20px;
         }
-        
+
         .loading-spinner {
             display: none;
         }
-        
+
         .loading .loading-spinner {
             display: inline-block;
         }
-        
+
         .loading .btn-text {
             display: none;
         }
-        
+
         @@media (max-width: 768px) {
             .login-left {
                 padding: 40px 20px;
             }
-            
+
             .login-right {
                 padding: 40px 20px;
             }
-            
+
             .logo {
                 font-size: 2rem;
             }
@@ -165,15 +175,20 @@
                     <h4>Bem-vindo de volta!</h4>
                     <p>Sistema integrado de gestão de recursos humanos. Faça login para acessar sua conta e gerenciar sua empresa com eficiência.</p>
                 </div>
+                <!-- Badge do modo de autenticação (será preenchido via JS) -->
+                <div class="auth-mode-badge" id="authModeBadge">
+                    <i class="fas fa-shield-alt me-2"></i>
+                    <span id="authModeText">Carregando...</span>
+                </div>
             </div>
-            
+
             <!-- Lado direito - Formulário -->
             <div class="col-lg-6 login-right">
                 <div class="text-center mb-4">
                     <h3 class="fw-bold text-dark">Fazer Login</h3>
-                    <p class="text-muted">Entre com suas credenciais</p>
+                    <p class="text-muted" id="loginSubtitle">Entre com suas credenciais</p>
                 </div>
-                
+
                 <!-- Mensagem de erro -->
                 @if (!string.IsNullOrEmpty(Model.ErrorMessage))
                 {
@@ -182,20 +197,21 @@
                         @Model.ErrorMessage
                     </div>
                 }
-                
+
                 <!-- Formulário de login -->
                 <form asp-action="Login" asp-controller="Auth" method="post" id="loginForm">
                     <input type="hidden" asp-for="ReturnUrl" />
-                    
-                    <!-- Campo Usuário -->
+
+                    <!-- Campo Usuário/Email (label dinâmico) -->
                     <div class="form-floating">
-                        <input asp-for="CdUsuario" class="form-control" id="floatingUser" placeholder="Usuário" required>
+                        <input asp-for="CdUsuario" class="form-control" id="floatingUser" placeholder="Usuário" required autofocus>
                         <label for="floatingUser">
-                            <i class="fas fa-user me-2"></i>Usuário
+                            <i class="fas fa-user me-2" id="userIcon"></i>
+                            <span id="userLabel">Usuário</span>
                         </label>
                         <span asp-validation-for="CdUsuario" class="text-danger"></span>
                     </div>
-                    
+
                     <!-- Campo Senha -->
                     <div class="form-floating">
                         <input asp-for="Senha" class="form-control" id="floatingPassword" placeholder="Senha" required>
@@ -204,16 +220,7 @@
                         </label>
                         <span asp-validation-for="Senha" class="text-danger"></span>
                     </div>
-                    
-                    <!-- Campo Domínio (opcional) -->
-                    <div class="form-floating">
-                        <input asp-for="Dominio" class="form-control" id="floatingDomain" placeholder="Domínio (opcional)">
-                        <label for="floatingDomain">
-                            <i class="fas fa-globe me-2"></i>Domínio (opcional)
-                        </label>
-                        <span asp-validation-for="Dominio" class="text-danger"></span>
-                    </div>
-                    
+
                     <!-- Lembrar-me -->
                     <div class="form-check">
                         <input asp-for="RememberMe" class="form-check-input" id="rememberMe">
@@ -221,7 +228,7 @@
                             Lembrar-me por 30 dias
                         </label>
                     </div>
-                    
+
                     <!-- Botão de login -->
                     <button type="submit" class="btn btn-login" id="loginBtn">
                         <span class="btn-text">
@@ -232,7 +239,7 @@
                         </span>
                     </button>
                 </form>
-                
+
                 <!-- Links adicionais -->
                 <div class="text-center mt-4">
                     <small class="text-muted">
@@ -250,29 +257,68 @@
             const loginForm = document.getElementById('loginForm');
             const loginBtn = document.getElementById('loginBtn');
             const userInput = document.getElementById('floatingUser');
-            
-            // Focar no campo usuário
-            userInput.focus();
-            
+            const userLabel = document.getElementById('userLabel');
+            const userIcon = document.getElementById('userIcon');
+            const authModeText = document.getElementById('authModeText');
+            const loginSubtitle = document.getElementById('loginSubtitle');
+
+            // Buscar configuração de autenticação da API
+            fetch('https://localhost:57148/api/v1/auth/info')
+                .then(res => res.json())
+                .then(data => {
+                    const mode = data.data.currentMode;
+
+                    // Adaptar UI baseado no modo de autenticação
+                    switch(mode) {
+                        case 'SaaS':
+                            userLabel.textContent = 'Email';
+                            userIcon.className = 'fas fa-envelope me-2';
+                            userInput.type = 'email';
+                            userInput.placeholder = 'seu@email.com';
+                            authModeText.textContent = 'Autenticação SaaS';
+                            loginSubtitle.textContent = 'Entre com seu email e senha';
+                            break;
+
+                        case 'Windows':
+                            userLabel.textContent = 'Usuário (Windows)';
+                            userIcon.className = 'fab fa-windows me-2';
+                            authModeText.textContent = 'Autenticação Windows AD';
+                            loginSubtitle.textContent = 'Entre com suas credenciais do Windows';
+                            break;
+
+                        case 'OnPrem':
+                        default:
+                            userLabel.textContent = 'Usuário';
+                            userIcon.className = 'fas fa-user me-2';
+                            authModeText.textContent = 'Autenticação OnPrem';
+                            loginSubtitle.textContent = 'Entre com suas credenciais';
+                            break;
+                    }
+                })
+                .catch(err => {
+                    console.warn('Não foi possível buscar configuração de auth:', err);
+                    authModeText.textContent = 'Modo padrão';
+                });
+
             // Adicionar loading no submit
             loginForm.addEventListener('submit', function() {
                 loginBtn.classList.add('loading');
                 loginBtn.disabled = true;
-                
+
                 // Remover loading após 10 segundos (timeout)
                 setTimeout(function() {
                     loginBtn.classList.remove('loading');
                     loginBtn.disabled = false;
                 }, 10000);
             });
-            
+
             // Enter para submeter
             document.addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
                     loginForm.submit();
                 }
             });
-            
+
             // Validação em tempo real
             const inputs = document.querySelectorAll('.form-control');
             inputs.forEach(input => {
@@ -290,9 +336,11 @@
             });
         });
     </script>
-    
+
     @section Scripts {
-        @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+        @{
+            await Html.RenderPartialAsync("_ValidationScriptsPartial");
+        }
     }
 </body>
 </html>

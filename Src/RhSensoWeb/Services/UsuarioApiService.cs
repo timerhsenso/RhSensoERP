@@ -49,14 +49,14 @@ public class UsuarioApiService : IUsuarioApiService
         _httpClient.BaseAddress = new Uri(_apiSettings.BaseUrl);
         _httpClient.Timeout = TimeSpan.FromSeconds(_apiSettings.TimeoutSeconds);
 
-        // Adicionar token de autorização se disponível
         var httpContext = _httpContextAccessor.HttpContext;
         if (httpContext?.User?.Identity?.IsAuthenticated == true)
         {
             var token = httpContext.User.GetAccessToken();
             if (!string.IsNullOrEmpty(token))
             {
-                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                _httpClient.DefaultRequestHeaders.Authorization =
+                    new AuthenticationHeaderValue("Bearer", token);
             }
         }
     }
@@ -65,8 +65,8 @@ public class UsuarioApiService : IUsuarioApiService
     /// Obtém lista paginada de usuários
     /// </summary>
     public async Task<DataTablesResponse<UsuarioListDto>> GetUsuariosAsync(
-        DataTablesRequest request, 
-        UsuarioFiltroDto? filtros = null, 
+        DataTablesRequest request,
+        UsuarioFiltroDto? filtros = null,
         CancellationToken cancellationToken = default)
     {
         try
@@ -86,26 +86,29 @@ public class UsuarioApiService : IUsuarioApiService
                 queryParams.Add($"orderDirection={request.OrderDirection}");
             }
 
-            // Adicionar filtros
+            // Filtros (Empresa/Filial como int?)
             if (filtros != null)
             {
                 if (!string.IsNullOrEmpty(filtros.Nome))
                     queryParams.Add($"nome={Uri.EscapeDataString(filtros.Nome)}");
-                
+
                 if (!string.IsNullOrEmpty(filtros.Email))
                     queryParams.Add($"email={Uri.EscapeDataString(filtros.Email)}");
-                
+
                 if (!string.IsNullOrEmpty(filtros.Tipo))
                     queryParams.Add($"tipo={Uri.EscapeDataString(filtros.Tipo)}");
-                
+
                 if (filtros.Status.HasValue)
                     queryParams.Add($"status={filtros.Status}");
-                
-                if (!string.IsNullOrEmpty(filtros.Empresa))
-                    queryParams.Add($"empresa={Uri.EscapeDataString(filtros.Empresa)}");
-                
-                if (!string.IsNullOrEmpty(filtros.Filial))
-                    queryParams.Add($"filial={Uri.EscapeDataString(filtros.Filial)}");
+
+                if (filtros.Empresa.HasValue)
+                    queryParams.Add($"empresa={filtros.Empresa.Value}");
+
+                if (filtros.Filial.HasValue)
+                    queryParams.Add($"filial={filtros.Filial.Value}");
+
+                if (!string.IsNullOrEmpty(filtros.Grupo))
+                    queryParams.Add($"grupo={Uri.EscapeDataString(filtros.Grupo)}");
             }
 
             var queryString = string.Join("&", queryParams);
@@ -114,8 +117,9 @@ public class UsuarioApiService : IUsuarioApiService
 
             if (response.IsSuccessStatusCode)
             {
-                var apiResponse = JsonSerializer.Deserialize<ApiResponse<DataTablesResponse<UsuarioListDto>>>(responseContent, _jsonOptions);
-                
+                var apiResponse = JsonSerializer.Deserialize<ApiResponse<DataTablesResponse<UsuarioListDto>>>(
+                    responseContent, _jsonOptions);
+
                 if (apiResponse?.Success == true && apiResponse.Data != null)
                 {
                     return apiResponse.Data;
@@ -123,7 +127,7 @@ public class UsuarioApiService : IUsuarioApiService
             }
 
             _logger.LogError("Erro ao obter usuários: {StatusCode} - {Content}", response.StatusCode, responseContent);
-            
+
             return new DataTablesResponse<UsuarioListDto>
             {
                 Draw = request.Draw,
@@ -136,7 +140,7 @@ public class UsuarioApiService : IUsuarioApiService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Erro inesperado ao obter usuários");
-            
+
             return new DataTablesResponse<UsuarioListDto>
             {
                 Draw = request.Draw,
@@ -152,7 +156,7 @@ public class UsuarioApiService : IUsuarioApiService
     /// Obtém usuário por código
     /// </summary>
     public async Task<ApiResponse<UsuarioDetalheDto>> GetUsuarioByIdAsync(
-        string cdUsuario, 
+        string cdUsuario,
         CancellationToken cancellationToken = default)
     {
         try
@@ -182,7 +186,7 @@ public class UsuarioApiService : IUsuarioApiService
     /// Cria novo usuário
     /// </summary>
     public async Task<ApiResponse<UsuarioDetalheDto>> CreateUsuarioAsync(
-        UsuarioViewModel usuario, 
+        UsuarioViewModel usuario,
         CancellationToken cancellationToken = default)
     {
         try
@@ -202,8 +206,7 @@ public class UsuarioApiService : IUsuarioApiService
             }
 
             _logger.LogError("Erro ao criar usuário: {StatusCode} - {Content}", response.StatusCode, responseContent);
-            
-            // Tentar deserializar erro da API
+
             try
             {
                 var errorResponse = JsonSerializer.Deserialize<ApiResponse<UsuarioDetalheDto>>(responseContent, _jsonOptions);
@@ -225,8 +228,8 @@ public class UsuarioApiService : IUsuarioApiService
     /// Atualiza usuário existente
     /// </summary>
     public async Task<ApiResponse<UsuarioDetalheDto>> UpdateUsuarioAsync(
-        string cdUsuario, 
-        UsuarioViewModel usuario, 
+        string cdUsuario,
+        UsuarioViewModel usuario,
         CancellationToken cancellationToken = default)
     {
         try
@@ -246,7 +249,7 @@ public class UsuarioApiService : IUsuarioApiService
             }
 
             _logger.LogError("Erro ao atualizar usuário {CdUsuario}: {StatusCode}", cdUsuario, response.StatusCode);
-            
+
             try
             {
                 var errorResponse = JsonSerializer.Deserialize<ApiResponse<UsuarioDetalheDto>>(responseContent, _jsonOptions);
@@ -268,7 +271,7 @@ public class UsuarioApiService : IUsuarioApiService
     /// Exclui usuário
     /// </summary>
     public async Task<ApiResponse> DeleteUsuarioAsync(
-        string cdUsuario, 
+        string cdUsuario,
         CancellationToken cancellationToken = default)
     {
         try
@@ -285,7 +288,7 @@ public class UsuarioApiService : IUsuarioApiService
             }
 
             _logger.LogError("Erro ao excluir usuário {CdUsuario}: {StatusCode}", cdUsuario, response.StatusCode);
-            
+
             try
             {
                 var errorResponse = JsonSerializer.Deserialize<ApiResponse>(responseContent, _jsonOptions);
@@ -307,8 +310,8 @@ public class UsuarioApiService : IUsuarioApiService
     /// Ativa/desativa usuário
     /// </summary>
     public async Task<ApiResponse> ToggleUsuarioStatusAsync(
-        string cdUsuario, 
-        bool ativo, 
+        string cdUsuario,
+        bool ativo,
         CancellationToken cancellationToken = default)
     {
         try
@@ -341,8 +344,8 @@ public class UsuarioApiService : IUsuarioApiService
     /// Altera senha do usuário
     /// </summary>
     public async Task<ApiResponse> AlterarSenhaAsync(
-        string cdUsuario, 
-        string novaSenha, 
+        string cdUsuario,
+        string novaSenha,
         CancellationToken cancellationToken = default)
     {
         try
@@ -429,14 +432,15 @@ public class UsuarioApiService : IUsuarioApiService
     /// Obtém filiais de uma empresa
     /// </summary>
     public async Task<ApiResponse<List<FilialDto>>> GetFiliaisAsync(
-        string cdEmpresa, 
+        int cdEmpresa,
         CancellationToken cancellationToken = default)
     {
         try
         {
             ConfigureHttpClient();
 
-            var response = await _httpClient.GetAsync($"rhu/empresas/{Uri.EscapeDataString(cdEmpresa)}/filiais", cancellationToken);
+            // IMPORTANTE: não usar Uri.EscapeDataString em int
+            var response = await _httpClient.GetAsync($"rhu/empresas/{cdEmpresa}/filiais", cancellationToken);
             var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
 
             if (response.IsSuccessStatusCode)

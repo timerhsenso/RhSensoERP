@@ -19,9 +19,6 @@ public class LoginViewModel
     [Display(Name = "Lembrar-me")]
     public bool RememberMe { get; set; }
 
-    [Display(Name = "Domínio")]
-    public string? Dominio { get; set; }
-
     /// <summary>
     /// URL para redirecionamento após login
     /// </summary>
@@ -35,12 +32,12 @@ public class LoginViewModel
 
 /// <summary>
 /// DTO para requisição de login na API
+/// IMPORTANTE: Não inclui domínio - será obtido da configuração do backend
 /// </summary>
 public class LoginRequestDto
 {
     public string CdUsuario { get; set; } = string.Empty;
     public string Senha { get; set; } = string.Empty;
-    public string? Dominio { get; set; }
 }
 
 /// <summary>
@@ -64,8 +61,8 @@ public class UserDataDto
     public string EmailUsuario { get; set; } = string.Empty;
     public string TpUsuario { get; set; } = string.Empty;
     public char FlAtivo { get; set; }
-    public string? CdEmpresa { get; set; }
-    public string? CdFilial { get; set; }
+    public int? CdEmpresa { get; set; }
+    public int? CdFilial { get; set; }
     public string? IdSaas { get; set; }
 }
 

@@ -39,11 +39,15 @@ public class UsuarioViewModel
     [Display(Name = "Ativo")]
     public char FlAtivo { get; set; } = 'S';
 
+    [Required(ErrorMessage = "A empresa é obrigatória")]
+    [Range(1, int.MaxValue, ErrorMessage = "Selecione uma empresa válida")]
     [Display(Name = "Empresa")]
-    public string? CdEmpresa { get; set; }
+    public int CdEmpresa { get; set; }
 
+    [Required(ErrorMessage = "A filial é obrigatória")]
+    [Range(1, int.MaxValue, ErrorMessage = "Selecione uma filial válida")]
     [Display(Name = "Filial")]
-    public string? CdFilial { get; set; }
+    public int CdFilial { get; set; }
 
     [Display(Name = "ID SaaS")]
     public string? IdSaas { get; set; }
@@ -61,19 +65,10 @@ public class UsuarioViewModel
     [StringLength(500, ErrorMessage = "As observações devem ter no máximo 500 caracteres")]
     public string? Observacoes { get; set; }
 
-    /// <summary>
-    /// Indica se é uma edição (não criar nova senha)
-    /// </summary>
     public bool IsEdicao => !string.IsNullOrEmpty(CdUsuario);
 
-    /// <summary>
-    /// Status formatado para exibição
-    /// </summary>
     public string StatusFormatado => FlAtivo == 'S' ? "Ativo" : "Inativo";
 
-    /// <summary>
-    /// CSS class para status
-    /// </summary>
     public string StatusCssClass => FlAtivo == 'S' ? "badge-success" : "badge-danger";
 }
 
@@ -87,8 +82,11 @@ public class UsuarioListDto
     public string EmailUsuario { get; set; } = string.Empty;
     public string TpUsuario { get; set; } = string.Empty;
     public char FlAtivo { get; set; }
-    public string? CdEmpresa { get; set; }
-    public string? CdFilial { get; set; }
+
+    // Inteiros (podem ser nulos na origem da API)
+    public int? CdEmpresa { get; set; }
+    public int? CdFilial { get; set; }
+
     public DateTime? DtUltimoLogin { get; set; }
     public List<string> Grupos { get; set; } = new();
 }
@@ -138,11 +136,12 @@ public class UsuarioFiltroDto
     [Display(Name = "Status")]
     public char? Status { get; set; }
 
+    // INTEIROS (opcionais para filtro)
     [Display(Name = "Empresa")]
-    public string? Empresa { get; set; }
+    public int? Empresa { get; set; }
 
     [Display(Name = "Filial")]
-    public string? Filial { get; set; }
+    public int? Filial { get; set; }
 
     [Display(Name = "Grupo")]
     public string? Grupo { get; set; }

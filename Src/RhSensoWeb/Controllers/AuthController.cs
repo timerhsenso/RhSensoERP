@@ -46,6 +46,7 @@ public class AuthController : Controller
 
     /// <summary>
     /// Processa o login do usuário
+    /// IMPORTANTE: Não recebe domínio - será obtido da configuração do backend
     /// </summary>
     [HttpPost]
     [AllowAnonymous]
@@ -63,12 +64,11 @@ public class AuthController : Controller
         {
             _logger.LogInformation("Tentativa de login para usuário {Usuario}", model.CdUsuario);
 
-            // Preparar requisição para API
+            // Preparar requisição para API (SEM domínio)
             var loginRequest = new LoginRequestDto
             {
                 CdUsuario = model.CdUsuario,
-                Senha = model.Senha,
-                Dominio = model.Dominio
+                Senha = model.Senha
             };
 
             // Chamar API de login
@@ -84,8 +84,11 @@ public class AuthController : Controller
                     EmailUsuario = response.Data.UserData.EmailUsuario,
                     TpUsuario = response.Data.UserData.TpUsuario,
                     FlAtivo = response.Data.UserData.FlAtivo,
-                    CdEmpresa = response.Data.UserData.CdEmpresa,
-                    CdFilial = response.Data.UserData.CdFilial,
+
+                    // >>> Empresa e Filial como INTEIRO (coalesce para 0 se vier nulo)
+                    CdEmpresa = response.Data.UserData.CdEmpresa ?? 0,
+                    CdFilial = response.Data.UserData.CdFilial ?? 0,
+
                     IdSaas = response.Data.UserData.IdSaas,
                     AccessToken = response.Data.AccessToken,
                     Groups = response.Data.Groups,
@@ -103,8 +106,8 @@ public class AuthController : Controller
                 var authProperties = new AuthenticationProperties
                 {
                     IsPersistent = model.RememberMe,
-                    ExpiresUtc = model.RememberMe 
-                        ? DateTimeOffset.UtcNow.AddDays(30) 
+                    ExpiresUtc = model.RememberMe
+                        ? DateTimeOffset.UtcNow.AddDays(30)
                         : DateTimeOffset.UtcNow.AddHours(8)
                 };
 
@@ -121,7 +124,7 @@ public class AuthController : Controller
             }
             else
             {
-                _logger.LogWarning("Login falhou para usuário {Usuario}: {Message}", 
+                _logger.LogWarning("Login falhou para usuário {Usuario}: {Message}",
                     model.CdUsuario, response.Message);
 
                 model.ErrorMessage = response.Message ?? "Usuário ou senha inválidos";
@@ -132,7 +135,7 @@ public class AuthController : Controller
         catch (Exception ex)
         {
             _logger.LogError(ex, "Erro inesperado durante login do usuário {Usuario}", model.CdUsuario);
-            
+
             model.ErrorMessage = "Erro interno do sistema. Tente novamente.";
             ModelState.AddModelError(string.Empty, model.ErrorMessage);
             return View(model);
@@ -227,7 +230,7 @@ public class AuthController : Controller
         try
         {
             var token = User.GetAccessToken();
-            
+
             if (string.IsNullOrEmpty(token))
             {
                 return Json(new { success = false, message = "Token não encontrado" });
@@ -235,7 +238,7 @@ public class AuthController : Controller
 
             // Validar token atual
             var isValid = await _authApiService.ValidateTokenAsync(token);
-            
+
             if (!isValid)
             {
                 return Json(new { success = false, message = "Sessão expirada" });
@@ -244,12 +247,12 @@ public class AuthController : Controller
             // Atualizar última atividade
             var claims = User.Claims.ToList();
             var lastActivityClaim = claims.FirstOrDefault(c => c.Type == "LastActivity");
-            
+
             if (lastActivityClaim != null)
             {
                 claims.Remove(lastActivityClaim);
             }
-            
+
             claims.Add(new Claim("LastActivity", DateTime.UtcNow.ToString("O")));
 
             var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);

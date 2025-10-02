@@ -36,7 +36,6 @@ public class UsuariosController : Controller
         ViewData["Title"] = "Usuários";
         ViewData["Subtitle"] = "Gerenciamento de usuários do sistema";
         ViewData["Icon"] = "fas fa-users";
-
         return View();
     }
 
@@ -49,15 +48,24 @@ public class UsuariosController : Controller
     {
         try
         {
-            // Obter filtros da query string
+            // Filtros opcionais como int? (null = sem filtro)
+            int? empresa = null;
+            int? filial = null;
+
+            var empresaStr = Request.Query["empresa"].ToString();
+            var filialStr = Request.Query["filial"].ToString();
+
+            if (int.TryParse(empresaStr, out var empParsed)) empresa = empParsed;
+            if (int.TryParse(filialStr, out var filParsed)) filial = filParsed;
+
             var filtros = new UsuarioFiltroDto
             {
                 Nome = Request.Query["nome"],
                 Email = Request.Query["email"],
                 Tipo = Request.Query["tipo"],
                 Status = Request.Query["status"].ToString().FirstOrDefault(),
-                Empresa = Request.Query["empresa"],
-                Filial = Request.Query["filial"],
+                Empresa = empresa,   // int?
+                Filial = filial,    // int?
                 Grupo = Request.Query["grupo"]
             };
 
@@ -67,7 +75,7 @@ public class UsuariosController : Controller
         catch (Exception ex)
         {
             _logger.LogError(ex, "Erro ao obter dados dos usuários");
-            
+
             return Json(new DataTablesResponse<UsuarioListDto>
             {
                 Draw = request.Draw,
@@ -92,7 +100,6 @@ public class UsuariosController : Controller
 
         var model = new UsuarioViewModel();
         await CarregarDadosFormulario();
-        
         return View(model);
     }
 
@@ -113,7 +120,7 @@ public class UsuariosController : Controller
             }
 
             var result = await _usuarioService.CreateUsuarioAsync(model);
-            
+
             if (result.Success)
             {
                 TempData["Success"] = "Usuário criado com sucesso!";
@@ -149,7 +156,7 @@ public class UsuariosController : Controller
             }
 
             var result = await _usuarioService.GetUsuarioByIdAsync(id);
-            
+
             if (!result.Success || result.Data == null)
             {
                 TempData["Error"] = result.Message ?? "Usuário não encontrado";
@@ -163,8 +170,11 @@ public class UsuariosController : Controller
                 EmailUsuario = result.Data.EmailUsuario,
                 TpUsuario = result.Data.TpUsuario,
                 FlAtivo = result.Data.FlAtivo,
-                CdEmpresa = result.Data.CdEmpresa,
-                CdFilial = result.Data.CdFilial,
+
+                // result.Data.* são int? no DTO; ViewModel exige int
+                CdEmpresa = result.Data.CdEmpresa ?? 0,
+                CdFilial = result.Data.CdFilial ?? 0,
+
                 IdSaas = result.Data.IdSaas,
                 Observacoes = result.Data.Observacoes,
                 GruposSelecionados = result.Data.Grupos
@@ -208,7 +218,7 @@ public class UsuariosController : Controller
             }
 
             var result = await _usuarioService.UpdateUsuarioAsync(id, model);
-            
+
             if (result.Success)
             {
                 TempData["Success"] = "Usuário atualizado com sucesso!";
@@ -244,7 +254,7 @@ public class UsuariosController : Controller
             }
 
             var result = await _usuarioService.GetUsuarioByIdAsync(id);
-            
+
             if (!result.Success || result.Data == null)
             {
                 TempData["Error"] = result.Message ?? "Usuário não encontrado";
@@ -281,7 +291,7 @@ public class UsuariosController : Controller
             }
 
             var result = await _usuarioService.DeleteUsuarioAsync(id);
-            
+
             if (result.Success)
             {
                 return Json(new { success = true, message = "Usuário excluído com sucesso!" });
@@ -311,7 +321,7 @@ public class UsuariosController : Controller
             }
 
             var result = await _usuarioService.ToggleUsuarioStatusAsync(id, ativo);
-            
+
             if (result.Success)
             {
                 var status = ativo ? "ativado" : "desativado";
@@ -347,7 +357,7 @@ public class UsuariosController : Controller
             }
 
             var result = await _usuarioService.AlterarSenhaAsync(id, novaSenha);
-            
+
             if (result.Success)
             {
                 return Json(new { success = true, message = "Senha alterada com sucesso!" });
@@ -363,20 +373,20 @@ public class UsuariosController : Controller
     }
 
     /// <summary>
-    /// Obter filiais por empresa (AJAX)
+    /// Obter filiais por empresa (AJAX) - empresa inteira
     /// </summary>
     [HttpGet]
-    public async Task<IActionResult> GetFiliais(string cdEmpresa)
+    public async Task<IActionResult> GetFiliais(int cdEmpresa)
     {
         try
         {
-            if (string.IsNullOrEmpty(cdEmpresa))
+            if (cdEmpresa <= 0)
             {
                 return Json(new List<FilialDto>());
             }
 
             var result = await _usuarioService.GetFiliaisAsync(cdEmpresa);
-            
+
             if (result.Success && result.Data != null)
             {
                 return Json(result.Data);
@@ -400,14 +410,14 @@ public class UsuariosController : Controller
         {
             // Carregar grupos
             var gruposResult = await _usuarioService.GetGruposAsync();
-            ViewBag.Grupos = gruposResult.Success && gruposResult.Data != null 
-                ? gruposResult.Data 
+            ViewBag.Grupos = gruposResult.Success && gruposResult.Data != null
+                ? gruposResult.Data
                 : new List<GrupoDto>();
 
             // Carregar empresas
             var empresasResult = await _usuarioService.GetEmpresasAsync();
-            ViewBag.Empresas = empresasResult.Success && empresasResult.Data != null 
-                ? empresasResult.Data 
+            ViewBag.Empresas = empresasResult.Success && empresasResult.Data != null
+                ? empresasResult.Data
                 : new List<EmpresaDto>();
 
             // Tipos de usuário
