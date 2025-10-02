@@ -22,7 +22,6 @@ public static class ServiceCollectionExtensions
     {
         // Configurações
         services.Configure<ApiSettings>(configuration.GetSection("ApiSettings"));
-        services.Configure<AuthSettings>(configuration.GetSection("AuthSettings"));
 
         // HttpContextAccessor
         services.AddHttpContextAccessor();
@@ -48,7 +47,12 @@ public static class ServiceCollectionExtensions
     /// </summary>
     public static IServiceCollection AddCustomAuthentication(this IServiceCollection services, IConfiguration configuration)
     {
-        var authSettings = configuration.GetSection("AuthSettings").Get<AuthSettings>() ?? new AuthSettings();
+        // ✅ CORRIGIDO: Usar "Authentication" do appsettings.json
+        var authSection = configuration.GetSection("Authentication");
+
+        var cookieName = authSection.GetValue<string>("CookieName") ?? "RhSensoAuth";
+        var expireTimeSpan = authSection.GetValue<TimeSpan>("ExpireTimeSpan", TimeSpan.FromHours(8));
+        var slidingExpiration = authSection.GetValue<bool>("SlidingExpiration", true);
 
         services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
                 .AddCookie(options =>
@@ -56,23 +60,49 @@ public static class ServiceCollectionExtensions
                     options.LoginPath = "/Auth/Login";
                     options.LogoutPath = "/Auth/Logout";
                     options.AccessDeniedPath = "/Auth/AccessDenied";
-                    options.ExpireTimeSpan = authSettings.ExpireTimeSpan;
-                    options.SlidingExpiration = true;
-                    options.Cookie.Name = authSettings.CookieName;
-                    options.Cookie.HttpOnly = true;
-                    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
-                    options.Cookie.SameSite = SameSiteMode.Lax;
+                    options.ExpireTimeSpan = expireTimeSpan;
+                    options.SlidingExpiration = slidingExpiration;
 
-                    options.Events.OnValidatePrincipal = async context =>
+                    // ✅ CONFIGURAÇÕES CRÍTICAS DO COOKIE
+                    options.Cookie.Name = cookieName;
+                    options.Cookie.HttpOnly = true;
+                    options.Cookie.SecurePolicy = CookieSecurePolicy.Always; // ✅ HTTPS obrigatório
+                    options.Cookie.SameSite = SameSiteMode.Lax;
+                    options.Cookie.IsEssential = true; // ✅ CRÍTICO
+
+                    // ✅ EVENTOS DE REDIRECIONAMENTO (SEM VALIDAÇÃO PREMATURA)
+                    options.Events = new CookieAuthenticationEvents
                     {
-                        // Validar se o token JWT ainda é válido
-                        var accessToken = context.Principal?.FindFirst("access_token")?.Value;
-                        if (string.IsNullOrEmpty(accessToken))
+                        OnRedirectToLogin = context =>
                         {
-                            context.RejectPrincipal();
-                            await context.HttpContext.SignOutAsync();
-                            return;
+                            // Evitar redirecionamento em chamadas AJAX/API
+                            if (context.Request.Path.StartsWithSegments("/api") ||
+                                context.Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                            {
+                                context.Response.StatusCode = 401;
+                            }
+                            else
+                            {
+                                context.Response.Redirect(context.RedirectUri);
+                            }
+                            return Task.CompletedTask;
+                        },
+
+                        OnRedirectToAccessDenied = context =>
+                        {
+                            if (context.Request.Path.StartsWithSegments("/api") ||
+                                context.Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                            {
+                                context.Response.StatusCode = 403;
+                            }
+                            else
+                            {
+                                context.Response.Redirect(context.RedirectUri);
+                            }
+                            return Task.CompletedTask;
                         }
+
+                        // ✅ REMOVIDO: OnValidatePrincipal que destruía o cookie
                     };
                 });
 

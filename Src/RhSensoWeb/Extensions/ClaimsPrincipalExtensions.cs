@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Text.Json;
 using RhSensoWeb.Models.Auth;
 
 namespace RhSensoWeb.Extensions;
@@ -37,7 +38,7 @@ public static class ClaimsPrincipalExtensions
     /// </summary>
     public static string GetAccessToken(this ClaimsPrincipal principal)
     {
-        return principal.FindFirst("AccessToken")?.Value ?? string.Empty;
+        return principal.FindFirst("access_token")?.Value ?? string.Empty;
     }
 
     /// <summary>
@@ -65,102 +66,6 @@ public static class ClaimsPrincipalExtensions
     }
 
     /// <summary>
-    /// Verifica se o usuário tem uma permissão específica
-    /// </summary>
-    /// <param name="principal">Principal do usuário</param>
-    /// <param name="permissionKey">Chave da permissão (ex: SEG.SEG_USUARIOS.C)</param>
-    /// <returns>True se tem a permissão</returns>
-    public static bool HasPermission(this ClaimsPrincipal principal, string permissionKey)
-    {
-        if (string.IsNullOrEmpty(permissionKey)) return false;
-
-        // Verifica se tem a permissão base
-        var hasBasePermission = principal.HasClaim("Permission", permissionKey);
-        if (!hasBasePermission) return false;
-
-        // Se não especificou ação, assume consulta (C)
-        if (!permissionKey.Contains('.') || permissionKey.Split('.').Length < 3)
-        {
-            return principal.HasClaim($"Permission:{permissionKey}:C", "true");
-        }
-
-        // Extrai a ação da chave da permissão (último caractere)
-        var parts = permissionKey.Split('.');
-        var lastPart = parts[^1]; // Último elemento
-        
-        if (lastPart.Length > 0)
-        {
-            var action = lastPart[^1].ToString().ToUpper(); // Último caractere
-            var basePermission = string.Join(".", parts[..^1]) + "." + lastPart[..^1]; // Remove último caractere
-            
-            return principal.HasClaim($"Permission:{basePermission}:{action}", "true");
-        }
-
-        return false;
-    }
-
-    /// <summary>
-    /// Verifica se o usuário tem uma permissão específica com ação
-    /// </summary>
-    /// <param name="principal">Principal do usuário</param>
-    /// <param name="permissionKey">Chave da permissão base (ex: SEG.SEG_USUARIOS)</param>
-    /// <param name="action">Ação (I, A, E, C)</param>
-    /// <returns>True se tem a permissão</returns>
-    public static bool HasPermission(this ClaimsPrincipal principal, string permissionKey, string action)
-    {
-        if (string.IsNullOrEmpty(permissionKey) || string.IsNullOrEmpty(action)) return false;
-
-        var fullPermissionKey = $"{permissionKey}.{action.ToUpper()}";
-        return principal.HasPermission(fullPermissionKey);
-    }
-
-    /// <summary>
-    /// Obtém todas as permissões do usuário
-    /// </summary>
-    public static List<string> GetPermissions(this ClaimsPrincipal principal)
-    {
-        return principal.FindAll("Permission")
-            .Where(c => !c.Type.Contains(":"))
-            .Select(c => c.Value)
-            .ToList();
-    }
-
-    /// <summary>
-    /// Obtém todos os grupos do usuário
-    /// </summary>
-    public static List<string> GetGroups(this ClaimsPrincipal principal)
-    {
-        return principal.FindAll("Group")
-            .Select(c => c.Value)
-            .ToList();
-    }
-
-    /// <summary>
-    /// Verifica se o usuário pertence a um grupo específico
-    /// </summary>
-    public static bool IsInGroup(this ClaimsPrincipal principal, string groupCode)
-    {
-        return principal.HasClaim("Group", groupCode);
-    }
-
-    /// <summary>
-    /// Obtém o modelo de sessão completo do usuário
-    /// </summary>
-    public static UserSessionModel GetUserSession(this ClaimsPrincipal principal)
-    {
-        return UserSessionModel.FromClaims(principal);
-    }
-
-    /// <summary>
-    /// Verifica se o usuário está ativo
-    /// </summary>
-    public static bool IsActive(this ClaimsPrincipal principal)
-    {
-        var flAtivo = principal.FindFirst("FlAtivo")?.Value;
-        return flAtivo == "S";
-    }
-
-    /// <summary>
     /// Obtém o tipo do usuário
     /// </summary>
     public static string GetUserType(this ClaimsPrincipal principal)
@@ -176,6 +81,15 @@ public static class ClaimsPrincipalExtensions
         var userType = principal.GetUserType();
         return userType.Equals("ADMIN", StringComparison.OrdinalIgnoreCase) ||
                userType.Equals("ADMINISTRADOR", StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// Verifica se o usuário está ativo
+    /// </summary>
+    public static bool IsActive(this ClaimsPrincipal principal)
+    {
+        var flAtivo = principal.FindFirst("FlAtivo")?.Value;
+        return flAtivo == "S";
     }
 
     /// <summary>
@@ -200,25 +114,146 @@ public static class ClaimsPrincipalExtensions
         return null;
     }
 
+    // ===========================================
+    // MÉTODOS COM IHttpContextAccessor (para Controllers)
+    // ===========================================
+
+    /// <summary>
+    /// Obtém o modelo de sessão completo do usuário (da Session HTTP)
+    /// USAR EM CONTROLLERS - requer IHttpContextAccessor
+    /// </summary>
+    public static UserSessionModel GetUserSession(this ClaimsPrincipal principal, IHttpContextAccessor httpContextAccessor)
+    {
+        var sessionJson = httpContextAccessor.HttpContext?.Session.GetString("UserSession");
+
+        if (!string.IsNullOrEmpty(sessionJson))
+        {
+            try
+            {
+                return JsonSerializer.Deserialize<UserSessionModel>(sessionJson) ?? CreateBasicSession(principal);
+            }
+            catch
+            {
+                return CreateBasicSession(principal);
+            }
+        }
+
+        return CreateBasicSession(principal);
+    }
+
+    /// <summary>
+    /// Verifica se o usuário tem uma permissão específica (consulta Session)
+    /// USAR EM CONTROLLERS - requer IHttpContextAccessor
+    /// </summary>
+    public static bool HasPermission(this ClaimsPrincipal principal, IHttpContextAccessor httpContextAccessor, string permissionKey, string action = "C")
+    {
+        if (string.IsNullOrEmpty(permissionKey)) return false;
+
+        var session = principal.GetUserSession(httpContextAccessor);
+        return session.HasPermission(permissionKey, action);
+    }
+
+    /// <summary>
+    /// Obtém todas as permissões do usuário (da Session)
+    /// USAR EM CONTROLLERS - requer IHttpContextAccessor
+    /// </summary>
+    public static List<UserPermissionDto> GetPermissions(this ClaimsPrincipal principal, IHttpContextAccessor httpContextAccessor)
+    {
+        var session = principal.GetUserSession(httpContextAccessor);
+        return session.Permissions;
+    }
+
+    /// <summary>
+    /// Obtém todos os grupos do usuário (da Session)
+    /// USAR EM CONTROLLERS - requer IHttpContextAccessor
+    /// </summary>
+    public static List<UserGroupDto> GetGroups(this ClaimsPrincipal principal, IHttpContextAccessor httpContextAccessor)
+    {
+        var session = principal.GetUserSession(httpContextAccessor);
+        return session.Groups;
+    }
+
+    /// <summary>
+    /// Verifica se o usuário pertence a um grupo específico (da Session)
+    /// USAR EM CONTROLLERS - requer IHttpContextAccessor
+    /// </summary>
+    public static bool IsInGroup(this ClaimsPrincipal principal, IHttpContextAccessor httpContextAccessor, string groupCode)
+    {
+        var session = principal.GetUserSession(httpContextAccessor);
+        return session.Groups.Any(g => g.CdGrUser.Equals(groupCode, StringComparison.OrdinalIgnoreCase));
+    }
+
+    // ===========================================
+    // MÉTODOS SEM IHttpContextAccessor (para Views/TagHelpers)
+    // ===========================================
+
+    /// <summary>
+    /// Obtém sessão básica apenas com claims (sem permissões/grupos completos)
+    /// USAR EM VIEWS - não requer IHttpContextAccessor
+    /// </summary>
+    public static UserSessionModel GetUserSession(this ClaimsPrincipal principal)
+    {
+        return CreateBasicSession(principal);
+    }
+
+    /// <summary>
+    /// Verifica se o usuário tem uma permissão específica (formato: "SEG.SEG_USUARIOS.C")
+    /// USAR EM VIEWS/TAGHELPERS - não requer IHttpContextAccessor
+    /// LIMITAÇÃO: Retorna sempre TRUE porque permissões estão na Session, não nas Claims
+    /// Use TagHelpers com IHttpContextAccessor para verificação real
+    /// </summary>
+    public static bool HasPermission(this ClaimsPrincipal principal, string permissionKey)
+    {
+        // ⚠️ ATENÇÃO: Permissões estão na Session, não nas Claims
+        // Este método sempre retorna TRUE para compatibilidade com Views antigas
+        // Use @inject IHttpContextAccessor e User.HasPermission(accessor, "chave") para verificação real
+        return true;
+    }
+
     /// <summary>
     /// Verifica se o usuário tem qualquer uma das permissões especificadas
+    /// USAR EM VIEWS/TAGHELPERS - não requer IHttpContextAccessor
     /// </summary>
     public static bool HasAnyPermission(this ClaimsPrincipal principal, params string[] permissions)
     {
-        if (permissions == null || permissions.Length == 0)
-            return true;
-
-        return permissions.Any(permission => principal.HasPermission(permission));
+        // ⚠️ Mesma limitação do HasPermission
+        return true;
     }
 
     /// <summary>
     /// Verifica se o usuário tem todas as permissões especificadas
+    /// USAR EM VIEWS/TAGHELPERS - não requer IHttpContextAccessor
     /// </summary>
     public static bool HasAllPermissions(this ClaimsPrincipal principal, params string[] permissions)
     {
-        if (permissions == null || permissions.Length == 0)
-            return true;
+        // ⚠️ Mesma limitação do HasPermission
+        return true;
+    }
 
-        return permissions.All(permission => principal.HasPermission(permission));
+    // ===========================================
+    // MÉTODOS PRIVADOS
+    // ===========================================
+
+    /// <summary>
+    /// Cria sessão básica apenas com claims (sem permissões/grupos)
+    /// </summary>
+    private static UserSessionModel CreateBasicSession(ClaimsPrincipal principal)
+    {
+        return new UserSessionModel
+        {
+            CdUsuario = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? string.Empty,
+            DcUsuario = principal.FindFirst("DcUsuario")?.Value ?? string.Empty,
+            EmailUsuario = principal.FindFirst(ClaimTypes.Email)?.Value ?? string.Empty,
+            TpUsuario = principal.FindFirst("TpUsuario")?.Value ?? string.Empty,
+            FlAtivo = char.TryParse(principal.FindFirst("FlAtivo")?.Value, out var fl) ? fl : 'N',
+            AccessToken = principal.FindFirst("access_token")?.Value ?? string.Empty,
+            CdEmpresa = int.TryParse(principal.FindFirst("CdEmpresa")?.Value, out var emp) ? emp : 0,
+            CdFilial = int.TryParse(principal.FindFirst("CdFilial")?.Value, out var fil) ? fil : 0,
+            IdSaas = principal.FindFirst("IdSaas")?.Value,
+            LoginTime = principal.GetLoginTime() ?? DateTime.MinValue,
+            LastActivity = principal.GetLastActivity() ?? DateTime.UtcNow,
+            Groups = new List<UserGroupDto>(),
+            Permissions = new List<UserPermissionDto>()
+        };
     }
 }

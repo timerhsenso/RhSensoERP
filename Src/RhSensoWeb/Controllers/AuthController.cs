@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Text.Json;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
@@ -30,9 +31,9 @@ public class AuthController : Controller
     [AllowAnonymous]
     public IActionResult Login(string? returnUrl = null)
     {
-        // Se já está autenticado, redirecionar
         if (User.Identity?.IsAuthenticated == true)
         {
+            _logger.LogInformation("Usuário já autenticado, redirecionando para {ReturnUrl}", returnUrl ?? "/Home");
             return RedirectToLocal(returnUrl);
         }
 
@@ -46,7 +47,6 @@ public class AuthController : Controller
 
     /// <summary>
     /// Processa o login do usuário
-    /// IMPORTANTE: Não recebe domínio - será obtido da configuração do backend
     /// </summary>
     [HttpPost]
     [AllowAnonymous]
@@ -64,19 +64,16 @@ public class AuthController : Controller
         {
             _logger.LogInformation("Tentativa de login para usuário {Usuario}", model.CdUsuario);
 
-            // Preparar requisição para API (SEM domínio)
             var loginRequest = new LoginRequestDto
             {
                 CdUsuario = model.CdUsuario,
                 Senha = model.Senha
             };
 
-            // Chamar API de login
             var response = await _authApiService.LoginAsync(loginRequest);
 
             if (response.Success && response.Data != null)
             {
-                // Criar sessão do usuário
                 var userSession = new UserSessionModel
                 {
                     CdUsuario = response.Data.UserData.CdUsuario,
@@ -84,11 +81,8 @@ public class AuthController : Controller
                     EmailUsuario = response.Data.UserData.EmailUsuario,
                     TpUsuario = response.Data.UserData.TpUsuario,
                     FlAtivo = response.Data.UserData.FlAtivo,
-
-                    // >>> Empresa e Filial como INTEIRO (coalesce para 0 se vier nulo)
                     CdEmpresa = response.Data.UserData.CdEmpresa ?? 0,
                     CdFilial = response.Data.UserData.CdFilial ?? 0,
-
                     IdSaas = response.Data.UserData.IdSaas,
                     AccessToken = response.Data.AccessToken,
                     Groups = response.Data.Groups,
@@ -97,12 +91,37 @@ public class AuthController : Controller
                     LastActivity = DateTime.UtcNow
                 };
 
-                // Criar claims do usuário
-                var claims = userSession.ToClaims();
+                // Armazenar dados completos na Session
+                HttpContext.Session.SetString("UserSession", JsonSerializer.Serialize(userSession));
+
+                // Criar apenas claims essenciais no cookie
+                var claims = new List<Claim>
+                {
+                    new Claim(ClaimTypes.NameIdentifier, userSession.CdUsuario),
+                    new Claim(ClaimTypes.Name, userSession.CdUsuario),
+                    new Claim(ClaimTypes.Email, userSession.EmailUsuario ?? ""),
+                    new Claim("DcUsuario", userSession.DcUsuario ?? ""),
+                    new Claim("TpUsuario", userSession.TpUsuario ?? ""),
+                    new Claim("FlAtivo", userSession.FlAtivo.ToString()),
+                    new Claim("CdEmpresa", userSession.CdEmpresa.ToString()),
+                    new Claim("CdFilial", userSession.CdFilial.ToString()),
+                    new Claim("access_token", userSession.AccessToken),
+                    new Claim("LoginTime", userSession.LoginTime.ToString("O")),
+                    new Claim("LastActivity", userSession.LastActivity.ToString("O"))
+                };
+
+                if (!string.IsNullOrEmpty(userSession.IdSaas))
+                {
+                    claims.Add(new Claim("IdSaas", userSession.IdSaas));
+                }
+
+                _logger.LogInformation("📝 Claims criadas: {ClaimsCount} (reduzido)", claims.Count);
+                _logger.LogInformation("📝 Permissões armazenadas na Session: {PermCount}", userSession.Permissions.Count);
+                _logger.LogInformation("📝 Grupos armazenados na Session: {GroupCount}", userSession.Groups.Count);
+
                 var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
                 var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
 
-                // Configurar propriedades do cookie
                 var authProperties = new AuthenticationProperties
                 {
                     IsPersistent = model.RememberMe,
@@ -111,15 +130,15 @@ public class AuthController : Controller
                         : DateTimeOffset.UtcNow.AddHours(8)
                 };
 
-                // Fazer login (criar cookie)
                 await HttpContext.SignInAsync(
                     CookieAuthenticationDefaults.AuthenticationScheme,
                     claimsPrincipal,
                     authProperties);
 
+                _logger.LogInformation("✅ SignInAsync executado com sucesso");
+                _logger.LogInformation("✅ Cookie criado: RhSensoAuth");
                 _logger.LogInformation("Login realizado com sucesso para usuário {Usuario}", model.CdUsuario);
 
-                // Redirecionar para página solicitada ou dashboard
                 return RedirectToLocal(returnUrl);
             }
             else
@@ -157,7 +176,6 @@ public class AuthController : Controller
 
             _logger.LogInformation("Logout iniciado para usuário {Usuario}", userId);
 
-            // Chamar API de logout (opcional)
             if (!string.IsNullOrEmpty(token))
             {
                 try
@@ -167,11 +185,13 @@ public class AuthController : Controller
                 catch (Exception ex)
                 {
                     _logger.LogWarning(ex, "Erro ao chamar logout da API para usuário {Usuario}", userId);
-                    // Continuar com logout local mesmo se API falhar
                 }
             }
 
-            // Fazer logout local (remover cookie)
+            // Limpar Session
+            HttpContext.Session.Remove("UserSession");
+
+            // Remover cookie
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
 
             _logger.LogInformation("Logout realizado com sucesso para usuário {Usuario}", userId);
@@ -199,11 +219,11 @@ public class AuthController : Controller
     /// Endpoint para verificar se usuário está autenticado (AJAX)
     /// </summary>
     [HttpGet]
-    public IActionResult CheckAuth()
+    public IActionResult CheckAuth([FromServices] IHttpContextAccessor httpContextAccessor)
     {
         if (User.Identity?.IsAuthenticated == true)
         {
-            var userSession = User.GetUserSession();
+            var userSession = User.GetUserSession(httpContextAccessor);
             return Json(new
             {
                 authenticated = true,
@@ -236,7 +256,6 @@ public class AuthController : Controller
                 return Json(new { success = false, message = "Token não encontrado" });
             }
 
-            // Validar token atual
             var isValid = await _authApiService.ValidateTokenAsync(token);
 
             if (!isValid)
@@ -244,7 +263,6 @@ public class AuthController : Controller
                 return Json(new { success = false, message = "Sessão expirada" });
             }
 
-            // Atualizar última atividade
             var claims = User.Claims.ToList();
             var lastActivityClaim = claims.FirstOrDefault(c => c.Type == "LastActivity");
 
@@ -271,16 +289,15 @@ public class AuthController : Controller
         }
     }
 
-    /// <summary>
-    /// Redireciona para URL local ou dashboard
-    /// </summary>
     private IActionResult RedirectToLocal(string? returnUrl)
     {
         if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
         {
+            _logger.LogInformation("Redirecionando para URL solicitada: {Url}", returnUrl);
             return Redirect(returnUrl);
         }
 
+        _logger.LogInformation("Redirecionando para dashboard padrão");
         return RedirectToAction("Index", "Home");
     }
 }

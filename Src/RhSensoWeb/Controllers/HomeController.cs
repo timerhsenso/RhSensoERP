@@ -6,63 +6,50 @@ using RhSensoWeb.Models;
 
 namespace RhSensoWeb.Controllers;
 
-/// <summary>
-/// Controller principal da aplicação
-/// </summary>
 [Authorize]
 public class HomeController : Controller
 {
     private readonly ILogger<HomeController> _logger;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public HomeController(ILogger<HomeController> logger)
+    public HomeController(ILogger<HomeController> logger, IHttpContextAccessor httpContextAccessor)
     {
         _logger = logger;
+        _httpContextAccessor = httpContextAccessor;
     }
 
-    /// <summary>
-    /// Dashboard principal
-    /// </summary>
     public IActionResult Index()
     {
-        var userSession = User.GetUserSession();
-        
+        var userSession = User.GetUserSession(_httpContextAccessor);
+
         _logger.LogInformation("Dashboard acessado por usuário {Usuario}", userSession.CdUsuario);
-        
+
         ViewBag.UserName = userSession.DcUsuario;
         ViewBag.UserEmail = userSession.EmailUsuario;
         ViewBag.CompanyCode = userSession.CdEmpresa;
         ViewBag.BranchCode = userSession.CdFilial;
-        
+
         return View();
     }
 
-    /// <summary>
-    /// Página de privacidade
-    /// </summary>
     public IActionResult Privacy()
     {
         return View();
     }
 
-    /// <summary>
-    /// Página de erro
-    /// </summary>
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error()
     {
         return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
     }
 
-    /// <summary>
-    /// Endpoint para obter informações do usuário (AJAX)
-    /// </summary>
     [HttpGet]
     public IActionResult GetUserInfo()
     {
         try
         {
-            var userSession = User.GetUserSession();
-            
+            var userSession = User.GetUserSession(_httpContextAccessor);
+
             return Json(new
             {
                 success = true,

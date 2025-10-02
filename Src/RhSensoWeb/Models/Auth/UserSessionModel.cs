@@ -1,4 +1,3 @@
-using System.Linq;
 using System.Security.Claims;
 
 namespace RhSensoWeb.Models.Auth;
@@ -21,7 +20,6 @@ public class UserSessionModel
     public string? IdSaas { get; set; }
     public string AccessToken { get; set; } = string.Empty;
 
-    // Use os DTOs já existentes no seu projeto (não redefina aqui)
     public List<UserGroupDto> Groups { get; set; } = new();
     public List<UserPermissionDto> Permissions { get; set; } = new();
 
@@ -35,41 +33,55 @@ public class UserSessionModel
     {
         var claims = new List<Claim>
         {
-            new(ClaimTypes.NameIdentifier, CdUsuario),
-            new(ClaimTypes.Name,          DcUsuario),
-            new(ClaimTypes.Email,         EmailUsuario),
-            new("TpUsuario",              TpUsuario),
-            new("FlAtivo",                FlAtivo.ToString()),
-            new("AccessToken",            AccessToken),
-            new("LoginTime",              LoginTime.ToString("O")),
-            new("LastActivity",           LastActivity.ToString("O")),
-
-            // Empresa/Filial inteiros gravados como string
-            new("CdEmpresa",              CdEmpresa.ToString()),
-            new("CdFilial",               CdFilial.ToString())
+            new Claim(ClaimTypes.NameIdentifier, CdUsuario),
+            new Claim(ClaimTypes.Name, CdUsuario),
+            new Claim(ClaimTypes.Email, EmailUsuario ?? ""),
+            new Claim("DcUsuario", DcUsuario ?? ""),
+            new Claim("TpUsuario", TpUsuario ?? ""),
+            new Claim("FlAtivo", FlAtivo.ToString()), // ✅ CORRIGIDO: char.ToString()
+            new Claim("CdEmpresa", CdEmpresa.ToString()),
+            new Claim("CdFilial", CdFilial.ToString()),
+            new Claim("access_token", AccessToken), // ✅ MINÚSCULO
+            new Claim("LoginTime", LoginTime.ToString("O")),
+            new Claim("LastActivity", LastActivity.ToString("O"))
         };
 
-        if (!string.IsNullOrWhiteSpace(IdSaas))
-            claims.Add(new Claim("IdSaas", IdSaas));
-
-        // Grupos
-        foreach (var g in Groups)
+        // Adicionar IdSaas se existir
+        if (!string.IsNullOrEmpty(IdSaas))
         {
-            if (!string.IsNullOrWhiteSpace(g.CdGrUser))
-                claims.Add(new Claim("Group", g.CdGrUser));
+            claims.Add(new Claim("IdSaas", IdSaas));
         }
 
-        // Permissões
-        foreach (var p in Permissions)
+        // Adicionar grupos
+        if (Groups != null)
         {
-            if (string.IsNullOrWhiteSpace(p.PermissionKey)) continue;
+            foreach (var group in Groups)
+            {
+                claims.Add(new Claim("Group", group.CdGrUser));
+            }
+        }
 
-            claims.Add(new Claim("Permission", p.PermissionKey));
+        // Adicionar permissões
+        if (Permissions != null)
+        {
+            foreach (var permission in Permissions)
+            {
+                var permKey = $"{permission.CdSistema}.{permission.CdFuncao}";
+                claims.Add(new Claim("Permission", permKey));
 
-            if (p.CanInclude) claims.Add(new Claim($"Permission:{p.PermissionKey}:I", "true"));
-            if (p.CanUpdate) claims.Add(new Claim($"Permission:{p.PermissionKey}:A", "true"));
-            if (p.CanDelete) claims.Add(new Claim($"Permission:{p.PermissionKey}:E", "true"));
-            if (p.CanConsult) claims.Add(new Claim($"Permission:{p.PermissionKey}:C", "true"));
+                // ✅ CORRIGIDO: Usar propriedades booleanas ao invés de CdAcoes
+                if (permission.CanInclude)
+                    claims.Add(new Claim($"Permission:{permKey}:I", "true"));
+
+                if (permission.CanUpdate)
+                    claims.Add(new Claim($"Permission:{permKey}:A", "true"));
+
+                if (permission.CanDelete)
+                    claims.Add(new Claim($"Permission:{permKey}:E", "true"));
+
+                if (permission.CanConsult)
+                    claims.Add(new Claim($"Permission:{permKey}:C", "true"));
+            }
         }
 
         return claims;
@@ -83,24 +95,20 @@ public class UserSessionModel
         var model = new UserSessionModel
         {
             CdUsuario = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? string.Empty,
-            DcUsuario = principal.FindFirst(ClaimTypes.Name)?.Value ?? string.Empty,
+            DcUsuario = principal.FindFirst("DcUsuario")?.Value ?? string.Empty,
             EmailUsuario = principal.FindFirst(ClaimTypes.Email)?.Value ?? string.Empty,
             TpUsuario = principal.FindFirst("TpUsuario")?.Value ?? string.Empty,
             FlAtivo = char.TryParse(principal.FindFirst("FlAtivo")?.Value, out var fl) ? fl : 'N',
             IdSaas = principal.FindFirst("IdSaas")?.Value,
-            AccessToken = principal.FindFirst("AccessToken")?.Value ?? string.Empty
+            AccessToken = principal.FindFirst("access_token")?.Value ?? string.Empty // ✅ MINÚSCULO
         };
 
-        // Empresa / Filial (int) — se não houver claim válida, fica 0
+        // Empresa / Filial (int)
         if (int.TryParse(principal.FindFirst("CdEmpresa")?.Value, out var emp))
             model.CdEmpresa = emp;
-        else
-            model.CdEmpresa = 0;
 
         if (int.TryParse(principal.FindFirst("CdFilial")?.Value, out var fil))
             model.CdFilial = fil;
-        else
-            model.CdFilial = 0;
 
         // Datas
         if (DateTime.TryParse(principal.FindFirst("LoginTime")?.Value, out var loginTime))
@@ -121,8 +129,11 @@ public class UserSessionModel
 
         foreach (var key in keys)
         {
+            var parts = key.Split('.');
             var perm = new UserPermissionDto
             {
+                CdSistema = parts.Length > 0 ? parts[0] : "",
+                CdFuncao = parts.Length > 1 ? parts[1] : "",
                 PermissionKey = key,
                 CanInclude = principal.HasClaim($"Permission:{key}:I", "true"),
                 CanUpdate = principal.HasClaim($"Permission:{key}:A", "true"),
