@@ -1,3 +1,5 @@
+// Src/RhSensoWeb/Extensions/ClaimsPrincipalExtensions.cs
+
 using System.Security.Claims;
 using System.Text.Json;
 using RhSensoWeb.Models.Auth;
@@ -150,7 +152,31 @@ public static class ClaimsPrincipalExtensions
         if (string.IsNullOrEmpty(permissionKey)) return false;
 
         var session = principal.GetUserSession(httpContextAccessor);
-        return session.HasPermission(permissionKey, action);
+        // return session.HasPermission(permissionKey, action);
+        /**/
+        // ✅ DEBUG: Log todas as permissões
+        var logger = httpContextAccessor.HttpContext?.RequestServices
+            .GetService<ILogger<ClaimsPrincipal>>();
+
+        logger?.LogWarning("🔍 DEBUG Total Permissões: {Count}", session.Permissions.Count);
+        logger?.LogWarning("🔍 DEBUG Buscando: {Key} com ação {Action}", permissionKey, action);
+
+        // Log primeiras 10 permissões para análise
+        foreach (var perm in session.Permissions.Take(10))
+        {
+            logger?.LogWarning("🔍 DEBUG Permissão: {Key} | I:{I} A:{A} E:{E} C:{C}",
+                perm.PermissionKey,
+                perm.CanInclude,
+                perm.CanUpdate,
+                perm.CanDelete,
+                perm.CanConsult);
+        }
+
+        var result = session.HasPermission(permissionKey, action);
+        logger?.LogWarning("🔍 DEBUG Resultado: {Result}", result);
+
+        return result;
+        /**/
     }
 
     /// <summary>
@@ -185,6 +211,7 @@ public static class ClaimsPrincipalExtensions
 
     // ===========================================
     // MÉTODOS SEM IHttpContextAccessor (para Views/TagHelpers)
+    // ⚠️ ESTES MÉTODOS NÃO DEVEM SER USADOS DIRETAMENTE
     // ===========================================
 
     /// <summary>
@@ -197,37 +224,43 @@ public static class ClaimsPrincipalExtensions
     }
 
     /// <summary>
-    /// Verifica se o usuário tem uma permissão específica (formato: "SEG.SEG_USUARIOS.C")
-    /// USAR EM VIEWS/TAGHELPERS - não requer IHttpContextAccessor
-    /// LIMITAÇÃO: Retorna sempre TRUE porque permissões estão na Session, não nas Claims
-    /// Use TagHelpers com IHttpContextAccessor para verificação real
+    /// ⚠️ OBSOLETO - NÃO USE DIRETAMENTE
+    /// Verifica se o usuário tem uma permissão específica
+    /// USAR TagHelpers com IHttpContextAccessor para verificação real
     /// </summary>
+    [Obsolete("Use HasPermission(IHttpContextAccessor, string) ou TagHelpers com IHttpContextAccessor", true)]
     public static bool HasPermission(this ClaimsPrincipal principal, string permissionKey)
     {
-        // ⚠️ ATENÇÃO: Permissões estão na Session, não nas Claims
-        // Este método sempre retorna TRUE para compatibilidade com Views antigas
-        // Use @inject IHttpContextAccessor e User.HasPermission(accessor, "chave") para verificação real
-        return true;
+        throw new InvalidOperationException(
+            "❌ ERRO DE SEGURANÇA: Este método não pode validar permissões sem IHttpContextAccessor. " +
+            "Permissões estão armazenadas na Session HTTP, não nas Claims. " +
+            "Use uma das seguintes abordagens:\n\n" +
+            "1. Em Controllers: User.HasPermission(_httpContextAccessor, \"SEG.SEG_USUARIOS.C\")\n" +
+            "2. Em Views: Use TagHelpers (<a permission=\"SEG.SEG_USUARIOS.C\">...</a>)\n" +
+            "3. Em Razor Code: @inject IHttpContextAccessor e User.HasPermission(accessor, \"chave\")"
+        );
     }
 
     /// <summary>
-    /// Verifica se o usuário tem qualquer uma das permissões especificadas
-    /// USAR EM VIEWS/TAGHELPERS - não requer IHttpContextAccessor
+    /// ⚠️ OBSOLETO - NÃO USE DIRETAMENTE
     /// </summary>
+    [Obsolete("Use TagHelpers com IHttpContextAccessor", true)]
     public static bool HasAnyPermission(this ClaimsPrincipal principal, params string[] permissions)
     {
-        // ⚠️ Mesma limitação do HasPermission
-        return true;
+        throw new InvalidOperationException(
+            "❌ ERRO DE SEGURANÇA: Use TagHelpers com IHttpContextAccessor para verificar permissões"
+        );
     }
 
     /// <summary>
-    /// Verifica se o usuário tem todas as permissões especificadas
-    /// USAR EM VIEWS/TAGHELPERS - não requer IHttpContextAccessor
+    /// ⚠️ OBSOLETO - NÃO USE DIRETAMENTE
     /// </summary>
+    [Obsolete("Use TagHelpers com IHttpContextAccessor", true)]
     public static bool HasAllPermissions(this ClaimsPrincipal principal, params string[] permissions)
     {
-        // ⚠️ Mesma limitação do HasPermission
-        return true;
+        throw new InvalidOperationException(
+            "❌ ERRO DE SEGURANÇA: Use TagHelpers com IHttpContextAccessor para verificar permissões"
+        );
     }
 
     // ===========================================

@@ -1,8 +1,16 @@
+@* Src/RhSensoWeb/Areas/SEG/Views/Usuarios/Index.cshtml *@
+
 @using RhSensoWeb.Extensions
+@inject IHttpContextAccessor HttpContextAccessor
 @{
     ViewData["Title"] = "Usuários";
     ViewData["Subtitle"] = "Gerenciamento de usuários do sistema";
     ViewData["Icon"] = "fas fa-users";
+
+    // ✅ SOLUÇÃO: Verificar permissões no servidor ANTES do JavaScript
+    var temPermissaoConsultar = User.HasPermission(HttpContextAccessor, "SEG.SEG_USUARIOS.C");
+    var temPermissaoAlterar = User.HasPermission(HttpContextAccessor, "SEG.SEG_USUARIOS.A");
+    var temPermissaoExcluir = User.HasPermission(HttpContextAccessor, "SEG.SEG_USUARIOS.E");
 }
 
 <!-- Botões de ação -->
@@ -160,13 +168,13 @@
                     <input type="hidden" id="usuarioIdSenha" name="usuarioId">
                     <div class="form-group">
                         <label for="novaSenha">Nova Senha</label>
-                        <input type="password" class="form-control" id="novaSenha" name="novaSenha" 
+                        <input type="password" class="form-control" id="novaSenha" name="novaSenha"
                                minlength="6" required placeholder="Digite a nova senha">
                         <small class="form-text text-muted">A senha deve ter pelo menos 6 caracteres</small>
                     </div>
                     <div class="form-group">
                         <label for="confirmarSenha">Confirmar Senha</label>
-                        <input type="password" class="form-control" id="confirmarSenha" name="confirmarSenha" 
+                        <input type="password" class="form-control" id="confirmarSenha" name="confirmarSenha"
                                minlength="6" required placeholder="Confirme a nova senha">
                     </div>
                 </div>
@@ -184,15 +192,19 @@
 @section Scripts {
     <script>
         let usuariosTable;
-        
+
+        // ✅ SOLUÇÃO: Definir permissões como variáveis JavaScript
+        const PERMISSOES = {
+            consultar: @temPermissaoConsultar.ToString().ToLower(),
+            alterar: @temPermissaoAlterar.ToString().ToLower(),
+            excluir: @temPermissaoExcluir.ToString().ToLower()
+        };
+
         $(document).ready(function() {
-            // Inicializar DataTable
             inicializarDataTable();
-            
-            // Configurar formulário de alterar senha
             configurarFormularioSenha();
         });
-        
+
         function inicializarDataTable() {
             usuariosTable = $('#usuariosTable').DataTable({
                 processing: true,
@@ -206,12 +218,10 @@
                     type: 'POST',
                     contentType: 'application/json',
                     data: function(d) {
-                        // Adicionar filtros aos dados
                         d.nome = $('#filtroNome').val();
                         d.email = $('#filtroEmail').val();
                         d.tipo = $('#filtroTipo').val();
                         d.status = $('#filtroStatus').val();
-                        
                         return JSON.stringify(d);
                     },
                     error: function(xhr, error, thrown) {
@@ -223,8 +233,8 @@
                     { data: 'cdUsuario', name: 'CdUsuario' },
                     { data: 'dcUsuario', name: 'DcUsuario' },
                     { data: 'emailUsuario', name: 'EmailUsuario' },
-                    { 
-                        data: 'tpUsuario', 
+                    {
+                        data: 'tpUsuario',
                         name: 'TpUsuario',
                         render: function(data) {
                             const tipos = {
@@ -235,26 +245,21 @@
                             return tipos[data] || data;
                         }
                     },
-                    { 
-                        data: 'flAtivo', 
+                    {
+                        data: 'flAtivo',
                         name: 'FlAtivo',
-                        render: function(data, type, row) {
-                            if (data === 'S') {
-                                return '<span class="badge badge-success">Ativo</span>';
-                            } else {
-                                return '<span class="badge badge-danger">Inativo</span>';
-                            }
+                        render: function(data) {
+                            return data === 'S'
+                                ? '<span class="badge badge-success">Ativo</span>'
+                                : '<span class="badge badge-danger">Inativo</span>';
                         }
                     },
                     { data: 'cdEmpresa', name: 'CdEmpresa' },
-                    { 
-                        data: 'dtUltimoLogin', 
+                    {
+                        data: 'dtUltimoLogin',
                         name: 'DtUltimoLogin',
                         render: function(data) {
-                            if (data) {
-                                return new Date(data).toLocaleString('pt-BR');
-                            }
-                            return 'Nunca';
+                            return data ? new Date(data).toLocaleString('pt-BR') : 'Nunca';
                         }
                     },
                     {
@@ -262,54 +267,40 @@
                         orderable: false,
                         searchable: false,
                         render: function(data, type, row) {
+                            // ✅ SOLUÇÃO: Usar variáveis JavaScript para verificar permissões
                             let actions = '<div class="btn-group" role="group">';
-                            
+
                             // Visualizar
-                            @if (User.HasPermission("SEG.SEG_USUARIOS.C"))
-                            {
-                                <text>
+                            if (PERMISSOES.consultar) {
                                 actions += '<a href="@Url.Action("Details")/' + row.cdUsuario + '" class="btn btn-info btn-sm" title="Visualizar">';
-                                actions += '<i class="fas fa-eye"></i>';
-                                actions += '</a>';
-                                </text>
+                                actions += '<i class="fas fa-eye"></i></a>';
                             }
-                            
+
                             // Editar
-                            @if (User.HasPermission("SEG.SEG_USUARIOS.A"))
-                            {
-                                <text>
+                            if (PERMISSOES.alterar) {
                                 actions += '<a href="@Url.Action("Edit")/' + row.cdUsuario + '" class="btn btn-warning btn-sm" title="Editar">';
-                                actions += '<i class="fas fa-edit"></i>';
-                                actions += '</a>';
-                                
+                                actions += '<i class="fas fa-edit"></i></a>';
+
                                 // Alterar senha
                                 actions += '<button type="button" class="btn btn-primary btn-sm" onclick="alterarSenha(\'' + row.cdUsuario + '\', \'' + row.dcUsuario + '\')" title="Alterar Senha">';
-                                actions += '<i class="fas fa-key"></i>';
-                                actions += '</button>';
-                                
+                                actions += '<i class="fas fa-key"></i></button>';
+
                                 // Toggle status
                                 if (row.flAtivo === 'S') {
                                     actions += '<button type="button" class="btn btn-secondary btn-sm" onclick="toggleStatus(\'' + row.cdUsuario + '\', false)" title="Desativar">';
-                                    actions += '<i class="fas fa-user-slash"></i>';
-                                    actions += '</button>';
+                                    actions += '<i class="fas fa-user-slash"></i></button>';
                                 } else {
                                     actions += '<button type="button" class="btn btn-success btn-sm" onclick="toggleStatus(\'' + row.cdUsuario + '\', true)" title="Ativar">';
-                                    actions += '<i class="fas fa-user-check"></i>';
-                                    actions += '</button>';
+                                    actions += '<i class="fas fa-user-check"></i></button>';
                                 }
-                                </text>
                             }
-                            
+
                             // Excluir
-                            @if (User.HasPermission("SEG.SEG_USUARIOS.E"))
-                            {
-                                <text>
+                            if (PERMISSOES.excluir) {
                                 actions += '<button type="button" class="btn btn-danger btn-sm" onclick="excluirUsuario(\'' + row.cdUsuario + '\', \'' + row.dcUsuario + '\')" title="Excluir">';
-                                actions += '<i class="fas fa-trash"></i>';
-                                actions += '</button>';
-                                </text>
+                                actions += '<i class="fas fa-trash"></i></button>';
                             }
-                            
+
                             actions += '</div>';
                             return actions;
                         }
@@ -336,49 +327,48 @@
                 pageLength: 25,
                 lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, 'Todos']]
             });
-            
-            // Mover botões para o header
+
             usuariosTable.buttons().container().appendTo('#usuariosTable_buttons');
         }
-        
+
         function aplicarFiltros() {
             usuariosTable.ajax.reload();
         }
-        
+
         function limparFiltros() {
             $('#filtrosForm')[0].reset();
             usuariosTable.ajax.reload();
         }
-        
+
         function reloadTable() {
             usuariosTable.ajax.reload();
         }
-        
+
         function alterarSenha(cdUsuario, dcUsuario) {
             $('#usuarioIdSenha').val(cdUsuario);
             $('#modalAlterarSenha .modal-title').html('<i class="fas fa-key mr-2"></i>Alterar Senha - ' + dcUsuario);
             $('#modalAlterarSenha').modal('show');
         }
-        
+
         function configurarFormularioSenha() {
             $('#formAlterarSenha').on('submit', function(e) {
                 e.preventDefault();
-                
+
                 const novaSenha = $('#novaSenha').val();
                 const confirmarSenha = $('#confirmarSenha').val();
-                
+
                 if (novaSenha !== confirmarSenha) {
                     toastr.error('As senhas não coincidem');
                     return;
                 }
-                
+
                 if (novaSenha.length < 6) {
                     toastr.error('A senha deve ter pelo menos 6 caracteres');
                     return;
                 }
-                
+
                 const usuarioId = $('#usuarioIdSenha').val();
-                
+
                 $.post('@Url.Action("AlterarSenha")', {
                     id: usuarioId,
                     novaSenha: novaSenha
@@ -397,55 +387,47 @@
                 });
             });
         }
-        
+
         function toggleStatus(cdUsuario, ativo) {
             const acao = ativo ? 'ativar' : 'desativar';
-            
-            RhSensoWeb.modal.confirm(
-                `Tem certeza que deseja ${acao} este usuário?`,
-                function() {
-                    $.post('@Url.Action("ToggleStatus")', {
-                        id: cdUsuario,
-                        ativo: ativo
-                    })
-                    .done(function(response) {
-                        if (response.success) {
-                            toastr.success(response.message);
-                            usuariosTable.ajax.reload(null, false);
-                        } else {
-                            toastr.error(response.message);
-                        }
-                    })
-                    .fail(function() {
-                        toastr.error('Erro ao alterar status do usuário');
-                    });
-                },
-                'Confirmar Ação'
-            );
+
+            if (confirm(`Tem certeza que deseja ${acao} este usuário?`)) {
+                $.post('@Url.Action("ToggleStatus")', {
+                    id: cdUsuario,
+                    ativo: ativo
+                })
+                .done(function(response) {
+                    if (response.success) {
+                        toastr.success(response.message);
+                        usuariosTable.ajax.reload(null, false);
+                    } else {
+                        toastr.error(response.message);
+                    }
+                })
+                .fail(function() {
+                    toastr.error('Erro ao alterar status do usuário');
+                });
+            }
         }
-        
+
         function excluirUsuario(cdUsuario, dcUsuario) {
-            RhSensoWeb.modal.confirm(
-                `Tem certeza que deseja excluir o usuário "${dcUsuario}"?<br><br><strong>Esta ação não pode ser desfeita!</strong>`,
-                function() {
-                    $.post('@Url.Action("Delete")', {
-                        id: cdUsuario,
-                        __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
-                    })
-                    .done(function(response) {
-                        if (response.success) {
-                            toastr.success(response.message);
-                            usuariosTable.ajax.reload();
-                        } else {
-                            toastr.error(response.message);
-                        }
-                    })
-                    .fail(function() {
-                        toastr.error('Erro ao excluir usuário');
-                    });
-                },
-                'Confirmar Exclusão'
-            );
+            if (confirm(`Tem certeza que deseja excluir o usuário "${dcUsuario}"?\n\nEsta ação não pode ser desfeita!`)) {
+                $.post('@Url.Action("Delete")', {
+                    id: cdUsuario,
+                    __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                })
+                .done(function(response) {
+                    if (response.success) {
+                        toastr.success(response.message);
+                        usuariosTable.ajax.reload();
+                    } else {
+                        toastr.error(response.message);
+                    }
+                })
+                .fail(function() {
+                    toastr.error('Erro ao excluir usuário');
+                });
+            }
         }
     </script>
 }

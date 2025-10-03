@@ -1,3 +1,5 @@
+// Src/RhSensoWeb/TagHelpers/PermissionTagHelper.cs
+
 using Microsoft.AspNetCore.Razor.TagHelpers;
 using RhSensoWeb.Extensions;
 
@@ -5,6 +7,7 @@ namespace RhSensoWeb.TagHelpers;
 
 /// <summary>
 /// TagHelper para controle de permissões em elementos HTML
+/// ✅ CORRIGIDO: Agora valida permissões corretamente usando IHttpContextAccessor
 /// </summary>
 [HtmlTargetElement("*", Attributes = "permission")]
 [HtmlTargetElement("*", Attributes = "permission-any")]
@@ -49,6 +52,7 @@ public class PermissionTagHelper : TagHelper
 
     /// <summary>
     /// Processa o elemento baseado nas permissões
+    /// ✅ CORRIGIDO: Agora usa HasPermission com IHttpContextAccessor
     /// </summary>
     public override void Process(TagHelperContext context, TagHelperOutput output)
     {
@@ -66,7 +70,8 @@ public class PermissionTagHelper : TagHelper
         // Verificar permissão única
         if (!string.IsNullOrEmpty(Permission))
         {
-            hasPermission = user.HasPermission(Permission);
+            // ✅ CORRIGIDO: Usar método com IHttpContextAccessor
+            hasPermission = user.HasPermission(_httpContextAccessor, Permission);
         }
         // Verificar qualquer permissão da lista
         else if (!string.IsNullOrEmpty(PermissionAny))
@@ -74,7 +79,9 @@ public class PermissionTagHelper : TagHelper
             var permissions = PermissionAny.Split(',', StringSplitOptions.RemoveEmptyEntries)
                                           .Select(p => p.Trim())
                                           .ToArray();
-            hasPermission = user.HasAnyPermission(permissions);
+
+            // ✅ CORRIGIDO: Verificar cada permissão individualmente
+            hasPermission = permissions.Any(p => user.HasPermission(_httpContextAccessor, p));
         }
         // Verificar todas as permissões da lista
         else if (!string.IsNullOrEmpty(PermissionAll))
@@ -82,7 +89,9 @@ public class PermissionTagHelper : TagHelper
             var permissions = PermissionAll.Split(',', StringSplitOptions.RemoveEmptyEntries)
                                           .Select(p => p.Trim())
                                           .ToArray();
-            hasPermission = user.HasAllPermissions(permissions);
+
+            // ✅ CORRIGIDO: Verificar cada permissão individualmente
+            hasPermission = permissions.All(p => user.HasPermission(_httpContextAccessor, p));
         }
         else
         {
@@ -114,6 +123,7 @@ public class PermissionTagHelper : TagHelper
 
 /// <summary>
 /// TagHelper específico para botões com permissões IAEC
+/// ✅ CORRIGIDO
 /// </summary>
 [HtmlTargetElement("button", Attributes = "iaec-permission")]
 [HtmlTargetElement("a", Attributes = "iaec-permission")]
@@ -145,6 +155,7 @@ public class IaecPermissionTagHelper : TagHelper
 
     /// <summary>
     /// Processa o elemento baseado na permissão IAEC
+    /// ✅ CORRIGIDO
     /// </summary>
     public override void Process(TagHelperContext context, TagHelperOutput output)
     {
@@ -161,7 +172,9 @@ public class IaecPermissionTagHelper : TagHelper
         }
 
         var fullPermission = $"{BasePermission}.{Operation.ToUpper()}";
-        var hasPermission = httpContext.User.HasPermission(fullPermission);
+
+        // ✅ CORRIGIDO: Usar método com IHttpContextAccessor
+        var hasPermission = httpContext.User.HasPermission(_httpContextAccessor, fullPermission);
 
         if (!hasPermission)
         {

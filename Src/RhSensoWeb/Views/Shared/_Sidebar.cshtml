@@ -1,8 +1,10 @@
+@* Src/RhSensoWeb/Views/Shared/_Sidebar.cshtml *@
+
 @using RhSensoWeb.Extensions
 
 <nav class="mt-2">
     <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
-        
+
         <!-- Dashboard -->
         <li class="nav-item">
             <a href="@Url.Action("Index", "Home")" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" && ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")">
@@ -12,7 +14,9 @@
         </li>
 
         <!-- Segurança -->
-        @if (User.HasPermission("SEG.SEG_USUARIOS.C") || User.HasPermission("SEG.SEG_FUNCOES.C") || User.HasPermission("SEG.SEG_SISTEMAS.C"))
+        @if (User.HasPermission(HttpContextAccessor, "SEG.SEG_USUARIOS.C") ||
+                User.HasPermission(HttpContextAccessor, "SEG.SEG_FUNCOES.C") ||
+                User.HasPermission(HttpContextAccessor, "SEG.SEG_SISTEMAS.C"))
         {
             <li class="nav-item @(ViewContext.RouteData.Values["area"]?.ToString() == "SEG" ? "menu-open" : "")">
                 <a href="#" class="nav-link @(ViewContext.RouteData.Values["area"]?.ToString() == "SEG" ? "active" : "")">
@@ -23,32 +27,32 @@
                     </p>
                 </a>
                 <ul class="nav nav-treeview">
-                    @if (User.HasPermission("SEG.SEG_USUARIOS.C"))
+                    @if (User.HasPermission(HttpContextAccessor, "SEG.SEG_USUARIOS.C"))
                     {
                         <li class="nav-item">
-                            <a href="@Url.Action("Index", "Usuarios", new { area = "SEG" })" 
+                            <a href="@Url.Action("Index", "Usuarios", new { area = "SEG" })"
                                class="nav-link @(ViewContext.RouteData.Values["area"]?.ToString() == "SEG" && ViewContext.RouteData.Values["controller"]?.ToString() == "Usuarios" ? "active" : "")">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>Usuários</p>
                             </a>
                         </li>
                     }
-                    
-                    @if (User.HasPermission("SEG.SEG_FUNCOES.C"))
+
+                    @if (User.HasPermission(HttpContextAccessor, "SEG.SEG_FUNCOES.C"))
                     {
                         <li class="nav-item">
-                            <a href="@Url.Action("Index", "Funcoes", new { area = "SEG" })" 
+                            <a href="@Url.Action("Index", "Funcoes", new { area = "SEG" })"
                                class="nav-link @(ViewContext.RouteData.Values["area"]?.ToString() == "SEG" && ViewContext.RouteData.Values["controller"]?.ToString() == "Funcoes" ? "active" : "")">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>Funções</p>
                             </a>
                         </li>
                     }
-                    
-                    @if (User.HasPermission("SEG.SEG_SISTEMAS.C"))
+
+                    @if (User.HasPermission(HttpContextAccessor, "SEG.SEG_SISTEMAS.C"))
                     {
                         <li class="nav-item">
-                            <a href="@Url.Action("Index", "Sistemas", new { area = "SEG" })" 
+                            <a href="@Url.Action("Index", "Sistemas", new { area = "SEG" })"
                                class="nav-link @(ViewContext.RouteData.Values["area"]?.ToString() == "SEG" && ViewContext.RouteData.Values["controller"]?.ToString() == "Sistemas" ? "active" : "")">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>Sistemas</p>
@@ -60,7 +64,9 @@
         }
 
         <!-- Recursos Humanos -->
-        @if (User.HasPermission("RHU.RHU_FUNCIONARIOS.C") || User.HasPermission("RHU.RHU_AFASTAMENTOS.C") || User.HasPermission("RHU.RHU_FERIAS.C"))
+        @if (User.HasPermission(HttpContextAccessor, "RHU.RHU_FUNCIONARIOS.C") ||
+                User.HasPermission(HttpContextAccessor, "RHU.RHU_AFASTAMENTOS.C") ||
+                User.HasPermission(HttpContextAccessor, "RHU.RHU_FERIAS.C"))
         {
             <li class="nav-item @(ViewContext.RouteData.Values["area"]?.ToString() == "RHU" ? "menu-open" : "")">
                 <a href="#" class="nav-link @(ViewContext.RouteData.Values["area"]?.ToString() == "RHU" ? "active" : "")">
@@ -71,39 +77,39 @@
                     </p>
                 </a>
                 <ul class="nav nav-treeview">
-                    @if (User.HasPermission("RHU.RHU_FUNCIONARIOS.C"))
+                    @if (User.HasPermission(HttpContextAccessor, "RHU.RHU_FUNCIONARIOS.C"))
                     {
                         <li class="nav-item">
-                            <a href="@Url.Action("Index", "Funcionarios", new { area = "RHU" })" 
+                            <a href="@Url.Action("Index", "Funcionarios", new { area = "RHU" })"
                                class="nav-link @(ViewContext.RouteData.Values["area"]?.ToString() == "RHU" && ViewContext.RouteData.Values["controller"]?.ToString() == "Funcionarios" ? "active" : "")">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>Funcionários</p>
                             </a>
                         </li>
                     }
-                    
-                    @if (User.HasPermission("RHU.RHU_AFASTAMENTOS.C"))
+
+                    @if (User.HasPermission(HttpContextAccessor, "RHU.RHU_AFASTAMENTOS.C"))
                     {
                         <li class="nav-item">
-                            <a href="@Url.Action("Index", "Afastamentos", new { area = "RHU" })" 
+                            <a href="@Url.Action("Index", "Afastamentos", new { area = "RHU" })"
                                class="nav-link @(ViewContext.RouteData.Values["area"]?.ToString() == "RHU" && ViewContext.RouteData.Values["controller"]?.ToString() == "Afastamentos" ? "active" : "")">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>Afastamentos</p>
                             </a>
                         </li>
                     }
-                    
-                    @if (User.HasPermission("RHU.RHU_FERIAS.C"))
+
+                    @if (User.HasPermission(HttpContextAccessor, "RHU.RHU_FERIAS.C"))
                     {
                         <li class="nav-item">
-                            <a href="@Url.Action("Index", "Ferias", new { area = "RHU" })" 
+                            <a href="@Url.Action("Index", "Ferias", new { area = "RHU" })"
                                class="nav-link @(ViewContext.RouteData.Values["area"]?.ToString() == "RHU" && ViewContext.RouteData.Values["controller"]?.ToString() == "Ferias" ? "active" : "")">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>Férias</p>
                             </a>
                         </li>
                     }
-                    
+
                     <!-- Submenu Cadastros -->
                     <li class="nav-item">
                         <a href="#" class="nav-link">
@@ -114,7 +120,7 @@
                             </p>
                         </a>
                         <ul class="nav nav-treeview">
-                            @if (User.HasPermission("RHU.RHU_EMPRESAS.C"))
+                            @if (User.HasPermission(HttpContextAccessor, "RHU.RHU_EMPRESAS.C"))
                             {
                                 <li class="nav-item">
                                     <a href="@Url.Action("Index", "Empresas", new { area = "RHU" })" class="nav-link">
@@ -123,8 +129,8 @@
                                     </a>
                                 </li>
                             }
-                            
-                            @if (User.HasPermission("RHU.RHU_FILIAIS.C"))
+
+                            @if (User.HasPermission(HttpContextAccessor, "RHU.RHU_FILIAIS.C"))
                             {
                                 <li class="nav-item">
                                     <a href="@Url.Action("Index", "Filiais", new { area = "RHU" })" class="nav-link">
@@ -133,8 +139,8 @@
                                     </a>
                                 </li>
                             }
-                            
-                            @if (User.HasPermission("RHU.RHU_CARGOS.C"))
+
+                            @if (User.HasPermission(HttpContextAccessor, "RHU.RHU_CARGOS.C"))
                             {
                                 <li class="nav-item">
                                     <a href="@Url.Action("Index", "Cargos", new { area = "RHU" })" class="nav-link">
@@ -143,8 +149,8 @@
                                     </a>
                                 </li>
                             }
-                            
-                            @if (User.HasPermission("RHU.RHU_CENTROS_CUSTO.C"))
+
+                            @if (User.HasPermission(HttpContextAccessor, "RHU.RHU_CENTROS_CUSTO.C"))
                             {
                                 <li class="nav-item">
                                     <a href="@Url.Action("Index", "CentrosCusto", new { area = "RHU" })" class="nav-link">
@@ -160,7 +166,7 @@
         }
 
         <!-- SaaS (Multi-tenant) -->
-        @if (User.HasPermission("SAAS.SAAS_TENANTS.C") && User.GetUserType() == "ADMIN")
+        @if (User.HasPermission(HttpContextAccessor, "SAAS.SAAS_TENANTS.C") && User.GetUserType() == "ADMIN")
         {
             <li class="nav-item @(ViewContext.RouteData.Values["area"]?.ToString() == "SaaS" ? "menu-open" : "")">
                 <a href="#" class="nav-link @(ViewContext.RouteData.Values["area"]?.ToString() == "SaaS" ? "active" : "")">
@@ -172,7 +178,7 @@
                 </a>
                 <ul class="nav nav-treeview">
                     <li class="nav-item">
-                        <a href="@Url.Action("Index", "Tenants", new { area = "SaaS" })" 
+                        <a href="@Url.Action("Index", "Tenants", new { area = "SaaS" })"
                            class="nav-link @(ViewContext.RouteData.Values["area"]?.ToString() == "SaaS" && ViewContext.RouteData.Values["controller"]?.ToString() == "Tenants" ? "active" : "")">
                             <i class="far fa-circle nav-icon"></i>
                             <p>Tenants</p>
@@ -238,7 +244,10 @@
                     <strong>Filial:</strong> @User.GetBranchCode()<br>
                     @if (!string.IsNullOrEmpty(User.GetSaasId()))
                     {
-                        <strong>Tenant:</strong> @User.GetSaasId()<br>
+                        <strong>Tenant:</strong> 
+                        @User.GetSaasId()
+                    
+                        <br>
                     }
                     <strong>Versão:</strong> 1.0.0
                 </p>
