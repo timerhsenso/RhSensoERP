@@ -2,7 +2,9 @@
 using Xunit;
 using FluentAssertions;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
+using Moq;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using RhSensoERP.Application.Auth;
@@ -33,14 +35,18 @@ public class JwtTokenServiceTests
             AccessTokenMinutes = 30
         };
 
-        var options = Options.Create(_jwtOptions);
-        _jwtService = new JwtTokenService(options);
+        var optionsMonitor = new Mock<IOptionsMonitor<JwtOptions>>();
+        optionsMonitor.Setup(x => x.CurrentValue).Returns(_jwtOptions);
+
+        var logger = new Mock<ILogger<JwtTokenService>>();
+
+        _jwtService = new JwtTokenService(optionsMonitor.Object, logger.Object);
     }
 
     [Fact]
-/// <summary>
-/// Createaccesstoken shouldgeneratevalidtoken.
-/// </summary>
+    /// <summary>
+    /// Createaccesstoken shouldgeneratevalidtoken.
+    /// </summary>
     public void CreateAccessToken_ShouldGenerateValidToken()
     {
         // Arrange
@@ -60,14 +66,14 @@ public class JwtTokenServiceTests
         jwt.Subject.Should().Be(userId);
         jwt.Issuer.Should().Be(_jwtOptions.Issuer);
         jwt.Audiences.Should().Contain(_jwtOptions.Audience);
-        jwt.Claims.Should().Contain(c => c.Type == "tenant" && c.Value == tenantId.ToString());
-        jwt.Claims.Where(c => c.Type == "perm").Should().HaveCount(2);
+        jwt.Claims.Should().Contain(c => c.Type == "tenant_id" && c.Value == tenantId.ToString());
+        jwt.Claims.Where(c => c.Type == "permission").Should().HaveCount(2);
     }
 
     [Fact]
-/// <summary>
-/// Createaccesstoken shouldsetcorrectexpiration.
-/// </summary>
+    /// <summary>
+    /// Createaccesstoken shouldsetcorrectexpiration.
+    /// </summary>
     public void CreateAccessToken_ShouldSetCorrectExpiration()
     {
         // Arrange
@@ -90,9 +96,9 @@ public class JwtTokenServiceTests
     [InlineData("")]
     [InlineData("user123")]
     [InlineData("admin@company.com")]
-/// <summary>
-/// Createaccesstoken withdifferentuserids shouldwork.
-/// </summary>
+    /// <summary>
+    /// Createaccesstoken withdifferentuserids shouldwork.
+    /// </summary>
     public void CreateAccessToken_WithDifferentUserIds_ShouldWork(string userId)
     {
         // Arrange

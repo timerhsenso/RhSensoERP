@@ -115,7 +115,7 @@ namespace RhSensoERP.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Groups");
+                    b.ToTable("Groups", (string)null);
                 });
 
             modelBuilder.Entity("RhSensoERP.Core.Security.Entities.GroupRole", b =>
@@ -139,7 +139,7 @@ namespace RhSensoERP.Infrastructure.Migrations
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("GroupRoles");
+                    b.ToTable("GroupRoles", (string)null);
                 });
 
             modelBuilder.Entity("RhSensoERP.Core.Security.Entities.GrupoDeUsuario", b =>
@@ -257,7 +257,7 @@ namespace RhSensoERP.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Roles");
+                    b.ToTable("Roles", (string)null);
                 });
 
             modelBuilder.Entity("RhSensoERP.Core.Security.Entities.SaasInvitation", b =>

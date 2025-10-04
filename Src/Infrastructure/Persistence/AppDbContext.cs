@@ -146,6 +146,10 @@ public class AppDbContext : DbContext
     /// </summary>
     public DbSet<GroupRole> GroupRoles => Set<GroupRole>();
 
+
+    public DbSet<RefreshToken> RefreshTokens { get; set; }
+
+
     // ========================================
     // CONFIGURAÇÃO DO MODELO
     // ========================================
@@ -153,6 +157,22 @@ public class AppDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // ? ADICIONAR esta configuração:
+        modelBuilder.Entity<RefreshToken>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.HasIndex(e => e.TokenHash)
+                .IsUnique();
+
+            entity.HasIndex(e => e.CdUsuario);
+
+            entity.HasIndex(e => e.ExpiresAt);
+
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("GETUTCDATE()");
+        });
 
         // ========================================
         // CONFIGURAÇÕES LEGACY - SECURITY

@@ -2,7 +2,9 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Moq;
 using RhSensoERP.Application.Auth;
 using RhSensoERP.Core.Security.Entities;
 using RhSensoERP.Infrastructure.Auth;
@@ -31,7 +33,6 @@ public class LegacyAuthServiceTests
         var options = new DbContextOptionsBuilder<AppDbContext>()
             .UseInMemoryDatabase(dbName)
             .Options;
-
         var http = new HttpContextAccessor();
         var audit = new AuditSaveChangesInterceptor(http);
         return new AppDbContext(options, audit);
@@ -42,34 +43,31 @@ public class LegacyAuthServiceTests
         {
             ["Jwt:Issuer"] = "test-issuer",
             ["Jwt:Audience"] = "test-audience",
-            ["Jwt:Key"] = "dev-only-test-key-1234567890"
+            ["Jwt:SecretKey"] = "dev-only-test-key-minimum-32-chars-required-here-1234567890"
         }!).Build();
 
     private static JwtTokenService CreateJwtService(IConfiguration cfg)
     {
-        var optsObj = new JwtOptions();
-        var t = typeof(JwtOptions);
-        void SetIfExists(string name, string? value)
+        var optsObj = new JwtOptions
         {
-            var p = t.GetProperty(name);
-            if (p != null && p.CanWrite && value is not null)
-                p.SetValue(optsObj, value);
-        }
-        SetIfExists("Issuer", cfg["Jwt:Issuer"]);
-        SetIfExists("Audience", cfg["Jwt:Audience"]);
-        var key = cfg["Jwt:Key"];
-        SetIfExists("Key", key);
-        SetIfExists("Secret", key);
-        SetIfExists("SecretKey", key);
-        SetIfExists("SigningKey", key);
+            Issuer = cfg["Jwt:Issuer"] ?? "test-issuer",
+            Audience = cfg["Jwt:Audience"] ?? "test-audience",
+            SecretKey = cfg["Jwt:SecretKey"] ?? "dev-only-test-key-minimum-32-chars-required-here-1234567890",
+            AccessTokenMinutes = 15
+        };
 
-        return new JwtTokenService(Options.Create(optsObj));
+        var optionsMonitor = new Mock<IOptionsMonitor<JwtOptions>>();
+        optionsMonitor.Setup(x => x.CurrentValue).Returns(optsObj);
+
+        var loggerMock = new Mock<ILogger<JwtTokenService>>();
+
+        return new JwtTokenService(optionsMonitor.Object, loggerMock.Object);
     }
 
     [Fact]
-/// <summary>
-/// Authenticateasync Deve falha para inativo usuário e senha incorreta.
-/// </summary>
+    /// <summary>
+    /// Authenticateasync Deve falha para inativo usuário e senha incorreta.
+    /// </summary>
     public async Task AuthenticateAsync_Should_Fail_For_Inactive_User_And_WrongPassword()
     {
         // Arrange
