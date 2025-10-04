@@ -7,7 +7,7 @@ namespace RhSensoERP.Core.Security.Entities;
 /// Entidade para armazenamento de Refresh Tokens
 /// ✅ SEGURANÇA: Tokens são armazenados como hash SHA256
 /// </summary>
-[Table("RefreshTokens", Schema = "seg")]
+[Table("RefreshTokens")]
 public class RefreshToken
 {
     [Key]

@@ -39,4 +39,5 @@ public record LoginResponseDto(
     string AccessToken,
     UserSessionData UserData,
     List<UserGroup> Groups,
-    List<UserPermission> Permissions);
+    List<UserPermission> Permissions, 
+    string RefreshToken);

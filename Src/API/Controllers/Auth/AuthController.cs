@@ -1,3 +1,5 @@
+/**/
+
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -9,6 +11,8 @@ using RhSensoERP.Application.Security.Auth.Services;
 using RhSensoERP.Application.Security.Auth.Validators;
 using RhSensoERP.Core.Security.Auth;
 using RhSensoERP.Core.Shared;
+using RhSensoERP.Infrastructure.Auth;
+using Microsoft.Extensions.DependencyInjection; // (necessário para GetRequiredService)
 
 namespace RhSensoERP.API.Controllers.Auth;
 
@@ -28,16 +32,28 @@ public class AuthController : ControllerBase
     private readonly AuthOptions _authOptions;
     private readonly ILogger<AuthController> _logger;
 
+    // ✅ ADICIONAR ESTAS 2 LINHAS:
+    private readonly JwtTokenService _jwtTokenService;
+    private readonly JwtOptions _jwtOptions;
+
     public AuthController(
         IAuthenticationService authService,
         ILegacyAuthService legacyAuthService,
         IOptionsMonitor<AuthOptions> authOptions,
-        ILogger<AuthController> logger)
+        ILogger<AuthController> logger,
+
+        // ✅ ADICIONAR ESTES 2 PARÂMETROS:
+        JwtTokenService jwtTokenService,
+        IOptionsMonitor<JwtOptions> jwtOptions)
     {
         _authService = authService;
         _legacyAuthService = legacyAuthService;
         _authOptions = authOptions.CurrentValue;
         _logger = logger;
+
+        // ✅ ADICIONAR ESTAS 2 LINHAS:
+        _jwtTokenService = jwtTokenService;
+        _jwtOptions = jwtOptions.CurrentValue;
     }
 
     /// <summary>
@@ -108,12 +124,23 @@ public class AuthController : ControllerBase
                 return BadRequest(ApiResponse<object>.Fail(result.ErrorMessage!));
             }
 
+
+            // Gerar Refresh Token
+            var accessTokenJti = _jwtTokenService.GetTokenId(result.AccessToken!) ?? Guid.NewGuid().ToString();
+            var refreshTokenService = HttpContext.RequestServices.GetRequiredService<IRefreshTokenService>();
+            var refreshToken = await refreshTokenService.CreateRefreshTokenAsync(
+                request.CdUsuario,
+                accessTokenJti,
+                ipAddress,
+                userAgent,
+                ct);
+
             // Sucesso - montar resposta
             var response = new LoginResponseDto(
                 result.AccessToken!,
                 result.UserData!,
                 result.Groups ?? new List<UserGroup>(),
-                result.Permissions ?? new List<UserPermission>());
+                result.Permissions ?? new List<UserPermission>(), refreshToken);
 
             // Log de sucesso
             _logger.LogInformation("Login SUCESSO para usuário {Usuario} de IP {IPAddress} em {Duration}ms via {Provider}",
@@ -187,11 +214,24 @@ public class AuthController : ControllerBase
                 return BadRequest(ApiResponse<object>.Fail(result.ErrorMessage!));
             }
 
+            // === ADIÇÃO MÍNIMA: gerar refresh token e passar 5º argumento ===
+            var ipAddress = GetClientIpAddress();
+            var userAgent = Request.Headers.UserAgent.ToString();
+            var accessTokenJti = _jwtTokenService.GetTokenId(result.AccessToken!) ?? Guid.NewGuid().ToString();
+            var refreshTokenService = HttpContext.RequestServices.GetRequiredService<IRefreshTokenService>();
+            var refreshToken = await refreshTokenService.CreateRefreshTokenAsync(
+                request.CdUsuario,
+                accessTokenJti,
+                ipAddress,
+                userAgent,
+                ct);
+
             var response = new LoginResponseDto(
                 result.AccessToken!,
                 result.UserData!,
                 result.Groups ?? new List<UserGroup>(),
-                result.Permissions ?? new List<UserPermission>());
+                result.Permissions ?? new List<UserPermission>(),
+                refreshToken);
 
             return Ok(ApiResponse<LoginResponseDto>.Ok(response));
         }
@@ -497,4 +537,196 @@ public class AuthController : ControllerBase
             AllClaims = User.Claims.Select(c => new { c.Type, c.Value }).ToList()
         });
     }
+
+
+    // ✅ ADICIONAR ESTE MÉTODO AO AuthController.cs
+
+    /// <summary>
+    /// Renova o Access Token usando um Refresh Token válido
+    /// ✅ SEGURANÇA: Implementa rotation de refresh tokens (o antigo é invalidado)
+    /// </summary>
+    [HttpPost("refresh")]
+    [AllowAnonymous]
+    [EnableRateLimiting("login")]
+    [ProducesResponseType(typeof(ApiResponse<RefreshTokenResponseDto>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<object>), 400)]
+    [ProducesResponseType(typeof(ApiResponse<object>), 401)]
+    public async Task<ActionResult<ApiResponse<RefreshTokenResponseDto>>> RefreshToken(
+        [FromBody] RefreshTokenRequestDto request,
+        [FromServices] IRefreshTokenService refreshTokenService,
+        CancellationToken ct)
+    {
+        var ipAddress = GetClientIpAddress();
+        var userAgent = Request.Headers.UserAgent.ToString();
+
+        _logger.LogInformation(
+            "SECURITY_EVENT: REFRESH_TOKEN_ATTEMPT | IP: {IP} | UserAgent: {UserAgent}",
+            ipAddress, userAgent);
+
+        try
+        {
+            if (string.IsNullOrWhiteSpace(request.RefreshToken))
+            {
+                return BadRequest(ApiResponse<object>.Fail("Refresh token é obrigatório"));
+            }
+
+            // 1. Validar e obter dados do refresh token
+            var refreshTokenData = await refreshTokenService.ValidateRefreshTokenAsync(
+                request.RefreshToken,
+                ct);
+
+            if (refreshTokenData == null || !refreshTokenData.IsValid)
+            {
+                _logger.LogWarning(
+                    "SECURITY_EVENT: REFRESH_TOKEN_INVALID | IP: {IP} | Reason: {Reason}",
+                    ipAddress, refreshTokenData?.ErrorMessage ?? "Token inválido");
+
+                return Unauthorized(ApiResponse<object>.Fail(
+                    refreshTokenData?.ErrorMessage ?? "Refresh token inválido ou expirado"));
+            }
+
+            var userId = refreshTokenData.UserId;
+
+            // 2. Carregar permissões atualizadas do usuário
+            var permissions = await _legacyAuthService.GetUserPermissionsAsync(userId, ct);
+
+            // 3. Gerar novo Access Token
+            var tenantId = Guid.Parse($"{permissions.UserData?.CdEmpresa ?? 1:D8}-0000-0000-0000-000000000000");
+            var permissionClaims = permissions.Permissions
+                .Select(p => $"{p.CdSistema.Trim()}.{p.CdFuncao.Trim()}.{p.CdAcoes.Trim()}")
+                .Distinct()
+                .ToList();
+
+            var newAccessToken = _jwtTokenService.CreateAccessToken(userId, tenantId, permissionClaims);
+
+            // 4. Gerar novo Refresh Token (rotation)
+            var newRefreshToken = await refreshTokenService.RotateRefreshTokenAsync(
+                request.RefreshToken,
+                ipAddress,
+                userAgent,
+                ct);
+
+            if (newRefreshToken == null)
+            {
+                _logger.LogError(
+                    "SECURITY_EVENT: REFRESH_TOKEN_ROTATION_FAILED | User: {User} | IP: {IP}",
+                    userId, ipAddress);
+
+                return StatusCode(500, ApiResponse<object>.Fail("Erro ao renovar token"));
+            }
+
+            _logger.LogInformation(
+                "SECURITY_EVENT: REFRESH_TOKEN_SUCCESS | User: {User} | IP: {IP}",
+                userId, ipAddress);
+
+            var response = new RefreshTokenResponseDto
+            {
+                AccessToken = newAccessToken,
+                RefreshToken = newRefreshToken,
+                //ExpiresIn = _authOptions.Jwt.AccessTokenMinutes * 60 // em segundos
+                ExpiresIn = _jwtOptions.AccessTokenMinutes * 60 // em segundos
+
+            };
+
+            return Ok(ApiResponse<RefreshTokenResponseDto>.Ok(response, "Token renovado com sucesso"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "SECURITY_EVENT: REFRESH_TOKEN_ERROR | IP: {IP}",
+                ipAddress);
+
+            return StatusCode(500, ApiResponse<object>.Fail("Erro interno do servidor"));
+        }
+    }
+
+    /// <summary>
+    /// Revoga um Refresh Token específico
+    /// ✅ SEGURANÇA: Permite ao usuário invalidar tokens comprometidos
+    /// </summary>
+    [HttpPost("revoke")]
+    [Authorize]
+    [ProducesResponseType(typeof(ApiResponse<object>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<object>), 400)]
+    public async Task<ActionResult<ApiResponse<object>>> RevokeToken(
+        [FromBody] RevokeTokenRequestDto request,
+        [FromServices] IRefreshTokenService refreshTokenService,
+        CancellationToken ct)
+    {
+        var userId = User.Identity?.Name;
+        var ipAddress = GetClientIpAddress();
+
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Unauthorized();
+        }
+
+        try
+        {
+            var success = await refreshTokenService.RevokeRefreshTokenAsync(
+                request.RefreshToken,
+                userId,
+                null, // sem replacement
+                ct);
+
+            if (!success)
+            {
+                _logger.LogWarning(
+                    "SECURITY_EVENT: REVOKE_TOKEN_FAILED | User: {User} | IP: {IP}",
+                    userId, ipAddress);
+
+                return BadRequest(ApiResponse<object>.Fail("Token não encontrado ou já revogado"));
+            }
+
+            _logger.LogInformation(
+                "SECURITY_EVENT: REVOKE_TOKEN_SUCCESS | User: {User} | IP: {IP}",
+                userId, ipAddress);
+
+            return Ok(ApiResponse<object>.Ok("Token revogado com sucesso"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao revogar token para usuário {User}", userId);
+            return StatusCode(500, ApiResponse<object>.Fail("Erro interno do servidor"));
+        }
+    }
+
+    /// <summary>
+    /// Revoga TODOS os Refresh Tokens do usuário atual
+    /// ✅ SEGURANÇA: Útil quando o usuário detecta atividade suspeita
+    /// </summary>
+    [HttpPost("revoke-all")]
+    [Authorize]
+    [ProducesResponseType(typeof(ApiResponse<object>), 200)]
+    public async Task<ActionResult<ApiResponse<object>>> RevokeAllTokens(
+        [FromServices] IRefreshTokenService refreshTokenService,
+        CancellationToken ct)
+    {
+        var userId = User.Identity?.Name;
+        var ipAddress = GetClientIpAddress();
+
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Unauthorized();
+        }
+
+        try
+        {
+            var count = await refreshTokenService.RevokeAllUserTokensAsync(userId, ct);
+
+            _logger.LogWarning(
+                "SECURITY_EVENT: REVOKE_ALL_TOKENS | User: {User} | IP: {IP} | TokensRevoked: {Count}",
+                userId, ipAddress, count);
+
+            return Ok(ApiResponse<object>.Ok(
+                new { tokensRevoked = count },
+                $"{count} token(s) revogado(s) com sucesso"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao revogar todos os tokens do usuário {User}", userId);
+            return StatusCode(500, ApiResponse<object>.Fail("Erro interno do servidor"));
+        }
+    }
+
 }

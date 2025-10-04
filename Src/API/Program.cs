@@ -15,6 +15,7 @@ using Microsoft.OpenApi.Models;
 using RhSensoERP.API.Configuration;
 using RhSensoERP.API.Middlewares;
 using RhSensoERP.Application.Common.Interfaces;
+using RhSensoERP.Application.Security.Auth.Services;
 using RhSensoERP.Application.Security.Auth.Validators;
 using RhSensoERP.Application.SEG.Interfaces;
 using RhSensoERP.Core.Abstractions.Interfaces;
@@ -120,6 +121,8 @@ builder.Services.AddDbContext<AppDbContext>(opt =>
 /// </summary>
 */
 builder.Services.AddJwtAuth(cfg);
+// Adicionar RefreshTokenService
+builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();
 
 #endregion
 
