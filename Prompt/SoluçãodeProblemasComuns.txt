@@ -1,0 +1,140 @@
+# Troubleshooting RhSensoERP
+
+## Problemas Comuns e Soluções
+
+### 1. Erro de Autenticação JWT
+
+**Problema**: 401 Unauthorized mesmo com token válido
+```bash
+# Verificar:
+1. SecretKey está configurada no user-secrets
+2. Issuer/Audience batem com appsettings.json
+3. Token não expirou (15 min padrão)
+4. ClockSkew está como TimeSpan.Zero
+
+# Solução:
+dotnet user-secrets set "JwtSettings:SecretKey" "nova-chave-minimo-32-chars" --project src/API
+```
+
+### 2. Migration Falha
+
+**Problema**: "The entity type 'X' requires a primary key"
+```csharp
+// Solução: Adicionar configuração
+public class EntityConfiguration : IEntityTypeConfiguration<Entity>
+{
+    public void Configure(EntityTypeBuilder<Entity> builder)
+    {
+        builder.HasKey(e => e.Id); // Adicionar explicitamente
+    }
+}
+```
+
+### 3. Circular Dependency no DI
+
+**Problema**: "A circular dependency was detected"
+```csharp
+// Evitar:
+public ServiceA(ServiceB b) { }
+public ServiceB(ServiceA a) { }
+
+// Solução: Usar IServiceProvider ou refatorar
+public ServiceA(IServiceProvider provider) 
+{
+    _serviceB = provider.GetRequiredService<ServiceB>();
+}
+```
+
+### 4. EF Core Tracking Issues
+
+**Problema**: "The instance of entity type cannot be tracked"
+```csharp
+// Solução 1: AsNoTracking() para queries read-only
+var entity = await _context.Entities
+    .AsNoTracking()
+    .FirstOrDefaultAsync(e => e.Id == id);
+
+// Solução 2: Detach entity existente
+_context.Entry(existingEntity).State = EntityState.Detached;
+```
+
+### 5. Nullable Reference Types Warnings
+
+**Problema**: CS8618: Non-nullable property must contain a non-null value
+```csharp
+// Solução para EF Core:
+public string Name { get; set; } = string.Empty; // Inicializar
+public string? Description { get; set; } // Ou tornar nullable
+
+// Para navegação:
+public virtual User User { get; set; } = null!; // null-forgiving operator
+```
+
+### 6. CORS Issues
+
+**Problema**: "CORS policy: No 'Access-Control-Allow-Origin'"
+```csharp
+// Em Program.cs, verificar:
+app.UseCors("AllowSpecificOrigins"); // ANTES de UseAuthentication/Authorization
+
+// Desenvolvimento:
+app.UseCors(x => x
+    .AllowAnyOrigin()
+    .AllowAnyMethod()
+    .AllowAnyHeader());
+```
+
+### 7. Hangfire Dashboard 404
+
+**Problema**: "/hangfire" retorna 404
+```csharp
+// Verificar ordem em Program.cs:
+app.UseAuthentication();
+app.UseAuthorization();
+app.UseHangfireDashboard("/hangfire", new DashboardOptions
+{
+    Authorization = new[] { new HangfireAuthorizationFilter() }
+});
+```
+
+### 8. Docker Build Fails
+
+**Problema**: "Could not find file"
+```dockerfile
+# Verificar contexto do build
+# Executar da raiz do projeto:
+docker build -f src/API/Dockerfile .
+
+# NÃO de dentro de src/API:
+# docker build . ❌
+```
+
+## Performance Issues
+
+### Query N+1
+```csharp
+// Problema:
+var users = await _context.Users.ToListAsync();
+foreach(var user in users)
+{
+    var groups = user.UserGroups.ToList(); // N queries!
+}
+
+// Solução:
+var users = await _context.Users
+    .Include(u => u.UserGroups)
+    .ThenInclude(ug => ug.Group)
+    .ToListAsync();
+```
+
+### Large Result Sets
+```csharp
+// Problema:
+var allRecords = await _context.LargeTable.ToListAsync();
+
+// Solução:
+var pagedRecords = await _context.LargeTable
+    .Skip((page - 1) * pageSize)
+    .Take(pageSize)
+    .ToListAsync();
+```

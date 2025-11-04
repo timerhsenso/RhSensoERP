@@ -1,0 +1,256 @@
+# Template: Implementar Nova Feature no RhSensoERP
+
+## Exemplo: Adicionar Gestão de Departamentos
+
+### 1️⃣ Domain Layer
+```csharp
+// src/Modules/GestaoDePessoas/Domain/Entities/Department.cs
+namespace RhSensoERP.Modules.GestaoDePessoas.Domain.Entities;
+
+public sealed class Department : AuditableEntity
+{
+    public string Code { get; private set; } = string.Empty;
+    public string Name { get; private set; } = string.Empty;
+    public string? Description { get; private set; }
+    public Guid? ParentDepartmentId { get; private set; }
+    
+    // Navegação
+    public virtual Department? ParentDepartment { get; private set; }
+    public virtual ICollection<Department> SubDepartments { get; private set; } = new List<Department>();
+    
+    private Department() { } // EF Core
+    
+    public static Department Create(string code, string name, string? description = null)
+    {
+        if (string.IsNullOrWhiteSpace(code))
+            throw new ArgumentException("Código é obrigatório");
+            
+        return new Department
+        {
+            Id = Guid.NewGuid(),
+            Code = code.ToUpperInvariant(),
+            Name = name.Trim(),
+            Description = description?.Trim()
+        };
+    }
+}
+```
+
+### 2️⃣ Application Layer
+```csharp
+// src/Modules/GestaoDePessoas/Application/Commands/CreateDepartmentCommand.cs
+public record CreateDepartmentCommand(
+    string Code,
+    string Name,
+    string? Description,
+    Guid? ParentDepartmentId) : IRequest<Guid>;
+
+// src/Modules/GestaoDePessoas/Application/Handlers/CreateDepartmentCommandHandler.cs
+public sealed class CreateDepartmentCommandHandler 
+    : IRequestHandler<CreateDepartmentCommand, Guid>
+{
+    private readonly IApplicationDbContext _context;
+    private readonly ILogger<CreateDepartmentCommandHandler> _logger;
+    
+    public CreateDepartmentCommandHandler(
+        IApplicationDbContext context,
+        ILogger<CreateDepartmentCommandHandler> logger)
+    {
+        _context = context;
+        _logger = logger;
+    }
+    
+    public async Task<Guid> Handle(
+        CreateDepartmentCommand request, 
+        CancellationToken cancellationToken)
+    {
+        var department = Department.Create(
+            request.Code,
+            request.Name,
+            request.Description);
+            
+        if (request.ParentDepartmentId.HasValue)
+        {
+            var parentExists = await _context.Departments
+                .AnyAsync(d => d.Id == request.ParentDepartmentId.Value, cancellationToken);
+                
+            if (!parentExists)
+                throw new NotFoundException("Departamento pai não encontrado");
+                
+            department.SetParentDepartment(request.ParentDepartmentId.Value);
+        }
+        
+        _context.Departments.Add(department);
+        await _context.SaveChangesAsync(cancellationToken);
+        
+        _logger.LogInformation("Departamento {Code} criado com ID {Id}", 
+            department.Code, department.Id);
+            
+        return department.Id;
+    }
+}
+
+// src/Modules/GestaoDePessoas/Application/Validators/CreateDepartmentValidator.cs
+public sealed class CreateDepartmentValidator 
+    : AbstractValidator<CreateDepartmentCommand>
+{
+    public CreateDepartmentValidator()
+    {
+        RuleFor(x => x.Code)
+            .NotEmpty().WithMessage("Código é obrigatório")
+            .MaximumLength(20).WithMessage("Código deve ter no máximo 20 caracteres");
+            
+        RuleFor(x => x.Name)
+            .NotEmpty().WithMessage("Nome é obrigatório")
+            .MaximumLength(100).WithMessage("Nome deve ter no máximo 100 caracteres");
+    }
+}
+```
+
+### 3️⃣ Infrastructure Layer
+```csharp
+// src/Modules/GestaoDePessoas/Infrastructure/Persistence/Configurations/DepartmentConfiguration.cs
+public sealed class DepartmentConfiguration : IEntityTypeConfiguration<Department>
+{
+    public void Configure(EntityTypeBuilder<Department> builder)
+    {
+        builder.ToTable("Departments", "rh");
+        
+        builder.HasKey(e => e.Id);
+        
+        builder.HasIndex(e => e.Code)
+            .IsUnique();
+            
+        builder.Property(e => e.Code)
+            .HasMaxLength(20)
+            .IsRequired();
+            
+        builder.Property(e => e.Name)
+            .HasMaxLength(100)
+            .IsRequired();
+            
+        builder.Property(e => e.Description)
+            .HasMaxLength(500);
+            
+        // Self-referencing relationship
+        builder.HasOne(e => e.ParentDepartment)
+            .WithMany(e => e.SubDepartments)
+            .HasForeignKey(e => e.ParentDepartmentId)
+            .OnDelete(DeleteBehavior.Restrict);
+    }
+}
+```
+
+### 4️⃣ API Layer
+```csharp
+// src/API/Controllers/DepartmentsController.cs
+[ApiController]
+[Route("api/v1/[controller]")]
+[Authorize]
+public sealed class DepartmentsController : ControllerBase
+{
+    private readonly IMediator _mediator;
+    
+    public DepartmentsController(IMediator mediator)
+    {
+        _mediator = mediator;
+    }
+    
+    /// <summary>
+    /// Cria um novo departamento.
+    /// </summary>
+    [HttpPost]
+    [ProducesResponseType(typeof(Guid), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> Create(
+        [FromBody] CreateDepartmentCommand command,
+        CancellationToken cancellationToken)
+    {
+        var id = await _mediator.Send(command, cancellationToken);
+        return CreatedAtAction(nameof(GetById), new { id }, new { id });
+    }
+    
+    /// <summary>
+    /// Obtém um departamento por ID.
+    /// </summary>
+    [HttpGet("{id:guid}")]
+    [ProducesResponseType(typeof(DepartmentDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetById(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        var query = new GetDepartmentByIdQuery(id);
+        var result = await _mediator.Send(query, cancellationToken);
+        return result != null ? Ok(result) : NotFound();
+    }
+}
+```
+
+### 5️⃣ Tests
+```csharp
+// tests/Unit/Domain.Tests/DepartmentTests.cs
+public sealed class DepartmentTests
+{
+    [Fact]
+    public void Create_WithValidData_ShouldCreateDepartment()
+    {
+        // Arrange
+        var code = "IT";
+        var name = "Tecnologia da Informação";
+        
+        // Act
+        var department = Department.Create(code, name);
+        
+        // Assert
+        department.Should().NotBeNull();
+        department.Code.Should().Be("IT");
+        department.Name.Should().Be(name);
+        department.Id.Should().NotBeEmpty();
+    }
+    
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData(" ")]
+    public void Create_WithInvalidCode_ShouldThrowException(string invalidCode)
+    {
+        // Act & Assert
+        Assert.Throws<ArgumentException>(() => 
+            Department.Create(invalidCode, "Nome Válido"));
+    }
+}
+
+// tests/Integration/Api.Integration.Tests/DepartmentsControllerTests.cs
+public sealed class DepartmentsControllerTests : IClassFixture<WebApplicationFactory<Program>>
+{
+    private readonly WebApplicationFactory<Program> _factory;
+    
+    public DepartmentsControllerTests(WebApplicationFactory<Program> factory)
+    {
+        _factory = factory;
+    }
+    
+    [Fact]
+    public async Task Create_WithValidData_ShouldReturn201()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+        var command = new CreateDepartmentCommand(
+            "HR", 
+            "Recursos Humanos", 
+            "Departamento de RH",
+            null);
+            
+        // Act
+        var response = await client.PostAsJsonAsync(
+            "/api/v1/departments", 
+            command);
+            
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
+        var content = await response.Content.ReadAsStringAsync();
+        content.Should().Contain("id");
+    }
+}
+```

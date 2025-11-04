@@ -1,0 +1,89 @@
+# Checklist de Qualidade RhSensoERP
+
+## Antes de Fazer Commit
+
+### 📝 Código
+- [ ] Código compila sem warnings
+- [ ] Nomenclatura segue convenções (PascalCase, sufixos, etc.)
+- [ ] Métodos async têm CancellationToken
+- [ ] Sem hardcode de strings/valores
+- [ ] Logs adequados (Info, Warning, Error)
+- [ ] Comentários XML em métodos públicos
+- [ ] Nullable reference types habilitado
+
+### 🏗️ Arquitetura
+- [ ] Respeitada Clean Architecture (dependências corretas)
+- [ ] Domain não depende de nada externo
+- [ ] Controllers thin (delegam para MediatR)
+- [ ] Validações no lugar certo (Domain ou Application)
+- [ ] Sem lógica de negócio em Infrastructure/API
+
+### 🔒 Segurança
+- [ ] Sem secrets no código
+- [ ] Autenticação/Autorização implementada
+- [ ] Validação de entrada com FluentValidation
+- [ ] Proteção contra injection
+- [ ] CORS configurado adequadamente
+
+### 🧪 Testes
+- [ ] Testes unitários para lógica de negócio
+- [ ] Testes de integração para endpoints
+- [ ] Cobertura mínima de 70%
+- [ ] Testes passando localmente
+- [ ] Mocks adequados (não testar dependências)
+
+### 📊 Banco de Dados
+- [ ] Migration criada e revisada
+- [ ] Índices apropriados
+- [ ] FK com DeleteBehavior.Restrict
+- [ ] Seed data se necessário
+- [ ] Rollback possível
+
+### 📚 Documentação
+- [ ] README atualizado se necessário
+- [ ] Swagger documentation (XML comments)
+- [ ] Changelog atualizado
+- [ ] Exemplos de request/response
+
+## Mensagem de Commit
+```
+tipo(escopo): descrição curta
+
+Descrição detalhada do que foi feito e por quê.
+
+- Lista de mudanças principais
+- Migration: Nome_Da_Migration (se houver)
+
+Refs: #123 (issue número)
+Breaking Changes: descrição (se houver)
+```
+
+### Tipos de Commit
+- **feat**: Nova funcionalidade
+- **fix**: Correção de bug
+- **docs**: Apenas documentação
+- **style**: Formatação, sem mudança de código
+- **refactor**: Refatoração sem mudança de funcionalidade
+- **perf**: Melhoria de performance
+- **test**: Adiciona/corrige testes
+- **chore**: Mudanças de build, ferramentas, etc.
+
+## Code Review Checklist
+
+### Para o Revisor
+- [ ] Código segue padrões do projeto
+- [ ] Lógica está correta e otimizada
+- [ ] Sem duplicação de código
+- [ ] Testes cobrem casos importantes
+- [ ] Performance aceitável
+- [ ] Segurança verificada
+- [ ] Documentação adequada
+- [ ] Breaking changes identificadas
+
+### Para o Autor
+- [ ] Self-review realizado
+- [ ] Testes executados localmente
+- [ ] Build do CI passando
+- [ ] Conflitos resolvidos
+- [ ] PR tem descrição clara
+- [ ] Issues linkadas

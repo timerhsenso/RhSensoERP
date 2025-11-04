@@ -1,0 +1,9 @@
+Usando os prompts do projeto RhSensoERP, preciso:
+
+1. Criar uma nova entidade "Cargo" no módulo GestaoDePessoas
+2. Deve ter: Código, Nome, Descrição, Nível, Salário Base
+3. Implementar CRUD completo com CQRS
+4. Incluir validações e testes
+5. Gerar migration apropriada
+
+Siga rigorosamente a estrutura de pastas e padrões estabelecidos.

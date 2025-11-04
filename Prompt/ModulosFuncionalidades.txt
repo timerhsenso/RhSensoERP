@@ -1,0 +1,74 @@
+# Módulos RhSensoERP
+
+## Módulo Identity (Completo)
+**Status**: ✅ Implementado
+**Responsabilidades**:
+- Autenticação (JWT + Refresh Tokens)
+- Autorização (Grupos, Funções, Permissões)
+- Gestão de usuários legados e SaaS
+- Multi-tenancy
+
+## Módulos de Negócio (Em Desenvolvimento)
+
+### GestaoDePessoas
+**Status**: 🚧 Em desenvolvimento
+**Funcionalidades**:
+- Cadastro de funcionários
+- Gestão de departamentos
+- Organograma
+- Histórico funcional
+
+### ControleDePonto
+**Status**: 📋 Planejado
+**Funcionalidades**:
+- Registro de ponto
+- Banco de horas
+- Escalas e turnos
+- Relatórios de frequência
+
+### SaudeOcupacional
+**Status**: 📋 Planejado
+**Funcionalidades**:
+- ASO (Atestado de Saúde Ocupacional)
+- PCMSO/PPRA
+- Controle de EPIs
+- Gestão de acidentes
+
+### Treinamentos
+**Status**: 📋 Planejado
+**Funcionalidades**:
+- Gestão de cursos
+- Controle de certificações
+- Matriz de competências
+- Avaliação de eficácia
+
+### Avaliacoes
+**Status**: 📋 Planejado
+**Funcionalidades**:
+- Avaliação de desempenho
+- Feedback 360°
+- PDI (Plano de Desenvolvimento)
+- Metas e OKRs
+
+## Estrutura Padrão por Módulo
+```
+src/Modules/{ModuleName}/
+├── Domain/
+│   ├── Entities/
+│   ├── ValueObjects/
+│   ├── Repositories/
+│   └── Events/
+├── Application/
+│   ├── Commands/
+│   ├── Queries/
+│   ├── Handlers/
+│   ├── DTOs/
+│   ├── Validators/
+│   └── Services/
+├── Infrastructure/
+│   ├── Persistence/
+│   │   ├── Configurations/
+│   │   └── Repositories/
+│   └── Services/
+└── {ModuleName}.csproj
+```

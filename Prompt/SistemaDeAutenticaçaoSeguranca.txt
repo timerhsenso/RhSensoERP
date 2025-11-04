@@ -1,0 +1,79 @@
+# Sistema de Segurança RhSensoERP
+
+## Autenticação Multi-Strategy
+
+### 1. Autenticação Legada (Tabela tuse1)
+- Usuários do sistema legado
+- Hash com BCrypt.Net-Next
+- Grupos e permissões por tabelas: gurh1, usrh1, hbrh1, fucn1
+
+### 2. Autenticação SaaS (Tabelas SaasUsers/SaasTenants)
+- Multi-tenant com isolamento por TenantId
+- Convites por email com tokens
+- Planos: Basic, Pro, Enterprise
+
+### 3. JWT + Refresh Tokens
+```csharp
+// Configuração em Program.cs
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(key),
+            ValidateIssuer = true,
+            ValidIssuer = "RhSensoERP.API",
+            ValidateAudience = true,
+            ValidAudience = "RhSensoERP.Client",
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero
+        };
+    });
+
+// Tokens com expiração
+AccessToken: 15 minutos
+RefreshToken: 7 dias (armazenado com hash SHA256)
+```
+
+## Controle de Permissões
+
+### Sistema Hierárquico
+```
+Sistema (tsistema) 
+  └── Funções (fucn1) 
+       └── Botões/Ações (btfuncao)
+
+Grupos (gurh1)
+  └── Permissões nas Funções (hbrh1)
+       └── Ações permitidas: I(ncluir), A(lterar), E(xcluir), C(onsultar)
+
+Usuários (tuse1)
+  └── Membros de Grupos (usrh1) com validade temporal
+```
+
+### Claims no JWT
+```json
+{
+  "sub": "usuario.codigo",
+  "name": "Nome Completo",
+  "email": "email@empresa.com",
+  "groups": ["ADMIN", "RH"],
+  "permissions": ["USU001:IAEC", "FUN002:C"],
+  "tenant": "empresa-guid",
+  "jti": "unique-token-id",
+  "exp": 1234567890
+}
+```
+
+## Segurança - Checklist Obrigatório
+✅ Nunca armazenar senhas em texto puro
+✅ Sempre usar BCrypt com salt para hash
+✅ RefreshTokens armazenados como hash SHA256
+✅ Secrets em user-secrets (dev) ou Azure KeyVault (prod)
+✅ HTTPS obrigatório em produção
+✅ CORS configurado com origens específicas
+✅ Rate limiting implementado
+✅ Logs de auditoria para ações sensíveis
+✅ Validação de entrada com FluentValidation
+✅ Proteção contra SQL Injection via EF Core

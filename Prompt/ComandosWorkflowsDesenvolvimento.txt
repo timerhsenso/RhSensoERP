@@ -1,0 +1,124 @@
+# Workflow de Desenvolvimento RhSensoERP
+
+## Setup Inicial
+```bash
+# Clonar e restaurar
+git clone [repo-url]
+cd RhSensoERP
+dotnet restore
+
+# Configurar secrets (desenvolvimento)
+dotnet user-secrets init --project src/API
+dotnet user-secrets set "JwtSettings:SecretKey" "sua-chave-super-secreta-com-pelo-menos-32-caracteres" --project src/API
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=localhost;Database=RhSensoERP;Trusted_Connection=true;TrustServerCertificate=true;" --project src/API
+
+# Criar/Atualizar banco
+dotnet ef database update --project src/Identity --startup-project src/API
+```
+
+## Desenvolvimento
+
+### Build e Execução
+```bash
+# Build completo
+dotnet build
+
+# Executar API
+dotnet run --project src/API
+
+# Com hot reload
+dotnet watch run --project src/API
+
+# Docker
+docker-compose up -d
+```
+
+### Testes
+```bash
+# Todos os testes
+dotnet test
+
+# Com cobertura
+dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
+
+# Específico
+dotnet test tests/Unit/Domain.Tests
+```
+
+### Criar Nova Feature
+```bash
+# 1. Criar branch
+git checkout -b feature/nome-da-feature
+
+# 2. Gerar entidade (exemplo)
+# Criar: src/Domain/Entities/Employee.cs
+# Criar: src/Infrastructure/Persistence/Configurations/EmployeeConfiguration.cs
+# Atualizar: src/Infrastructure/Data/ApplicationDbContext.cs
+
+# 3. Gerar migration
+dotnet ef migrations add Feature_Add_Employee_202501031600 \
+  --project src/Infrastructure \
+  --startup-project src/API
+
+# 4. Criar Command/Query/Handler
+# src/Application/Commands/CreateEmployeeCommand.cs
+# src/Application/Handlers/CreateEmployeeCommandHandler.cs
+# src/Application/Validators/CreateEmployeeValidator.cs
+
+# 5. Criar Controller
+# src/API/Controllers/EmployeesController.cs
+
+# 6. Testes
+# tests/Unit/Domain.Tests/EmployeeTests.cs
+# tests/Integration/Api.Integration.Tests/EmployeesControllerTests.cs
+
+# 7. Commit
+git add .
+git commit -m "feat: implementa gestão de funcionários
+
+- Adiciona entidade Employee com validações
+- Implementa CRUD via CQRS
+- Adiciona testes unitários e de integração
+- Migration: Feature_Add_Employee_202501031600"
+
+# 8. Push e PR
+git push origin feature/nome-da-feature
+```
+
+## Deploy
+
+### Desenvolvimento
+```bash
+# Via Docker
+docker build -t rhsensoerp:dev -f src/API/Dockerfile .
+docker run -p 5000:80 rhsensoerp:dev
+```
+
+### Produção (IIS)
+```bash
+# Publicar
+dotnet publish src/API -c Release -o ./publish
+
+# Copiar para servidor
+# Configurar Application Pool (.NET 8)
+# Configurar bindings HTTPS
+```
+
+## Troubleshooting
+
+### Erro de Migrations
+```bash
+# Reverter última migration
+dotnet ef database update {PreviousMigration} --project src/Identity --startup-project src/API
+
+# Remover migration
+dotnet ef migrations remove --project src/Identity --startup-project src/API
+```
+
+### Limpar e reconstruir
+```bash
+dotnet clean
+rm -rf **/bin **/obj
+dotnet restore
+dotnet build
+```

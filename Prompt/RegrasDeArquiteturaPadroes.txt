@@ -1,0 +1,109 @@
+# Regras Arquiteturais RhSensoERP
+
+## Clean Architecture - Camadas e Responsabilidades
+
+### 1. Domain (Centro)
+- **Localização**: `src/Shared/Core/` e `src/Modules/*/Domain/`
+- **Contém**: Entidades, ValueObjects, Interfaces de Repositório, Eventos de Domínio
+- **Regras**: 
+  - Zero dependências externas
+  - Lógica de negócio pura
+  - Imutabilidade sempre que possível
+
+### 2. Application 
+- **Localização**: `src/Shared/Application/` e `src/Modules/*/Application/`
+- **Contém**: Commands, Queries, Handlers, DTOs, Validators, Services de Aplicação
+- **Regras**:
+  - Depende apenas do Domain
+  - Orquestra casos de uso
+  - Usa MediatR para CQRS
+
+### 3. Infrastructure
+- **Localização**: `src/Shared/Infrastructure/` e `src/Modules/*/Infrastructure/`
+- **Contém**: DbContext, Repositories, Services externos, Caching
+- **Regras**:
+  - Implementa interfaces do Domain
+  - Configurações do EF Core
+  - Integrações externas
+
+### 4. API (Presentation)
+- **Localização**: `src/API/`
+- **Contém**: Controllers, Middleware, Program.cs, Configurações
+- **Regras**:
+  - Thin controllers (delega para MediatR)
+  - Não contém lógica de negócio
+  - Apenas coordena requests/responses
+
+## Convenções de Código
+
+### Nomenclatura
+```csharp
+// Classes e arquivos: PascalCase
+public class EmployeeController { }
+
+// Interfaces: IPrefixPascalCase  
+public interface IEmployeeRepository { }
+
+// Métodos async: sufixo Async
+public async Task<Employee> GetByIdAsync(Guid id, CancellationToken ct)
+
+// Namespaces: seguem estrutura de pastas
+namespace RhSensoERP.Identity.Services;
+
+// Constantes: UPPER_CASE
+public const string DEFAULT_CONNECTION = "DefaultConnection";
+
+// Campos privados: _camelCase
+private readonly ILogger<AuthService> _logger;
+```
+
+### Entity Framework Core
+```csharp
+// Configurações em classes separadas
+public class UserConfiguration : IEntityTypeConfiguration<User>
+{
+    public void Configure(EntityTypeBuilder<User> builder)
+    {
+        builder.ToTable("tuse1");
+        builder.HasKey(e => e.Id);
+        // ...
+    }
+}
+
+// Migrations com nomenclatura padrão
+// Feature_{Description}_YYYYMMDDHHmm
+// Ex: Feature_Add_RefreshTokens_202501031430
+```
+
+### Padrões CQRS com MediatR
+```csharp
+// Command
+public record CreateEmployeeCommand(
+    string FirstName, 
+    string LastName, 
+    string Email) : IRequest<Guid>;
+
+// Handler
+public class CreateEmployeeCommandHandler 
+    : IRequestHandler<CreateEmployeeCommand, Guid>
+{
+    // implementação
+}
+
+// Query
+public record GetEmployeeByIdQuery(Guid Id) : IRequest<EmployeeDto>;
+```
+
+### Validação com FluentValidation
+```csharp
+public class CreateEmployeeValidator 
+    : AbstractValidator<CreateEmployeeCommand>
+{
+    public CreateEmployeeValidator()
+    {
+        RuleFor(x => x.Email)
+            .NotEmpty()
+            .EmailAddress();
+    }
+}
+```

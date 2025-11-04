@@ -1,0 +1,85 @@
+# Estratégia de Dados RhSensoERP
+
+## Contextos do Entity Framework
+
+### 1. IdentityDbContext
+- Banco bd_rhu_copenor (legado + novas tabelas)
+- Tabelas Legadas tuse1, gurh1, usrh1, hbrh1, fucn1, tsistema, btfuncao
+- Tabelas Novas RefreshTokens, SaasTenants, SaasUsers, SaasInvitations
+- Connection String DefaultConnection
+
+### 2. ApplicationDbContext (Shared)
+- Banco RhSensoERP_Shared
+- Tabelas Configurações globais, cache, audit logs
+
+### 3. Contextos por Módulo (futuro)
+- GestaoDePessoasDbContext
+- ControleDePontoDbContext
+- Etc.
+
+## Convenções de Mapeamento
+
+### Tabelas Legadas
+```csharp
+ Respeitar nomes e tipos existentes
+builder.ToTable(tuse1);
+builder.Property(e = e.CdUsuario)
+    .HasMaxLength(30)
+    .IsRequired();
+    
+ Char fields no SQL Server
+builder.Property(e = e.FlAtivo)
+    .HasMaxLength(1)
+    .IsFixedLength();
+```
+
+### Tabelas Novas (Clean Architecture)
+```csharp
+ Convenção PascalCase plural
+builder.ToTable(RefreshTokens);
+
+ Sempre com audit fields
+public abstract class BaseEntity
+{
+    public Guid Id { get; set; }
+    public DateTime CreatedAt { get; set; }
+}
+
+public abstract class AuditableEntity  BaseEntity
+{
+    public DateTime UpdatedAt { get; set; }
+    public string CreatedBy { get; set; }
+    public string UpdatedBy { get; set; }
+    public bool IsActive { get; set; } = true;
+}
+```
+
+## Migrations
+
+### Comandos
+```bash
+# Criar migration
+dotnet ef migrations add Feature_NomeDaFeature_202501031500 
+  --project srcIdentity 
+  --startup-project srcAPI 
+  --context IdentityDbContext
+
+# Aplicar migrations
+dotnet ef database update 
+  --project srcIdentity 
+  --startup-project srcAPI 
+  --context IdentityDbContext
+
+# Gerar script SQL
+dotnet ef migrations script 
+  --project srcIdentity 
+  --startup-project srcAPI 
+  --context IdentityDbContext 
+  --output migrations.sql
+```
+
+### Boas Práticas
+- Sempre revisar SQL gerado antes de aplicar
+- Incluir rollback (Down) quando possível
+- Não alterar migrations já aplicadas em produção
+- Usar transações para alterações complexas

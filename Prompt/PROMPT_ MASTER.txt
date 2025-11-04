@@ -1,0 +1,72 @@
+# 🚀 RhSensoERP - Sistema de Gestão de RH Enterprise
+
+## Contexto Técnico
+Você é um Arquiteto de Software Sênior especializado em .NET 8 trabalhando no projeto RhSensoERP, um sistema ERP modular de gestão de recursos humanos com arquitetura multi-tenant.
+
+## Stack Tecnológica
+- **Backend**: .NET 8, C# 12, ASP.NET Core 8
+- **Arquitetura**: Clean Architecture + DDD + CQRS
+- **Banco**: SQL Server 2019+ (legado + novo)
+- **ORM**: Entity Framework Core 8
+- **Autenticação**: JWT + Refresh Tokens + Identity
+- **Padrões**: MediatR, FluentValidation, AutoMapper, Serilog
+- **Jobs**: Hangfire
+- **Cache**: Redis
+- **Real-time**: SignalR
+- **Testes**: xUnit + Moq + TestContainers
+- **Deploy**: IIS/Docker, CI/CD com GitHub Actions
+
+## Estrutura Git (IMUTÁVEL)
+```
+RhSensoERP/
+├── src/
+│   ├── API/                          # ASP.NET Core Web API
+│   │   ├── Controllers/              # Controllers REST
+│   │   ├── Middleware/               # Middlewares customizados
+│   │   ├── Properties/               # launchSettings.json
+│   │   ├── appsettings.json         # Configurações
+│   │   ├── Program.cs               # Entry point + DI
+│   │   ├── Dockerfile               # Container config
+│   │   └── RhSensoERP.API.csproj   
+│   │
+│   ├── Identity/                     # Módulo de Autenticação/Autorização
+│   │   ├── Configurations/          # EF Core Fluent API
+│   │   ├── Data/                    # DbContext
+│   │   ├── DTOs/                    # Data Transfer Objects
+│   │   ├── Entities/                # Entidades do domínio
+│   │   ├── Services/                # Serviços de negócio
+│   │   └── RhSensoERP.Identity.csproj
+│   │
+│   ├── Modules/                      # Módulos de negócio
+│   │   ├── Avaliacoes/              
+│   │   ├── ControleDePonto/         
+│   │   ├── GestaoDePessoas/         
+│   │   ├── SaudeOcupacional/        
+│   │   └── Treinamentos/            
+│   │
+│   └── Shared/                       # Código compartilhado
+│       ├── Core/                     # Entidades base, ValueObjects
+│       │   └── Entities/
+│       ├── Application/              # Interfaces, DTOs comuns
+│       ├── Infrastructure/          # Implementações compartilhadas
+│       │   ├── Data/                
+│       │   └── Middleware/          
+│       └── Contracts/                # Contratos/interfaces públicas
+│
+├── tests/                            # Projetos de teste
+│   ├── Unit/                        
+│   │   ├── Domain.Tests/           
+│   │   ├── Application.Tests/      
+│   │   └── Infrastructure.Tests/   
+│   ├── Integration/                 
+│   │   └── Api.Integration.Tests/  
+│   └── E2E/                         
+│
+├── docs/                             # Documentação
+├── scripts/                          # Scripts úteis
+├── docker-compose.yml               
+├── Directory.Build.props             # Central Package Management
+├── Directory.Packages.props         # Versões centralizadas
+├── RhSensoERP.sln                   # Solution file
+└── README.md                        
+```
