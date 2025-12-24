@@ -1,0 +1,73 @@
+/****** 
+ * TABELA: SEG_LoginAuditLog
+ * DESCRIÇÃO: Registro completo de TODAS as tentativas de login (sucesso e falha).
+ *             Essencial para: auditoria de segurança, detecção de ataques, compliance (LGPD/GDPR).
+ *             Alto volume de dados - considerar particionamento por data em produção.
+ * RELACIONAMENTO: N:1 com SEG_UserSecurity
+ * RETENÇÃO: Definir política de retenção (ex: manter últimos 90 dias, arquivar mais antigos)
+ ******/
+
+CREATE TABLE [dbo].[SEG_LoginAuditLog](
+    [Id] [bigint] IDENTITY(1,1) NOT NULL,
+    [IdUserSecurity] [uniqueidentifier] NOT NULL,
+    [IdSaaS] [uniqueidentifier] NULL,
+    
+    [LoginAttemptAt] [datetime2](7) NOT NULL DEFAULT GETUTCDATE(),
+    [IsSuccess] [bit] NOT NULL,
+    [FailureReason] [varchar](100) NULL,
+    
+    [IpAddress] [varchar](45) NOT NULL,
+    [UserAgent] [nvarchar](500) NULL,
+    [DeviceType] [varchar](50) NULL,
+    [Location] [nvarchar](100) NULL,
+    
+    [TwoFactorUsed] [bit] NOT NULL DEFAULT 0,
+    [SessionId] [nvarchar](100) NULL,
+    
+    CONSTRAINT [PK_SEG_LoginAuditLog] PRIMARY KEY CLUSTERED ([Id] ASC),
+    CONSTRAINT [FK_SEG_LoginAuditLog_UserSecurity] FOREIGN KEY([IdUserSecurity])
+        REFERENCES [dbo].[SEG_UserSecurity] ([Id]) ON DELETE CASCADE
+) ON [PRIMARY]
+GO
+
+CREATE NONCLUSTERED INDEX [IX_SEG_LoginAuditLog_UserSecurity_Date] 
+    ON [dbo].[SEG_LoginAuditLog]([IdUserSecurity], [LoginAttemptAt] DESC)
+GO
+CREATE NONCLUSTERED INDEX [IX_SEG_LoginAuditLog_IdSaaS_Date] 
+    ON [dbo].[SEG_LoginAuditLog]([IdSaaS], [LoginAttemptAt] DESC) 
+    WHERE [IdSaaS] IS NOT NULL
+GO
+CREATE NONCLUSTERED INDEX [IX_SEG_LoginAuditLog_IP_Failed] 
+    ON [dbo].[SEG_LoginAuditLog]([IpAddress], [LoginAttemptAt] DESC) 
+    WHERE [IsSuccess] = 0
+GO
+
+-- EXTENDED PROPERTIES - TABELA
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Log de auditoria completo de tentativas de login (sucesso e falha). Essencial para compliance (LGPD/GDPR), detecção de ataques brute-force, análise de comportamento suspeito. Alto volume - considerar particionamento por data e política de retenção.' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_LoginAuditLog'
+GO
+
+-- EXTENDED PROPERTIES - COLUNAS
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Chave primária BIGINT IDENTITY para suportar alto volume (milhões de registros)' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_LoginAuditLog', @level2type=N'COLUMN', @level2name=N'Id'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'FK para SEG_UserSecurity.Id - Usuário que tentou fazer login' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_LoginAuditLog', @level2type=N'COLUMN', @level2name=N'IdUserSecurity'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Tenant do usuário. Denormalizado para facilitar queries de auditoria por empresa' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_LoginAuditLog', @level2type=N'COLUMN', @level2name=N'IdSaaS'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Data/hora UTC exata da tentativa de login' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_LoginAuditLog', @level2type=N'COLUMN', @level2name=N'LoginAttemptAt'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'TRUE = login bem-sucedido. FALSE = falhou (ver FailureReason)' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_LoginAuditLog', @level2type=N'COLUMN', @level2name=N'IsSuccess'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Motivo da falha: InvalidPassword, AccountLocked, 2FAFailed, 2FARequired, UserNotFound, AccountDisabled' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_LoginAuditLog', @level2type=N'COLUMN', @level2name=N'FailureReason'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Endereço IP de origem (IPv4 ou IPv6). Crítico para detectar ataques distribuídos' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_LoginAuditLog', @level2type=N'COLUMN', @level2name=N'IpAddress'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'User-Agent do navegador/app. Ex: Mozilla/5.0... Ajuda identificar tipo de device' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_LoginAuditLog', @level2type=N'COLUMN', @level2name=N'UserAgent'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Tipo de dispositivo: Web, Mobile, Desktop, API. Parseado do UserAgent' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_LoginAuditLog', @level2type=N'COLUMN', @level2name=N'DeviceType'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Localização geográfica aproximada (opcional). Ex: "Salvador, BA, Brasil". Obtido via geolocalização de IP' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_LoginAuditLog', @level2type=N'COLUMN', @level2name=N'Location'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Se TRUE, 2FA foi usado neste login (código TOTP, SMS, etc)' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_LoginAuditLog', @level2type=N'COLUMN', @level2name=N'TwoFactorUsed'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'ID da sessão criada (se login bem-sucedido). Vincula a SEG_RefreshToken.Id ou JWT jti claim' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_LoginAuditLog', @level2type=N'COLUMN', @level2name=N'SessionId'
+GO

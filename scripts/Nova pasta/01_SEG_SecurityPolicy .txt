@@ -1,0 +1,108 @@
+/****** 
+ * TABELA: SEG_SecurityPolicy
+ * DESCRIÇÃO: Políticas e configurações de segurança globais ou por tenant (SaaS).
+ *             Define regras de senha, lockout, sessão, etc. aplicáveis a grupos de usuários.
+ *             Evita repetição de configurações por usuário (DRY - Don't Repeat Yourself).
+ * RELACIONAMENTO: 1:N com SEG_UserSecurity (via IdSaaS ou política global)
+ * PADRÃO: Strategy Pattern - permite múltiplas políticas (Default, HighSecurity, Compliance)
+ ******/
+
+CREATE TABLE [dbo].[SEG_SecurityPolicy](
+    [Id] [uniqueidentifier] NOT NULL DEFAULT NEWSEQUENTIALID(),
+    [IdSaaS] [uniqueidentifier] NULL,
+    [PolicyName] [varchar](100) NOT NULL,
+    
+    -- ========================================
+    -- SENHA
+    -- ========================================
+    [PasswordMinLength] [int] NOT NULL DEFAULT 8,
+    [PasswordRequireDigit] [bit] NOT NULL DEFAULT 1,
+    [PasswordRequireUppercase] [bit] NOT NULL DEFAULT 1,
+    [PasswordRequireLowercase] [bit] NOT NULL DEFAULT 1,
+    [PasswordRequireNonAlphanumeric] [bit] NOT NULL DEFAULT 1,
+    [PasswordExpirationDays] [int] NULL DEFAULT 90,
+    [PasswordHistoryCount] [int] NOT NULL DEFAULT 5,
+    
+    -- ========================================
+    -- LOCKOUT
+    -- ========================================
+    [MaxFailedAccessAttempts] [int] NOT NULL DEFAULT 5,
+    [LockoutDurationMinutes] [int] NOT NULL DEFAULT 30,
+    [ResetFailedCountAfterMinutes] [int] NOT NULL DEFAULT 15,
+    
+    -- ========================================
+    -- SESSÃO
+    -- ========================================
+    [SessionTimeoutMinutes] [int] NOT NULL DEFAULT 30,
+    [RefreshTokenExpirationDays] [int] NOT NULL DEFAULT 7,
+    [RequireTwoFactorForAdmins] [bit] NOT NULL DEFAULT 0,
+    
+    -- ========================================
+    -- OUTRAS
+    -- ========================================
+    [AllowConcurrentSessions] [bit] NOT NULL DEFAULT 1,
+    [MaxConcurrentSessions] [int] NOT NULL DEFAULT 3,
+    [IsActive] [bit] NOT NULL DEFAULT 1,
+    [CreatedAt] [datetime2](7) NOT NULL DEFAULT GETUTCDATE(),
+    [UpdatedAt] [datetime2](7) NOT NULL DEFAULT GETUTCDATE(),
+    
+    CONSTRAINT [PK_SEG_SecurityPolicy] PRIMARY KEY CLUSTERED ([Id] ASC),
+    CONSTRAINT [UK_SEG_SecurityPolicy_TenantName] UNIQUE ([IdSaaS], [PolicyName]),
+    CONSTRAINT [CK_SEG_SecurityPolicy_PasswordMinLength] CHECK ([PasswordMinLength] BETWEEN 6 AND 128),
+    CONSTRAINT [CK_SEG_SecurityPolicy_MaxFailedAttempts] CHECK ([MaxFailedAccessAttempts] BETWEEN 3 AND 10),
+    CONSTRAINT [CK_SEG_SecurityPolicy_LockoutDuration] CHECK ([LockoutDurationMinutes] BETWEEN 5 AND 1440),
+    CONSTRAINT [CK_SEG_SecurityPolicy_PasswordHistoryCount] CHECK ([PasswordHistoryCount] BETWEEN 0 AND 24)
+) ON [PRIMARY]
+GO
+
+-- EXTENDED PROPERTIES - TABELA
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Políticas de segurança configuráveis por tenant ou globais. Define regras de complexidade de senha, lockout, expiração, sessões. Permite diferentes níveis de segurança (Default, HighSecurity, Compliance) sem duplicar configurações por usuário.' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_SecurityPolicy'
+GO
+
+-- EXTENDED PROPERTIES - COLUNAS
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Chave primária GUID da política de segurança' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_SecurityPolicy', @level2type=N'COLUMN', @level2name=N'Id'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Tenant ao qual esta política se aplica. NULL = política global aplicável a todos os tenants que não têm política específica' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_SecurityPolicy', @level2type=N'COLUMN', @level2name=N'IdSaaS'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Nome identificador da política. Ex: "DefaultGlobal", "HighSecurity", "Compliance_LGPD", "Banking". Único por tenant' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_SecurityPolicy', @level2type=N'COLUMN', @level2name=N'PolicyName'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Tamanho mínimo da senha em caracteres. Recomendado: 8-16. OWASP recomenda mínimo 8' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_SecurityPolicy', @level2type=N'COLUMN', @level2name=N'PasswordMinLength'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Se TRUE, senha deve conter pelo menos um dígito (0-9)' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_SecurityPolicy', @level2type=N'COLUMN', @level2name=N'PasswordRequireDigit'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Se TRUE, senha deve conter pelo menos uma letra maiúscula (A-Z)' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_SecurityPolicy', @level2type=N'COLUMN', @level2name=N'PasswordRequireUppercase'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Se TRUE, senha deve conter pelo menos uma letra minúscula (a-z)' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_SecurityPolicy', @level2type=N'COLUMN', @level2name=N'PasswordRequireLowercase'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Se TRUE, senha deve conter pelo menos um caractere especial (!@#$%^&* etc)' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_SecurityPolicy', @level2type=N'COLUMN', @level2name=N'PasswordRequireNonAlphanumeric'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Dias até senha expirar. NULL = senha nunca expira. Recomendado: 90 dias (PCI-DSS), 60 dias (alta segurança)' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_SecurityPolicy', @level2type=N'COLUMN', @level2name=N'PasswordExpirationDays'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Quantidade de senhas anteriores que não podem ser reutilizadas. Validado contra SEG_PasswordHistory. Recomendado: 5-12' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_SecurityPolicy', @level2type=N'COLUMN', @level2name=N'PasswordHistoryCount'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Número máximo de tentativas de login incorretas antes de bloquear conta. Recomendado: 5 (OWASP)' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_SecurityPolicy', @level2type=N'COLUMN', @level2name=N'MaxFailedAccessAttempts'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Duração do bloqueio automático em minutos. Recomendado: 30-60 min. Máximo: 1440 (24h)' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_SecurityPolicy', @level2type=N'COLUMN', @level2name=N'LockoutDurationMinutes'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Minutos após o qual o contador de tentativas falhas é zerado automaticamente (se não atingir MaxFailedAccessAttempts)' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_SecurityPolicy', @level2type=N'COLUMN', @level2name=N'ResetFailedCountAfterMinutes'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Tempo de inatividade em minutos até sessão expirar automaticamente. Usado para tokens JWT e cookies' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_SecurityPolicy', @level2type=N'COLUMN', @level2name=N'SessionTimeoutMinutes'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Dias de validade do refresh token. Após expirar, usuário deve fazer login completo novamente. Recomendado: 7-30 dias' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_SecurityPolicy', @level2type=N'COLUMN', @level2name=N'RefreshTokenExpirationDays'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Se TRUE, usuários com perfil administrador são obrigados a ter 2FA ativo' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_SecurityPolicy', @level2type=N'COLUMN', @level2name=N'RequireTwoFactorForAdmins'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Se TRUE, permite que usuário esteja logado em múltiplos dispositivos simultaneamente (Web + Mobile)' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_SecurityPolicy', @level2type=N'COLUMN', @level2name=N'AllowConcurrentSessions'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Número máximo de sessões simultâneas permitidas por usuário. Apenas se AllowConcurrentSessions = TRUE' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_SecurityPolicy', @level2type=N'COLUMN', @level2name=N'MaxConcurrentSessions'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Se FALSE, política está desativada e não será aplicada' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_SecurityPolicy', @level2type=N'COLUMN', @level2name=N'IsActive'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Data/hora UTC de criação da política' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_SecurityPolicy', @level2type=N'COLUMN', @level2name=N'CreatedAt'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Data/hora UTC da última atualização da política' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_SecurityPolicy', @level2type=N'COLUMN', @level2name=N'UpdatedAt'
+GO
+
+-- SEED: Política padrão global
+INSERT INTO [dbo].[SEG_SecurityPolicy] (PolicyName, IdSaaS) VALUES ('DefaultGlobal', NULL)
+GO

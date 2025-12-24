@@ -1,0 +1,10 @@
+{
+  "VersionMajor": 2,
+  "VersionMinor": 0,
+  "Solutions": [
+    {
+      "Name": "Folha",
+      "File": "RhSensoERP.sln"
+    }
+  ]
+}

@@ -1,0 +1,85 @@
+@model RhSensoERP.Web.Models.GestaoDePessoas.Tvin1.Tvin1ListViewModel
+@{
+    ViewData["Title"] = Model.PageTitle;
+    Layout = "_CrudLayout";
+    ViewData["EntityName"] = "Vínculo Empregatício";
+    ViewData["IconClass"] = "fas fa-table";
+}
+
+@* ============================================================================
+   Permissões injetadas para JavaScript (ANTES do script específico)
+   ============================================================================ *@
+<script>
+    window.crudPermissions = {
+        canCreate: @Model.CanCreate.ToString().ToLower(),
+        canEdit: @Model.CanEdit.ToString().ToLower(),
+        canDelete: @Model.CanDelete.ToString().ToLower(),
+        canView: @Model.CanView.ToString().ToLower(),
+        actions: "@Model.UserPermissions"
+    };
+</script>
+
+@* ============================================================================
+   Tabela usando partial _CrudTable (toolbar + datatable)
+   ============================================================================ *@
+@await Html.PartialAsync("_CrudTable", Model)
+
+@* ============================================================================
+   Conteúdo do Modal (apenas campos do formulário)
+   O wrapper do modal está no _CrudLayout
+   ============================================================================ *@
+@section ModalContent {
+    <input type="hidden" id="Id" name="Id" />
+    <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="Cdvincul" class="form-label">
+                        Cdvincul
+                    </label>
+                    <input type="text" class="form-control" id="Cdvincul" name="Cdvincul" 
+                           placeholder=""   maxlength="2" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Dcvincul" class="form-label">
+                        Dcvincul
+                    </label>
+                    <input type="text" class="form-control" id="Dcvincul" name="Dcvincul" 
+                           placeholder=""   maxlength="120" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Cdsefip" class="form-label">
+                        Cdsefip
+                    </label>
+                    <input type="text" class="form-control" id="Cdsefip" name="Cdsefip" 
+                           placeholder=""   maxlength="2" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Cdclasse" class="form-label">
+                        Cdclasse
+                    </label>
+                    <input type="text" class="form-control" id="Cdclasse" name="Cdclasse" 
+                           placeholder=""   maxlength="2" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Flrais" class="form-label">
+                        Flrais <span class="text-danger">*</span>
+                    </label>
+                    <input type="number" class="form-control" id="Flrais" name="Flrais" 
+                           placeholder="" required  />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="NatativIdade" class="form-label">
+                        Natatividade <span class="text-danger">*</span>
+                    </label>
+                    <input type="number" class="form-control" id="NatativIdade" name="NatativIdade" 
+                           placeholder="" required  />
+                </div>
+    </div>
+
+}
+
+@* ============================================================================
+   Script específico da entidade
+   ============================================================================ *@
+@section PageScripts {
+    <script src="~/js/gestaodepessoas/tvin1/tvin1.js" asp-append-version="true"></script>
+}

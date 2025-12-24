@@ -1,0 +1,90 @@
+{
+  "$schema": "./crud-schema.json",
+  "solutionRoot": ".",
+  "apiProject": "src/RhSensoERP.API",
+  "webProject": "src/Web",
+  "entities": [
+    {
+      "name": "Tabtaux1",
+      "displayName": "Tipo de Tabela",
+      "pluralName": "Tabtaux1s",
+      "module": "GestaoDePessoas",
+      "moduleRoute": "gestaodepessoas",
+      "backendNamespace": "RhSensoERP.Modules.GestaoDePessoas.Application.DTOs.Tabtaux1s",
+      "tableName": "taux1",
+      "cdSistema": "RHU",
+      "cdFuncao": "RHU_FM_TAUX1",
+
+      "primaryKey": {
+        "property": "CdTpTabela",
+        "type": "string",
+        "column": "cdtptabela"
+      },
+
+      "properties": [
+        {
+          "name": "CdTpTabela",
+          "type": "string",
+          "column": "cdtptabela",
+          "displayName": "Código do Tipo",
+          "maxLength": 2,
+          "required": true,
+          "isPrimaryKey": true,
+          "list": {
+            "show": true,
+            "order": 1,
+            "sortable": true,
+            "align": "left",
+            "format": "text",
+            "width": "80px"
+          },
+          "form": {
+            "show": true,
+            "showOnCreate": true,
+            "showOnEdit": false,
+            "order": 1,
+            "inputType": "text",
+            "placeholder": "Ex: 01",
+            "helpText": "Código da tabela auxiliar",
+            "colSize": 3
+          }
+        },
+        {
+          "name": "DcTabela",
+          "type": "string",
+          "column": "dctabela",
+          "displayName": "Descrição",
+          "maxLength": 60,
+          "required": true,
+          "list": {
+            "show": true,
+            "order": 2,
+            "sortable": true,
+            "align": "left",
+            "format": "text",
+            "width": null
+          },
+          "form": {
+            "show": true,
+            "showOnCreate": true,
+            "showOnEdit": true,
+            "order": 2,
+            "inputType": "text",
+            "placeholder": "Digite a descrição da tabela",
+            "helpText": "Descrição da tabela auxiliar",
+            "colSize": 9
+          }
+        }
+      ],
+
+      "generate": {
+        "apiController": false,
+        "webController": true,
+        "webModels": true,
+        "webServices": true,
+        "view": true,
+        "javascript": true
+      }
+    }
+  ]
+}

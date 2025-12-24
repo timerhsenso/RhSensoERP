@@ -1,0 +1,71 @@
+-- ========================================
+-- TRIGGER 1: Atualizar UpdatedAt
+-- ========================================
+CREATE OR ALTER TRIGGER [dbo].[TR_SEG_UserSecurity_UpdatedAt]
+ON [dbo].[SEG_UserSecurity]
+AFTER UPDATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+    UPDATE us SET UpdatedAt = GETUTCDATE()
+    FROM [dbo].[SEG_UserSecurity] us
+    INNER JOIN inserted i ON us.Id = i.Id
+END
+GO
+
+-- ========================================
+-- TRIGGER 2: Registrar histórico de senha
+-- ========================================
+CREATE OR ALTER TRIGGER [dbo].[TR_SEG_UserSecurity_PasswordChange]
+ON [dbo].[SEG_UserSecurity]
+AFTER UPDATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+    
+    INSERT INTO [dbo].[SEG_PasswordHistory] (IdUserSecurity, PasswordHash, PasswordAlgorithm, ChangeReason, ChangedByIP)
+    SELECT 
+        i.Id, 
+        i.PasswordHash, 
+        i.PasswordAlgorithm, 
+        CASE WHEN i.MustChangePassword = 1 THEN 'Forced' ELSE 'Manual' END,
+        i.LastLoginIP
+    FROM inserted i
+    INNER JOIN deleted d ON i.Id = d.Id
+    WHERE i.PasswordHash <> d.PasswordHash
+    
+    -- Limpar histórico antigo (manter apenas últimos N definidos em policy)
+    -- Este cleanup pode ser movido para um JOB noturno em produção
+    DELETE ph
+    FROM [dbo].[SEG_PasswordHistory] ph
+    WHERE ph.Id NOT IN (
+        SELECT TOP 12 Id 
+        FROM [dbo].[SEG_PasswordHistory] 
+        WHERE IdUserSecurity = ph.IdUserSecurity
+        ORDER BY ChangedAt DESC
+    )
+END
+GO
+
+-- ========================================
+-- TRIGGER 3: Invalidar refresh tokens ao mudar SecurityStamp
+-- ========================================
+CREATE OR ALTER TRIGGER [dbo].[TR_SEG_UserSecurity_SecurityStampChanged]
+ON [dbo].[SEG_UserSecurity]
+AFTER UPDATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+    
+    UPDATE rt
+    SET 
+        IsRevoked = 1, 
+        RevokedAt = GETUTCDATE(), 
+        RevokedReason = 'SecurityStampChanged'
+    FROM [dbo].[SEG_RefreshToken] rt
+    INNER JOIN inserted i ON rt.IdUserSecurity = i.Id
+    INNER JOIN deleted d ON i.Id = d.Id
+    WHERE i.SecurityStamp <> d.SecurityStamp
+        AND rt.IsRevoked = 0
+END
+GO

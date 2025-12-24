@@ -1,0 +1,207 @@
+# CONTEXTO DO PROJETO
+Estou trabalhando no RhSensoERP v2, um sistema ERP corporativo multi-tenant com arquitetura Clean Architecture em .NET 8 + ASP.NET Core Web API.
+
+# ESTRUTURA DO PROJETO
+- **API**: Controllers (ASP.NET Core Web API)
+- **Application**: DTOs, Services, Mappings (AutoMapper)
+- **Core**: Entities (Domain Models)
+- **Infrastructure**: Configurations (EF Core), Repositories, DbContext
+
+# ARQUIVOS DE REFERÊNCIA (PADRÃO A SEGUIR)
+[Cole aqui os arquivos do Municipio que enviei]
+
+# ENTIDADE PARA GERAR CRUD
+[Cole aqui a entidade específica que deseja gerar]
+
+# TABELA DO BANCO DE DADOS
+Tabela: [nome_da_tabela]
+Schema: dbo
+Chave Primária: [campo_pk]
+Índices Únicos: [listar se houver]
+
+# RELACIONAMENTOS (se houver)
+- FK para [TabelaPai]: [campo_fk]
+- Coleção de [TabelaFilha]: navegação virtual
+
+# REQUISITOS OBRIGATÓRIOS
+
+## 1️⃣ CONTROLLER (API REST)
+📁 Caminho: `src/API/Controllers/GestaoDePessoas/Tabelas/Pessoal/[Entidade]Controller.cs`
+
+✅ Deve conter:
+- Herdar de `ControllerBase`
+- Route: `api/v1/gestaodepessoas/tabelas/pessoal/[recurso]`
+- `[Authorize]` para segurança
+- Swagger annotations completas (SwaggerOperation, SwaggerTag)
+- Injeção de: Repository, IMapper, ILogger
+- Endpoints CRUD completos:
+  - **GET** `/` - GetAll (lista completa ordenada)
+  - **GET** `/{id}` - GetById (com NotFound se não existir)
+  - **POST** `/` - Create (validação de duplicação, retorna 201 Created)
+  - **PUT** `/{id}` - Update (validação, retorna 200 OK)
+  - **DELETE** `/{id}` - Delete (verifica integridade, retorna 204 NoContent)
+- Logs estruturados com contexto (LogInformation, LogWarning)
+- Validações de duplicação antes de Insert/Update
+- Tratamento de conflitos (409 Conflict) e não encontrado (404 NotFound)
+- Mensagens de erro descritivas: `{ message: "..." }`
+- ProducesResponseType para documentação Swagger
+
+❌ NÃO usar:
+- Códigos hardcoded sem constantes
+- Exception sem tratamento
+- Retornar entidade diretamente (sempre usar DTO)
+
+---
+
+## 2️⃣ DTOs (DATA TRANSFER OBJECTS)
+📁 Caminho: `src/Modules/GestaoDePessoas/Application/DTOs/[Entidade]Dto.cs`
+
+✅ Deve conter:
+- **Record type** (`public sealed record`)
+- Data Annotations completas:
+  - `[Required]` com mensagens customizadas
+  - `[StringLength]` com min/max
+  - `[Range]` para numéricos
+  - `[RegularExpression]` para formatos específicos
+- Comentários XML (///<summary>)
+- Propriedades com `init` (imutabilidade)
+- Valores default com `= string.Empty` ou `= 0`
+- Separar DTOs se necessário:
+  - `[Entidade]Dto` (leitura)
+  - `Create[Entidade]Dto` (criação, sem Id)
+  - `Update[Entidade]Dto` (edição)
+
+❌ NÃO usar:
+- Classes mutáveis
+- Propriedades sem validação
+- Tipos nullable sem necessidade
+
+---
+
+## 3️⃣ AUTOMAPPER PROFILE
+📁 Caminho: `src/Modules/GestaoDePessoas/Application/Mappings/[Entidade]Profile.cs`
+
+✅ Deve conter:
+- Herdar de `Profile`
+- Sealed class
+- Mapeamentos bidirecionais:
+  - `Entity -> Dto`
+  - `Dto -> Entity` (com `.ForMember(dest => dest.Id, opt => opt.Ignore())`)
+- Configurações customizadas se houver conversões especiais
+
+---
+
+## 4️⃣ ENTITY (DOMAIN MODEL)
+📁 Caminho: `src/Modules/GestaoDePessoas/Core/Entities/Tabelas/Pessoal/[Entidade].cs`
+
+✅ Deve conter:
+- POCO simples (sem data annotations, sem lógica de persistência)
+- Propriedades públicas com get/set
+- Chave primária (Guid Id ou string Codigo)
+- Propriedades de navegação virtual para relacionamentos
+- Coleções inicializadas no construtor:
+```csharp
+  public [Entidade]()
+  {
+      RelacionamentoFilho = new HashSet<Filha>();
+  }
+```
+- Comentários XML (///<summary>)
+
+❌ NÃO incluir:
+- Data Annotations ([Required], [MaxLength], etc.)
+- Validações no modelo
+- Lógica de negócio
+
+---
+
+## 5️⃣ EF CORE CONFIGURATION (FLUENT API)
+📁 Caminho: `src/Modules/GestaoDePessoas/Infrastructure/Persistence/Configurations/Tabelas/Pessoal/[Entidade]Configuration.cs`
+
+✅ Deve conter:
+- Implementar `IEntityTypeConfiguration<[Entidade]>`
+- Mapeamento completo:
+  - `ToTable("nome_tabela_legado")`
+  - `HasKey()` com chave primária
+  - Todas as propriedades com `.HasColumnName("coluna_legado")`
+  - `.HasColumnType()` para char, varchar, decimal, etc.
+  - `.IsRequired()` para campos obrigatórios
+  - `.HasMaxLength()` para strings
+  - `.HasDefaultValueSql()` se houver (ex: newsequentialid())
+- Índices:
+  - `.HasIndex().IsUnique()` para constraints
+  - `.HasDatabaseName()` para preservar nome original
+- Relacionamentos:
+  - `.HasOne().WithMany()`
+  - `.HasForeignKey()`
+  - `.OnDelete(DeleteBehavior.Restrict)` se necessário
+
+❌ NÃO esquecer:
+- Índices únicos (UX_*)
+- Foreign Keys
+- Tipos de coluna específicos (char, varchar, decimal(18,2))
+
+---
+
+## 6️⃣ REPOSITORY (se necessário)
+📁 Caminho: `src/Modules/GestaoDePessoas/Infrastructure/Persistence/Repositories/[Entidade]Repository.cs`
+
+✅ Deve conter:
+- Interface `I[Entidade]Repository`
+- Implementação com DbContext injetado
+- Métodos assíncronos:
+  - `GetAllAsync()`
+  - `GetByIdAsync(id)`
+  - `AddAsync(entity)`
+  - `UpdateAsync(entity)`
+  - `DeleteAsync(id)`
+  - `ExistsAsync(id)` para validações
+  - Métodos customizados (ex: `GetByEstadoAsync(uf)`)
+- `await _context.SaveChangesAsync()`
+
+---
+
+## 7️⃣ REGISTRAR NO DbContext
+📁 Caminho: `src/Modules/GestaoDePessoas/Infrastructure/Persistence/Contexts/GestaoDePessoasDbContext.cs`
+
+✅ Adicionar:
+```csharp
+public DbSet<[Entidade]> [Entidades] { get; set; }
+```
+
+❌ NÃO esquecer:
+- Nome plural para DbSet
+- Ordem alfabética (organização)
+
+---
+
+# INSTRUÇÕES FINAIS
+
+1. **Gere TODOS os 7 arquivos completos**
+2. **Use caminhos exatos** conforme especificado
+3. **Siga rigorosamente o padrão de Municipio**
+4. **Inclua logs estruturados** em todas as operações
+5. **Valide duplicações** antes de Insert/Update
+6. **Trate integridade referencial** no Delete
+7. **Use nomenclatura consistente** (PascalCase, nomes descritivos)
+8. **Adicione comentários XML** em classes e métodos públicos
+9. **Configure Swagger** completamente
+10. **Teste códigos completos** - sem placeholders
+
+# FORMATO DE RESPOSTA ESPERADO
+
+Para cada arquivo, forneça:
+
+# CHECKLIST FINAL
+- [ ] Controller com 5 endpoints CRUD
+- [ ] DTO com validações completas
+- [ ] AutoMapper Profile configurado
+- [ ] Entity POCO sem data annotations
+- [ ] Configuration com Fluent API completa
+- [ ] Repository (se aplicável)
+- [ ] DbSet registrado no contexto
+- [ ] Logs em operações críticas
+- [ ] Tratamento de erros HTTP
+- [ ] Swagger documentado
+- [ ] Código sem erros de compilação
+- [ ] Segue 100% o padrão de Municipio

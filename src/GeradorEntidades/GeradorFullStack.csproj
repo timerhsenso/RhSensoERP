@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>GeradorEntidades</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.SqlClient" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="TabSheet\Templates\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="wwwroot\js\tabsheet\tabsheet-config.js" />
+  </ItemGroup>
+
+</Project>

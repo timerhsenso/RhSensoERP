@@ -1,0 +1,658 @@
+@* =============================================================================
+    RHSENSOERP.WEB - GENERIC LIST VIEW
+    =============================================================================
+    Arquivo: Views/Shared/_GenericList.cshtml
+    Descrição: View genérica para listagem de entidades usando metadados
+    Uso: return View("~/Views/Shared/_GenericList.cshtml", viewModel);
+    Versão: 2.1 - CORRIGIDO: Verificação robusta de dependências (jQuery, Bootstrap, DataTables)
+    ============================================================================= *@
+
+@using RhSensoERP.Shared.Application.Metadata
+@model RhSensoERP.Web.Models.Common.GenericListViewModel
+
+@{
+    var metadata = Model.Metadata;
+    var entityName = Model.EntityName;
+    var title = metadata?.DisplayName ?? entityName;
+    var pluralName = metadata?.PluralName ?? entityName + "s";
+    var icon = metadata?.UIConfig?.Icon ?? "fas fa-list";
+    var canCreate = metadata?.Actions?.CanCreate ?? true;
+    var canExport = metadata?.Actions?.CanExport ?? false;
+    var canBatchDelete = metadata?.Actions?.CanBatchDelete ?? false;
+
+    ViewData["Title"] = pluralName;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@* =========================================================================
+   CABEÇALHO DA PÁGINA
+   ========================================================================= *@
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0">
+                    <i class="@icon me-2"></i>@pluralName
+                </h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-end">
+                    <li class="breadcrumb-item"><a href="/">Home</a></li>
+                    @if (!string.IsNullOrEmpty(metadata?.ModuleName))
+                    {
+                        <li class="breadcrumb-item">@metadata.ModuleName</li>
+                    }
+                    <li class="breadcrumb-item active">@pluralName</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* =========================================================================
+   CONTEÚDO PRINCIPAL
+   ========================================================================= *@
+<section class="content">
+    <div class="container-fluid">
+        <div class="card">
+            @* -----------------------------------------------------------------
+               HEADER DO CARD - BOTÕES DE AÇÃO
+               ----------------------------------------------------------------- *@
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h3 class="card-title">
+                        <i class="fas fa-table me-2"></i>Lista de @pluralName
+                    </h3>
+                    <div class="card-tools">
+                        @if (canCreate)
+                        {
+                            <button type="button" class="btn btn-primary btn-sm" id="btnNew">
+                                <i class="fas fa-plus me-1"></i> Novo @title
+                            </button>
+                        }
+                        @if (canExport)
+                        {
+                            <div class="btn-group ms-2">
+                                <button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle"
+                                        data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fas fa-download me-1"></i> Exportar
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li>
+                                        <a class="dropdown-item btn-export" href="#" data-format="excel">
+                                            <i class="fas fa-file-excel me-2 text-success"></i>Excel
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item btn-export" href="#" data-format="pdf">
+                                            <i class="fas fa-file-pdf me-2 text-danger"></i>PDF
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item btn-export" href="#" data-format="csv">
+                                            <i class="fas fa-file-csv me-2 text-primary"></i>CSV
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        }
+                        @if (canBatchDelete)
+                        {
+                            <button type="button" class="btn btn-outline-danger btn-sm ms-2" id="btnBatchDelete"
+                                    disabled title="Selecione registros para excluir">
+                                <i class="fas fa-trash me-1"></i> Excluir Selecionados
+                            </button>
+                        }
+                        <button type="button" class="btn btn-outline-secondary btn-sm ms-2" id="btnRefresh"
+                                title="Atualizar lista">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            @* -----------------------------------------------------------------
+               BODY DO CARD - TABELA
+               ----------------------------------------------------------------- *@
+            <div class="card-body">
+                @* Área de filtros avançados (colapsável) *@
+                @if (Model.ShowAdvancedFilters)
+                {
+                    <div class="collapse mb-3" id="advancedFilters">
+                        <div class="card card-body bg-light">
+                            <div class="row" id="filterFields">
+                                @* Campos de filtro serão gerados via JavaScript *@
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-12 text-end">
+                                    <button type="button" class="btn btn-secondary btn-sm" id="btnClearFilters">
+                                        <i class="fas fa-eraser me-1"></i> Limpar Filtros
+                                    </button>
+                                    <button type="button" class="btn btn-primary btn-sm" id="btnApplyFilters">
+                                        <i class="fas fa-filter me-1"></i> Aplicar Filtros
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <button class="btn btn-outline-info btn-sm" type="button"
+                                data-bs-toggle="collapse" data-bs-target="#advancedFilters">
+                            <i class="fas fa-sliders-h me-1"></i> Filtros Avançados
+                        </button>
+                    </div>
+                }
+
+                @* Tabela DataTable *@
+                <div class="table-responsive">
+                    <table id="dataTable" class="table table-bordered table-striped table-hover" style="width:100%">
+                        <thead class="table-dark">
+                            @* Cabeçalhos serão gerados via JavaScript/DataTable *@
+                        </thead>
+                        <tbody>
+                            @* Dados serão carregados via AJAX *@
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            @* -----------------------------------------------------------------
+               FOOTER DO CARD
+               ----------------------------------------------------------------- *@
+            <div class="card-footer">
+                <div class="d-flex justify-content-between align-items-center">
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Clique duas vezes em uma linha para editar
+                    </small>
+                    <div id="tableInfo" class="text-muted">
+                        @* Info será atualizado pelo DataTable *@
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+@* =========================================================================
+   MODAL DE CRIAÇÃO/EDIÇÃO
+   ========================================================================= *@
+<div class="modal fade" id="entityModal" tabindex="-1" aria-labelledby="entityModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="entityModalLabel">
+                    <i class="fas fa-edit me-2"></i><span id="modalTitleText">@title</span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                @* Formulário será gerado via JavaScript *@
+                <div class="text-center py-5">
+                    <i class="fas fa-spinner fa-spin fa-2x"></i>
+                    <p class="mt-2">Carregando formulário...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i> Cancelar
+                </button>
+                <button type="button" class="btn btn-primary" id="btnSave">
+                    <i class="fas fa-save me-1"></i> Salvar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* =========================================================================
+   MODAL DE EXCLUSÃO
+   ========================================================================= *@
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteModalLabel">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Confirmar Exclusão
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem certeza que deseja excluir este registro?</p>
+                <p class="text-muted small">Esta ação não poderá ser desfeita.</p>
+                <input type="hidden" id="deleteId" />
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i> Cancelar
+                </button>
+                <button type="button" class="btn btn-danger" id="btnConfirmDelete">
+                    <i class="fas fa-trash me-1"></i> Excluir
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* =========================================================================
+   MODAL DE VISUALIZAÇÃO (SOMENTE LEITURA)
+   ========================================================================= *@
+<div class="modal fade" id="viewModal" tabindex="-1" aria-labelledby="viewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title" id="viewModalLabel">
+                    <i class="fas fa-eye me-2"></i>Visualizar @title
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body" id="viewModalBody">
+                @* Conteúdo será gerado via JavaScript *@
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i> Fechar
+                </button>
+                <button type="button" class="btn btn-primary" id="btnEditFromView">
+                    <i class="fas fa-edit me-1"></i> Editar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* =========================================================================
+   SCRIPTS
+   ========================================================================= *@
+@section Scripts {
+    @* Carrega generic-crud.js primeiro *@
+    <script src="~/js/generic-crud.js?v=2.1"></script>
+
+    @* Script de inicialização - CORRIGIDO: Verificação robusta de dependências *@
+    <script>
+        // Usa jQuery ready para garantir que DataTables está carregado
+        $(function() {
+            'use strict';
+
+            // Configurações da página
+            const entityName = '@entityName';
+            const displayName = '@title';
+            let currentMode = 'create';
+            let currentId = null;
+
+            // Referências aos modais
+            let entityModal, deleteModal, viewModal;
+
+            // =====================================================================
+            // VERIFICA SE TODAS AS DEPENDÊNCIAS ESTÃO DISPONÍVEIS
+            // =====================================================================
+            function waitForDependencies(callback, maxAttempts) {
+                maxAttempts = maxAttempts || 50;
+                let attempts = 0;
+
+                function check() {
+                    attempts++;
+
+                    // 1. Verifica jQuery
+                    if (typeof jQuery === 'undefined' || typeof $ === 'undefined') {
+                        if (attempts < maxAttempts) {
+                            console.log('[GenericList] Aguardando jQuery... tentativa ' + attempts);
+                            setTimeout(check, 100);
+                        } else {
+                            console.error('[GenericList] jQuery não foi carregado após ' + maxAttempts + ' tentativas');
+                            alert('ERRO CRÍTICO: jQuery não foi carregado. Recarregue a página.');
+                        }
+                        return;
+                    }
+
+                    // 2. Verifica Bootstrap
+                    if (typeof bootstrap === 'undefined') {
+                        if (attempts < maxAttempts) {
+                            console.log('[GenericList] Aguardando Bootstrap... tentativa ' + attempts);
+                            setTimeout(check, 100);
+                        } else {
+                            console.error('[GenericList] Bootstrap não foi carregado após ' + maxAttempts + ' tentativas');
+                            if (typeof toastr !== 'undefined') {
+                                toastr.error('Erro: Bootstrap não foi carregado. Recarregue a página.');
+                            } else {
+                                alert('ERRO: Bootstrap não foi carregado. Recarregue a página.');
+                            }
+                        }
+                        return;
+                    }
+
+                    // 3. Verifica DataTables
+                    if (typeof $.fn.DataTable === 'undefined') {
+                        if (attempts < maxAttempts) {
+                            console.log('[GenericList] Aguardando DataTables... tentativa ' + attempts);
+                            setTimeout(check, 100);
+                        } else {
+                            console.error('[GenericList] DataTables não foi carregado após ' + maxAttempts + ' tentativas');
+                            if (typeof toastr !== 'undefined') {
+                                toastr.error('Erro: DataTables não foi carregado. Recarregue a página.');
+                            } else {
+                                alert('ERRO: DataTables não foi carregado. Recarregue a página.');
+                            }
+                        }
+                        return;
+                    }
+
+                    // 4. Verifica GenericCrud
+                    if (typeof GenericCrud === 'undefined') {
+                        if (attempts < maxAttempts) {
+                            console.log('[GenericList] Aguardando GenericCrud... tentativa ' + attempts);
+                            setTimeout(check, 100);
+                        } else {
+                            console.error('[GenericList] GenericCrud não foi carregado após ' + maxAttempts + ' tentativas');
+                            if (typeof toastr !== 'undefined') {
+                                toastr.error('Erro: GenericCrud não foi carregado. Recarregue a página.');
+                            } else {
+                                alert('ERRO: GenericCrud não foi carregado. Recarregue a página.');
+                            }
+                        }
+                        return;
+                    }
+
+                    // ✅ TODAS AS DEPENDÊNCIAS CARREGADAS!
+                    console.log('[GenericList] ✅ Todas as dependências carregadas após ' + attempts + ' tentativas');
+                    console.log('[GenericList] - jQuery versão: ' + jQuery.fn.jquery);
+                    console.log('[GenericList] - Bootstrap disponível: ' + (typeof bootstrap !== 'undefined'));
+                    console.log('[GenericList] - DataTables disponível: ' + (typeof $.fn.DataTable !== 'undefined'));
+                    console.log('[GenericList] - GenericCrud disponível: ' + (typeof GenericCrud !== 'undefined'));
+                    callback();
+                }
+
+                check();
+            }
+
+            // =====================================================================
+            // INICIALIZAÇÃO
+            // =====================================================================
+            async function initPage() {
+                console.log('[GenericList] Iniciando página para entidade:', entityName);
+
+                // Inicializa modais Bootstrap
+                entityModal = new bootstrap.Modal(document.getElementById('entityModal'));
+                deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+                viewModal = new bootstrap.Modal(document.getElementById('viewModal'));
+
+                // Inicializa GenericCrud com callbacks
+                const initialized = await GenericCrud.init(entityName, {
+                    onDataLoaded: onDataLoaded,
+                    onSaveSuccess: onSaveSuccess,
+                    onDeleteSuccess: onDeleteSuccess,
+                    onError: onError
+                });
+
+                if (!initialized) {
+                    if (typeof toastr !== 'undefined') {
+                        toastr.error('Erro ao carregar metadados da entidade.');
+                    } else {
+                        alert('Erro ao carregar metadados da entidade.');
+                    }
+                    return;
+                }
+
+                // Inicializa DataTable
+                console.log('[GenericList] Inicializando DataTable...');
+                GenericCrud.initDataTable();
+
+                // Configura eventos
+                setupEventHandlers();
+
+                console.log('[GenericList] ✅ Inicialização completa!');
+            }
+
+            // Aguarda TODAS as dependências e então inicializa
+            waitForDependencies(initPage);
+
+            // =====================================================================
+            // CONFIGURAÇÃO DE EVENTOS
+            // =====================================================================
+            function setupEventHandlers() {
+                // Botão Novo
+                const btnNew = document.getElementById('btnNew');
+                if (btnNew) {
+                    btnNew.addEventListener('click', function() {
+                        openModal('create');
+                    });
+                }
+
+                // Botão Refresh
+                const btnRefresh = document.getElementById('btnRefresh');
+                if (btnRefresh) {
+                    btnRefresh.addEventListener('click', function() {
+                        GenericCrud.reloadData();
+                    });
+                }
+
+                // Botão Salvar (modal)
+                const btnSave = document.getElementById('btnSave');
+                if (btnSave) {
+                    btnSave.addEventListener('click', handleSave);
+                }
+
+                // Botão Confirmar Exclusão (modal)
+                const btnConfirmDelete = document.getElementById('btnConfirmDelete');
+                if (btnConfirmDelete) {
+                    btnConfirmDelete.addEventListener('click', handleDelete);
+                }
+
+                // Botão Editar (da modal de visualização)
+                const btnEditFromView = document.getElementById('btnEditFromView');
+                if (btnEditFromView) {
+                    btnEditFromView.addEventListener('click', function() {
+                        viewModal.hide();
+                        if (currentId) {
+                            openModal('edit', currentId);
+                        }
+                    });
+                }
+
+                // Delegação de eventos para botões na tabela
+                document.getElementById('dataTable').addEventListener('click', function(e) {
+                    const target = e.target.closest('button');
+                    if (!target) return;
+
+                    const id = target.getAttribute('data-id');
+                    if (!id) return;
+
+                    if (target.classList.contains('btn-edit')) {
+                        openModal('edit', id);
+                    } else if (target.classList.contains('btn-delete')) {
+                        openDeleteModal(id);
+                    } else if (target.classList.contains('btn-view')) {
+                        openViewModal(id);
+                    }
+                });
+
+                // Double-click para editar
+                $('#dataTable').on('dblclick', 'tbody tr', function() {
+                    const data = $('#dataTable').DataTable().row(this).data();
+                    if (data) {
+                        const metadata = GenericCrud.getMetadata();
+                        const keyField = metadata.keyField || 'id';
+                        const id = data[GenericCrud.toCamelCase(keyField)] || data[keyField];
+                        if (id) {
+                            openModal('edit', id);
+                        }
+                    }
+                });
+
+                // Limpar filtros
+                const btnClearFilters = document.getElementById('btnClearFilters');
+                if (btnClearFilters) {
+                    btnClearFilters.addEventListener('click', function() {
+                        document.querySelectorAll('#filterFields input, #filterFields select').forEach(function(el) {
+                            el.value = '';
+                        });
+                    });
+                }
+
+                // Aplicar filtros
+                const btnApplyFilters = document.getElementById('btnApplyFilters');
+                if (btnApplyFilters) {
+                    btnApplyFilters.addEventListener('click', function() {
+                        // TODO: Implementar filtros avançados
+                        GenericCrud.reloadData();
+                    });
+                }
+            }
+
+            // =====================================================================
+            // MODAL DE CRIAÇÃO/EDIÇÃO
+            // =====================================================================
+            async function openModal(mode, id) {
+                currentMode = mode;
+                currentId = id || null;
+
+                const metadata = GenericCrud.getMetadata();
+                const titleText = mode === 'create'
+                    ? 'Novo ' + metadata.displayName
+                    : 'Editar ' + metadata.displayName;
+
+                document.getElementById('modalTitleText').textContent = titleText;
+
+                // Gera formulário
+                const formHtml = GenericCrud.generateFormHtml(mode);
+                document.getElementById('modalBody').innerHTML = formHtml;
+
+                // Se for edição, carrega dados
+                if (mode === 'edit' && id) {
+                    try {
+                        const data = await GenericCrud.getById(id);
+                        if (data) {
+                            GenericCrud.populateForm(data);
+                        }
+                    } catch (error) {
+                        toastr.error('Erro ao carregar dados do registro.');
+                        return;
+                    }
+                }
+
+                // Exibe botão salvar
+                document.getElementById('btnSave').style.display = 'inline-block';
+
+                entityModal.show();
+            }
+
+            async function handleSave() {
+                if (!GenericCrud.validateForm()) {
+                    toastr.warning('Preencha todos os campos obrigatórios.');
+                    return;
+                }
+
+                const data = GenericCrud.getFormData();
+                const btnSave = document.getElementById('btnSave');
+                const originalHtml = btnSave.innerHTML;
+
+                try {
+                    btnSave.disabled = true;
+                    btnSave.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Salvando...';
+
+                    let result;
+                    if (currentMode === 'create') {
+                        result = await GenericCrud.create(data);
+                    } else {
+                        result = await GenericCrud.update(currentId, data);
+                    }
+
+                    entityModal.hide();
+                    GenericCrud.reloadData();
+
+                    const msg = currentMode === 'create'
+                        ? 'Registro criado com sucesso!'
+                        : 'Registro atualizado com sucesso!';
+                    toastr.success(msg);
+
+                } catch (error) {
+                    console.error('[GenericList] Erro ao salvar:', error);
+                    toastr.error(error.message || 'Erro ao salvar registro.');
+                } finally {
+                    btnSave.disabled = false;
+                    btnSave.innerHTML = originalHtml;
+                }
+            }
+
+            // =====================================================================
+            // MODAL DE EXCLUSÃO
+            // =====================================================================
+            function openDeleteModal(id) {
+                document.getElementById('deleteId').value = id;
+                deleteModal.show();
+            }
+
+            async function handleDelete() {
+                const id = document.getElementById('deleteId').value;
+                const btnDelete = document.getElementById('btnConfirmDelete');
+                const originalHtml = btnDelete.innerHTML;
+
+                try {
+                    btnDelete.disabled = true;
+                    btnDelete.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Excluindo...';
+
+                    await GenericCrud.remove(id);
+
+                    deleteModal.hide();
+                    GenericCrud.reloadData();
+                    toastr.success('Registro excluído com sucesso!');
+
+                } catch (error) {
+                    console.error('[GenericList] Erro ao excluir:', error);
+                    toastr.error(error.message || 'Erro ao excluir registro.');
+                } finally {
+                    btnDelete.disabled = false;
+                    btnDelete.innerHTML = originalHtml;
+                }
+            }
+
+            // =====================================================================
+            // MODAL DE VISUALIZAÇÃO
+            // =====================================================================
+            async function openViewModal(id) {
+                currentId = id;
+
+                try {
+                    const data = await GenericCrud.getById(id);
+                    if (!data) {
+                        toastr.error('Registro não encontrado.');
+                        return;
+                    }
+
+                    const formHtml = GenericCrud.generateFormHtml('view');
+                    document.getElementById('viewModalBody').innerHTML = formHtml;
+                    GenericCrud.populateForm(data);
+
+                    viewModal.show();
+
+                } catch (error) {
+                    console.error('[GenericList] Erro ao visualizar:', error);
+                    toastr.error('Erro ao carregar dados do registro.');
+                }
+            }
+
+            // =====================================================================
+            // CALLBACKS DO GENERICCRUD
+            // =====================================================================
+            function onDataLoaded(dataTable) {
+                console.log('[GenericList] Dados carregados no DataTable');
+            }
+
+            function onSaveSuccess(mode, result) {
+                console.log('[GenericList] Salvo com sucesso:', mode);
+            }
+
+            function onDeleteSuccess(id) {
+                console.log('[GenericList] Excluído com sucesso:', id);
+            }
+
+            function onError(error) {
+                console.error('[GenericList] Erro:', error);
+                if (error && error.message) {
+                    toastr.error(error.message);
+                }
+            }
+
+        });
+    </script>
+}

@@ -1,0 +1,48 @@
+{
+  "$schema": "./crud-schema.json",
+  "solutionRoot": ".",
+  "apiProject": "src/API",
+  "webProject": "src/Web",
+  "entities": [
+    {
+      "name": "Sistema",
+      "displayName": "Sistema",
+      "pluralName": "Sistemas",
+      "module": "Identity",
+      "tableName": "tsistema",
+      "cdSistema": "SEG",
+      "cdFuncao": "SEG_FM_TSISTEMA",
+      "primaryKey": {
+        "property": "CdSistema",
+        "type": "string",
+        "column": "cdsistema"
+      },
+      "properties": [
+        {
+          "name": "CdSistema",
+          "type": "string",
+          "column": "cdsistema",
+          "displayName": "Código",
+          "maxLength": 10,
+          "required": true,
+          "isPrimaryKey": true
+        },
+        {
+          "name": "DcSistema",
+          "type": "string",
+          "column": "dcsistema",
+          "displayName": "Descrição",
+          "maxLength": 60,
+          "required": true
+        },
+        {
+          "name": "Ativo",
+          "type": "bool",
+          "column": "ativo",
+          "displayName": "Ativo",
+          "defaultValue": true
+        }
+      ]
+    }
+  ]
+}

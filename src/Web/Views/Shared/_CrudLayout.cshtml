@@ -1,0 +1,146 @@
+@{
+    Layout = "_Layout";
+
+    // Obtém configurações do ViewData (definidas na página filha)
+    var modalId = ViewData["ModalId"]?.ToString() ?? "modalCrud";
+    var iconClass = ViewData["IconClass"]?.ToString() ?? "fas fa-edit";
+    var entityName = ViewData["EntityName"]?.ToString() ?? "Registro";
+}
+
+@*
+    ============================================================================
+    CRUD LAYOUT - Layout Intermediário para Páginas CRUD
+    ============================================================================
+    Arquivo: Views/Shared/_CrudLayout.cshtml
+    Versão: 2.1 (Corrigido)
+    
+    Layout intermediário que adiciona os recursos necessários para páginas CRUD:
+    - DataTables (tabelas interativas com paginação, busca, ordenação)
+    - SweetAlert2 (alertas e confirmações elegantes)
+    - jQuery Validation (validação de formulários)
+    - Script base reutilizável (crud-base.js)
+    - Modais de CRUD (criação/edição/visualização)
+    
+    Hierarquia de Layouts:
+    _Layout.cshtml (base) → _CrudLayout.cshtml (intermediário) → Index.cshtml (página)
+    
+    IMPORTANTE: Os modais agora são renderizados AQUI (no layout), não em partial views,
+    pois @RenderSection só funciona em layouts, não em partial views.
+    
+    ============================================================================
+*@
+
+@* Adiciona os estilos específicos do CRUD *@
+@section Styles {
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/select/1.7.0/css/select.bootstrap5.min.css" />
+
+    <!-- SweetAlert2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" />
+
+    <!-- CRUD Base CSS -->
+    <link rel="stylesheet" href="~/css/crud-base.css" asp-append-version="true" />
+}
+
+@* Renderiza o conteúdo da página (tabela CRUD) *@
+@RenderBody()
+
+@* ============================================================================
+   MODAL DE CRIAÇÃO/EDIÇÃO - Renderizado pelo Layout
+   ============================================================================ *@
+<div class="modal fade" id="@modalId" tabindex="-1" aria-labelledby="@(modalId)Label" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header modal-header-crud">
+                <h5 class="modal-title" id="@(modalId)Label">
+                    <i class="@iconClass me-2"></i>
+                    <span id="modalTitle">Novo @entityName</span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="formCrud">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <input type="hidden" id="Id" name="Id" />
+
+                    @* =========================================================
+                       CONTEÚDO ESPECÍFICO DO FORMULÁRIO
+                       Cada página filha define sua section ModalContent
+                       ========================================================= *@
+                    @RenderSection("ModalContent", required: false)
+                </div>
+                <div class="modal-footer modal-footer-crud">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-crud btn-crud-primary">
+                        <i class="fas fa-save me-2"></i>Salvar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@* ============================================================================
+   MODAL DE VISUALIZAÇÃO
+   ============================================================================ *@
+<div class="modal fade" id="modalView" tabindex="-1" aria-labelledby="modalViewLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header modal-header-crud">
+                <h5 class="modal-title" id="modalViewLabel">
+                    <i class="fas fa-eye me-2"></i>
+                    Detalhes do @entityName
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="viewContent">
+                <!-- Conteúdo carregado via AJAX -->
+            </div>
+            <div class="modal-footer modal-footer-crud">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* ============================================================================
+   SCRIPTS DO CRUD
+   ============================================================================ *@
+@section Scripts {
+    <!-- DataTables Scripts -->
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/select/1.7.0/js/dataTables.select.min.js"></script>
+
+    <!-- Bibliotecas para exportação -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- jQuery Validation -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.19.5/dist/jquery.validate.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.19.5/dist/additional-methods.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.19.5/dist/localization/messages_pt_BR.min.js"></script>
+
+    <!-- Script base reutilizável -->
+    <script src="~/js/crud-base.js" asp-append-version="true"></script>
+
+    @* Permite que as páginas filhas adicionem scripts adicionais *@
+    @RenderSection("PageScripts", required: false)
+}

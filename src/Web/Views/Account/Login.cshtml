@@ -1,0 +1,117 @@
+@model RhSensoERP.Web.Models.Account.LoginViewModel
+@{
+    ViewData["Title"] = "Login";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - RhSensoERP</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/login.css" asp-append-version="true" />
+</head>
+<body class="login-page">
+    <div class="login-container">
+        <div class="login-box">
+            <!-- Logo e Título -->
+            <div class="login-header text-center mb-4">
+                <i class="fas fa-user-shield fa-3x text-primary mb-3"></i>
+                <h2 class="fw-bold">RhSensoERP</h2>
+                <p class="text-muted">Sistema de Gestão de Recursos Humanos</p>
+            </div>
+
+            <!-- Formulário de Login -->
+            <form asp-action="Login" asp-controller="Account" method="post" id="loginForm">
+                <input type="hidden" asp-for="ReturnUrl" />
+
+                @if (!ViewData.ModelState.IsValid)
+                {
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        <div asp-validation-summary="ModelOnly" class="mb-0"></div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                }
+
+                <!-- Código do Usuário -->
+                <div class="mb-3">
+                    <label asp-for="CdUsuario" class="form-label">
+                        <i class="fas fa-user me-2"></i>Usuário
+                    </label>
+                    <input asp-for="CdUsuario"
+                           class="form-control form-control-lg"
+                           placeholder="Digite seu código de usuário"
+                           autocomplete="username"
+                           autofocus />
+                    <span asp-validation-for="CdUsuario" class="text-danger small"></span>
+                </div>
+
+                <!-- Senha -->
+                <div class="mb-3">
+                    <label asp-for="Senha" class="form-label">
+                        <i class="fas fa-lock me-2"></i>Senha
+                    </label>
+                    <div class="input-group">
+                        <input asp-for="Senha"
+                               type="password"
+                               class="form-control form-control-lg"
+                               placeholder="Digite sua senha"
+                               autocomplete="current-password"
+                               id="senhaInput" />
+                        <button class="btn btn-outline-secondary"
+                                type="button"
+                                id="togglePassword"
+                                title="Mostrar/Ocultar senha">
+                            <i class="fas fa-eye" id="togglePasswordIcon"></i>
+                        </button>
+                    </div>
+                    <span asp-validation-for="Senha" class="text-danger small"></span>
+                </div>
+
+                <!-- Manter Conectado -->
+                <div class="form-check mb-3">
+                    <input asp-for="RememberMe" class="form-check-input" type="checkbox" />
+                    <label asp-for="RememberMe" class="form-check-label">
+                        Manter conectado
+                    </label>
+                </div>
+
+                <!-- Botão de Login -->
+                <div class="d-grid mb-3">
+                    <button type="submit" class="btn btn-primary btn-lg" id="btnLogin">
+                        <i class="fas fa-sign-in-alt me-2"></i>
+                        <span id="btnLoginText">Entrar</span>
+                        <span id="btnLoginSpinner" class="spinner-border spinner-border-sm ms-2 d-none" role="status">
+                            <span class="visually-hidden">Carregando...</span>
+                        </span>
+                    </button>
+                </div>
+
+                <!-- Links Adicionais -->
+                <div class="text-center">
+                    <a href="#" class="text-muted small text-decoration-none">
+                        <i class="fas fa-question-circle me-1"></i>Esqueceu sua senha?
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Rodapé -->
+        <div class="login-footer text-center mt-4">
+            <p class="text-muted small mb-0">
+                &copy; @DateTime.Now.Year RhSensoERP - Todos os direitos reservados
+            </p>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+    <script src="~/js/login.js" asp-append-version="true"></script>
+</body>
+</html>

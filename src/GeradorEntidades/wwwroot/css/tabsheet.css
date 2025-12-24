@@ -1,0 +1,1364 @@
+/**
+ * =============================================================================
+ * TABSHEET GENERATOR v2.0 - ADVANCED STYLES
+ * Design System Completo com Animações e Efeitos Profissionais
+ * =============================================================================
+ */
+
+/* ============================================================================
+   CSS VARIABLES - DESIGN TOKENS
+   ============================================================================ */
+:root {
+    /* Primary Palette */
+    --ts-primary: #6366f1;
+    --ts-primary-dark: #4f46e5;
+    --ts-primary-light: #818cf8;
+    --ts-primary-glow: rgba(99, 102, 241, 0.4);
+    
+    /* Secondary Palette */
+    --ts-secondary: #8b5cf6;
+    --ts-secondary-dark: #7c3aed;
+    --ts-secondary-light: #a78bfa;
+    
+    /* Accent Colors */
+    --ts-success: #10b981;
+    --ts-success-glow: rgba(16, 185, 129, 0.4);
+    --ts-warning: #f59e0b;
+    --ts-danger: #ef4444;
+    --ts-info: #06b6d4;
+    
+    /* Neutral Palette */
+    --ts-bg-primary: #ffffff;
+    --ts-bg-secondary: #f8fafc;
+    --ts-bg-tertiary: #f1f5f9;
+    --ts-border: #e2e8f0;
+    --ts-border-focus: #6366f1;
+    --ts-text-primary: #1e293b;
+    --ts-text-secondary: #64748b;
+    --ts-text-muted: #94a3b8;
+    
+    /* Glass Effect */
+    --ts-glass-bg: rgba(255, 255, 255, 0.8);
+    --ts-glass-border: rgba(255, 255, 255, 0.2);
+    --ts-glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    
+    /* Shadows */
+    --ts-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --ts-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    --ts-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    --ts-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    --ts-shadow-glow: 0 0 20px var(--ts-primary-glow);
+    
+    /* Transitions */
+    --ts-transition-fast: 150ms ease;
+    --ts-transition-base: 250ms ease;
+    --ts-transition-slow: 350ms ease;
+    --ts-transition-bounce: 500ms cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    
+    /* Border Radius */
+    --ts-radius-sm: 6px;
+    --ts-radius-md: 10px;
+    --ts-radius-lg: 16px;
+    --ts-radius-xl: 24px;
+    --ts-radius-full: 9999px;
+}
+
+/* Dark Theme */
+[data-bs-theme="dark"], [data-theme="dark"] {
+    --ts-bg-primary: #0f172a;
+    --ts-bg-secondary: #1e293b;
+    --ts-bg-tertiary: #334155;
+    --ts-border: #334155;
+    --ts-text-primary: #f1f5f9;
+    --ts-text-secondary: #94a3b8;
+    --ts-text-muted: #64748b;
+    --ts-glass-bg: rgba(15, 23, 42, 0.9);
+    --ts-glass-border: rgba(255, 255, 255, 0.1);
+}
+
+/* ============================================================================
+   KEYFRAME ANIMATIONS
+   ============================================================================ */
+
+/* Fade Animations */
+@keyframes tsFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes tsFadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes tsFadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes tsFadeInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes tsFadeInRight {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Scale Animations */
+@keyframes tsScaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes tsBounceIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.3);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    70% {
+        transform: scale(0.9);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes tsPulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+@keyframes tsHeartbeat {
+    0%, 100% { transform: scale(1); }
+    14% { transform: scale(1.1); }
+    28% { transform: scale(1); }
+    42% { transform: scale(1.1); }
+    70% { transform: scale(1); }
+}
+
+/* Glow Animations */
+@keyframes tsGlow {
+    0%, 100% {
+        box-shadow: 0 0 5px var(--ts-primary-glow),
+                    0 0 10px var(--ts-primary-glow);
+    }
+    50% {
+        box-shadow: 0 0 15px var(--ts-primary-glow),
+                    0 0 30px var(--ts-primary-glow);
+    }
+}
+
+@keyframes tsShimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+/* Rotation */
+@keyframes tsSpin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes tsSpinReverse {
+    from { transform: rotate(360deg); }
+    to { transform: rotate(0deg); }
+}
+
+/* Floating */
+@keyframes tsFloat {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+/* Wave */
+@keyframes tsWave {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(20deg); }
+    75% { transform: rotate(-15deg); }
+}
+
+/* Gradient Animation */
+@keyframes tsGradientFlow {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Progress Bar */
+@keyframes tsProgressStripes {
+    from { background-position: 1rem 0; }
+    to { background-position: 0 0; }
+}
+
+/* Checkmark */
+@keyframes tsCheckmark {
+    0% {
+        stroke-dashoffset: 100;
+    }
+    100% {
+        stroke-dashoffset: 0;
+    }
+}
+
+/* ============================================================================
+   MODAL STYLES
+   ============================================================================ */
+
+#modalTabSheet .modal-dialog {
+    max-width: 1100px;
+}
+
+#modalTabSheet .modal-content {
+    background: var(--ts-bg-primary);
+    border: none;
+    border-radius: var(--ts-radius-lg);
+    box-shadow: var(--ts-shadow-xl);
+    overflow: hidden;
+}
+
+/* Header */
+.ts-header {
+    background: linear-gradient(135deg, var(--ts-primary) 0%, var(--ts-secondary) 100%);
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.ts-header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+    animation: tsSpin 20s linear infinite;
+}
+
+.ts-header-logo {
+    width: 48px;
+    height: 48px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: var(--ts-radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: white;
+    backdrop-filter: blur(10px);
+    animation: tsPulse 2s ease-in-out infinite;
+    position: relative;
+    z-index: 1;
+}
+
+.ts-header-info {
+    flex: 1;
+    position: relative;
+    z-index: 1;
+}
+
+.ts-header-title {
+    color: white;
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.ts-header-title .badge {
+    font-size: 0.65rem;
+    padding: 0.25rem 0.5rem;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    animation: tsGlow 2s ease-in-out infinite;
+}
+
+.ts-header-subtitle {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.875rem;
+    margin: 0.25rem 0 0;
+}
+
+.ts-badge-table {
+    background: rgba(255, 255, 255, 0.2) !important;
+    color: white !important;
+    font-family: 'Fira Code', 'Consolas', monospace;
+    font-size: 0.8rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: var(--ts-radius-full);
+    backdrop-filter: blur(10px);
+    animation: tsFadeInRight 0.5s ease;
+}
+
+.ts-btn-close {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--ts-radius-full);
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--ts-transition-base);
+    position: relative;
+    z-index: 1;
+}
+
+.ts-btn-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: rotate(90deg);
+}
+
+/* ============================================================================
+   WIZARD STEPS
+   ============================================================================ */
+
+.ts-wizard-container {
+    background: var(--ts-bg-secondary);
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid var(--ts-border);
+}
+
+.ts-wizard-steps {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0;
+    position: relative;
+}
+
+.ts-step {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1.25rem;
+    cursor: pointer;
+    transition: all var(--ts-transition-base);
+    position: relative;
+    z-index: 1;
+}
+
+.ts-step-number {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--ts-radius-full);
+    background: var(--ts-bg-tertiary);
+    border: 2px solid var(--ts-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    color: var(--ts-text-secondary);
+    transition: all var(--ts-transition-base);
+    position: relative;
+}
+
+.ts-step-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.ts-step-title {
+    font-weight: 600;
+    color: var(--ts-text-secondary);
+    font-size: 0.875rem;
+    transition: color var(--ts-transition-base);
+}
+
+.ts-step-desc {
+    font-size: 0.75rem;
+    color: var(--ts-text-muted);
+}
+
+/* Step Connector */
+.ts-step-connector {
+    width: 60px;
+    height: 3px;
+    background: var(--ts-border);
+    border-radius: var(--ts-radius-full);
+    position: relative;
+    overflow: hidden;
+}
+
+.ts-step-connector::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 0;
+    background: linear-gradient(90deg, var(--ts-primary), var(--ts-secondary));
+    border-radius: var(--ts-radius-full);
+    transition: width var(--ts-transition-slow);
+}
+
+/* Active Step */
+.ts-step.active .ts-step-number {
+    background: linear-gradient(135deg, var(--ts-primary), var(--ts-secondary));
+    border-color: transparent;
+    color: white;
+    box-shadow: var(--ts-shadow-glow);
+    animation: tsPulse 2s ease-in-out infinite;
+}
+
+.ts-step.active .ts-step-title {
+    color: var(--ts-primary);
+}
+
+/* Completed Step */
+.ts-step.completed .ts-step-number {
+    background: var(--ts-success);
+    border-color: transparent;
+    color: white;
+}
+
+.ts-step.completed .ts-step-number::before {
+    content: '\f00c';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+}
+
+.ts-step.completed .ts-step-number span {
+    display: none;
+}
+
+.ts-step.completed + .ts-step-connector::after {
+    width: 100%;
+}
+
+.ts-step.completed .ts-step-title {
+    color: var(--ts-success);
+}
+
+/* ============================================================================
+   STEP CONTENT
+   ============================================================================ */
+
+.ts-body {
+    padding: 0;
+    max-height: calc(100vh - 280px);
+    overflow-y: auto;
+    position: relative;
+}
+
+.ts-step-content {
+    display: none;
+    padding: 1.5rem;
+    animation: tsFadeInUp 0.4s ease;
+}
+
+.ts-step-content.active {
+    display: block;
+}
+
+/* Section Headers */
+.ts-section {
+    margin-bottom: 1.5rem;
+}
+
+.ts-section-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--ts-border);
+}
+
+.ts-section-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--ts-radius-md);
+    background: linear-gradient(135deg, var(--ts-primary), var(--ts-secondary));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.125rem;
+    flex-shrink: 0;
+}
+
+.ts-section-info h5 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--ts-text-primary);
+}
+
+.ts-section-info p {
+    margin: 0.25rem 0 0;
+    font-size: 0.8rem;
+    color: var(--ts-text-secondary);
+}
+
+/* ============================================================================
+   FORM CONTROLS
+   ============================================================================ */
+
+.ts-form-group {
+    margin-bottom: 1rem;
+}
+
+.ts-label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--ts-text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.ts-input {
+    width: 100%;
+    padding: 0.625rem 0.875rem;
+    font-size: 0.875rem;
+    border: 2px solid var(--ts-border);
+    border-radius: var(--ts-radius-sm);
+    background: var(--ts-bg-primary);
+    color: var(--ts-text-primary);
+    transition: all var(--ts-transition-base);
+}
+
+.ts-input:focus {
+    outline: none;
+    border-color: var(--ts-primary);
+    box-shadow: 0 0 0 3px var(--ts-primary-glow);
+}
+
+.ts-input::placeholder {
+    color: var(--ts-text-muted);
+}
+
+.ts-input-sm {
+    padding: 0.375rem 0.625rem;
+    font-size: 0.8125rem;
+}
+
+/* ============================================================================
+   MASTER INFO CARD
+   ============================================================================ */
+
+.ts-master-info-card {
+    background: linear-gradient(135deg, var(--ts-bg-secondary), var(--ts-bg-tertiary));
+    border: 1px solid var(--ts-border);
+    border-radius: var(--ts-radius-md);
+    padding: 1.25rem;
+    margin-top: 1rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.ts-master-info-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 150px;
+    height: 150px;
+    background: linear-gradient(135deg, var(--ts-primary-glow), transparent);
+    border-radius: 0 0 0 100%;
+    opacity: 0.5;
+}
+
+.ts-master-info-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.ts-master-info-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--ts-radius-sm);
+    background: linear-gradient(135deg, var(--ts-primary), var(--ts-secondary));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+.ts-master-info-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--ts-text-primary);
+    margin: 0;
+}
+
+.ts-master-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 1rem;
+}
+
+.ts-master-info-item {
+    text-align: center;
+    padding: 0.75rem;
+    background: var(--ts-bg-primary);
+    border-radius: var(--ts-radius-sm);
+    border: 1px solid var(--ts-border);
+}
+
+.ts-master-info-item .value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--ts-primary);
+    font-family: 'Fira Code', monospace;
+}
+
+.ts-master-info-item .label {
+    font-size: 0.7rem;
+    color: var(--ts-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 0.25rem;
+}
+
+/* ============================================================================
+   CONFIG TABLES
+   ============================================================================ */
+
+.ts-table-container {
+    background: var(--ts-bg-primary);
+    border: 1px solid var(--ts-border);
+    border-radius: var(--ts-radius-md);
+    overflow: hidden;
+}
+
+.ts-config-table {
+    margin: 0;
+    font-size: 0.8125rem;
+}
+
+.ts-config-table thead {
+    background: var(--ts-bg-secondary);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.ts-config-table thead th {
+    padding: 0.75rem;
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--ts-text-secondary);
+    border-bottom: 2px solid var(--ts-border);
+    white-space: nowrap;
+}
+
+.ts-config-table tbody tr {
+    transition: background var(--ts-transition-fast);
+}
+
+.ts-config-table tbody tr:hover {
+    background: var(--ts-bg-secondary);
+}
+
+.ts-config-table tbody td {
+    padding: 0.625rem 0.75rem;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--ts-border);
+}
+
+/* Code Badge */
+.ts-code {
+    font-family: 'Fira Code', 'Consolas', monospace;
+    font-size: 0.75rem;
+    padding: 0.2rem 0.5rem;
+    background: linear-gradient(135deg, #1e293b, #334155);
+    color: #10b981;
+    border-radius: var(--ts-radius-sm);
+    display: inline-block;
+}
+
+/* Column Badges */
+.ts-col-badges {
+    display: inline-flex;
+    gap: 0.25rem;
+    margin-left: 0.5rem;
+}
+
+.ts-badge-pk {
+    background: linear-gradient(135deg, #fbbf24, #f59e0b) !important;
+    color: #1e293b !important;
+    font-size: 0.6rem;
+    padding: 0.15rem 0.35rem;
+    font-weight: 700;
+}
+
+.ts-badge-fk {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8) !important;
+    color: white !important;
+    font-size: 0.6rem;
+    padding: 0.15rem 0.35rem;
+    font-weight: 700;
+}
+
+.ts-badge-identity {
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed) !important;
+    color: white !important;
+    font-size: 0.6rem;
+    padding: 0.15rem 0.35rem;
+    font-weight: 700;
+}
+
+/* ============================================================================
+   SUB TABS
+   ============================================================================ */
+
+.ts-sub-tabs {
+    background: var(--ts-bg-secondary);
+    border-radius: var(--ts-radius-md);
+    padding: 0.375rem;
+    display: inline-flex;
+    gap: 0.25rem;
+}
+
+.ts-sub-tabs .nav-link {
+    padding: 0.5rem 1rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--ts-text-secondary);
+    border-radius: var(--ts-radius-sm);
+    border: none;
+    transition: all var(--ts-transition-base);
+}
+
+.ts-sub-tabs .nav-link:hover {
+    color: var(--ts-primary);
+    background: var(--ts-bg-tertiary);
+}
+
+.ts-sub-tabs .nav-link.active {
+    background: linear-gradient(135deg, var(--ts-primary), var(--ts-secondary));
+    color: white;
+    box-shadow: var(--ts-shadow-md);
+}
+
+/* ============================================================================
+   PANELS (Step 3)
+   ============================================================================ */
+
+.ts-panel {
+    background: var(--ts-bg-primary);
+    border: 1px solid var(--ts-border);
+    border-radius: var(--ts-radius-md);
+    overflow: hidden;
+    height: 100%;
+}
+
+.ts-panel-header {
+    background: var(--ts-bg-secondary);
+    padding: 0.875rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--ts-border);
+}
+
+.ts-panel-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--ts-text-primary);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.ts-panel-title i {
+    color: var(--ts-primary);
+}
+
+.ts-panel-badge {
+    background: var(--ts-primary);
+    color: white;
+    font-size: 0.7rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: var(--ts-radius-full);
+    font-weight: 600;
+}
+
+.ts-panel-body {
+    padding: 1rem;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+/* Search Box */
+.ts-search-box {
+    position: relative;
+    margin-bottom: 1rem;
+}
+
+.ts-search-box input {
+    width: 100%;
+    padding: 0.625rem 0.875rem 0.625rem 2.5rem;
+    border: 2px solid var(--ts-border);
+    border-radius: var(--ts-radius-full);
+    background: var(--ts-bg-secondary);
+    font-size: 0.8125rem;
+    transition: all var(--ts-transition-base);
+}
+
+.ts-search-box input:focus {
+    border-color: var(--ts-primary);
+    box-shadow: 0 0 0 3px var(--ts-primary-glow);
+}
+
+.ts-search-box i {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--ts-text-muted);
+}
+
+/* Available Items */
+.ts-available-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    background: var(--ts-bg-secondary);
+    border: 1px solid var(--ts-border);
+    border-radius: var(--ts-radius-sm);
+    margin-bottom: 0.5rem;
+    transition: all var(--ts-transition-base);
+    cursor: pointer;
+}
+
+.ts-available-item:hover {
+    border-color: var(--ts-primary);
+    transform: translateX(5px);
+    box-shadow: var(--ts-shadow-md);
+}
+
+.ts-available-item.added {
+    opacity: 0.5;
+    pointer-events: none;
+    background: var(--ts-bg-tertiary);
+}
+
+.ts-available-item.added::after {
+    content: '✓ Adicionado';
+    font-size: 0.7rem;
+    color: var(--ts-success);
+    font-weight: 600;
+}
+
+.ts-available-name {
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--ts-text-primary);
+}
+
+.ts-available-meta {
+    display: flex;
+    gap: 0.75rem;
+    font-size: 0.7rem;
+    color: var(--ts-text-muted);
+    margin-top: 0.25rem;
+}
+
+.ts-available-meta span {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.ts-btn-add {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--ts-radius-full);
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--ts-transition-base);
+}
+
+.ts-btn-add:hover {
+    transform: scale(1.1) rotate(90deg);
+}
+
+/* Detail Tabs */
+.ts-detail-tabs {
+    border-bottom: none;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.ts-detail-tabs .nav-link {
+    background: var(--ts-bg-secondary);
+    border: 1px solid var(--ts-border);
+    border-radius: var(--ts-radius-sm) var(--ts-radius-sm) 0 0;
+    padding: 0.5rem 1rem;
+    font-size: 0.8125rem;
+    color: var(--ts-text-secondary);
+    position: relative;
+    transition: all var(--ts-transition-base);
+}
+
+.ts-detail-tabs .nav-link.active {
+    background: var(--ts-bg-primary);
+    border-bottom-color: var(--ts-bg-primary);
+    color: var(--ts-primary);
+    font-weight: 600;
+}
+
+.ts-tab-close {
+    margin-left: 0.5rem;
+    width: 18px;
+    height: 18px;
+    border-radius: var(--ts-radius-full);
+    background: var(--ts-danger);
+    color: white;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.6rem;
+    cursor: pointer;
+    transition: all var(--ts-transition-base);
+    opacity: 0.7;
+}
+
+.ts-tab-close:hover {
+    opacity: 1;
+    transform: scale(1.2);
+}
+
+/* Empty State */
+.ts-empty-state {
+    text-align: center;
+    padding: 3rem 1.5rem;
+    color: var(--ts-text-muted);
+}
+
+.ts-empty-state i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.ts-empty-state h6 {
+    color: var(--ts-text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.ts-empty-state p {
+    font-size: 0.8125rem;
+}
+
+/* ============================================================================
+   SUMMARY (Step 4)
+   ============================================================================ */
+
+.ts-summary-section {
+    background: var(--ts-bg-secondary);
+    border-radius: var(--ts-radius-md);
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.ts-summary-title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--ts-text-secondary);
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.ts-summary-title i {
+    color: var(--ts-primary);
+}
+
+.ts-summary-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px dashed var(--ts-border);
+}
+
+.ts-summary-item:last-child {
+    border-bottom: none;
+}
+
+.ts-summary-item span {
+    color: var(--ts-text-secondary);
+    font-size: 0.8125rem;
+}
+
+.ts-summary-item strong {
+    color: var(--ts-text-primary);
+    font-family: 'Fira Code', monospace;
+    font-size: 0.8125rem;
+}
+
+.ts-file-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    background: var(--ts-bg-primary);
+    border-radius: var(--ts-radius-sm);
+    margin-bottom: 0.375rem;
+    font-size: 0.8125rem;
+    animation: tsFadeInLeft 0.3s ease;
+}
+
+.ts-file-item i {
+    color: var(--ts-primary);
+}
+
+.ts-file-item span:first-of-type {
+    flex: 1;
+    font-family: 'Fira Code', monospace;
+    color: var(--ts-text-primary);
+}
+
+/* Generation Options */
+.ts-options-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+}
+
+.ts-option-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    background: var(--ts-bg-secondary);
+    border-radius: var(--ts-radius-sm);
+    transition: all var(--ts-transition-base);
+}
+
+.ts-option-item:hover {
+    background: var(--ts-bg-tertiary);
+}
+
+.ts-option-item label {
+    font-size: 0.8125rem;
+    color: var(--ts-text-primary);
+    cursor: pointer;
+    margin: 0;
+}
+
+/* ============================================================================
+   FOOTER
+   ============================================================================ */
+
+.ts-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    background: var(--ts-bg-secondary);
+    border-top: 1px solid var(--ts-border);
+}
+
+.ts-footer-left {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.ts-footer-right {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* Buttons */
+.ts-btn {
+    padding: 0.625rem 1.25rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: var(--ts-radius-sm);
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all var(--ts-transition-base);
+}
+
+.ts-btn-secondary {
+    background: var(--ts-bg-tertiary);
+    color: var(--ts-text-secondary);
+}
+
+.ts-btn-secondary:hover {
+    background: var(--ts-border);
+    color: var(--ts-text-primary);
+}
+
+.ts-btn-primary {
+    background: linear-gradient(135deg, var(--ts-primary), var(--ts-secondary));
+    color: white;
+    box-shadow: var(--ts-shadow-md);
+}
+
+.ts-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--ts-shadow-lg), var(--ts-shadow-glow);
+}
+
+.ts-btn-success {
+    background: linear-gradient(135deg, var(--ts-success), #059669);
+    color: white;
+    box-shadow: var(--ts-shadow-md);
+}
+
+.ts-btn-success:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--ts-shadow-lg), 0 0 20px var(--ts-success-glow);
+}
+
+/* ============================================================================
+   LOADING OVERLAY
+   ============================================================================ */
+
+.ts-loading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--ts-glass-bg);
+    backdrop-filter: blur(8px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+}
+
+.ts-loading.active {
+    display: flex;
+}
+
+.ts-loading-content {
+    text-align: center;
+}
+
+.ts-spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid var(--ts-border);
+    border-top-color: var(--ts-primary);
+    border-radius: 50%;
+    animation: tsSpin 1s linear infinite;
+    margin: 0 auto 1rem;
+}
+
+.ts-loading-text {
+    color: var(--ts-text-secondary);
+    font-size: 0.875rem;
+}
+
+/* ============================================================================
+   FK CARDS
+   ============================================================================ */
+
+.ts-fk-card {
+    background: var(--ts-bg-secondary);
+    border: 1px solid var(--ts-border);
+    border-radius: var(--ts-radius-md);
+    padding: 1rem;
+    transition: all var(--ts-transition-base);
+}
+
+.ts-fk-card:hover {
+    border-color: var(--ts-primary);
+    box-shadow: var(--ts-shadow-md);
+}
+
+.ts-fk-card .fk-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.ts-fk-card .fk-name {
+    font-weight: 600;
+    color: var(--ts-text-primary);
+    font-size: 0.875rem;
+}
+
+.ts-fk-card .fk-detail {
+    font-size: 0.75rem;
+    color: var(--ts-text-muted);
+    font-family: 'Fira Code', monospace;
+}
+
+/* ============================================================================
+   DETAIL CONFIG
+   ============================================================================ */
+
+.ts-detail-config {
+    background: var(--ts-bg-primary);
+    border: 1px solid var(--ts-border);
+    border-top: none;
+    border-radius: 0 0 var(--ts-radius-md) var(--ts-radius-md);
+}
+
+.ts-detail-header {
+    background: var(--ts-bg-secondary);
+    padding: 1rem;
+    border-radius: var(--ts-radius-sm);
+    margin-bottom: 1rem;
+}
+
+.ts-permissions {
+    background: var(--ts-bg-primary);
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--ts-radius-sm);
+    border: 1px solid var(--ts-border);
+}
+
+/* ============================================================================
+   SCROLLBAR
+   ============================================================================ */
+
+.ts-body::-webkit-scrollbar,
+.ts-panel-body::-webkit-scrollbar,
+.ts-table-container::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.ts-body::-webkit-scrollbar-track,
+.ts-panel-body::-webkit-scrollbar-track,
+.ts-table-container::-webkit-scrollbar-track {
+    background: var(--ts-bg-secondary);
+    border-radius: var(--ts-radius-full);
+}
+
+.ts-body::-webkit-scrollbar-thumb,
+.ts-panel-body::-webkit-scrollbar-thumb,
+.ts-table-container::-webkit-scrollbar-thumb {
+    background: var(--ts-border);
+    border-radius: var(--ts-radius-full);
+}
+
+.ts-body::-webkit-scrollbar-thumb:hover,
+.ts-panel-body::-webkit-scrollbar-thumb:hover,
+.ts-table-container::-webkit-scrollbar-thumb:hover {
+    background: var(--ts-primary);
+}
+
+/* ============================================================================
+   RESPONSIVE
+   ============================================================================ */
+
+@media (max-width: 992px) {
+    #modalTabSheet .modal-dialog {
+        max-width: 95%;
+    }
+    
+    .ts-wizard-steps {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .ts-step-connector {
+        display: none;
+    }
+    
+    .ts-step {
+        flex: 0 0 45%;
+    }
+}
+
+@media (max-width: 768px) {
+    .ts-step {
+        flex: 0 0 100%;
+    }
+    
+    .ts-step-info {
+        display: none;
+    }
+    
+    .ts-options-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .ts-master-info-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* ============================================================================
+   UTILITY CLASSES
+   ============================================================================ */
+
+.ts-animate-fade-in { animation: tsFadeIn 0.3s ease; }
+.ts-animate-fade-in-up { animation: tsFadeInUp 0.4s ease; }
+.ts-animate-fade-in-down { animation: tsFadeInDown 0.4s ease; }
+.ts-animate-scale-in { animation: tsScaleIn 0.3s ease; }
+.ts-animate-bounce-in { animation: tsBounceIn 0.6s ease; }
+.ts-animate-pulse { animation: tsPulse 2s ease-in-out infinite; }
+.ts-animate-float { animation: tsFloat 3s ease-in-out infinite; }
+.ts-animate-glow { animation: tsGlow 2s ease-in-out infinite; }

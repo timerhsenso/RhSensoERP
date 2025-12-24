@@ -1,0 +1,123 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<UserSecretsId>e7f8fd86-8e3f-423d-ba9c-abb7aa6a2021</UserSecretsId>
+
+		<!-- Configurações de Build -->
+		<AnalysisLevel>latest</AnalysisLevel>
+		<TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+		<NoWarn>$(NoWarn);CS1591</NoWarn>
+
+		<!-- Documentação XML -->
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<DocumentationFile>$(OutputPath)RhSensoERP.API.xml</DocumentationFile>
+
+		<!-- Informações do Assembly -->
+		<AssemblyName>RhSensoERP.API</AssemblyName>
+		<RootNamespace>RhSensoERP.API</RootNamespace>
+		<Product>RhSensoERP</Product>
+		<Company>RhSenso</Company>
+		<Authors>Equipe RhSenso</Authors>
+		<Description>API principal do sistema RhSensoERP</Description>
+		<Version>2.0.0</Version>
+		<AssemblyVersion>2.0.0.0</AssemblyVersion>
+		<FileVersion>2.0.0.0</FileVersion>
+	</PropertyGroup>
+
+
+	<ItemGroup Label="Packages">
+		<!-- API Core -->
+		<PackageReference Include="Asp.Versioning.Mvc" />
+		<PackageReference Include="Asp.Versioning.Mvc.ApiExplorer" />
+		<PackageReference Include="Swashbuckle.AspNetCore" />
+		<PackageReference Include="Swashbuckle.AspNetCore.Annotations" />
+
+		<!-- Logging - ADICIONADOS OS PACOTES FALTANTES -->
+		<PackageReference Include="Serilog.AspNetCore" />
+		<PackageReference Include="Serilog.Settings.Configuration" />
+		<PackageReference Include="Serilog.Sinks.File" />
+		<PackageReference Include="Serilog.Sinks.Console" />
+		<PackageReference Include="Serilog.Enrichers.Environment" />
+		<PackageReference Include="Serilog.Enrichers.Thread" />
+
+		<!-- Health Checks -->
+		<PackageReference Include="AspNetCore.HealthChecks.SqlServer" />
+		<PackageReference Include="AspNetCore.HealthChecks.Redis" />
+		<PackageReference Include="AspNetCore.HealthChecks.UI" />
+		<PackageReference Include="AspNetCore.HealthChecks.UI.Client" />
+		<PackageReference Include="AspNetCore.HealthChecks.UI.InMemory.Storage" />
+		<PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" />
+
+		<!-- Rate Limiting -->
+		<PackageReference Include="AspNetCoreRateLimit" />
+
+		<!-- Background Jobs -->
+		<PackageReference Include="Hangfire.AspNetCore" />
+
+		<!-- SignalR -->
+		<PackageReference Include="Microsoft.AspNetCore.SignalR.Common" />
+
+
+		<!-- ATokens -->
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+		<PackageReference Include="Microsoft.IdentityModel.Tokens" />
+		<PackageReference Include="System.IdentityModel.Tokens.Jwt" />
+		
+		
+	</ItemGroup>
+
+	<ItemGroup Label="Project References">
+		<!-- Identity -->
+		<ProjectReference Include="..\Identity\RhSensoERP.Identity.csproj" />
+		<ProjectReference Include="..\Modules\AdministracaoPessoal\RhSensoERP.Modules.AdministracaoPessoal.csproj" />
+		<ProjectReference Include="..\Modules\CargosSalariosRemuneracao\RhSensoERP.Modules.CargosSalariosRemuneracao.csproj" />
+		<ProjectReference Include="..\Modules\ComplianceTrabalhistaJuridico\RhSensoERP.Modules.ComplianceTrabalhistaJuridico.csproj" />
+		<ProjectReference Include="..\Modules\FolhaPagamentoEncargos\RhSensoERP.Modules.FolhaPagamentoEncargos.csproj" />
+		<ProjectReference Include="..\Modules\GestaoBeneficios\RhSensoERP.Modules.GestaoBeneficios.csproj" />
+		<ProjectReference Include="..\Modules\GestaoDocumental\RhSensoERP.Modules.GestaoDocumental.csproj" />
+		<ProjectReference Include="..\Modules\GestaoJornadaPonto\RhSensoERP.Modules.GestaoJornadaPonto.csproj" />
+		<ProjectReference Include="..\Modules\GestaoPortariaAcesso\RhSensoERP.Modules.GestaoPortariaAcesso.csproj" />
+		<ProjectReference Include="..\Modules\GestaoTalentosDesempenho\RhSensoERP.Modules.GestaoTalentosDesempenho.csproj" />
+		<ProjectReference Include="..\Modules\GestaoTerceirosPrestadores\RhSensoERP.Modules.GestaoTerceirosPrestadores.csproj" />
+		<ProjectReference Include="..\Modules\IntegracoesMensageria\RhSensoERP.Modules.IntegracoesMensageria.csproj" />
+		<ProjectReference Include="..\Modules\MultiTenant\RhSensoERP.Modules.MultiTenant.csproj" />
+		<ProjectReference Include="..\Modules\PeopleAnalyticsBI\RhSensoERP.Modules.PeopleAnalyticsBI.csproj" />
+		<ProjectReference Include="..\Modules\PortalColaborador\RhSensoERP.Modules.PortalColaborador.csproj" />
+		<ProjectReference Include="..\Modules\RecrutamentoSelecao\RhSensoERP.Modules.RecrutamentoSelecao.csproj" />
+		<ProjectReference Include="..\Modules\SaudeSegurancaTrabalho\RhSensoERP.Modules.SaudeSegurancaTrabalho.csproj" />
+		<ProjectReference Include="..\Modules\TreinamentoDesenvolvimento\RhSensoERP.Modules.TreinamentoDesenvolvimento.csproj" />
+		<ProjectReference Include="..\Modules\ViagensDespesas\RhSensoERP.Modules.ViagensDespesas.csproj" />
+
+		<!-- Shared -->
+		<ProjectReference Include="..\Shared\Core\RhSensoERP.Shared.Core.csproj" />
+		<ProjectReference Include="..\Shared\Contracts\RhSensoERP.Shared.Contracts.csproj" />
+		<ProjectReference Include="..\Shared\Application\RhSensoERP.Shared.Application.csproj" />
+		<ProjectReference Include="..\Shared\Infrastructure\RhSensoERP.Shared.Infrastructure.csproj" />
+
+	</ItemGroup>
+
+	<ItemGroup>
+		<Content Update="appsettings.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+		<Content Update="appsettings.Development.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+		<Content Update="appsettings.Staging.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+
+	<ItemGroup>
+		<InternalsVisibleTo Include="RhSensoERP.IntegrationTests" />
+		<InternalsVisibleTo Include="RhSensoERP.UnitTests" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="logs\" />
+	</ItemGroup>
+
+</Project>

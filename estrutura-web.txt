@@ -1,0 +1,1664 @@
+Listagem de caminhos de pasta
+O n£mero de s‚rie do volume ‚ D4A3-CA4E
+C:\USERS\EDUARDO\SOURCE\REPOS\RHSANALISE2\SRC
+³   Generators.zip
+³   
+ÃÄÄÄAPI
+³   ³   appsettings.Development.json
+³   ³   appsettings.json
+³   ³   appsettings.Staging.json
+³   ³   Dockerfile
+³   ³   Program.cs
+³   ³   RhSensoERP.API.csproj
+³   ³   RhSensoERP.API.csproj.user
+³   ³   RhSensoERP.API.http
+³   ³   RhSensoERP.API.xml
+³   ³   SecretsConfig.cs
+³   ³   
+³   ÃÄÄÄAuthorization
+³   ³       RequirePermissionAttribute.cs
+³   ³       
+³   ÃÄÄÄBackgroundServices
+³   ³       AuditCleanupBackgroundService.cs
+³   ³       
+³   ÃÄÄÄbin
+³   ³   ÀÄÄÄDebug
+³   ³       ÀÄÄÄnet8.0
+³   ³           ³   appsettings.Development.json
+³   ³           ³   appsettings.json
+³   ³           ³   appsettings.Staging.json
+³   ³           ³   Asp.Versioning.Abstractions.dll
+³   ³           ³   Asp.Versioning.Http.dll
+³   ³           ³   Asp.Versioning.Mvc.ApiExplorer.dll
+³   ³           ³   Asp.Versioning.Mvc.dll
+³   ³           ³   AspNetCoreRateLimit.dll
+³   ³           ³   AutoMapper.dll
+³   ³           ³   AutoMapper.Extensions.Microsoft.DependencyInjection.dll
+³   ³           ³   Azure.Core.dll
+³   ³           ³   Azure.Identity.dll
+³   ³           ³   BCrypt.Net-Next.dll
+³   ³           ³   FluentValidation.DependencyInjectionExtensions.dll
+³   ³           ³   FluentValidation.dll
+³   ³           ³   Fractions.dll
+³   ³           ³   Hangfire.AspNetCore.dll
+³   ³           ³   Hangfire.Core.dll
+³   ³           ³   Hangfire.NetCore.dll
+³   ³           ³   HealthChecks.Redis.dll
+³   ³           ³   HealthChecks.SqlServer.dll
+³   ³           ³   HealthChecks.UI.Client.dll
+³   ³           ³   HealthChecks.UI.Core.dll
+³   ³           ³   HealthChecks.UI.Data.dll
+³   ³           ³   HealthChecks.UI.dll
+³   ³           ³   HealthChecks.UI.InMemory.Storage.dll
+³   ³           ³   Humanizer.dll
+³   ³           ³   IdentityModel.dll
+³   ³           ³   IdentityModel.OidcClient.dll
+³   ³           ³   KubernetesClient.dll
+³   ³           ³   MediatR.Contracts.dll
+³   ³           ³   MediatR.dll
+³   ³           ³   Microsoft.AspNetCore.Authentication.JwtBearer.dll
+³   ³           ³   Microsoft.AspNetCore.Connections.Abstractions.dll
+³   ³           ³   Microsoft.AspNetCore.SignalR.Common.dll
+³   ³           ³   Microsoft.Bcl.AsyncInterfaces.dll
+³   ³           ³   Microsoft.CodeAnalysis.CSharp.dll
+³   ³           ³   Microsoft.CodeAnalysis.CSharp.Workspaces.dll
+³   ³           ³   Microsoft.CodeAnalysis.dll
+³   ³           ³   Microsoft.CodeAnalysis.Workspaces.dll
+³   ³           ³   Microsoft.Data.SqlClient.dll
+³   ³           ³   Microsoft.EntityFrameworkCore.Abstractions.dll
+³   ³           ³   Microsoft.EntityFrameworkCore.Design.dll
+³   ³           ³   Microsoft.EntityFrameworkCore.dll
+³   ³           ³   Microsoft.EntityFrameworkCore.InMemory.dll
+³   ³           ³   Microsoft.EntityFrameworkCore.Relational.dll
+³   ³           ³   Microsoft.EntityFrameworkCore.SqlServer.dll
+³   ³           ³   Microsoft.Extensions.Caching.Memory.dll
+³   ³           ³   Microsoft.Extensions.DependencyInjection.Abstractions.dll
+³   ³           ³   Microsoft.Extensions.DependencyInjection.dll
+³   ³           ³   Microsoft.Extensions.DependencyModel.dll
+³   ³           ³   Microsoft.Extensions.Diagnostics.Abstractions.dll
+³   ³           ³   Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions.dll
+³   ³           ³   Microsoft.Extensions.Diagnostics.HealthChecks.dll
+³   ³           ³   Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore.dll
+³   ³           ³   Microsoft.Extensions.Features.dll
+³   ³           ³   Microsoft.Extensions.Hosting.Abstractions.dll
+³   ³           ³   Microsoft.Extensions.Logging.Abstractions.dll
+³   ³           ³   Microsoft.Extensions.Logging.dll
+³   ³           ³   Microsoft.Extensions.Options.dll
+³   ³           ³   Microsoft.Identity.Client.dll
+³   ³           ³   Microsoft.Identity.Client.Extensions.Msal.dll
+³   ³           ³   Microsoft.IdentityModel.Abstractions.dll
+³   ³           ³   Microsoft.IdentityModel.JsonWebTokens.dll
+³   ³           ³   Microsoft.IdentityModel.Logging.dll
+³   ³           ³   Microsoft.IdentityModel.Protocols.dll
+³   ³           ³   Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+³   ³           ³   Microsoft.IdentityModel.Tokens.dll
+³   ³           ³   Microsoft.OpenApi.dll
+³   ³           ³   Microsoft.SqlServer.Server.dll
+³   ³           ³   Mono.TextTemplating.dll
+³   ³           ³   Newtonsoft.Json.dll
+³   ³           ³   Pipelines.Sockets.Unofficial.dll
+³   ³           ³   RhSensoERP.API.deps.json
+³   ³           ³   RhSensoERP.API.dll
+³   ³           ³   RhSensoERP.API.exe
+³   ³           ³   RhSensoERP.API.pdb
+³   ³           ³   RhSensoERP.API.runtimeconfig.json
+³   ³           ³   RhSensoERP.API.xml
+³   ³           ³   RhSensoERP.Identity.dll
+³   ³           ³   RhSensoERP.Identity.pdb
+³   ³           ³   RhSensoERP.Modules.Avaliacoes.dll
+³   ³           ³   RhSensoERP.Modules.Avaliacoes.pdb
+³   ³           ³   RhSensoERP.Modules.ControleDePonto.dll
+³   ³           ³   RhSensoERP.Modules.ControleDePonto.pdb
+³   ³           ³   RhSensoERP.Modules.Esocial.dll
+³   ³           ³   RhSensoERP.Modules.Esocial.pdb
+³   ³           ³   RhSensoERP.Modules.GestaoDePessoas.dll
+³   ³           ³   RhSensoERP.Modules.GestaoDePessoas.pdb
+³   ³           ³   RhSensoERP.Modules.SaudeOcupacional.dll
+³   ³           ³   RhSensoERP.Modules.SaudeOcupacional.pdb
+³   ³           ³   RhSensoERP.Modules.Treinamentos.dll
+³   ³           ³   RhSensoERP.Modules.Treinamentos.pdb
+³   ³           ³   RhSensoERP.Shared.Application.dll
+³   ³           ³   RhSensoERP.Shared.Application.pdb
+³   ³           ³   RhSensoERP.Shared.Contracts.dll
+³   ³           ³   RhSensoERP.Shared.Contracts.pdb
+³   ³           ³   RhSensoERP.Shared.Core.dll
+³   ³           ³   RhSensoERP.Shared.Core.pdb
+³   ³           ³   RhSensoERP.Shared.Infrastructure.dll
+³   ³           ³   RhSensoERP.Shared.Infrastructure.pdb
+³   ³           ³   Serilog.AspNetCore.dll
+³   ³           ³   Serilog.dll
+³   ³           ³   Serilog.Enrichers.Environment.dll
+³   ³           ³   Serilog.Enrichers.Thread.dll
+³   ³           ³   Serilog.Extensions.Hosting.dll
+³   ³           ³   Serilog.Extensions.Logging.dll
+³   ³           ³   Serilog.Formatting.Compact.dll
+³   ³           ³   Serilog.Settings.Configuration.dll
+³   ³           ³   Serilog.Sinks.Console.dll
+³   ³           ³   Serilog.Sinks.Debug.dll
+³   ³           ³   Serilog.Sinks.File.dll
+³   ³           ³   StackExchange.Redis.dll
+³   ³           ³   Swashbuckle.AspNetCore.Annotations.dll
+³   ³           ³   Swashbuckle.AspNetCore.Swagger.dll
+³   ³           ³   Swashbuckle.AspNetCore.SwaggerGen.dll
+³   ³           ³   Swashbuckle.AspNetCore.SwaggerUI.dll
+³   ³           ³   System.CodeDom.dll
+³   ³           ³   System.Composition.AttributedModel.dll
+³   ³           ³   System.Composition.Convention.dll
+³   ³           ³   System.Composition.Hosting.dll
+³   ³           ³   System.Composition.Runtime.dll
+³   ³           ³   System.Composition.TypedParts.dll
+³   ³           ³   System.Configuration.ConfigurationManager.dll
+³   ³           ³   System.DirectoryServices.AccountManagement.dll
+³   ³           ³   System.DirectoryServices.dll
+³   ³           ³   System.DirectoryServices.Protocols.dll
+³   ³           ³   System.IdentityModel.Tokens.Jwt.dll
+³   ³           ³   System.Memory.Data.dll
+³   ³           ³   System.Runtime.Caching.dll
+³   ³           ³   System.Security.Cryptography.ProtectedData.dll
+³   ³           ³   YamlDotNet.dll
+³   ³           ³   
+³   ³           ÃÄÄÄcs
+³   ³           ³       Microsoft.CodeAnalysis.CSharp.resources.dll
+³   ³           ³       Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+³   ³           ³       Microsoft.CodeAnalysis.resources.dll
+³   ³           ³       Microsoft.CodeAnalysis.Workspaces.resources.dll
+³   ³           ³       
+³   ³           ÃÄÄÄde
+³   ³           ³       Microsoft.CodeAnalysis.CSharp.resources.dll
+³   ³           ³       Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+³   ³           ³       Microsoft.CodeAnalysis.resources.dll
+³   ³           ³       Microsoft.CodeAnalysis.Workspaces.resources.dll
+³   ³           ³       Microsoft.Data.SqlClient.resources.dll
+³   ³           ³       
+³   ³           ÃÄÄÄes
+³   ³           ³       Microsoft.CodeAnalysis.CSharp.resources.dll
+³   ³           ³       Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+³   ³           ³       Microsoft.CodeAnalysis.resources.dll
+³   ³           ³       Microsoft.CodeAnalysis.Workspaces.resources.dll
+³   ³           ³       Microsoft.Data.SqlClient.resources.dll
+³   ³           ³       
+³   ³           ÃÄÄÄfr
+³   ³           ³       Microsoft.CodeAnalysis.CSharp.resources.dll
+³   ³           ³       Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+³   ³           ³       Microsoft.CodeAnalysis.resources.dll
+³   ³           ³       Microsoft.CodeAnalysis.Workspaces.resources.dll
+³   ³           ³       Microsoft.Data.SqlClient.resources.dll
+³   ³           ³       
+³   ³           ÃÄÄÄit
+³   ³           ³       Microsoft.CodeAnalysis.CSharp.resources.dll
+³   ³           ³       Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+³   ³           ³       Microsoft.CodeAnalysis.resources.dll
+³   ³           ³       Microsoft.CodeAnalysis.Workspaces.resources.dll
+³   ³           ³       Microsoft.Data.SqlClient.resources.dll
+³   ³           ³       
+³   ³           ÃÄÄÄja
+³   ³           ³       Microsoft.CodeAnalysis.CSharp.resources.dll
+³   ³           ³       Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+³   ³           ³       Microsoft.CodeAnalysis.resources.dll
+³   ³           ³       Microsoft.CodeAnalysis.Workspaces.resources.dll
+³   ³           ³       Microsoft.Data.SqlClient.resources.dll
+³   ³           ³       
+³   ³           ÃÄÄÄko
+³   ³           ³       Microsoft.CodeAnalysis.CSharp.resources.dll
+³   ³           ³       Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+³   ³           ³       Microsoft.CodeAnalysis.resources.dll
+³   ³           ³       Microsoft.CodeAnalysis.Workspaces.resources.dll
+³   ³           ³       Microsoft.Data.SqlClient.resources.dll
+³   ³           ³       
+³   ³           ÃÄÄÄpl
+³   ³           ³       Microsoft.CodeAnalysis.CSharp.resources.dll
+³   ³           ³       Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+³   ³           ³       Microsoft.CodeAnalysis.resources.dll
+³   ³           ³       Microsoft.CodeAnalysis.Workspaces.resources.dll
+³   ³           ³       
+³   ³           ÃÄÄÄpt-BR
+³   ³           ³       Microsoft.CodeAnalysis.CSharp.resources.dll
+³   ³           ³       Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+³   ³           ³       Microsoft.CodeAnalysis.resources.dll
+³   ³           ³       Microsoft.CodeAnalysis.Workspaces.resources.dll
+³   ³           ³       Microsoft.Data.SqlClient.resources.dll
+³   ³           ³       
+³   ³           ÃÄÄÄru
+³   ³           ³       Microsoft.CodeAnalysis.CSharp.resources.dll
+³   ³           ³       Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+³   ³           ³       Microsoft.CodeAnalysis.resources.dll
+³   ³           ³       Microsoft.CodeAnalysis.Workspaces.resources.dll
+³   ³           ³       Microsoft.Data.SqlClient.resources.dll
+³   ³           ³       
+³   ³           ÃÄÄÄruntimes
+³   ³           ³   ÃÄÄÄlinux
+³   ³           ³   ³   ÀÄÄÄlib
+³   ³           ³   ³       ÀÄÄÄnet8.0
+³   ³           ³   ³               System.DirectoryServices.Protocols.dll
+³   ³           ³   ³               
+³   ³           ³   ÃÄÄÄosx
+³   ³           ³   ³   ÀÄÄÄlib
+³   ³           ³   ³       ÀÄÄÄnet8.0
+³   ³           ³   ³               System.DirectoryServices.Protocols.dll
+³   ³           ³   ³               
+³   ³           ³   ÃÄÄÄunix
+³   ³           ³   ³   ÀÄÄÄlib
+³   ³           ³   ³       ÀÄÄÄnet8.0
+³   ³           ³   ³               Microsoft.Data.SqlClient.dll
+³   ³           ³   ³               
+³   ³           ³   ÃÄÄÄwin
+³   ³           ³   ³   ÀÄÄÄlib
+³   ³           ³   ³       ÀÄÄÄnet8.0
+³   ³           ³   ³               Microsoft.Data.SqlClient.dll
+³   ³           ³   ³               System.DirectoryServices.AccountManagement.dll
+³   ³           ³   ³               System.DirectoryServices.dll
+³   ³           ³   ³               System.DirectoryServices.Protocols.dll
+³   ³           ³   ³               System.Runtime.Caching.dll
+³   ³           ³   ³               
+³   ³           ³   ÃÄÄÄwin-arm
+³   ³           ³   ³   ÀÄÄÄnative
+³   ³           ³   ³           Microsoft.Data.SqlClient.SNI.dll
+³   ³           ³   ³           
+³   ³           ³   ÃÄÄÄwin-arm64
+³   ³           ³   ³   ÀÄÄÄnative
+³   ³           ³   ³           Microsoft.Data.SqlClient.SNI.dll
+³   ³           ³   ³           
+³   ³           ³   ÃÄÄÄwin-x64
+³   ³           ³   ³   ÀÄÄÄnative
+³   ³           ³   ³           Microsoft.Data.SqlClient.SNI.dll
+³   ³           ³   ³           
+³   ³           ³   ÀÄÄÄwin-x86
+³   ³           ³       ÀÄÄÄnative
+³   ³           ³               Microsoft.Data.SqlClient.SNI.dll
+³   ³           ³               
+³   ³           ÃÄÄÄtr
+³   ³           ³       Microsoft.CodeAnalysis.CSharp.resources.dll
+³   ³           ³       Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+³   ³           ³       Microsoft.CodeAnalysis.resources.dll
+³   ³           ³       Microsoft.CodeAnalysis.Workspaces.resources.dll
+³   ³           ³       
+³   ³           ÃÄÄÄzh-Hans
+³   ³           ³       Microsoft.CodeAnalysis.CSharp.resources.dll
+³   ³           ³       Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+³   ³           ³       Microsoft.CodeAnalysis.resources.dll
+³   ³           ³       Microsoft.CodeAnalysis.Workspaces.resources.dll
+³   ³           ³       Microsoft.Data.SqlClient.resources.dll
+³   ³           ³       
+³   ³           ÀÄÄÄzh-Hant
+³   ³                   Microsoft.CodeAnalysis.CSharp.resources.dll
+³   ³                   Microsoft.CodeAnalysis.CSharp.Workspaces.resources.dll
+³   ³                   Microsoft.CodeAnalysis.resources.dll
+³   ³                   Microsoft.CodeAnalysis.Workspaces.resources.dll
+³   ³                   Microsoft.Data.SqlClient.resources.dll
+³   ³                   
+³   ÃÄÄÄConfiguration
+³   ³       ModuleGroupConvention.cs
+³   ³       RateLimitingConfiguration.cs
+³   ³       RateLimitSettings.cs
+³   ³       SwaggerConfiguration.cs
+³   ³       SwaggerFilters.cs
+³   ³       
+³   ÃÄÄÄControllers
+³   ³   ³   AuditReportsController.cs
+³   ³   ³   DiagnosticsController.cs
+³   ³   ³   HealthCheckController.cs
+³   ³   ³   MetadataController.cs
+³   ³   ³   SecurityMetricsController.cs
+³   ³   ³   SwaggerTestController.cs
+³   ³   ³   
+³   ³   ÃÄÄÄBase
+³   ³   ³       DataTablesController.cs
+³   ³   ³       GenericApiController.cs
+³   ³   ³       
+³   ³   ÃÄÄÄGestaoDePessoas
+³   ³   ³   ÀÄÄÄTabelas
+³   ³   ³       ÀÄÄÄPessoal
+³   ³   ÀÄÄÄIdentity
+³   ³           AuthController.cs
+³   ³           PermissoesController.cs
+³   ³           UsuariosController.cs
+³   ³           
+³   ÃÄÄÄExtensions
+³   ³       MetadataExtensions.cs
+³   ³       ServiceCollectionExtensions.cs
+³   ³       
+³   ÃÄÄÄlogs
+³   ³       log-20251127_025.txt
+³   ³       log-20251127_026.txt
+³   ³       log-20251127_027.txt
+³   ³       log-20251127_028.txt
+³   ³       log-20251127_029.txt
+³   ³       log-20251127_030.txt
+³   ³       log-20251127_031.txt
+³   ³       log-20251127_032.txt
+³   ³       log-20251127_033.txt
+³   ³       log-20251127_034.txt
+³   ³       log-20251127_035.txt
+³   ³       log-20251127_036.txt
+³   ³       log-20251127_037.txt
+³   ³       log-20251127_038.txt
+³   ³       log-20251127_039.txt
+³   ³       log-20251127_040.txt
+³   ³       log-20251127_041.txt
+³   ³       log-20251128.txt
+³   ³       log-20251128_001.txt
+³   ³       log-20251128_002.txt
+³   ³       log-20251128_003.txt
+³   ³       log-20251128_004.txt
+³   ³       log-20251128_005.txt
+³   ³       log-20251128_006.txt
+³   ³       log-20251128_007.txt
+³   ³       log-20251128_008.txt
+³   ³       log-20251128_009.txt
+³   ³       log-20251128_010.txt
+³   ³       log-20251128_011.txt
+³   ³       log-20251128_012.txt
+³   ³       sql-20251127.txt
+³   ³       sql-20251128.txt
+³   ³       
+³   ÃÄÄÄMiddleware
+³   ³       SecurityHeadersMiddleware.cs
+³   ³       TenantMiddleware.cs
+³   ³       
+³   ÃÄÄÄobj
+³   ³   ³   project.assets.json
+³   ³   ³   project.nuget.cache
+³   ³   ³   RhSensoERP.API.csproj.nuget.dgspec.json
+³   ³   ³   RhSensoERP.API.csproj.nuget.g.props
+³   ³   ³   RhSensoERP.API.csproj.nuget.g.targets
+³   ³   ³   
+³   ³   ÀÄÄÄDebug
+³   ³       ÀÄÄÄnet8.0
+³   ³           ³   .NETCoreApp,Version=v8.0.AssemblyAttributes.cs
+³   ³           ³   ApiEndpoints.json
+³   ³           ³   apphost.exe
+³   ³           ³   RhSensoE.D6B71BC9.Up2Date
+³   ³           ³   RhSensoERP.API.AssemblyInfo.cs
+³   ³           ³   RhSensoERP.API.AssemblyInfoInputs.cache
+³   ³           ³   RhSensoERP.API.assets.cache
+³   ³           ³   RhSensoERP.API.csproj.AssemblyReference.cache
+³   ³           ³   RhSensoERP.API.csproj.BuildWithSkipAnalyzers
+³   ³           ³   RhSensoERP.API.csproj.CoreCompileInputs.cache
+³   ³           ³   RhSensoERP.API.csproj.FileListAbsolute.txt
+³   ³           ³   RhSensoERP.API.dll
+³   ³           ³   RhSensoERP.API.GeneratedMSBuildEditorConfig.editorconfig
+³   ³           ³   RhSensoERP.API.genruntimeconfig.cache
+³   ³           ³   RhSensoERP.API.GlobalUsings.g.cs
+³   ³           ³   RhSensoERP.API.MvcApplicationPartsAssemblyInfo.cache
+³   ³           ³   RhSensoERP.API.MvcApplicationPartsAssemblyInfo.cs
+³   ³           ³   RhSensoERP.API.pdb
+³   ³           ³   RhSensoERP.API.sourcelink.json
+³   ³           ³   staticwebassets.build.json
+³   ³           ³   
+³   ³           ÃÄÄÄEndpointInfo
+³   ³           ³       RhSensoERP.API.json
+³   ³           ³       RhSensoERP.API.OpenApiFiles.cache
+³   ³           ³       
+³   ³           ÃÄÄÄref
+³   ³           ³       RhSensoERP.API.dll
+³   ³           ³       
+³   ³           ÃÄÄÄrefint
+³   ³           ³       RhSensoERP.API.dll
+³   ³           ³       
+³   ³           ÀÄÄÄstaticwebassets
+³   ³                   msbuild.build.RhSensoERP.API.props
+³   ³                   msbuild.buildMultiTargeting.RhSensoERP.API.props
+³   ³                   msbuild.buildTransitive.RhSensoERP.API.props
+³   ³                   
+³   ÃÄÄÄProperties
+³   ³   ³   launchSettings.json
+³   ³   ³   
+³   ³   ÀÄÄÄPublishProfiles
+³   ³           IISProfile.pubxml
+³   ³           
+³   ÀÄÄÄResponses
+³           ApiResponseFactory.cs
+³           
+ÃÄÄÄGenerators
+³   ³   Generators.zip
+³   ³   Generatorsv2.zip
+³   ³   install.ps1
+³   ³   README.md
+³   ³   RhSensoERP.Generators.csproj
+³   ³   
+³   ÃÄÄÄAttributes
+³   ³       GenerateCrudAttribute.cs
+³   ³       
+³   ÃÄÄÄbin
+³   ³   ÀÄÄÄDebug
+³   ³       ÀÄÄÄnetstandard2.0
+³   ³               RhSensoERP.Generators.deps.json
+³   ³               RhSensoERP.Generators.dll
+³   ³               RhSensoERP.Generators.pdb
+³   ³               
+³   ÃÄÄÄExamples
+³   ÃÄÄÄExtractors
+³   ³       EntityInfoExtractor.cs
+³   ³       
+³   ÃÄÄÄGenerators
+³   ³       CrudGenerator.cs
+³   ³       
+³   ÃÄÄÄModels
+³   ³       EntityInfo.cs
+³   ³       
+³   ÃÄÄÄobj
+³   ³   ³   project.assets.json
+³   ³   ³   project.nuget.cache
+³   ³   ³   RhSensoERP.Generators.csproj.nuget.dgspec.json
+³   ³   ³   RhSensoERP.Generators.csproj.nuget.g.props
+³   ³   ³   RhSensoERP.Generators.csproj.nuget.g.targets
+³   ³   ³   
+³   ³   ÀÄÄÄDebug
+³   ³       ÀÄÄÄnetstandard2.0
+³   ³               .NETStandard,Version=v2.0.AssemblyAttributes.cs
+³   ³               RhSensoERP.Generators.AssemblyInfo.cs
+³   ³               RhSensoERP.Generators.AssemblyInfoInputs.cache
+³   ³               RhSensoERP.Generators.assets.cache
+³   ³               RhSensoERP.Generators.csproj.AssemblyReference.cache
+³   ³               RhSensoERP.Generators.csproj.BuildWithSkipAnalyzers
+³   ³               RhSensoERP.Generators.csproj.CoreCompileInputs.cache
+³   ³               RhSensoERP.Generators.csproj.FileListAbsolute.txt
+³   ³               RhSensoERP.Generators.dll
+³   ³               RhSensoERP.Generators.GeneratedMSBuildEditorConfig.editorconfig
+³   ³               RhSensoERP.Generators.GlobalUsings.g.cs
+³   ³               RhSensoERP.Generators.pdb
+³   ³               RhSensoERP.Generators.sourcelink.json
+³   ³               
+³   ÃÄÄÄTemplates
+³   ³       ApiControllerTemplate.cs
+³   ³       CommandsTemplate.cs
+³   ³       DtoTemplate.cs
+³   ³       EfConfigTemplate.cs
+³   ³       MapperTemplate.cs
+³   ³       MetadataTemplate.cs
+³   ³       QueriesTemplate.cs
+³   ³       RepositoryTemplate.cs
+³   ³       ValidatorsTemplate.cs
+³   ³       WebControllerTemplate.cs
+³   ³       WebModelsTemplate.cs
+³   ³       WebServicesTemplate.cs
+³   ³       
+³   ÀÄÄÄ{Attributes,Models,Extractors,Templates,Generators}
+ÃÄÄÄIdentity
+³   ³   RhSensoERP.Identity.csproj
+³   ³   
+³   ÃÄÄÄApplication
+³   ³   ³   DependencyInjection.cs
+³   ³   ³   
+³   ³   ÃÄÄÄDTOs
+³   ³   ³   ÃÄÄÄAuth
+³   ³   ³   ³       AuthResponse.cs
+³   ³   ³   ³       LoginRequest.cs
+³   ³   ³   ³       LogoutRequest.cs
+³   ³   ³   ³       RefreshTokenRequest.cs
+³   ³   ³   ³       UserInfoDto.cs
+³   ³   ³   ³       UserPermissionsDto.cs
+³   ³   ³   ³       
+³   ³   ³   ÃÄÄÄCommon
+³   ³   ³   ÃÄÄÄPermissoes
+³   ³   ³   ³       BotaoDto.cs
+³   ³   ³   ³       FuncaoPermissaoDto.cs
+³   ³   ³   ³       TogglePermissaoRequest.cs
+³   ³   ³   ³       TogglePermissaoResponse.cs
+³   ³   ³   ³       ValidarPermissaoRequest.cs
+³   ³   ³   ³       ValidarPermissaoResponse.cs
+³   ³   ³   ³       
+³   ³   ³   ÀÄÄÄUsuario
+³   ³   ³           UsuarioDto.cs
+³   ³   ³           
+³   ³   ÃÄÄÄFeatures
+³   ³   ³   ÀÄÄÄAuth
+³   ³   ³       ÃÄÄÄCommands
+³   ³   ³       ³       LoginCommand.cs
+³   ³   ³       ³       LogoutCommand.cs
+³   ³   ³       ³       RefreshTokenCommand.cs
+³   ³   ³       ³       
+³   ³   ³       ÀÄÄÄQueries
+³   ³   ³               GetCurrentUserQuery.cs
+³   ³   ³               
+³   ³   ÃÄÄÄMapping
+³   ³   ³       AuthProfile.cs
+³   ³   ³       PermissaoProfile.cs
+³   ³   ³       UsuarioProfile.cs
+³   ³   ³       
+³   ³   ÃÄÄÄRequests
+³   ³   ÃÄÄÄServices
+³   ³   ³       AuthService.cs
+³   ³   ³       bkpAuthService.cs
+³   ³   ³       IActiveDirectoryService.cs
+³   ³   ³       IAuthService.cs
+³   ³   ³       IJwtService.cs
+³   ³   ³       IPermissaoService.cs
+³   ³   ³       JwtService.cs
+³   ³   ³       PermissaoService.cs
+³   ³   ³       SecurityAuditService.cs
+³   ³   ³       UsuarioService.cs
+³   ³   ³       
+³   ³   ÀÄÄÄValidators
+³   ³       ÀÄÄÄAuth
+³   ³               LoginRequestValidator.cs
+³   ³               RefreshTokenRequestValidator.cs
+³   ³               
+³   ÃÄÄÄbin
+³   ³   ÀÄÄÄDebug
+³   ³       ÀÄÄÄnet8.0
+³   ³               RhSensoERP.Identity.deps.json
+³   ³               RhSensoERP.Identity.dll
+³   ³               RhSensoERP.Identity.pdb
+³   ³               RhSensoERP.Identity.runtimeconfig.json
+³   ³               RhSensoERP.Shared.Application.dll
+³   ³               RhSensoERP.Shared.Application.pdb
+³   ³               RhSensoERP.Shared.Contracts.dll
+³   ³               RhSensoERP.Shared.Contracts.pdb
+³   ³               RhSensoERP.Shared.Core.dll
+³   ³               RhSensoERP.Shared.Core.pdb
+³   ³               RhSensoERP.Shared.Infrastructure.dll
+³   ³               RhSensoERP.Shared.Infrastructure.pdb
+³   ³               
+³   ÃÄÄÄCore
+³   ³   ÀÄÄÄInterfaces
+³   ³       ÀÄÄÄRepositories
+³   ³               Class1.cs
+³   ³               
+³   ÃÄÄÄDomain
+³   ³   ÃÄÄÄEntities
+³   ³   ³       BotaoFuncao.cs
+³   ³   ³       Funcao.cs
+³   ³   ³       GrupoDeUsuario.cs
+³   ³   ³       GrupoFuncao.cs
+³   ³   ³       LoginAuditLog.cs
+³   ³   ³       PasswordHistory.cs
+³   ³   ³       RefreshToken.cs
+³   ³   ³       SecurityAuditLog.cs
+³   ³   ³       SecurityPolicy.cs
+³   ³   ³       Sistema.cs
+³   ³   ³       TwoFactorRecoveryCode.cs
+³   ³   ³       UserGroup.cs
+³   ³   ³       UserSecurity.cs
+³   ³   ³       UserSecurityToken.cs
+³   ³   ³       Usuario.cs
+³   ³   ³       
+³   ³   ÃÄÄÄEnums
+³   ³   ÀÄÄÄInterfaces
+³   ÃÄÄÄInfrastructure
+³   ³   ³   DependencyInjection.cs
+³   ³   ³   
+³   ³   ÃÄÄÄAuthentication
+³   ³   ÃÄÄÄMultiTenancy
+³   ³   ÃÄÄÄPersistence
+³   ³   ³   ³   IdentityDbContext.cs
+³   ³   ³   ³   IdentityDbContextFactory.cs
+³   ³   ³   ³   
+³   ³   ³   ÃÄÄÄConfigurations
+³   ³   ³   ³   ³   BotaoFuncaoConfiguration.cs
+³   ³   ³   ³   ³   FuncaoConfiguration.cs
+³   ³   ³   ³   ³   GrupoDeUsuarioConfiguration.cs
+³   ³   ³   ³   ³   GrupoFuncaoConfiguration.cs
+³   ³   ³   ³   ³   LoginAuditLogConfiguration.cs
+³   ³   ³   ³   ³   PasswordHistoryConfiguration.cs
+³   ³   ³   ³   ³   RefreshTokenConfiguration.cs
+³   ³   ³   ³   ³   SecurityAuditLogConfiguration.cs
+³   ³   ³   ³   ³   SecurityPolicyConfiguration.cs
+³   ³   ³   ³   ³   TwoFactorRecoveryCodeConfiguration.cs
+³   ³   ³   ³   ³   UserGroupConfiguration.cs
+³   ³   ³   ³   ³   UserSecurityConfiguration.cs
+³   ³   ³   ³   ³   UserSecurityTokenConfiguration.cs
+³   ³   ³   ³   ³   UsuarioConfiguration.cs
+³   ³   ³   ³   ³   
+³   ³   ³   ³   ÀÄÄÄAuth
+³   ³   ³   ³           AuthSettings.cs
+³   ³   ³   ³           JwtSettings.cs
+³   ³   ³   ³           SecurityPolicySettings.cs
+³   ³   ³   ³           
+³   ³   ³   ÀÄÄÄMigrations
+³   ³   ³           20251119120000_AddSecurityAuditLog.cs
+³   ³   ³           
+³   ³   ÃÄÄÄRepositories
+³   ³   ³       PermissaoRepository.cs
+³   ³   ³       UsuarioRepository.cs
+³   ³   ³       
+³   ³   ÀÄÄÄServices
+³   ³           ActiveDirectoryService.cs
+³   ³           
+³   ÀÄÄÄobj
+³       ³   project.assets.json
+³       ³   project.nuget.cache
+³       ³   RhSensoERP.Identity.csproj.nuget.dgspec.json
+³       ³   RhSensoERP.Identity.csproj.nuget.g.props
+³       ³   RhSensoERP.Identity.csproj.nuget.g.targets
+³       ³   
+³       ÀÄÄÄDebug
+³           ÀÄÄÄnet8.0
+³               ³   .NETCoreApp,Version=v8.0.AssemblyAttributes.cs
+³               ³   RhSensoE.E024431C.Up2Date
+³               ³   RhSensoERP.Identity.AssemblyInfo.cs
+³               ³   RhSensoERP.Identity.AssemblyInfoInputs.cache
+³               ³   RhSensoERP.Identity.assets.cache
+³               ³   RhSensoERP.Identity.csproj.AssemblyReference.cache
+³               ³   RhSensoERP.Identity.csproj.BuildWithSkipAnalyzers
+³               ³   RhSensoERP.Identity.csproj.CoreCompileInputs.cache
+³               ³   RhSensoERP.Identity.csproj.FileListAbsolute.txt
+³               ³   RhSensoERP.Identity.dll
+³               ³   RhSensoERP.Identity.GeneratedMSBuildEditorConfig.editorconfig
+³               ³   RhSensoERP.Identity.genruntimeconfig.cache
+³               ³   RhSensoERP.Identity.GlobalUsings.g.cs
+³               ³   RhSensoERP.Identity.pdb
+³               ³   RhSensoERP.Identity.sourcelink.json
+³               ³   
+³               ÃÄÄÄref
+³               ³       RhSensoERP.Identity.dll
+³               ³       
+³               ÀÄÄÄrefint
+³                       RhSensoERP.Identity.dll
+³                       
+ÃÄÄÄModules
+³   ÃÄÄÄAvaliacoes
+³   ³   ³   RhSensoERP.Modules.Avaliacoes.csproj
+³   ³   ³   
+³   ³   ÃÄÄÄbin
+³   ³   ³   ÀÄÄÄDebug
+³   ³   ³       ÀÄÄÄnet8.0
+³   ³   ³               RhSensoERP.Modules.Avaliacoes.deps.json
+³   ³   ³               RhSensoERP.Modules.Avaliacoes.dll
+³   ³   ³               RhSensoERP.Modules.Avaliacoes.pdb
+³   ³   ³               RhSensoERP.Shared.Application.dll
+³   ³   ³               RhSensoERP.Shared.Application.pdb
+³   ³   ³               RhSensoERP.Shared.Contracts.dll
+³   ³   ³               RhSensoERP.Shared.Contracts.pdb
+³   ³   ³               RhSensoERP.Shared.Core.dll
+³   ³   ³               RhSensoERP.Shared.Core.pdb
+³   ³   ³               RhSensoERP.Shared.Infrastructure.dll
+³   ³   ³               RhSensoERP.Shared.Infrastructure.pdb
+³   ³   ³               
+³   ³   ÀÄÄÄobj
+³   ³       ³   project.assets.json
+³   ³       ³   project.nuget.cache
+³   ³       ³   RhSensoERP.Modules.Avaliacoes.csproj.nuget.dgspec.json
+³   ³       ³   RhSensoERP.Modules.Avaliacoes.csproj.nuget.g.props
+³   ³       ³   RhSensoERP.Modules.Avaliacoes.csproj.nuget.g.targets
+³   ³       ³   
+³   ³       ÀÄÄÄDebug
+³   ³           ÀÄÄÄnet8.0
+³   ³               ³   .NETCoreApp,Version=v8.0.AssemblyAttributes.cs
+³   ³               ³   RhSensoE.6CA04557.Up2Date
+³   ³               ³   RhSensoERP.Modules.Avaliacoes.AssemblyInfo.cs
+³   ³               ³   RhSensoERP.Modules.Avaliacoes.AssemblyInfoInputs.cache
+³   ³               ³   RhSensoERP.Modules.Avaliacoes.assets.cache
+³   ³               ³   RhSensoERP.Modules.Avaliacoes.csproj.AssemblyReference.cache
+³   ³               ³   RhSensoERP.Modules.Avaliacoes.csproj.BuildWithSkipAnalyzers
+³   ³               ³   RhSensoERP.Modules.Avaliacoes.csproj.CoreCompileInputs.cache
+³   ³               ³   RhSensoERP.Modules.Avaliacoes.csproj.FileListAbsolute.txt
+³   ³               ³   RhSensoERP.Modules.Avaliacoes.dll
+³   ³               ³   RhSensoERP.Modules.Avaliacoes.GeneratedMSBuildEditorConfig.editorconfig
+³   ³               ³   RhSensoERP.Modules.Avaliacoes.GlobalUsings.g.cs
+³   ³               ³   RhSensoERP.Modules.Avaliacoes.pdb
+³   ³               ³   RhSensoERP.Modules.Avaliacoes.sourcelink.json
+³   ³               ³   
+³   ³               ÃÄÄÄref
+³   ³               ³       RhSensoERP.Modules.Avaliacoes.dll
+³   ³               ³       
+³   ³               ÀÄÄÄrefint
+³   ³                       RhSensoERP.Modules.Avaliacoes.dll
+³   ³                       
+³   ÃÄÄÄControleDePonto
+³   ³   ³   ControleDePonto.DependencyInjection.cs
+³   ³   ³   RhSensoERP.Modules.ControleDePonto.csproj
+³   ³   ³   
+³   ³   ÃÄÄÄbin
+³   ³   ³   ÀÄÄÄDebug
+³   ³   ³       ÀÄÄÄnet8.0
+³   ³   ³               RhSensoERP.Modules.ControleDePonto.deps.json
+³   ³   ³               RhSensoERP.Modules.ControleDePonto.dll
+³   ³   ³               RhSensoERP.Modules.ControleDePonto.pdb
+³   ³   ³               RhSensoERP.Shared.Application.dll
+³   ³   ³               RhSensoERP.Shared.Application.pdb
+³   ³   ³               RhSensoERP.Shared.Contracts.dll
+³   ³   ³               RhSensoERP.Shared.Contracts.pdb
+³   ³   ³               RhSensoERP.Shared.Core.dll
+³   ³   ³               RhSensoERP.Shared.Core.pdb
+³   ³   ³               RhSensoERP.Shared.Infrastructure.dll
+³   ³   ³               RhSensoERP.Shared.Infrastructure.pdb
+³   ³   ³               
+³   ³   ÃÄÄÄCore
+³   ³   ³   ÀÄÄÄEntities
+³   ³   ³           BancoHoras.cs
+³   ³   ³           Batidas.cs
+³   ³   ³           Calnd1.cs
+³   ³   ³           Chor1.cs
+³   ³   ³           Chor2.cs
+³   ³   ³           Ctur1.cs
+³   ³   ³           Freq1.cs
+³   ³   ³           Freq2.cs
+³   ³   ³           Freq4.cs
+³   ³   ³           Hjor1.cs
+³   ³   ³           Mfre1.cs
+³   ³   ³           Mfre2.cs
+³   ³   ³           Sitc2.cs
+³   ³   ³           Test1Freq.cs
+³   ³   ³           Turm1.cs
+³   ³   ³           Vprh1.cs
+³   ³   ³           Vprh2.cs
+³   ³   ³           
+³   ³   ÃÄÄÄInfrastructure
+³   ³   ³   ÀÄÄÄPersistence
+³   ³   ³       ÀÄÄÄContexts
+³   ³   ³               ControleDePontoDbContext.cs
+³   ³   ³               
+³   ³   ÀÄÄÄobj
+³   ³       ³   project.assets.json
+³   ³       ³   project.nuget.cache
+³   ³       ³   RhSensoERP.Modules.ControleDePonto.csproj.nuget.dgspec.json
+³   ³       ³   RhSensoERP.Modules.ControleDePonto.csproj.nuget.g.props
+³   ³       ³   RhSensoERP.Modules.ControleDePonto.csproj.nuget.g.targets
+³   ³       ³   
+³   ³       ÀÄÄÄDebug
+³   ³           ÀÄÄÄnet8.0
+³   ³               ³   .NETCoreApp,Version=v8.0.AssemblyAttributes.cs
+³   ³               ³   RhSensoE.31C0BA9A.Up2Date
+³   ³               ³   RhSensoERP.Modules.ControleDePonto.AssemblyInfo.cs
+³   ³               ³   RhSensoERP.Modules.ControleDePonto.AssemblyInfoInputs.cache
+³   ³               ³   RhSensoERP.Modules.ControleDePonto.assets.cache
+³   ³               ³   RhSensoERP.Modules.ControleDePonto.csproj.AssemblyReference.cache
+³   ³               ³   RhSensoERP.Modules.ControleDePonto.csproj.BuildWithSkipAnalyzers
+³   ³               ³   RhSensoERP.Modules.ControleDePonto.csproj.CoreCompileInputs.cache
+³   ³               ³   RhSensoERP.Modules.ControleDePonto.csproj.FileListAbsolute.txt
+³   ³               ³   RhSensoERP.Modules.ControleDePonto.dll
+³   ³               ³   RhSensoERP.Modules.ControleDePonto.GeneratedMSBuildEditorConfig.editorconfig
+³   ³               ³   RhSensoERP.Modules.ControleDePonto.GlobalUsings.g.cs
+³   ³               ³   RhSensoERP.Modules.ControleDePonto.pdb
+³   ³               ³   RhSensoERP.Modules.ControleDePonto.sourcelink.json
+³   ³               ³   
+³   ³               ÃÄÄÄref
+³   ³               ³       RhSensoERP.Modules.ControleDePonto.dll
+³   ³               ³       
+³   ³               ÀÄÄÄrefint
+³   ³                       RhSensoERP.Modules.ControleDePonto.dll
+³   ³                       
+³   ÃÄÄÄEsocial
+³   ³   ³   DependencyInjection.cs
+³   ³   ³   RhSensoERP.Modules.Esocial.csproj
+³   ³   ³   
+³   ³   ÃÄÄÄbin
+³   ³   ³   ÀÄÄÄDebug
+³   ³   ³       ÀÄÄÄnet8.0
+³   ³   ³               RhSensoERP.Modules.Esocial.deps.json
+³   ³   ³               RhSensoERP.Modules.Esocial.dll
+³   ³   ³               RhSensoERP.Modules.Esocial.pdb
+³   ³   ³               RhSensoERP.Shared.Application.dll
+³   ³   ³               RhSensoERP.Shared.Application.pdb
+³   ³   ³               RhSensoERP.Shared.Contracts.dll
+³   ³   ³               RhSensoERP.Shared.Contracts.pdb
+³   ³   ³               RhSensoERP.Shared.Core.dll
+³   ³   ³               RhSensoERP.Shared.Core.pdb
+³   ³   ³               RhSensoERP.Shared.Infrastructure.dll
+³   ³   ³               RhSensoERP.Shared.Infrastructure.pdb
+³   ³   ³               
+³   ³   ÃÄÄÄCore
+³   ³   ³   ÀÄÄÄEntities
+³   ³   ³           Tab10Esocial.cs
+³   ³   ³           Tab21Esocial.cs
+³   ³   ³           Tab4Esocial.cs
+³   ³   ³           Tab8Esocial.cs
+³   ³   ³           
+³   ³   ÃÄÄÄInfrastructure
+³   ³   ³   ÀÄÄÄPersistence
+³   ³   ³       ÀÄÄÄContexts
+³   ³   ³               EsocialDbContext.cs
+³   ³   ³               
+³   ³   ÀÄÄÄobj
+³   ³       ³   project.assets.json
+³   ³       ³   project.nuget.cache
+³   ³       ³   RhSensoERP.Modules.Esocial.csproj.nuget.dgspec.json
+³   ³       ³   RhSensoERP.Modules.Esocial.csproj.nuget.g.props
+³   ³       ³   RhSensoERP.Modules.Esocial.csproj.nuget.g.targets
+³   ³       ³   
+³   ³       ÀÄÄÄDebug
+³   ³           ÀÄÄÄnet8.0
+³   ³               ³   .NETCoreApp,Version=v8.0.AssemblyAttributes.cs
+³   ³               ³   RhSensoE.B08DE7C4.Up2Date
+³   ³               ³   RhSensoERP.Modules.Esocial.AssemblyInfo.cs
+³   ³               ³   RhSensoERP.Modules.Esocial.AssemblyInfoInputs.cache
+³   ³               ³   RhSensoERP.Modules.Esocial.assets.cache
+³   ³               ³   RhSensoERP.Modules.Esocial.csproj.AssemblyReference.cache
+³   ³               ³   RhSensoERP.Modules.Esocial.csproj.BuildWithSkipAnalyzers
+³   ³               ³   RhSensoERP.Modules.Esocial.csproj.CoreCompileInputs.cache
+³   ³               ³   RhSensoERP.Modules.Esocial.csproj.FileListAbsolute.txt
+³   ³               ³   RhSensoERP.Modules.Esocial.dll
+³   ³               ³   RhSensoERP.Modules.Esocial.GeneratedMSBuildEditorConfig.editorconfig
+³   ³               ³   RhSensoERP.Modules.Esocial.GlobalUsings.g.cs
+³   ³               ³   RhSensoERP.Modules.Esocial.pdb
+³   ³               ³   RhSensoERP.Modules.Esocial.sourcelink.json
+³   ³               ³   
+³   ³               ÃÄÄÄref
+³   ³               ³       RhSensoERP.Modules.Esocial.dll
+³   ³               ³       
+³   ³               ÀÄÄÄrefint
+³   ³                       RhSensoERP.Modules.Esocial.dll
+³   ³                       
+³   ÃÄÄÄGestaoDePessoas
+³   ³   ³   DependencyInjection.cs
+³   ³   ³   RhSensoERP.Modules.GestaoDePessoas.csproj
+³   ³   ³   
+³   ³   ÃÄÄÄbin
+³   ³   ³   ÀÄÄÄDebug
+³   ³   ³       ÀÄÄÄnet8.0
+³   ³   ³               RhSensoERP.Modules.Esocial.dll
+³   ³   ³               RhSensoERP.Modules.Esocial.pdb
+³   ³   ³               RhSensoERP.Modules.GestaoDePessoas.deps.json
+³   ³   ³               RhSensoERP.Modules.GestaoDePessoas.dll
+³   ³   ³               RhSensoERP.Modules.GestaoDePessoas.pdb
+³   ³   ³               RhSensoERP.Shared.Application.dll
+³   ³   ³               RhSensoERP.Shared.Application.pdb
+³   ³   ³               RhSensoERP.Shared.Contracts.dll
+³   ³   ³               RhSensoERP.Shared.Contracts.pdb
+³   ³   ³               RhSensoERP.Shared.Core.dll
+³   ³   ³               RhSensoERP.Shared.Core.pdb
+³   ³   ³               RhSensoERP.Shared.Infrastructure.dll
+³   ³   ³               RhSensoERP.Shared.Infrastructure.pdb
+³   ³   ³               
+³   ³   ÃÄÄÄCore
+³   ³   ³   ÀÄÄÄEntities
+³   ³   ³       ÃÄÄÄEventos
+³   ³   ³       ³   ÃÄÄÄAfastamento
+³   ³   ³       ³   ³       Apagar.txt
+³   ³   ³       ³   ³       
+³   ³   ³       ³   ÃÄÄÄFerias
+³   ³   ³       ³   ³       Apagar.txt
+³   ³   ³       ³   ³       
+³   ³   ³       ³   ÀÄÄÄRescisao
+³   ³   ³       ³           Apagar.txt
+³   ³   ³       ³           
+³   ³   ³       ÃÄÄÄFolhadepagamento
+³   ³   ³       ³   ÀÄÄÄCalculo
+³   ³   ³       ³           Apagar.txt
+³   ³   ³       ³           
+³   ³   ³       ÃÄÄÄGestaodepessoas
+³   ³   ³       ³       Apagar.txt
+³   ³   ³       ³       
+³   ³   ³       ÀÄÄÄTabelas
+³   ³   ³           ÃÄÄÄEventos
+³   ³   ³           ³       Apagar.txt
+³   ³   ³           ³       
+³   ³   ³           ÃÄÄÄFolha
+³   ³   ³           ³       Apagar.txt
+³   ³   ³           ³       
+³   ³   ³           ÀÄÄÄPessoal
+³   ³   ³                   Banco.cs
+³   ³   ³                   
+³   ³   ÃÄÄÄInfrastructure
+³   ³   ³   ÀÄÄÄPersistence
+³   ³   ³       ÀÄÄÄContexts
+³   ³   ³               GestaoDePessoasDbContext.cs
+³   ³   ³               
+³   ³   ÀÄÄÄobj
+³   ³       ³   project.assets.json
+³   ³       ³   project.nuget.cache
+³   ³       ³   RhSensoERP.Modules.GestaoDePessoas.csproj.nuget.dgspec.json
+³   ³       ³   RhSensoERP.Modules.GestaoDePessoas.csproj.nuget.g.props
+³   ³       ³   RhSensoERP.Modules.GestaoDePessoas.csproj.nuget.g.targets
+³   ³       ³   
+³   ³       ÀÄÄÄDebug
+³   ³           ÀÄÄÄnet8.0
+³   ³               ³   .NETCoreApp,Version=v8.0.AssemblyAttributes.cs
+³   ³               ³   RhSensoE.93B742EA.Up2Date
+³   ³               ³   RhSensoERP.Modules.GestaoDePessoas.AssemblyInfo.cs
+³   ³               ³   RhSensoERP.Modules.GestaoDePessoas.AssemblyInfoInputs.cache
+³   ³               ³   RhSensoERP.Modules.GestaoDePessoas.assets.cache
+³   ³               ³   RhSensoERP.Modules.GestaoDePessoas.csproj.AssemblyReference.cache
+³   ³               ³   RhSensoERP.Modules.GestaoDePessoas.csproj.BuildWithSkipAnalyzers
+³   ³               ³   RhSensoERP.Modules.GestaoDePessoas.csproj.CoreCompileInputs.cache
+³   ³               ³   RhSensoERP.Modules.GestaoDePessoas.csproj.FileListAbsolute.txt
+³   ³               ³   RhSensoERP.Modules.GestaoDePessoas.dll
+³   ³               ³   RhSensoERP.Modules.GestaoDePessoas.GeneratedMSBuildEditorConfig.editorconfig
+³   ³               ³   RhSensoERP.Modules.GestaoDePessoas.GlobalUsings.g.cs
+³   ³               ³   RhSensoERP.Modules.GestaoDePessoas.pdb
+³   ³               ³   RhSensoERP.Modules.GestaoDePessoas.sourcelink.json
+³   ³               ³   
+³   ³               ÃÄÄÄref
+³   ³               ³       RhSensoERP.Modules.GestaoDePessoas.dll
+³   ³               ³       
+³   ³               ÀÄÄÄrefint
+³   ³                       RhSensoERP.Modules.GestaoDePessoas.dll
+³   ³                       
+³   ÃÄÄÄSaudeOcupacional
+³   ³   ³   RhSensoERP.Modules.SaudeOcupacional.csproj
+³   ³   ³   
+³   ³   ÃÄÄÄbin
+³   ³   ³   ÀÄÄÄDebug
+³   ³   ³       ÀÄÄÄnet8.0
+³   ³   ³               RhSensoERP.Modules.SaudeOcupacional.deps.json
+³   ³   ³               RhSensoERP.Modules.SaudeOcupacional.dll
+³   ³   ³               RhSensoERP.Modules.SaudeOcupacional.pdb
+³   ³   ³               RhSensoERP.Shared.Application.dll
+³   ³   ³               RhSensoERP.Shared.Application.pdb
+³   ³   ³               RhSensoERP.Shared.Contracts.dll
+³   ³   ³               RhSensoERP.Shared.Contracts.pdb
+³   ³   ³               RhSensoERP.Shared.Core.dll
+³   ³   ³               RhSensoERP.Shared.Core.pdb
+³   ³   ³               RhSensoERP.Shared.Infrastructure.dll
+³   ³   ³               RhSensoERP.Shared.Infrastructure.pdb
+³   ³   ³               
+³   ³   ÀÄÄÄobj
+³   ³       ³   project.assets.json
+³   ³       ³   project.nuget.cache
+³   ³       ³   RhSensoERP.Modules.SaudeOcupacional.csproj.nuget.dgspec.json
+³   ³       ³   RhSensoERP.Modules.SaudeOcupacional.csproj.nuget.g.props
+³   ³       ³   RhSensoERP.Modules.SaudeOcupacional.csproj.nuget.g.targets
+³   ³       ³   
+³   ³       ÀÄÄÄDebug
+³   ³           ÀÄÄÄnet8.0
+³   ³               ³   .NETCoreApp,Version=v8.0.AssemblyAttributes.cs
+³   ³               ³   RhSensoE.7928B8DF.Up2Date
+³   ³               ³   RhSensoERP.Modules.SaudeOcupacional.AssemblyInfo.cs
+³   ³               ³   RhSensoERP.Modules.SaudeOcupacional.AssemblyInfoInputs.cache
+³   ³               ³   RhSensoERP.Modules.SaudeOcupacional.assets.cache
+³   ³               ³   RhSensoERP.Modules.SaudeOcupacional.csproj.AssemblyReference.cache
+³   ³               ³   RhSensoERP.Modules.SaudeOcupacional.csproj.BuildWithSkipAnalyzers
+³   ³               ³   RhSensoERP.Modules.SaudeOcupacional.csproj.CoreCompileInputs.cache
+³   ³               ³   RhSensoERP.Modules.SaudeOcupacional.csproj.FileListAbsolute.txt
+³   ³               ³   RhSensoERP.Modules.SaudeOcupacional.dll
+³   ³               ³   RhSensoERP.Modules.SaudeOcupacional.GeneratedMSBuildEditorConfig.editorconfig
+³   ³               ³   RhSensoERP.Modules.SaudeOcupacional.GlobalUsings.g.cs
+³   ³               ³   RhSensoERP.Modules.SaudeOcupacional.pdb
+³   ³               ³   RhSensoERP.Modules.SaudeOcupacional.sourcelink.json
+³   ³               ³   
+³   ³               ÃÄÄÄref
+³   ³               ³       RhSensoERP.Modules.SaudeOcupacional.dll
+³   ³               ³       
+³   ³               ÀÄÄÄrefint
+³   ³                       RhSensoERP.Modules.SaudeOcupacional.dll
+³   ³                       
+³   ÀÄÄÄTreinamentos
+³       ³   RhSensoERP.Modules.Treinamentos.csproj
+³       ³   
+³       ÃÄÄÄbin
+³       ³   ÀÄÄÄDebug
+³       ³       ÀÄÄÄnet8.0
+³       ³               RhSensoERP.Modules.Treinamentos.deps.json
+³       ³               RhSensoERP.Modules.Treinamentos.dll
+³       ³               RhSensoERP.Modules.Treinamentos.pdb
+³       ³               RhSensoERP.Shared.Application.dll
+³       ³               RhSensoERP.Shared.Application.pdb
+³       ³               RhSensoERP.Shared.Contracts.dll
+³       ³               RhSensoERP.Shared.Contracts.pdb
+³       ³               RhSensoERP.Shared.Core.dll
+³       ³               RhSensoERP.Shared.Core.pdb
+³       ³               RhSensoERP.Shared.Infrastructure.dll
+³       ³               RhSensoERP.Shared.Infrastructure.pdb
+³       ³               
+³       ÀÄÄÄobj
+³           ³   project.assets.json
+³           ³   project.nuget.cache
+³           ³   RhSensoERP.Modules.Treinamentos.csproj.nuget.dgspec.json
+³           ³   RhSensoERP.Modules.Treinamentos.csproj.nuget.g.props
+³           ³   RhSensoERP.Modules.Treinamentos.csproj.nuget.g.targets
+³           ³   
+³           ÀÄÄÄDebug
+³               ÀÄÄÄnet8.0
+³                   ³   .NETCoreApp,Version=v8.0.AssemblyAttributes.cs
+³                   ³   RhSensoE.3B605E5D.Up2Date
+³                   ³   RhSensoERP.Modules.Treinamentos.AssemblyInfo.cs
+³                   ³   RhSensoERP.Modules.Treinamentos.AssemblyInfoInputs.cache
+³                   ³   RhSensoERP.Modules.Treinamentos.assets.cache
+³                   ³   RhSensoERP.Modules.Treinamentos.csproj.AssemblyReference.cache
+³                   ³   RhSensoERP.Modules.Treinamentos.csproj.BuildWithSkipAnalyzers
+³                   ³   RhSensoERP.Modules.Treinamentos.csproj.CoreCompileInputs.cache
+³                   ³   RhSensoERP.Modules.Treinamentos.csproj.FileListAbsolute.txt
+³                   ³   RhSensoERP.Modules.Treinamentos.dll
+³                   ³   RhSensoERP.Modules.Treinamentos.GeneratedMSBuildEditorConfig.editorconfig
+³                   ³   RhSensoERP.Modules.Treinamentos.GlobalUsings.g.cs
+³                   ³   RhSensoERP.Modules.Treinamentos.pdb
+³                   ³   RhSensoERP.Modules.Treinamentos.sourcelink.json
+³                   ³   
+³                   ÃÄÄÄref
+³                   ³       RhSensoERP.Modules.Treinamentos.dll
+³                   ³       
+³                   ÀÄÄÄrefint
+³                           RhSensoERP.Modules.Treinamentos.dll
+³                           
+ÃÄÄÄShared
+³   ³   README.md
+³   ³   
+³   ÃÄÄÄApplication
+³   ³   ³   RhSensoERP.Shared.Application.csproj
+³   ³   ³   
+³   ³   ÃÄÄÄBehaviors
+³   ³   ³       LoggingBehavior.cs
+³   ³   ³       ValidationBehavior.cs
+³   ³   ³       
+³   ³   ÃÄÄÄbin
+³   ³   ³   ÀÄÄÄDebug
+³   ³   ³       ÀÄÄÄnet8.0
+³   ³   ³               RhSensoERP.Shared.Application.deps.json
+³   ³   ³               RhSensoERP.Shared.Application.dll
+³   ³   ³               RhSensoERP.Shared.Application.pdb
+³   ³   ³               RhSensoERP.Shared.Contracts.dll
+³   ³   ³               RhSensoERP.Shared.Contracts.pdb
+³   ³   ³               RhSensoERP.Shared.Core.dll
+³   ³   ³               RhSensoERP.Shared.Core.pdb
+³   ³   ³               
+³   ³   ÃÄÄÄDTOs
+³   ³   ³   ÀÄÄÄCommon
+³   ³   ³           BatchDeleteResult.cs
+³   ³   ³           Novo Documento de Texto.txt
+³   ³   ³           
+³   ³   ÃÄÄÄExceptions
+³   ³   ³       AppException.cs
+³   ³   ³       NotFoundException.cs
+³   ³   ³       ValidationException.cs
+³   ³   ³       
+³   ³   ÃÄÄÄInterfaces
+³   ³   ³       IEmailService.cs
+³   ³   ³       IService.cs
+³   ³   ³       
+³   ³   ÃÄÄÄMetadata
+³   ³   ³       EntityMetadata.cs
+³   ³   ³       IMetadataRegistry.cs
+³   ³   ³       MetadataRegistry.cs
+³   ³   ³       PropertyMetadata.cs
+³   ³   ³       
+³   ³   ÃÄÄÄobj
+³   ³   ³   ³   project.assets.json
+³   ³   ³   ³   project.nuget.cache
+³   ³   ³   ³   RhSensoERP.Shared.Application.csproj.nuget.dgspec.json
+³   ³   ³   ³   RhSensoERP.Shared.Application.csproj.nuget.g.props
+³   ³   ³   ³   RhSensoERP.Shared.Application.csproj.nuget.g.targets
+³   ³   ³   ³   
+³   ³   ³   ÀÄÄÄDebug
+³   ³   ³       ÀÄÄÄnet8.0
+³   ³   ³           ³   .NETCoreApp,Version=v8.0.AssemblyAttributes.cs
+³   ³   ³           ³   RhSensoE.B4A77BBA.Up2Date
+³   ³   ³           ³   RhSensoERP.Shared.Application.AssemblyInfo.cs
+³   ³   ³           ³   RhSensoERP.Shared.Application.AssemblyInfoInputs.cache
+³   ³   ³           ³   RhSensoERP.Shared.Application.assets.cache
+³   ³   ³           ³   RhSensoERP.Shared.Application.csproj.AssemblyReference.cache
+³   ³   ³           ³   RhSensoERP.Shared.Application.csproj.BuildWithSkipAnalyzers
+³   ³   ³           ³   RhSensoERP.Shared.Application.csproj.CoreCompileInputs.cache
+³   ³   ³           ³   RhSensoERP.Shared.Application.csproj.FileListAbsolute.txt
+³   ³   ³           ³   RhSensoERP.Shared.Application.dll
+³   ³   ³           ³   RhSensoERP.Shared.Application.GeneratedMSBuildEditorConfig.editorconfig
+³   ³   ³           ³   RhSensoERP.Shared.Application.GlobalUsings.g.cs
+³   ³   ³           ³   RhSensoERP.Shared.Application.pdb
+³   ³   ³           ³   RhSensoERP.Shared.Application.sourcelink.json
+³   ³   ³           ³   
+³   ³   ³           ÃÄÄÄref
+³   ³   ³           ³       RhSensoERP.Shared.Application.dll
+³   ³   ³           ³       
+³   ³   ³           ÀÄÄÄrefint
+³   ³   ³                   RhSensoERP.Shared.Application.dll
+³   ³   ³                   
+³   ³   ÃÄÄÄServices
+³   ³   ³       GenericService.cs
+³   ³   ³       
+³   ³   ÀÄÄÄSpecifications
+³   ³           ISpecification.cs
+³   ³           
+³   ÃÄÄÄContracts
+³   ³   ³   RhSensoERP.Shared.Contracts.csproj
+³   ³   ³   
+³   ³   ÃÄÄÄbin
+³   ³   ³   ÀÄÄÄDebug
+³   ³   ³       ÀÄÄÄnet8.0
+³   ³   ³               RhSensoERP.Shared.Contracts.deps.json
+³   ³   ³               RhSensoERP.Shared.Contracts.dll
+³   ³   ³               RhSensoERP.Shared.Contracts.pdb
+³   ³   ³               
+³   ³   ÃÄÄÄCommon
+³   ³   ³       ApiResponse.cs
+³   ³   ³       PagedRequest.cs
+³   ³   ³       
+³   ³   ÃÄÄÄDTOs
+³   ³   ³       PaginationDtos.cs
+³   ³   ³       
+³   ³   ÀÄÄÄobj
+³   ³       ³   project.assets.json
+³   ³       ³   project.nuget.cache
+³   ³       ³   RhSensoERP.Shared.Contracts.csproj.nuget.dgspec.json
+³   ³       ³   RhSensoERP.Shared.Contracts.csproj.nuget.g.props
+³   ³       ³   RhSensoERP.Shared.Contracts.csproj.nuget.g.targets
+³   ³       ³   
+³   ³       ÀÄÄÄDebug
+³   ³           ÀÄÄÄnet8.0
+³   ³               ³   .NETCoreApp,Version=v8.0.AssemblyAttributes.cs
+³   ³               ³   RhSensoERP.Shared.Contracts.AssemblyInfo.cs
+³   ³               ³   RhSensoERP.Shared.Contracts.AssemblyInfoInputs.cache
+³   ³               ³   RhSensoERP.Shared.Contracts.assets.cache
+³   ³               ³   RhSensoERP.Shared.Contracts.csproj.BuildWithSkipAnalyzers
+³   ³               ³   RhSensoERP.Shared.Contracts.csproj.CoreCompileInputs.cache
+³   ³               ³   RhSensoERP.Shared.Contracts.csproj.FileListAbsolute.txt
+³   ³               ³   RhSensoERP.Shared.Contracts.dll
+³   ³               ³   RhSensoERP.Shared.Contracts.GeneratedMSBuildEditorConfig.editorconfig
+³   ³               ³   RhSensoERP.Shared.Contracts.GlobalUsings.g.cs
+³   ³               ³   RhSensoERP.Shared.Contracts.pdb
+³   ³               ³   RhSensoERP.Shared.Contracts.sourcelink.json
+³   ³               ³   
+³   ³               ÃÄÄÄref
+³   ³               ³       RhSensoERP.Shared.Contracts.dll
+³   ³               ³       
+³   ³               ÀÄÄÄrefint
+³   ³                       RhSensoERP.Shared.Contracts.dll
+³   ³                       
+³   ÃÄÄÄCore
+³   ³   ³   RhSensoERP.Shared.Core.csproj
+³   ³   ³   
+³   ³   ÃÄÄÄAbstractions
+³   ³   ³       IAggregateRoot.cs
+³   ³   ³       IAuditableEntity.cs
+³   ³   ³       ICacheService.cs
+³   ³   ³       ICurrentUser.cs
+³   ³   ³       IDateTimeProvider.cs
+³   ³   ³       IDistributedLock.cs
+³   ³   ³       IRepository.cs
+³   ³   ³       IRepositoryExtended.cs
+³   ³   ³       ISoftDelete.cs
+³   ³   ³       ITenantContext.cs
+³   ³   ³       IUnitOfWork.cs
+³   ³   ³       IUnitOfWorkExtended.cs
+³   ³   ³       
+³   ³   ÃÄÄÄAttributes
+³   ³   ³       GeneratorAttributes.cs
+³   ³   ³       
+³   ³   ÃÄÄÄbin
+³   ³   ³   ÀÄÄÄDebug
+³   ³   ³       ÀÄÄÄnet8.0
+³   ³   ³               RhSensoERP.Shared.Contracts.dll
+³   ³   ³               RhSensoERP.Shared.Contracts.pdb
+³   ³   ³               RhSensoERP.Shared.Core.deps.json
+³   ³   ³               RhSensoERP.Shared.Core.dll
+³   ³   ³               RhSensoERP.Shared.Core.pdb
+³   ³   ³               
+³   ³   ÃÄÄÄCommon
+³   ³   ³       ApiResponseFactory.cs
+³   ³   ³       Error.cs
+³   ³   ³       ErrorCodes.cs
+³   ³   ³       Guard.cs
+³   ³   ³       PagedResult.cs
+³   ³   ³       Result.cs
+³   ³   ³       ResultExtensions.cs
+³   ³   ³       
+³   ³   ÃÄÄÄDomain
+³   ³   ³   ÃÄÄÄEntities
+³   ³   ³   ³       EntityBase.cs
+³   ³   ³   ³       
+³   ³   ³   ÀÄÄÄInterfaces
+³   ³   ³           IEntity.cs
+³   ³   ³           
+³   ³   ÃÄÄÄobj
+³   ³   ³   ³   project.assets.json
+³   ³   ³   ³   project.nuget.cache
+³   ³   ³   ³   RhSensoERP.Shared.Core.csproj.nuget.dgspec.json
+³   ³   ³   ³   RhSensoERP.Shared.Core.csproj.nuget.g.props
+³   ³   ³   ³   RhSensoERP.Shared.Core.csproj.nuget.g.targets
+³   ³   ³   ³   
+³   ³   ³   ÀÄÄÄDebug
+³   ³   ³       ÀÄÄÄnet8.0
+³   ³   ³           ³   .NETCoreApp,Version=v8.0.AssemblyAttributes.cs
+³   ³   ³           ³   RhSensoE.E3A96BBB.Up2Date
+³   ³   ³           ³   RhSensoERP.Shared.Core.AssemblyInfo.cs
+³   ³   ³           ³   RhSensoERP.Shared.Core.AssemblyInfoInputs.cache
+³   ³   ³           ³   RhSensoERP.Shared.Core.assets.cache
+³   ³   ³           ³   RhSensoERP.Shared.Core.csproj.AssemblyReference.cache
+³   ³   ³           ³   RhSensoERP.Shared.Core.csproj.BuildWithSkipAnalyzers
+³   ³   ³           ³   RhSensoERP.Shared.Core.csproj.CoreCompileInputs.cache
+³   ³   ³           ³   RhSensoERP.Shared.Core.csproj.FileListAbsolute.txt
+³   ³   ³           ³   RhSensoERP.Shared.Core.dll
+³   ³   ³           ³   RhSensoERP.Shared.Core.GeneratedMSBuildEditorConfig.editorconfig
+³   ³   ³           ³   RhSensoERP.Shared.Core.GlobalUsings.g.cs
+³   ³   ³           ³   RhSensoERP.Shared.Core.pdb
+³   ³   ³           ³   RhSensoERP.Shared.Core.sourcelink.json
+³   ³   ³           ³   
+³   ³   ³           ÃÄÄÄref
+³   ³   ³           ³       RhSensoERP.Shared.Core.dll
+³   ³   ³           ³       
+³   ³   ³           ÀÄÄÄrefint
+³   ³   ³                   RhSensoERP.Shared.Core.dll
+³   ³   ³                   
+³   ³   ÀÄÄÄPrimitives
+³   ³           AuditableEntity.cs
+³   ³           BaseEntity.cs
+³   ³           Maybe.cs
+³   ³           PaginatedList.cs
+³   ³           SoftDeletableEntity.cs
+³   ³           ValueObject.cs
+³   ³           
+³   ÀÄÄÄInfrastructure
+³       ³   DependencyInjection.cs
+³       ³   RhSensoERP.Shared.Infrastructure.csproj
+³       ³   
+³       ÃÄÄÄbin
+³       ³   ÀÄÄÄDebug
+³       ³       ÀÄÄÄnet8.0
+³       ³               RhSensoERP.Shared.Application.dll
+³       ³               RhSensoERP.Shared.Application.pdb
+³       ³               RhSensoERP.Shared.Contracts.dll
+³       ³               RhSensoERP.Shared.Contracts.pdb
+³       ³               RhSensoERP.Shared.Core.dll
+³       ³               RhSensoERP.Shared.Core.pdb
+³       ³               RhSensoERP.Shared.Infrastructure.deps.json
+³       ³               RhSensoERP.Shared.Infrastructure.dll
+³       ³               RhSensoERP.Shared.Infrastructure.pdb
+³       ³               
+³       ÃÄÄÄExtensions
+³       ³       ServiceCollectionExtensions.cs
+³       ³       
+³       ÃÄÄÄobj
+³       ³   ³   project.assets.json
+³       ³   ³   project.nuget.cache
+³       ³   ³   RhSensoERP.Shared.Infrastructure.csproj.nuget.dgspec.json
+³       ³   ³   RhSensoERP.Shared.Infrastructure.csproj.nuget.g.props
+³       ³   ³   RhSensoERP.Shared.Infrastructure.csproj.nuget.g.targets
+³       ³   ³   
+³       ³   ÀÄÄÄDebug
+³       ³       ÀÄÄÄnet8.0
+³       ³           ³   .NETCoreApp,Version=v8.0.AssemblyAttributes.cs
+³       ³           ³   RhSensoE.3488DC06.Up2Date
+³       ³           ³   RhSensoERP.Shared.Infrastructure.AssemblyInfo.cs
+³       ³           ³   RhSensoERP.Shared.Infrastructure.AssemblyInfoInputs.cache
+³       ³           ³   RhSensoERP.Shared.Infrastructure.assets.cache
+³       ³           ³   RhSensoERP.Shared.Infrastructure.csproj.AssemblyReference.cache
+³       ³           ³   RhSensoERP.Shared.Infrastructure.csproj.BuildWithSkipAnalyzers
+³       ³           ³   RhSensoERP.Shared.Infrastructure.csproj.CoreCompileInputs.cache
+³       ³           ³   RhSensoERP.Shared.Infrastructure.csproj.FileListAbsolute.txt
+³       ³           ³   RhSensoERP.Shared.Infrastructure.dll
+³       ³           ³   RhSensoERP.Shared.Infrastructure.GeneratedMSBuildEditorConfig.editorconfig
+³       ³           ³   RhSensoERP.Shared.Infrastructure.GlobalUsings.g.cs
+³       ³           ³   RhSensoERP.Shared.Infrastructure.pdb
+³       ³           ³   RhSensoERP.Shared.Infrastructure.sourcelink.json
+³       ³           ³   
+³       ³           ÃÄÄÄref
+³       ³           ³       RhSensoERP.Shared.Infrastructure.dll
+³       ³           ³       
+³       ³           ÀÄÄÄrefint
+³       ³                   RhSensoERP.Shared.Infrastructure.dll
+³       ³                   
+³       ÃÄÄÄPersistence
+³       ³   ³   GenericRepository.cs
+³       ³   ³   UnitOfWork.cs
+³       ³   ³   UnitOfWorkExtended.cs
+³       ³   ³   
+³       ³   ÀÄÄÄInterceptors
+³       ³           AuditableEntityInterceptor.cs
+³       ³           SqlLoggingInterceptor.cs
+³       ³           
+³       ÀÄÄÄServices
+³               CurrentUserService.cs
+³               DateTimeProvider.cs
+³               TenantContext.cs
+³               
+ÃÄÄÄTools
+³   ³   CHANGELOG.md
+³   ³   crud-config-sitc2.json
+³   ³   crud-schema.json
+³   ³   Program.cs
+³   ³   README.md
+³   ³   RESUMO_ALTERACOES.md
+³   ³   RhSensoERP.CrudTool.csproj
+³   ³   Tools.zip
+³   ³   
+³   ÃÄÄÄbin
+³   ³   ÀÄÄÄDebug
+³   ³       ÀÄÄÄnet8.0
+³   ³               Microsoft.Extensions.Configuration.Abstractions.dll
+³   ³               Microsoft.Extensions.Configuration.dll
+³   ³               Microsoft.Extensions.Configuration.FileExtensions.dll
+³   ³               Microsoft.Extensions.Configuration.Json.dll
+³   ³               Microsoft.Extensions.FileProviders.Abstractions.dll
+³   ³               Microsoft.Extensions.FileProviders.Physical.dll
+³   ³               Microsoft.Extensions.FileSystemGlobbing.dll
+³   ³               Microsoft.Extensions.Primitives.dll
+³   ³               RhSensoERP.CrudTool.deps.json
+³   ³               RhSensoERP.CrudTool.dll
+³   ³               RhSensoERP.CrudTool.exe
+³   ³               RhSensoERP.CrudTool.pdb
+³   ³               RhSensoERP.CrudTool.runtimeconfig.json
+³   ³               Spectre.Console.dll
+³   ³               
+³   ÃÄÄÄGenerators
+³   ³       CrudGenerator.cs
+³   ³       
+³   ÃÄÄÄModels
+³   ³       CrudConfig.cs
+³   ³       
+³   ÃÄÄÄobj
+³   ³   ³   project.assets.json
+³   ³   ³   project.nuget.cache
+³   ³   ³   RhSensoERP.CrudTool.csproj.nuget.dgspec.json
+³   ³   ³   RhSensoERP.CrudTool.csproj.nuget.g.props
+³   ³   ³   RhSensoERP.CrudTool.csproj.nuget.g.targets
+³   ³   ³   
+³   ³   ÀÄÄÄDebug
+³   ³       ÀÄÄÄnet8.0
+³   ³           ³   .NETCoreApp,Version=v8.0.AssemblyAttributes.cs
+³   ³           ³   apphost.exe
+³   ³           ³   RhSensoE.0A7C81EB.Up2Date
+³   ³           ³   RhSensoERP.CrudTool.AssemblyInfo.cs
+³   ³           ³   RhSensoERP.CrudTool.AssemblyInfoInputs.cache
+³   ³           ³   RhSensoERP.CrudTool.assets.cache
+³   ³           ³   RhSensoERP.CrudTool.csproj.AssemblyReference.cache
+³   ³           ³   RhSensoERP.CrudTool.csproj.CoreCompileInputs.cache
+³   ³           ³   RhSensoERP.CrudTool.csproj.FileListAbsolute.txt
+³   ³           ³   RhSensoERP.CrudTool.dll
+³   ³           ³   RhSensoERP.CrudTool.GeneratedMSBuildEditorConfig.editorconfig
+³   ³           ³   RhSensoERP.CrudTool.genruntimeconfig.cache
+³   ³           ³   RhSensoERP.CrudTool.GlobalUsings.g.cs
+³   ³           ³   RhSensoERP.CrudTool.pdb
+³   ³           ³   RhSensoERP.CrudTool.sourcelink.json
+³   ³           ³   
+³   ³           ÃÄÄÄref
+³   ³           ³       RhSensoERP.CrudTool.dll
+³   ³           ³       
+³   ³           ÀÄÄÄrefint
+³   ³                   RhSensoERP.CrudTool.dll
+³   ³                   
+³   ÃÄÄÄsrc
+³   ÀÄÄÄTemplates
+³           ApiControllerTemplate.cs
+³           JavaScriptTemplate.cs
+³           ViewTemplate.cs
+³           WebControllerTemplate.cs
+³           WebModelsTemplate.cs
+³           WebServicesTemplate.cs
+³           
+ÀÄÄÄWeb
+    ³   appsettings.Development.json
+    ³   appsettings.json
+    ³   Program.cs
+    ³   RhSensoERP.Web.csproj
+    ³   RhSensoERP.Web.csproj.user
+    ³   
+    ÃÄÄÄbin
+    ³   ÀÄÄÄDebug
+    ³       ÀÄÄÄnet8.0
+    ³           ÃÄÄÄcs
+    ³           ÃÄÄÄde
+    ³           ÃÄÄÄes
+    ³           ÃÄÄÄfr
+    ³           ÃÄÄÄit
+    ³           ÃÄÄÄja
+    ³           ÃÄÄÄko
+    ³           ÃÄÄÄpl
+    ³           ÃÄÄÄpt-BR
+    ³           ÃÄÄÄru
+    ³           ÃÄÄÄruntimes
+    ³           ³   ÃÄÄÄlinux
+    ³           ³   ³   ÀÄÄÄlib
+    ³           ³   ³       ÀÄÄÄnet8.0
+    ³           ³   ÃÄÄÄosx
+    ³           ³   ³   ÀÄÄÄlib
+    ³           ³   ³       ÀÄÄÄnet8.0
+    ³           ³   ÃÄÄÄunix
+    ³           ³   ³   ÀÄÄÄlib
+    ³           ³   ³       ÀÄÄÄnet6.0
+    ³           ³   ÃÄÄÄwin
+    ³           ³   ³   ÀÄÄÄlib
+    ³           ³   ³       ÃÄÄÄnet6.0
+    ³           ³   ³       ÀÄÄÄnet8.0
+    ³           ³   ÃÄÄÄwin-arm
+    ³           ³   ³   ÀÄÄÄnative
+    ³           ³   ÃÄÄÄwin-arm64
+    ³           ³   ³   ÀÄÄÄnative
+    ³           ³   ÃÄÄÄwin-x64
+    ³           ³   ³   ÀÄÄÄnative
+    ³           ³   ÀÄÄÄwin-x86
+    ³           ³       ÀÄÄÄnative
+    ³           ÃÄÄÄtr
+    ³           ÃÄÄÄzh-Hans
+    ³           ÀÄÄÄzh-Hant
+    ÃÄÄÄConfiguration
+    ³       ApiSettings.cs
+    ³       
+    ÃÄÄÄControllers
+    ³   ³   AccountController.cs
+    ³   ³   BancosGenericController.cs
+    ³   ³   HomeController.cs
+    ³   ³   MetadataController.cs
+    ³   ³   SistemasController.cs
+    ³   ³   Sitc2sController.cs
+    ³   ³   
+    ³   ÀÄÄÄBase
+    ³           BaseCrudController.cs
+    ³           GenericCrudController.cs
+    ³           
+    ÃÄÄÄExtensions
+    ³       ClaimsPrincipalExtensions.cs
+    ³       PermissionServicesExtensions.cs
+    ³       ServiceCollectionExtensions.cs
+    ³       
+    ÃÄÄÄFilters
+    ³       GlobalExceptionFilter.cs
+    ³       
+    ÃÄÄÄlogs
+    ³       rhsensoerp-web-20251127.log
+    ³       rhsensoerp-web-20251128.log
+    ³       web-20251127.txt
+    ³       web-20251128.txt
+    ³       
+    ÃÄÄÄModels
+    ³   ³   ErrorViewModel.cs
+    ³   ³   
+    ³   ÃÄÄÄAccount
+    ³   ³       DashboardViewModel.cs
+    ³   ³       LoginViewModel.cs
+    ³   ³       UserInfoViewModel.cs
+    ³   ³       UserPermissionsViewModel.cs
+    ³   ³       
+    ³   ÃÄÄÄBancos
+    ³   ³       BancoDto.cs
+    ³   ³       BancosListViewModel.cs
+    ³   ³       
+    ³   ÃÄÄÄBase
+    ³   ³       BaseListViewModel.cs
+    ³   ³       DataTableRequest.cs
+    ³   ³       
+    ³   ÃÄÄÄCommon
+    ³   ³       ApiResponse.cs
+    ³   ³       BatchDeleteResultDto.cs
+    ³   ³       GenericListViewModel.cs
+    ³   ³       Result.cs
+    ³   ³       
+    ³   ÃÄÄÄIdentity
+    ³   ÃÄÄÄSistemas
+    ³   ³       CreateSistemaDto.cs
+    ³   ³       SistemaDto.cs
+    ³   ³       SistemasListViewModel.cs
+    ³   ³       UpdateSistemaDto.cs
+    ³   ³       
+    ³   ÀÄÄÄSitc2s
+    ³           CreateSitc2Request.cs
+    ³           Sitc2Dto.cs
+    ³           Sitc2sListViewModel.cs
+    ³           UpdateSitc2Request.cs
+    ³           
+    ÃÄÄÄobj
+    ³   ³   project.assets.json
+    ³   ³   project.nuget.cache
+    ³   ³   RhSensoERP.Web.csproj.nuget.dgspec.json
+    ³   ³   RhSensoERP.Web.csproj.nuget.g.props
+    ³   ³   RhSensoERP.Web.csproj.nuget.g.targets
+    ³   ³   
+    ³   ÀÄÄÄDebug
+    ³       ÀÄÄÄnet8.0
+    ³           ³   .NETCoreApp,Version=v8.0.AssemblyAttributes.cs
+    ³           ³   ApiEndpoints.json
+    ³           ³   apphost.exe
+    ³           ³   RhSensoERP.Web.AssemblyInfo.cs
+    ³           ³   RhSensoERP.Web.AssemblyInfoInputs.cache
+    ³           ³   RhSensoERP.Web.assets.cache
+    ³           ³   RhSensoERP.Web.csproj.AssemblyReference.cache
+    ³           ³   RhSensoERP.Web.csproj.BuildWithSkipAnalyzers
+    ³           ³   RhSensoERP.Web.csproj.CoreCompileInputs.cache
+    ³           ³   RhSensoERP.Web.csproj.FileListAbsolute.txt
+    ³           ³   RhSensoERP.Web.GeneratedMSBuildEditorConfig.editorconfig
+    ³           ³   RhSensoERP.Web.GlobalUsings.g.cs
+    ³           ³   RhSensoERP.Web.MvcApplicationPartsAssemblyInfo.cache
+    ³           ³   RhSensoERP.Web.MvcApplicationPartsAssemblyInfo.cs
+    ³           ³   RhSensoERP.Web.RazorAssemblyInfo.cache
+    ³           ³   RhSensoERP.Web.RazorAssemblyInfo.cs
+    ³           ³   RhSensoERP.Web.sourcelink.json
+    ³           ³   
+    ³           ÃÄÄÄref
+    ³           ÃÄÄÄrefint
+    ³           ÃÄÄÄscopedcss
+    ³           ³   ÃÄÄÄbundle
+    ³           ³   ÃÄÄÄprojectbundle
+    ³           ³   ÀÄÄÄViews
+    ³           ³       ÀÄÄÄShared
+    ³           ÀÄÄÄstaticwebassets
+    ÃÄÄÄProperties
+    ³   ³   launchSettings.json
+    ³   ³   
+    ³   ÀÄÄÄPublishProfiles
+    ³           IISProfile.pubxml
+    ³           
+    ÃÄÄÄServices
+    ³   ³   AuthApiService.cs
+    ³   ³   IAuthApiService.cs
+    ³   ³   MetadataService.cs
+    ³   ³   
+    ³   ÃÄÄÄBancos
+    ³   ³       BancoApiService.cs
+    ³   ³       IBancoApiService.cs
+    ³   ³       
+    ³   ÃÄÄÄBase
+    ³   ³       BaseApiService.cs
+    ³   ³       IApiService.cs
+    ³   ³       IBatchDeleteService.cs
+    ³   ³       
+    ³   ÃÄÄÄPermissions
+    ³   ³       IUserPermissionsCacheService.cs
+    ³   ³       UserPermissionsCacheService.cs
+    ³   ³       
+    ³   ÃÄÄÄSistemas
+    ³   ³       ISistemaApiService.cs
+    ³   ³       SistemaApiService.cs
+    ³   ³       
+    ³   ÀÄÄÄSitc2s
+    ³           ISitc2ApiService.cs
+    ³           Sitc2ApiService.cs
+    ³           
+    ÃÄÄÄTagHelpers
+    ³       PermissionTagHelper.cs
+    ³       
+    ÃÄÄÄViews
+    ³   ³   _ViewImports.cshtml
+    ³   ³   _ViewStart.cshtml
+    ³   ³   
+    ³   ÃÄÄÄAccount
+    ³   ³       AccessDenied.cshtml
+    ³   ³       Dashboard.cshtml
+    ³   ³       Login.cshtml
+    ³   ³       SecurityMetrics.cshtml
+    ³   ³       
+    ³   ÃÄÄÄBancos
+    ³   ³       Index.cshtml
+    ³   ³       
+    ³   ÃÄÄÄHome
+    ³   ³       Index.cshtml
+    ³   ³       Privacy.cshtml
+    ³   ³       
+    ³   ÃÄÄÄShared
+    ³   ³       Error.cshtml
+    ³   ³       _CrudLayout.cshtml
+    ³   ³       _CrudTable.cshtml
+    ³   ³       _GenericList.cshtml
+    ³   ³       _Layout.cshtml
+    ³   ³       _Layout.cshtml.css
+    ³   ³       _ValidationScriptsPartial.cshtml
+    ³   ³       
+    ³   ÃÄÄÄSistemas
+    ³   ³       Index.cshtml
+    ³   ³       
+    ³   ÀÄÄÄSitc2s
+    ³           Index.cshtml
+    ³           
+    ÀÄÄÄwwwroot
+        ³   favicon.ico
+        ³   
+        ÃÄÄÄcss
+        ³       crud-base.css
+        ³       login.css
+        ³       site.css
+        ³       
+        ÃÄÄÄjs
+        ³   ³   crud-base.js
+        ³   ³   generic-crud.js
+        ³   ³   login.js
+        ³   ³   site.js
+        ³   ³   
+        ³   ÃÄÄÄpages
+        ³   ³       bancos.js
+        ³   ³       sistemas.js
+        ³   ³       
+        ³   ÀÄÄÄsitc2s
+        ³           sitc2.js
+        ³           
+        ÀÄÄÄlib
+            ÃÄÄÄbootstrap
+            ³   ³   LICENSE
+            ³   ³   
+            ³   ÀÄÄÄdist
+            ³       ÃÄÄÄcss
+            ³       ³       bootstrap-grid.css
+            ³       ³       bootstrap-grid.css.map
+            ³       ³       bootstrap-grid.min.css
+            ³       ³       bootstrap-grid.min.css.map
+            ³       ³       bootstrap-grid.rtl.css
+            ³       ³       bootstrap-grid.rtl.css.map
+            ³       ³       bootstrap-grid.rtl.min.css
+            ³       ³       bootstrap-grid.rtl.min.css.map
+            ³       ³       bootstrap-reboot.css
+            ³       ³       bootstrap-reboot.css.map
+            ³       ³       bootstrap-reboot.min.css
+            ³       ³       bootstrap-reboot.min.css.map
+            ³       ³       bootstrap-reboot.rtl.css
+            ³       ³       bootstrap-reboot.rtl.css.map
+            ³       ³       bootstrap-reboot.rtl.min.css
+            ³       ³       bootstrap-reboot.rtl.min.css.map
+            ³       ³       bootstrap-utilities.css
+            ³       ³       bootstrap-utilities.css.map
+            ³       ³       bootstrap-utilities.min.css
+            ³       ³       bootstrap-utilities.min.css.map
+            ³       ³       bootstrap-utilities.rtl.css
+            ³       ³       bootstrap-utilities.rtl.css.map
+            ³       ³       bootstrap-utilities.rtl.min.css
+            ³       ³       bootstrap-utilities.rtl.min.css.map
+            ³       ³       bootstrap.css
+            ³       ³       bootstrap.css.map
+            ³       ³       bootstrap.min.css
+            ³       ³       bootstrap.min.css.map
+            ³       ³       bootstrap.rtl.css
+            ³       ³       bootstrap.rtl.css.map
+            ³       ³       bootstrap.rtl.min.css
+            ³       ³       bootstrap.rtl.min.css.map
+            ³       ³       
+            ³       ÀÄÄÄjs
+            ³               bootstrap.bundle.js
+            ³               bootstrap.bundle.js.map
+            ³               bootstrap.bundle.min.js
+            ³               bootstrap.bundle.min.js.map
+            ³               bootstrap.esm.js
+            ³               bootstrap.esm.js.map
+            ³               bootstrap.esm.min.js
+            ³               bootstrap.esm.min.js.map
+            ³               bootstrap.js
+            ³               bootstrap.js.map
+            ³               bootstrap.min.js
+            ³               bootstrap.min.js.map
+            ³               
+            ÃÄÄÄjquery
+            ³   ³   LICENSE.txt
+            ³   ³   
+            ³   ÀÄÄÄdist
+            ³           jquery.js
+            ³           jquery.min.js
+            ³           jquery.min.map
+            ³           
+            ÃÄÄÄjquery-validation
+            ³   ³   LICENSE.md
+            ³   ³   
+            ³   ÀÄÄÄdist
+            ³           additional-methods.js
+            ³           additional-methods.min.js
+            ³           jquery.validate.js
+            ³           jquery.validate.min.js
+            ³           
+            ÀÄÄÄjquery-validation-unobtrusive
+                    jquery.validate.unobtrusive.js
+                    jquery.validate.unobtrusive.min.js
+                    LICENSE.txt
+                    

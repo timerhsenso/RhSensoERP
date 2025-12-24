@@ -1,0 +1,361 @@
+@{
+    ViewData["Title"] = "Gerador de Frontend";
+    Layout = null; // Página standalone sem layout
+}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"] - Wizard</title>
+    <link rel="stylesheet" href="~/css/generator/wizard.css" asp-append-version="true" />
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🚀 Gerador de Frontend v3.7</h1>
+            <p>Gere Views, Controllers, Models e JavaScript automaticamente</p>
+            <div class="shortcuts-hint">
+                <span title="Salvar estado">Ctrl+S</span>
+                <span title="Desfazer última ação">Ctrl+Z</span>
+                <span title="Fechar popups">Esc</span>
+            </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="progress-bar">
+            <div class="step active" data-step="0">
+                <div class="step-number">1</div>
+                <div class="step-label">Entidade</div>
+            </div>
+            <div class="step" data-step="1">
+                <div class="step-number">2</div>
+                <div class="step-label">Validação</div>
+            </div>
+            <div class="step" data-step="2">
+                <div class="step-number">3</div>
+                <div class="step-label">Listagem</div>
+            </div>
+            <div class="step" data-step="3">
+                <div class="step-number">4</div>
+                <div class="step-label">Formulário</div>
+            </div>
+            <div class="step" data-step="4">
+                <div class="step-number">5</div>
+                <div class="step-label">Gerar</div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- =========================================== -->
+            <!-- STEP 0: Seleção de Entidade -->
+            <!-- =========================================== -->
+            <div class="step-content active" data-step="0">
+                <h2>📥 Etapa 1: Selecionar Entidade</h2>
+                <p>Carregue do manifesto ou cole o JSON da entidade</p>
+
+                <!-- Manifest Loader -->
+                <div id="manifestLoader"></div>
+
+                <hr style="margin: 20px 0; border-color: #e0e0e0;">
+
+                <!-- Configurações Obrigatórias -->
+                <div class="config-section">
+                    <h3>⚙️ Configurações</h3>
+                    <div class="alert alert-info" style="margin-bottom: 15px;">
+                        <strong>💡 Dica:</strong> Os campos CdFuncao e Ícone são opcionais.
+                        Se deixá-los vazios, serão gerados automaticamente com base no módulo selecionado.
+                    </div>
+
+                    <div class="config-grid">
+                        <!-- CdSistema - OBRIGATÓRIO -->
+                        <div class="form-group">
+                            <label for="cdSistema">
+                                Módulo/Sistema <span class="required">*</span>
+                            </label>
+                            <select id="cdSistema">
+                                <option value="RHU">RHU - Gestão de Pessoas</option>
+                                <option value="GTC">GTC - Gestão de Terceiros</option>
+                                <option value="CAP">CAP - Controle Acesso Portaria</option>
+                                <option value="CPO">CPO - Controle de Ponto</option>
+                                <option value="TRE">TRE - Treinamento</option>
+                                <option value="MSO">MSO - Saúde Ocupacional</option>
+                                <option value="SEG">SEG - Segurança</option>
+                                <option value="AVA">AVA - Avaliação</option>
+                                <option value="ESO">ESO - eSocial</option>
+                                <option value="EPI">EPI - Gestão de EPI</option>
+                            </select>
+                            <small>Selecione o módulo do sistema</small>
+                        </div>
+
+                        <!-- DisplayName - OBRIGATÓRIO -->
+                        <div class="form-group">
+                            <label for="displayName">
+                                Nome de Exibição <span class="required">*</span>
+                            </label>
+                            <input type="text" id="displayName" placeholder="Ex: Tipos de Treinamento" />
+                            <small>Nome que aparece no menu e títulos</small>
+                        </div>
+
+                        <!-- CdFuncao - OPCIONAL (auto-gerado) -->
+                        <div class="form-group">
+                            <label for="cdFuncao">
+                                CdFuncao
+                                <span class="badge badge-info">Opcional</span>
+                            </label>
+                            <input type="text" id="cdFuncao" placeholder="Auto-gerado: {MODULO}_FM_{ENTIDADE}" />
+                            <small class="text-muted">
+                                <strong>Auto-gerado como:</strong> TRE_FM_TRETIPOSTREINAMENTO<br>
+                                Deixe vazio para gerar automaticamente
+                            </small>
+                        </div>
+
+                        <!-- IconClass - OPCIONAL (auto-mapeado) -->
+                        <div class="form-group">
+                            <label for="iconClass">
+                                Ícone
+                                <span class="badge badge-info">Opcional</span>
+                            </label>
+                            <input type="text" id="iconClass" placeholder="Auto-mapeado por módulo" />
+                            <small class="text-muted">
+                                <strong>Mapeamento automático:</strong><br>
+                                RHU=fas fa-users | TRE=fas fa-certificate | MSO=fas fa-heartbeat<br>
+                                GTC=fas fa-hard-hat | SEG=fas fa-shield-alt | EPI=fas fa-vest
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                <hr style="margin: 20px 0; border-color: #e0e0e0;">
+
+                <!-- JSON Manual -->
+                <div class="form-group">
+                    <label>JSON da Entidade (opcional - se não usar manifesto):</label>
+                    <textarea id="jsonInput" rows="12">{
+  "entityName": "Exemplo",
+  "tableName": "TB_EXEMPLO",
+  "properties": [
+    { "name": "Id", "type": "int", "nullable": false },
+    { "name": "Nome", "type": "string", "nullable": false, "maxLength": 200 },
+    { "name": "Descricao", "type": "string", "nullable": true, "maxLength": 500 },
+    { "name": "Ativo", "type": "bool", "nullable": false }
+  ]
+}</textarea>
+                </div>
+
+                <div id="jsonError" class="alert alert-error" style="display: none;"></div>
+                <div id="jsonSuccess" class="alert alert-success" style="display: none;"></div>
+
+                <div class="navigation">
+                    <div>
+                        <button class="btn btn-secondary btn-small" onclick="App.confirmReset()" title="Remove todos os dados e configurações">
+                            🔄 Limpar Tudo
+                        </button>
+                    </div>
+                    <button class="btn btn-primary" onclick="validateAndNext(0)">Próximo →</button>
+                </div>
+            </div>
+
+            <!-- =========================================== -->
+            <!-- STEP 1: Schema Validation -->
+            <!-- =========================================== -->
+            <div class="step-content" data-step="1">
+                <h2>🔍 Etapa 2: Validação de Schema</h2>
+                <p>Compare a estrutura da entidade com a tabela do banco de dados</p>
+
+                <div id="schemaValidatorContent"></div>
+
+                <div class="navigation">
+                    <button class="btn btn-secondary" onclick="goToStep(0)">← Anterior</button>
+                    <button class="btn btn-primary" onclick="validateAndNext(1)">Próximo →</button>
+                </div>
+            </div>
+
+            <!-- =========================================== -->
+            <!-- STEP 2: Grid Configuration -->
+            <!-- =========================================== -->
+            <div class="step-content" data-step="2">
+                <h2>📋 Etapa 3: Configuração da Listagem</h2>
+                <p>Configure colunas, filtros e opções do DataTables</p>
+
+                <div class="alert alert-info">
+                    <strong>💡 Dica:</strong> Se não configurar colunas, serão geradas automaticamente
+                    até 8 colunas principais (excluindo campos de auditoria).
+                </div>
+
+                <div id="gridGeneralOptions"></div>
+                <div id="columnConfig"></div>
+                <div id="filterConfig"></div>
+
+                <div class="navigation">
+                    <button class="btn btn-secondary" onclick="goToStep(1)">← Anterior</button>
+                    <button class="btn btn-primary" onclick="validateAndNext(2)">Próximo →</button>
+                </div>
+            </div>
+
+            <!-- =========================================== -->
+            <!-- STEP 3: Form Designer -->
+            <!-- =========================================== -->
+            <div class="step-content" data-step="3">
+                <h2>🎨 Etapa 4: Designer de Formulário</h2>
+                <p>Configure o layout e arraste os campos para o canvas</p>
+
+                <div class="alert alert-info">
+                    <strong>💡 Dica:</strong> Se não arrastar campos, serão gerados automaticamente
+                    TODOS os campos (excluindo IDs auto-gerados e campos de auditoria).
+                </div>
+
+                <div id="layoutOptions"></div>
+
+                <div class="form-designer">
+                    <div class="fields-palette">
+                        <h3>📦 Campos Disponíveis</h3>
+                        <div id="fieldsPalette"></div>
+                    </div>
+
+                    <div class="canvas" id="formCanvas">
+                        <div class="canvas-empty">
+                            <h3>Arraste os campos aqui</h3>
+                            <p>Arraste campos da paleta à esquerda para montar seu formulário</p>
+                            <p><small class="text-muted">Ou deixe vazio para gerar automaticamente</small></p>
+                        </div>
+                    </div>
+
+                    <div class="field-config">
+                        <h3>⚙️ Configuração do Campo</h3>
+                        <div id="fieldConfigPanel">
+                            <p style="color: #999; text-align: center; margin-top: 50px;">
+                                Selecione um campo no canvas
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="navigation">
+                    <button class="btn btn-secondary" onclick="goToStep(2)">← Anterior</button>
+                    <button class="btn btn-primary" onclick="validateAndNext(3)">Próximo →</button>
+                </div>
+            </div>
+
+            <!-- =========================================== -->
+            <!-- STEP 4: Geração de Código -->
+            <!-- =========================================== -->
+            <div class="step-content" data-step="4">
+                <h2>🚀 Etapa 5: Gerar Código</h2>
+                <p>Revise as opções e gere os arquivos</p>
+
+                <!-- Resumo da Configuração -->
+                <div class="config-summary" style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    <h3 style="margin-top: 0;">📋 Resumo da Configuração</h3>
+                    <div id="configSummary" style="font-family: monospace; font-size: 13px;">
+                        <!-- Será preenchido via JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Opções de Geração -->
+                <div class="generation-options">
+                    <h3>📦 O que gerar?</h3>
+                    <div class="checkbox-grid">
+                        <label><input type="checkbox" id="optWebController" checked> WebController</label>
+                        <label><input type="checkbox" id="optWebModels" checked> WebModels (DTOs)</label>
+                        <label><input type="checkbox" id="optWebServices" checked> WebServices</label>
+                        <label><input type="checkbox" id="optView" checked> View (Index.cshtml)</label>
+                        <label><input type="checkbox" id="optJavaScript" checked> JavaScript</label>
+                        <label><input type="checkbox" id="optEntidade"> Entidade (Backend)</label>
+                    </div>
+                </div>
+
+                <!-- Botão de Geração -->
+                <div class="generation-actions">
+                    <button class="btn btn-primary btn-large" onclick="ApiClient.generate()">
+                        ⚡ Gerar Código
+                    </button>
+                    <button class="btn btn-success btn-large" onclick="ApiClient.downloadZip()">
+                        📦 Download ZIP
+                    </button>
+                </div>
+
+                <!-- Loading -->
+                <div id="generationLoading" style="display: none; text-align: center; padding: 40px;">
+                    <div class="spinner"></div>
+                    <p>Gerando código...</p>
+                </div>
+
+                <!-- Resultado -->
+                <div id="generationResult" style="display: none;">
+                    <h3>✅ Arquivos Gerados</h3>
+                    <div id="generatedFilesList"></div>
+                </div>
+
+                <!-- Preview de Código -->
+                <div id="codePreviewSection" style="display: none;">
+                    <h3>📄 Preview do Código</h3>
+                    <div class="code-tabs" id="codeTabsHeader"></div>
+                    <div id="codeTabsContent"></div>
+                </div>
+
+                <div class="navigation">
+                    <button class="btn btn-secondary" onclick="goToStep(3)">← Anterior</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="~/js/generator/app.js" asp-append-version="true"></script>
+    <script src="~/js/generator/modules/wizard.js" asp-append-version="true"></script>
+    <script src="~/js/generator/modules/manifest-manager.js" asp-append-version="true"></script>
+    <script src="~/js/generator/modules/schema-validator.js" asp-append-version="true"></script>
+    <script src="~/js/generator/modules/grid-config.js" asp-append-version="true"></script>
+    <script src="~/js/generator/modules/form-designer.js" asp-append-version="true"></script>
+    <script src="~/js/generator/modules/api-client.js" asp-append-version="true"></script>
+
+    <script>
+        // Inicializa quando a página carregar
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🚀 Gerador v3.7 iniciado');
+
+            // Carrega URL base da API (mesmo servidor)
+            ApiClient.baseUrl = window.location.origin;
+
+            // Inicializa Manifest Manager
+            setTimeout(() => {
+                if (App.modules.ManifestManager) {
+                    App.modules.ManifestManager.render();
+                }
+            }, 100);
+
+            // Mostra resumo na última etapa
+            window.showConfigSummary = function() {
+                const entity = Store.get('entity') || {};
+                const cdSistema = document.getElementById('cdSistema')?.value || 'N/A';
+                const cdFuncao = document.getElementById('cdFuncao')?.value || 'Auto-gerado';
+                const icon = document.getElementById('iconClass')?.value || 'Auto-mapeado';
+                const formFields = Store.get('formFields') || [];
+
+                const summary = `
+                    <strong>Entidade:</strong> ${entity.entityName || 'N/A'}<br>
+                    <strong>Módulo:</strong> ${cdSistema}<br>
+                    <strong>CdFuncao:</strong> ${cdFuncao}<br>
+                    <strong>Ícone:</strong> ${icon}<br>
+                    <strong>Campos Formulário:</strong> ${formFields.length > 0 ? formFields.length + ' campos configurados' : 'Auto-gerado (todos os campos)'}<br>
+                    <strong>Colunas Grid:</strong> ${typeof GridConfig !== 'undefined' && GridConfig.config?.columns?.length > 0 ? GridConfig.config.columns.length + ' colunas configuradas' : 'Auto-gerado (até 8 colunas)'}
+                `;
+
+                document.getElementById('configSummary').innerHTML = summary;
+            };
+
+            // Chama showConfigSummary quando chegar na etapa 4
+            const originalValidateAndNext = window.validateAndNext;
+            window.validateAndNext = function(step) {
+                originalValidateAndNext(step);
+                if (step === 3) { // Próximo da etapa 3 = chegou na etapa 4
+                    setTimeout(() => showConfigSummary(), 100);
+                }
+            };
+        });
+    </script>
+</body>
+</html>

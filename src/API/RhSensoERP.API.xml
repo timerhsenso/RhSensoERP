@@ -1,0 +1,1341 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>RhSensoERP.API</name>
+    </assembly>
+    <members>
+        <member name="T:RhSensoERP.API.Authorization.RequirePermissionAttribute">
+            <summary>
+            Atributo de autorização customizado para verificar permissões legadas.
+            Verifica se o usuário tem permissão para executar uma ação em uma função.
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Authorization.RequirePermissionAttribute.#ctor(System.String,System.Char)">
+            <summary>
+            Construtor do atributo de permissão.
+            </summary>
+            <param name="cdFuncao">Código da função (ex: "CADUSER")</param>
+            <param name="acao">Ação requerida: I=Incluir, A=Alterar, E=Excluir, C=Consultar</param>
+        </member>
+        <member name="T:RhSensoERP.API.Authorization.RequireIncluirAttribute">
+            <summary>
+            Atributos de atalho para ações comuns.
+            </summary>
+        </member>
+        <member name="T:RhSensoERP.API.BackgroundServices.AuditCleanupBackgroundService">
+            <summary>
+            Serviço background para limpeza automática de logs de auditoria antigos.
+            ✅ FASE 5: Job agendado para manter tabela de auditoria gerenciável
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.BackgroundServices.AuditCleanupBackgroundService.ExecuteCleanupAsync(System.Threading.CancellationToken)">
+            <summary>
+            Executa a limpeza de logs antigos.
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.BackgroundServices.AuditCleanupBackgroundService.CalculateNextRunTime">
+            <summary>
+            Calcula o próximo horário de execução baseado na frequência configurada.
+            </summary>
+        </member>
+        <member name="T:RhSensoERP.API.Configuration.ModuleGroupConvention">
+            <summary>
+            Define o ApiExplorer.GroupName automaticamente a partir do namespace do controller.
+            Não sobrescreve quando o controller já definiu via atributo [ApiExplorerSettings].
+            
+            Hierarquia de detecção:
+            1. Controllers em RhSensoERP.Modules.* → Nome do módulo
+            2. Controllers em RhSensoERP.Identity.* → "Identity"
+            3. Controllers em RhSensoERP.API.Controllers.* → Nome da pasta/segmento
+            4. Controllers em RhSensoERP.API.Controllers → "Diagnostics" (fallback)
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Configuration.ModuleGroupConvention.ExtractModuleNameFromNamespace(System.String)">
+            <summary>
+            Extrai o nome do módulo do namespace.
+            Ex: "RhSensoERP.Modules.GestaoDePessoas.API.Controllers" → "GestaoDePessoas"
+            </summary>
+        </member>
+        <member name="T:RhSensoERP.API.Configuration.RateLimitingConfiguration">
+            <summary>
+            Extensão para configuração de Rate Limiting da aplicação.
+            Protege contra DDoS, brute force e abuse de endpoints críticos.
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Configuration.RateLimitingConfiguration.AddRateLimiting(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            Adiciona e configura o Rate Limiting na aplicação.
+            Lê configurações do appsettings.json via Options Pattern.
+            </summary>
+            <param name="services">Coleção de serviços do DI container</param>
+            <returns>Coleção de serviços para encadeamento</returns>
+        </member>
+        <member name="M:RhSensoERP.API.Configuration.RateLimitingConfiguration.CreateLimiter(System.String,System.Int32,System.Int32,System.String,System.Int32)">
+            <summary>
+            Cria um limitador de taxa baseado nos parâmetros fornecidos.
+            Suporta janelas fixas (Fixed) e deslizantes (Sliding).
+            </summary>
+            <param name="partitionKey">Chave de partição (geralmente IP do cliente)</param>
+            <param name="permitLimit">Número máximo de requisições permitidas</param>
+            <param name="windowMinutes">Duração da janela em minutos</param>
+            <param name="windowType">Tipo de janela: "Fixed" ou "Sliding"</param>
+            <param name="segmentsPerWindow">Número de segmentos (apenas para Sliding)</param>
+            <returns>Partição de rate limiter configurada</returns>
+        </member>
+        <member name="T:RhSensoERP.API.Configuration.RateLimitSettings">
+            <summary>
+            Configurações de Rate Limiting extraídas do appsettings.json.
+            Mapeia a seção "RateLimit" do arquivo de configuração.
+            </summary>
+        </member>
+        <member name="P:RhSensoERP.API.Configuration.RateLimitSettings.Global">
+            <summary>
+            Configuração do limite global aplicado a todas as requisições
+            que não possuem política específica.
+            </summary>
+        </member>
+        <member name="P:RhSensoERP.API.Configuration.RateLimitSettings.Policies">
+            <summary>
+            Dicionário de políticas específicas por nome.
+            Chave: nome da política (ex: "login", "refresh", "diagnostics")
+            Valor: configuração da política
+            </summary>
+        </member>
+        <member name="T:RhSensoERP.API.Configuration.GlobalRateLimitRule">
+            <summary>
+            Configuração do limite global de requisições.
+            Aplica-se a todos os endpoints que não têm política específica.
+            </summary>
+        </member>
+        <member name="P:RhSensoERP.API.Configuration.GlobalRateLimitRule.PermitLimit">
+            <summary>
+            Número máximo de requisições permitidas na janela de tempo.
+            Exemplo: 100 requisições por minuto
+            </summary>
+        </member>
+        <member name="P:RhSensoERP.API.Configuration.GlobalRateLimitRule.WindowMinutes">
+            <summary>
+            Duração da janela de tempo em minutos.
+            Exemplo: 1 = janela de 1 minuto
+            </summary>
+        </member>
+        <member name="P:RhSensoERP.API.Configuration.GlobalRateLimitRule.WindowType">
+            <summary>
+            Tipo de janela de tempo:
+            - "Fixed": janela fixa (reseta completamente a cada período)
+            - "Sliding": janela deslizante (mais preciso, considera histórico)
+            </summary>
+        </member>
+        <member name="T:RhSensoERP.API.Configuration.RateLimitPolicy">
+            <summary>
+            Configuração de uma política de rate limiting específica.
+            Usada para endpoints críticos que precisam de limites customizados.
+            </summary>
+        </member>
+        <member name="P:RhSensoERP.API.Configuration.RateLimitPolicy.PermitLimit">
+            <summary>
+            Número máximo de requisições permitidas na janela de tempo.
+            Exemplo: 5 tentativas de login a cada 5 minutos
+            </summary>
+        </member>
+        <member name="P:RhSensoERP.API.Configuration.RateLimitPolicy.WindowMinutes">
+            <summary>
+            Duração da janela de tempo em minutos.
+            Exemplo: 5 = janela de 5 minutos
+            </summary>
+        </member>
+        <member name="P:RhSensoERP.API.Configuration.RateLimitPolicy.WindowType">
+            <summary>
+            Tipo de janela de tempo:
+            - "Fixed": janela fixa (reseta completamente a cada período)
+            - "Sliding": janela deslizante (mais preciso, considera histórico)
+            
+            Recomendação:
+            - Use "Sliding" para proteção contra brute force (mais preciso)
+            - Use "Fixed" para limites gerais (mais performático)
+            </summary>
+        </member>
+        <member name="P:RhSensoERP.API.Configuration.RateLimitPolicy.SegmentsPerWindow">
+            <summary>
+            Número de segmentos da janela deslizante (apenas para WindowType = "Sliding").
+            Define a granularidade da janela deslizante.
+            
+            Exemplo: WindowMinutes = 5, SegmentsPerWindow = 5
+            Cada segmento representa 1 minuto, permitindo controle mais fino.
+            
+            Padrão: 5 segmentos
+            </summary>
+        </member>
+        <member name="F:RhSensoERP.API.Configuration.SwaggerConfiguration.ModuleDocs">
+            <summary>
+            Definição dos módulos que aparecerão no dropdown do Swagger.
+            Key = GroupName (deve corresponder ao retornado por ModuleGroupConvention)
+            Title = Nome exibido no dropdown
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Configuration.SwaggerConfiguration.AddSwaggerDocs(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            Adiciona a configuração do Swagger aos serviços.
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Configuration.SwaggerConfiguration.UseSwaggerDocs(Microsoft.AspNetCore.Builder.IApplicationBuilder)">
+            <summary>
+            Configura o Swagger UI no pipeline da aplicação.
+            </summary>
+        </member>
+        <member name="T:RhSensoERP.API.Configuration.SwaggerDefaultValuesFilter">
+            <summary>
+            Filtro para adicionar valores padrão aos parâmetros do Swagger.
+            Útil para exibir valores default de parâmetros opcionais.
+            </summary>
+        </member>
+        <member name="T:RhSensoERP.API.Configuration.LowercaseDocumentFilter">
+            <summary>
+            Filtro para converter paths do Swagger para lowercase.
+            Padroniza URLs como /api/usuarios ao invés de /api/Usuarios.
+            </summary>
+        </member>
+        <member name="T:RhSensoERP.API.Configuration.ApiDescriptionExtensions">
+            <summary>
+            Extensões auxiliares para ApiDescription.
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Configuration.ApiDescriptionExtensions.IsDeprecated(Microsoft.AspNetCore.Mvc.ApiExplorer.ApiDescription)">
+            <summary>
+            Verifica se um endpoint está marcado como obsoleto.
+            </summary>
+        </member>
+        <member name="T:RhSensoERP.API.Controllers.AuditReportsController">
+            <summary>
+            Controller para relatórios de auditoria de segurança.
+            ✅ FASE 5: Relatórios completos de eventos de segurança
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.AuditReportsController.GetRecentEvents(System.Int32,System.String,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Retorna eventos recentes de segurança.
+            </summary>
+            <param name="count">Número de eventos a retornar (padrão: 100, máx: 1000)</param>
+            <param name="eventType">Filtrar por tipo de evento</param>
+            <param name="severity">Filtrar por severidade</param>
+            <param name="ct">Token de cancelamento</param>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.AuditReportsController.GetStatistics(System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Retorna estatísticas de eventos de segurança.
+            </summary>
+            <param name="hours">Período em horas (padrão: 24)</param>
+            <param name="ct">Token de cancelamento</param>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.AuditReportsController.GetLoginReport(System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Retorna relatório de tentativas de login.
+            </summary>
+            <param name="hours">Período em horas (padrão: 24)</param>
+            <param name="ct">Token de cancelamento</param>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.AuditReportsController.GetSuspiciousActivities(System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Retorna relatório de atividades suspeitas.
+            </summary>
+            <param name="hours">Período em horas (padrão: 24)</param>
+            <param name="ct">Token de cancelamento</param>
+        </member>
+        <member name="T:RhSensoERP.API.Controllers.Base.DataTablesRequest">
+            <summary>
+            Request do DataTables jQuery.
+            </summary>
+        </member>
+        <member name="P:RhSensoERP.API.Controllers.Base.DataTablesRequest.Draw">
+            <summary>
+            Draw counter para sincronização.
+            </summary>
+        </member>
+        <member name="P:RhSensoERP.API.Controllers.Base.DataTablesRequest.Start">
+            <summary>
+            Índice do primeiro registro.
+            </summary>
+        </member>
+        <member name="P:RhSensoERP.API.Controllers.Base.DataTablesRequest.Length">
+            <summary>
+            Número de registros por página.
+            </summary>
+        </member>
+        <member name="P:RhSensoERP.API.Controllers.Base.DataTablesRequest.Search">
+            <summary>
+            Busca global.
+            </summary>
+        </member>
+        <member name="P:RhSensoERP.API.Controllers.Base.DataTablesRequest.Order">
+            <summary>
+            Ordenação.
+            </summary>
+        </member>
+        <member name="P:RhSensoERP.API.Controllers.Base.DataTablesRequest.Columns">
+            <summary>
+            Colunas.
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.Base.DataTablesRequest.ToPagedRequest">
+            <summary>
+            Converte para ServicePagedRequest.
+            </summary>
+        </member>
+        <member name="T:RhSensoERP.API.Controllers.Base.DataTablesSearch">
+            <summary>
+            Busca do DataTables.
+            </summary>
+        </member>
+        <member name="P:RhSensoERP.API.Controllers.Base.DataTablesSearch.Value">
+            <summary>
+            Valor da busca.
+            </summary>
+        </member>
+        <member name="P:RhSensoERP.API.Controllers.Base.DataTablesSearch.Regex">
+            <summary>
+            Se é regex.
+            </summary>
+        </member>
+        <member name="T:RhSensoERP.API.Controllers.Base.DataTablesOrder">
+            <summary>
+            Ordenação do DataTables.
+            </summary>
+        </member>
+        <member name="P:RhSensoERP.API.Controllers.Base.DataTablesOrder.Column">
+            <summary>
+            Índice da coluna.
+            </summary>
+        </member>
+        <member name="P:RhSensoERP.API.Controllers.Base.DataTablesOrder.Dir">
+            <summary>
+            Direção (asc/desc).
+            </summary>
+        </member>
+        <member name="T:RhSensoERP.API.Controllers.Base.DataTablesColumn">
+            <summary>
+            Coluna do DataTables.
+            </summary>
+        </member>
+        <member name="P:RhSensoERP.API.Controllers.Base.DataTablesColumn.Data">
+            <summary>
+            Nome do campo de dados.
+            </summary>
+        </member>
+        <member name="P:RhSensoERP.API.Controllers.Base.DataTablesColumn.Name">
+            <summary>
+            Nome da coluna.
+            </summary>
+        </member>
+        <member name="P:RhSensoERP.API.Controllers.Base.DataTablesColumn.Searchable">
+            <summary>
+            Se é pesquisável.
+            </summary>
+        </member>
+        <member name="P:RhSensoERP.API.Controllers.Base.DataTablesColumn.Orderable">
+            <summary>
+            Se é ordenável.
+            </summary>
+        </member>
+        <member name="P:RhSensoERP.API.Controllers.Base.DataTablesColumn.Search">
+            <summary>
+            Busca específica da coluna.
+            </summary>
+        </member>
+        <member name="T:RhSensoERP.API.Controllers.Base.DataTablesResponse`1">
+            <summary>
+            Response do DataTables jQuery.
+            </summary>
+            <typeparam name="T">Tipo dos dados</typeparam>
+        </member>
+        <member name="P:RhSensoERP.API.Controllers.Base.DataTablesResponse`1.Draw">
+            <summary>
+            Draw counter.
+            </summary>
+        </member>
+        <member name="P:RhSensoERP.API.Controllers.Base.DataTablesResponse`1.RecordsTotal">
+            <summary>
+            Total de registros sem filtro.
+            </summary>
+        </member>
+        <member name="P:RhSensoERP.API.Controllers.Base.DataTablesResponse`1.RecordsFiltered">
+            <summary>
+            Total de registros após filtro.
+            </summary>
+        </member>
+        <member name="P:RhSensoERP.API.Controllers.Base.DataTablesResponse`1.Data">
+            <summary>
+            Dados.
+            </summary>
+        </member>
+        <member name="P:RhSensoERP.API.Controllers.Base.DataTablesResponse`1.Error">
+            <summary>
+            Erro (se houver).
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.Base.DataTablesResponse`1.FromPagedResult(RhSensoERP.Shared.Application.Interfaces.ServicePagedResult{`0},System.Int32,System.Nullable{System.Int32})">
+            <summary>
+            Cria uma resposta do DataTables.
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.Base.DataTablesResponse`1.FromError(System.Int32,System.String)">
+            <summary>
+            Cria uma resposta de erro.
+            </summary>
+        </member>
+        <member name="T:RhSensoERP.API.Controllers.Base.DataTablesApiController`3">
+            <summary>
+            Controller base com suporte a DataTables jQuery.
+            Herda de GenericApiController e adiciona endpoint para DataTables.
+            </summary>
+            <typeparam name="TEntity">Tipo da entidade</typeparam>
+            <typeparam name="TKey">Tipo da chave primária</typeparam>
+            <typeparam name="TDto">Tipo do DTO</typeparam>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.Base.DataTablesApiController`3.#ctor(RhSensoERP.Shared.Application.Interfaces.ICrudService{`0,`1,`2},Microsoft.Extensions.Logging.ILogger)">
+            <summary>
+            Construtor.
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.Base.DataTablesApiController`3.DataTables(RhSensoERP.API.Controllers.Base.DataTablesRequest,System.Threading.CancellationToken)">
+            <summary>
+            Endpoint para DataTables jQuery (server-side processing).
+            </summary>
+            <param name="request">Request do DataTables</param>
+            <param name="ct">Token de cancelamento</param>
+            <returns>Response formatado para DataTables</returns>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.Base.DataTablesApiController`3.DataTablesGet(System.Int32,System.Int32,System.Int32,System.String,System.Int32,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Endpoint GET para DataTables (alternativa ao POST).
+            </summary>
+        </member>
+        <member name="T:RhSensoERP.API.Controllers.Base.GenericApiController`3">
+            <summary>
+            Controller base genérico com operações CRUD.
+            </summary>
+            <typeparam name="TEntity">Tipo da entidade</typeparam>
+            <typeparam name="TKey">Tipo da chave primária</typeparam>
+            <typeparam name="TDto">Tipo do DTO</typeparam>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.Base.GenericApiController`3.#ctor(RhSensoERP.Shared.Application.Interfaces.ICrudService{`0,`1,`2},Microsoft.Extensions.Logging.ILogger)">
+            <summary>
+            Construtor.
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.Base.GenericApiController`3.GetAll(System.Int32,System.Int32,System.String,System.String,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Lista todos os registros com paginação.
+            </summary>
+            <param name="pageNumber">Número da página (1-based)</param>
+            <param name="pageSize">Tamanho da página</param>
+            <param name="sortField">Campo para ordenação</param>
+            <param name="sortDirection">Direção (asc/desc)</param>
+            <param name="searchTerm">Termo de busca global</param>
+            <param name="ct">Token de cancelamento</param>
+            <returns>Lista paginada de registros</returns>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.Base.GenericApiController`3.GetById(`1,System.Threading.CancellationToken)">
+            <summary>
+            Obtém um registro pelo ID.
+            </summary>
+            <param name="id">ID do registro</param>
+            <param name="ct">Token de cancelamento</param>
+            <returns>Registro encontrado ou 404</returns>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.Base.GenericApiController`3.Create(`2,System.Threading.CancellationToken)">
+            <summary>
+            Cria um novo registro.
+            </summary>
+            <param name="dto">Dados do registro</param>
+            <param name="ct">Token de cancelamento</param>
+            <returns>Registro criado</returns>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.Base.GenericApiController`3.Update(`1,`2,System.Threading.CancellationToken)">
+            <summary>
+            Atualiza um registro existente.
+            </summary>
+            <param name="id">ID do registro</param>
+            <param name="dto">Dados atualizados</param>
+            <param name="ct">Token de cancelamento</param>
+            <returns>Registro atualizado</returns>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.Base.GenericApiController`3.Delete(`1,System.Threading.CancellationToken)">
+            <summary>
+            Remove um registro.
+            </summary>
+            <param name="id">ID do registro</param>
+            <param name="ct">Token de cancelamento</param>
+            <returns>204 No Content ou erro</returns>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.Base.GenericApiController`3.Exists(`1,System.Threading.CancellationToken)">
+            <summary>
+            Verifica se um registro existe.
+            </summary>
+            <param name="id">ID do registro</param>
+            <param name="ct">Token de cancelamento</param>
+            <returns>200 OK com true/false</returns>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.Base.GenericApiController`3.Count(System.Threading.CancellationToken)">
+            <summary>
+            Conta o total de registros.
+            </summary>
+            <param name="ct">Token de cancelamento</param>
+            <returns>Total de registros</returns>
+        </member>
+        <member name="T:RhSensoERP.API.Controllers.Base.GenericApiController`5">
+            <summary>
+            Controller base genérico com DTOs separados para Create e Update.
+            </summary>
+            <typeparam name="TEntity">Tipo da entidade</typeparam>
+            <typeparam name="TKey">Tipo da chave primária</typeparam>
+            <typeparam name="TDto">Tipo do DTO de leitura</typeparam>
+            <typeparam name="TCreateDto">Tipo do DTO de criação</typeparam>
+            <typeparam name="TUpdateDto">Tipo do DTO de atualização</typeparam>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.Base.GenericApiController`5.#ctor(RhSensoERP.Shared.Application.Interfaces.ICrudService{`0,`1,`2,`3,`4},Microsoft.Extensions.Logging.ILogger)">
+            <summary>
+            Construtor.
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.Base.GenericApiController`5.GetAll(System.Int32,System.Int32,System.String,System.String,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Lista todos os registros com paginação.
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.Base.GenericApiController`5.GetById(`1,System.Threading.CancellationToken)">
+            <summary>
+            Obtém um registro pelo ID.
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.Base.GenericApiController`5.Create(`3,System.Threading.CancellationToken)">
+            <summary>
+            Cria um novo registro.
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.Base.GenericApiController`5.Update(`1,`4,System.Threading.CancellationToken)">
+            <summary>
+            Atualiza um registro existente.
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.Base.GenericApiController`5.Delete(`1,System.Threading.CancellationToken)">
+            <summary>
+            Remove um registro.
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.Base.GenericApiController`5.Exists(`1,System.Threading.CancellationToken)">
+            <summary>
+            Verifica se um registro existe.
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.Base.GenericApiController`5.Count(System.Threading.CancellationToken)">
+            <summary>
+            Conta o total de registros.
+            </summary>
+        </member>
+        <member name="T:RhSensoERP.API.Controllers.DiagnosticsController">
+            <summary>
+            Controller para diagnósticos e testes do sistema.
+            ✅ FASE 1: Protegido com [Authorize(Roles = "Admin")] e oculto do Swagger em Release
+            ✅ FASE 2: Adicionado rate limiting específico
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.DiagnosticsController.TestDatabaseAsync(System.Threading.CancellationToken)">
+            <summary>
+            Testa a conexão com o banco de dados.
+            ✅ FASE 1: Desabilitado em produção por segurança
+            ✅ FASE 2: Rate limiting aplicado
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.DiagnosticsController.TestSqlLogging(System.Threading.CancellationToken)">
+            <summary>
+            Testa o SqlLoggingInterceptor com queries variadas.
+            ✅ FASE 1: Desabilitado em produção por segurança
+            ✅ FASE 2: Rate limiting aplicado
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.DiagnosticsController.TestSlowQuery(System.Threading.CancellationToken)">
+            <summary>
+            Testa query lenta (vai gerar warning de performance).
+            ✅ FASE 1: Substituído WAITFOR DELAY por Task.Delay (boa prática)
+            ✅ FASE 2: Rate limiting aplicado
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.DiagnosticsController.TestWriteOperations(System.Threading.CancellationToken)">
+            <summary>
+            Testa INSERT/UPDATE/DELETE (non-query commands).
+            ✅ FASE 1: Desabilitado em produção por segurança
+            ✅ FASE 2: Rate limiting aplicado
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.DiagnosticsController.GetSqlLoggingConfig">
+            <summary>
+            Retorna a configuração atual do SqlLogging.
+            ✅ FASE 1: Desabilitado em produção por segurança
+            ✅ FASE 2: Rate limiting aplicado
+            </summary>
+        </member>
+        <member name="T:RhSensoERP.API.Controllers.SqlLoggingOptions">
+            <summary>
+            Opções de configuração do SqlLogging.
+            </summary>
+        </member>
+        <member name="T:RhSensoERP.API.Controllers.HealthCheckController">
+            <summary>
+            Controller para health checks detalhados do sistema.
+            ✅ FASE 4: Health checks completos com status de dependências
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.HealthCheckController.Liveness">
+            <summary>
+            Health check básico (público, sem autenticação).
+            Usado por load balancers e monitoramento externo.
+            </summary>
+            <returns>Status básico da aplicação</returns>
+            <response code="200">Aplicação está saudável</response>
+            <response code="503">Aplicação está com problemas</response>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.HealthCheckController.Readiness(System.Threading.CancellationToken)">
+            <summary>
+            Health check completo (requer autenticação de admin).
+            Verifica status de todas as dependências.
+            </summary>
+            <param name="ct">Token de cancelamento</param>
+            <returns>Status detalhado da aplicação e dependências</returns>
+            <response code="200">Todos os componentes estão saudáveis</response>
+            <response code="401">Não autorizado</response>
+            <response code="503">Um ou mais componentes estão com problemas</response>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.HealthCheckController.CheckDatabaseAsync(System.Threading.CancellationToken)">
+            <summary>
+            Verifica conectividade com o banco de dados.
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.HealthCheckController.CheckConfiguration">
+            <summary>
+            Verifica se configurações críticas estão presentes.
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.HealthCheckController.CheckMemoryUsage">
+            <summary>
+            Verifica uso de memória da aplicação.
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.HealthCheckController.CheckDiskSpace">
+            <summary>
+            Verifica espaço em disco disponível.
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.HealthCheckController.GetApplicationVersion">
+            <summary>
+            Retorna a versão da aplicação.
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.HealthCheckController.GetUptime">
+            <summary>
+            Retorna o tempo de uptime da aplicação.
+            </summary>
+        </member>
+        <member name="T:RhSensoERP.API.Controllers.HealthCheckResult">
+            <summary>
+            Resultado de um health check individual.
+            </summary>
+        </member>
+        <member name="T:RhSensoERP.API.Controllers.Identity.AuthController">
+            <summary>
+            Controller para autenticação e gestão de tokens.
+            ✅ FASE 5: Auditoria completa implementada
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.Identity.AuthController.Login(RhSensoERP.Identity.Application.DTOs.Auth.LoginRequest,System.Threading.CancellationToken)">
+            <summary>
+            Autentica um usuário e retorna tokens JWT.
+            </summary>
+            <param name="request">Credenciais de login</param>
+            <param name="ct">Token de cancelamento</param>
+            <returns>Tokens de acesso e refresh</returns>
+            <response code="200">Login bem-sucedido</response>
+            <response code="400">Dados de entrada inválidos</response>
+            <response code="401">Credenciais inválidas ou conta bloqueada</response>
+            <response code="429">Limite de requisições excedido</response>
+            <response code="504">Timeout na requisição</response>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.Identity.AuthController.RefreshToken(RhSensoERP.Identity.Application.DTOs.Auth.RefreshTokenRequest,System.Threading.CancellationToken)">
+            <summary>
+            Renova tokens usando refresh token.
+            </summary>
+            <param name="request">Access token expirado e refresh token válido</param>
+            <param name="ct">Token de cancelamento</param>
+            <returns>Novos tokens de acesso e refresh</returns>
+            <response code="200">Tokens renovados com sucesso</response>
+            <response code="400">Dados de entrada inválidos</response>
+            <response code="401">Refresh token inválido ou expirado</response>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.Identity.AuthController.Logout(RhSensoERP.Identity.Application.DTOs.Auth.LogoutRequest,System.Threading.CancellationToken)">
+            <summary>
+            Logout do usuário (revoga refresh tokens).
+            </summary>
+            <param name="request">Parâmetros de logout</param>
+            <param name="ct">Token de cancelamento</param>
+            <returns>Confirmação de logout</returns>
+            <response code="200">Logout realizado com sucesso</response>
+            <response code="401">Não autorizado</response>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.Identity.AuthController.GetCurrentUser(System.Threading.CancellationToken)">
+            <summary>
+            Obtém informações do usuário autenticado.
+            </summary>
+            <param name="ct">Token de cancelamento</param>
+            <returns>Dados do usuário</returns>
+            <response code="200">Dados do usuário retornados com sucesso</response>
+            <response code="401">Não autorizado</response>
+            <response code="404">Usuário não encontrado</response>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.Identity.AuthController.ValidateToken">
+            <summary>
+            Valida se o token JWT atual ainda é válido (health check de autenticação).
+            </summary>
+            <returns>Status de validação</returns>
+            <response code="200">Token válido</response>
+            <response code="401">Token inválido ou expirado</response>
+        </member>
+        <member name="T:RhSensoERP.API.Controllers.Identity.PermissoesController">
+            <summary>
+            Controller para gerenciamento de permissões de usuários.
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.Identity.PermissoesController.GetPermissoes(System.String,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Retorna todas as permissões (funções e botões) de um usuário,
+            opcionalmente filtrando por sistema.
+            </summary>
+            <param name="cdUsuario">Código do usuário legado (tuse1.cdusuario)</param>
+            <param name="cdSistema">Código do sistema (opcional). Exemplos: RHU, FIN, EST</param>
+            <param name="ct">Token de cancelamento</param>
+            <returns>DTO com permissões do usuário</returns>
+            <response code="200">Permissões carregadas com sucesso</response>
+            <response code="400">Parâmetros inválidos</response>
+            <response code="500">Erro interno do servidor</response>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.Identity.PermissoesController.ValidarPermissao(RhSensoERP.Identity.Application.DTOs.Permissoes.ValidarPermissaoRequest,System.Threading.CancellationToken)">
+            <summary>
+            Valida se um usuário tem permissão específica para uma ação em uma função.
+            Este endpoint é usado para validar ações específicas como Incluir, Alterar, Excluir, Consultar.
+            </summary>
+            <param name="request">Dados da validação (cdUsuario, cdSistema, cdFuncao, acao)</param>
+            <param name="ct">Token de cancelamento</param>
+            <returns>Resultado detalhado da validação</returns>
+            <response code="200">Validação realizada com sucesso</response>
+            <response code="400">Parâmetros inválidos</response>
+            <response code="500">Erro interno do servidor</response>
+            <remarks>
+            Exemplo de request:
+            
+                POST /api/identity/permissoes/validar
+                {
+                  "cdUsuario": "VERUSA",
+                  "cdSistema": "RHU",
+                  "cdFuncao": "SEG_FM_TSISTEMA",
+                  "acao": "I"
+                }
+            
+            Ações válidas:
+            - I = Incluir
+            - A = Alterar
+            - E = Excluir
+            - C = Consultar
+            
+            Exemplo de response (com permissão):
+            
+                {
+                  "temPermissao": true,
+                  "cdUsuario": "VERUSA",
+                  "cdSistema": "RHU",
+                  "cdFuncao": "SEG_FM_TSISTEMA",
+                  "acao": "I",
+                  "descricaoAcao": "Incluir",
+                  "acoesDisponiveis": "IAEC"
+                }
+            
+            Exemplo de response (sem permissão):
+            
+                {
+                  "temPermissao": false,
+                  "cdUsuario": "VERUSA",
+                  "cdSistema": "RHU",
+                  "cdFuncao": "SEG_FM_TSISTEMA",
+                  "acao": "E",
+                  "descricaoAcao": "Excluir",
+                  "motivo": "Usuário não possui permissão de 'Excluir' para esta função. Ações disponíveis: Incluir, Alterar, Consultar",
+                  "acoesDisponiveis": "IAC"
+                }
+            </remarks>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.Identity.PermissoesController.GetFuncoesPermitidas(System.String,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Retorna lista de funções permitidas para um usuário.
+            </summary>
+            <param name="cdUsuario">Código do usuário</param>
+            <param name="cdSistema">Código do sistema (opcional)</param>
+            <param name="ct">Token de cancelamento</param>
+            <returns>Lista de códigos de funções</returns>
+            <response code="200">Lista de funções retornada com sucesso</response>
+            <response code="400">Parâmetros inválidos</response>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.Identity.PermissoesController.GetBotoesPermitidos(System.String,System.String,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Retorna lista de botões permitidos para um usuário em uma função específica.
+            </summary>
+            <param name="cdUsuario">Código do usuário</param>
+            <param name="cdFuncao">Código da função</param>
+            <param name="cdSistema">Código do sistema (opcional)</param>
+            <param name="ct">Token de cancelamento</param>
+            <returns>Lista de códigos de botões</returns>
+            <response code="200">Lista de botões retornada com sucesso</response>
+            <response code="400">Parâmetros inválidos</response>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.Identity.PermissoesController.TogglePermissao(RhSensoERP.Identity.Application.DTOs.Permissoes.TogglePermissaoRequest,System.Threading.CancellationToken)">
+            <summary>
+            Habilita ou desabilita uma permissão específica (ação) para o grupo do usuário.
+            </summary>
+            <param name="request">Dados do toggle</param>
+            <param name="ct">Token de cancelamento</param>
+            <returns>Resultado da operação</returns>
+            <response code="200">Permissão alterada com sucesso</response>
+            <response code="400">Parâmetros inválidos</response>
+            <response code="500">Erro interno</response>
+            <remarks>
+            Exemplo de request:
+            
+                POST /api/identity/permissoes/toggle
+                {
+                  "cdUsuario": "VERUSA",
+                  "cdSistema": "RHU",
+                  "cdFuncao": "FM_COMPINSS",
+                  "acao": "I",
+                  "enabled": false
+                }
+            
+            **ATENÇÃO:** Esta operação altera a permissão no GRUPO do usuário,
+            afetando todos os usuários deste grupo.
+            </remarks>
+        </member>
+        <member name="T:RhSensoERP.API.Controllers.Identity.UsuariosController">
+            <summary>
+            Controller para gerenciamento de usuários.
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.Identity.UsuariosController.GetByCodigo(System.String,System.Threading.CancellationToken)">
+            <summary>
+            Obtém um usuário pelo código (cdusuario).
+            </summary>
+            <param name="cdUsuario">Código do usuário</param>
+            <param name="ct">Token de cancelamento</param>
+            <returns>Dados do usuário ou NotFound</returns>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.Identity.UsuariosController.Search(System.String,System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Pesquisa usuários por termo (cdusuario, nome ou e-mail).
+            </summary>
+            <param name="term">Termo de busca (opcional)</param>
+            <param name="take">Quantidade de registros (padrão 20, máximo 100)</param>
+            <param name="ct">Token de cancelamento</param>
+            <returns>Lista de usuários encontrados</returns>
+        </member>
+        <member name="T:RhSensoERP.API.Controllers.ManifestController">
+            <summary>
+            Controller que expõe manifesto das entidades do backend.
+            Usado pelo GeradorfullStack para gerar frontend automaticamente.
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.ManifestController.GetManifest">
+            <summary>
+            Retorna o manifesto completo de entidades.
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.ManifestController.GetModules">
+            <summary>
+            Lista módulos disponíveis.
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.ManifestController.GetModuleEntities(System.String)">
+            <summary>
+            Retorna entidades de um módulo.
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.ManifestController.GetEntity(System.String)">
+            <summary>
+            Retorna entidade específica.
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.ManifestController.RefreshManifest">
+            <summary>
+            Força reconstrução do cache.
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.ManifestController.DownloadManifest">
+            <summary>
+            Download do JSON.
+            </summary>
+        </member>
+        <member name="T:RhSensoERP.API.Controllers.MetadataController">
+            <summary>
+            Controller para consulta de metadados de entidades.
+            Usado pelo frontend dinâmico para renderizar UI.
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.MetadataController.GetModules">
+            <summary>
+            Lista todos os módulos disponíveis.
+            </summary>
+            <returns>Lista de nomes de módulos</returns>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.MetadataController.GetModuleEntities(System.String)">
+            <summary>
+            Lista todas as entidades de um módulo.
+            </summary>
+            <param name="moduleName">Nome do módulo (ex: GestaoDePessoas)</param>
+            <returns>Lista de entidades do módulo</returns>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.MetadataController.GetByRoute(System.String,System.String)">
+            <summary>
+            Retorna metadados completos de uma entidade por módulo e nome.
+            </summary>
+            <param name="moduleName">Nome do módulo (ex: GestaoDePessoas)</param>
+            <param name="entityName">Nome da entidade no plural (ex: bancos)</param>
+            <returns>Metadados completos da entidade</returns>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.MetadataController.GetByName(System.String)">
+            <summary>
+            Retorna metadados completos de uma entidade pelo nome.
+            </summary>
+            <param name="entityName">Nome da entidade (ex: Banco)</param>
+            <returns>Metadados completos da entidade</returns>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.MetadataController.GetAll">
+            <summary>
+            Lista todas as entidades registradas.
+            </summary>
+            <returns>Lista de todas as entidades</returns>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.MetadataController.GetStats">
+            <summary>
+            Retorna estatísticas do registry de metadados.
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.MetadataController.FormatModuleName(System.String)">
+            <summary>
+            Formata o nome do módulo para exibição.
+            </summary>
+        </member>
+        <member name="T:RhSensoERP.API.Controllers.ModuleInfo">
+            <summary>
+            Informações resumidas de um módulo.
+            </summary>
+        </member>
+        <member name="T:RhSensoERP.API.Controllers.EntitySummary">
+            <summary>
+            Informações resumidas de uma entidade.
+            </summary>
+        </member>
+        <member name="T:RhSensoERP.API.Controllers.MetadataStats">
+            <summary>
+            Estatísticas do registry de metadados.
+            </summary>
+        </member>
+        <member name="T:RhSensoERP.API.Controllers.ModuleStats">
+            <summary>
+            Estatísticas de um módulo.
+            </summary>
+        </member>
+        <member name="T:RhSensoERP.API.Controllers.SchemaController">
+            <summary>
+            Controller para consulta de schema do banco de dados.
+            Usado pelo Gerador de Razor Pages para validar entidades.
+            ⚠️ APENAS DISPONÍVEL EM AMBIENTE DE DESENVOLVIMENTO
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.SchemaController.GetTableSchema(System.String,System.String)">
+            <summary>
+            Retorna o schema de uma tabela específica.
+            </summary>
+            <param name="tableName">Nome da tabela (ex: TB_FUNCIONARIOS)</param>
+            <param name="database">Nome do banco (opcional, usa DefaultConnection se não informado)</param>
+            <returns>Schema da tabela com colunas, tipos, PK, FK, etc.</returns>
+            <response code="200">Schema retornado com sucesso</response>
+            <response code="400">Nome da tabela inválido ou bloqueado</response>
+            <response code="404">Tabela não encontrada ou endpoint indisponível</response>
+            <response code="500">Erro interno ao consultar banco</response>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.SchemaController.ListTables(System.String,System.String)">
+            <summary>
+            Lista todas as tabelas disponíveis no banco.
+            </summary>
+            <param name="database">Nome do banco (opcional)</param>
+            <param name="filter">Filtro por nome (ex: TB_)</param>
+            <returns>Lista de tabelas</returns>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.SchemaController.GetSchemaFromDatabaseAsync(System.String,System.String)">
+            <summary>
+            Consulta o schema da tabela no banco de dados.
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.SchemaController.GetTablesListAsync(System.String,System.String)">
+            <summary>
+            Lista tabelas do banco.
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.SchemaController.MapSqlTypeToCSharp(System.String,System.Boolean)">
+            <summary>
+            Mapeia tipo SQL para tipo C#.
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.SchemaController.SanitizeTableName(System.String)">
+            <summary>
+            Sanitiza nome da tabela (remove caracteres perigosos).
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.SchemaController.SanitizeDatabaseName(System.String)">
+            <summary>
+            Sanitiza nome do banco.
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.SchemaController.IsBlockedTable(System.String)">
+            <summary>
+            Verifica se é tabela bloqueada.
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.SchemaController.ReplaceDatabase(System.String,System.String)">
+            <summary>
+            Substitui o banco na connection string.
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.SchemaController.GetDatabaseName(System.String)">
+            <summary>
+            Extrai nome do banco da connection string.
+            </summary>
+        </member>
+        <member name="T:RhSensoERP.API.Controllers.TableSchemaResult">
+            <summary>
+            Resultado do schema de uma tabela.
+            </summary>
+        </member>
+        <member name="P:RhSensoERP.API.Controllers.TableSchemaResult.TableName">
+            <summary>Nome da tabela.</summary>
+        </member>
+        <member name="P:RhSensoERP.API.Controllers.TableSchemaResult.Schema">
+            <summary>Schema (default: dbo).</summary>
+        </member>
+        <member name="P:RhSensoERP.API.Controllers.TableSchemaResult.Database">
+            <summary>Nome do banco de dados.</summary>
+        </member>
+        <member name="P:RhSensoERP.API.Controllers.TableSchemaResult.ColumnCount">
+            <summary>Quantidade de colunas.</summary>
+        </member>
+        <member name="P:RhSensoERP.API.Controllers.TableSchemaResult.Columns">
+            <summary>Lista de colunas com seus metadados.</summary>
+        </member>
+        <member name="T:RhSensoERP.API.Controllers.ColumnSchemaItem">
+            <summary>
+            Metadados de uma coluna.
+            </summary>
+        </member>
+        <member name="P:RhSensoERP.API.Controllers.ColumnSchemaItem.Name">
+            <summary>Nome da coluna.</summary>
+        </member>
+        <member name="P:RhSensoERP.API.Controllers.ColumnSchemaItem.Type">
+            <summary>Tipo C# equivalente (int, string, DateTime, etc).</summary>
+        </member>
+        <member name="P:RhSensoERP.API.Controllers.ColumnSchemaItem.SqlType">
+            <summary>Tipo SQL original (nvarchar, int, datetime2, etc).</summary>
+        </member>
+        <member name="P:RhSensoERP.API.Controllers.ColumnSchemaItem.IsNullable">
+            <summary>Permite nulo?</summary>
+        </member>
+        <member name="P:RhSensoERP.API.Controllers.ColumnSchemaItem.IsPrimaryKey">
+            <summary>É chave primária?</summary>
+        </member>
+        <member name="P:RhSensoERP.API.Controllers.ColumnSchemaItem.IsIdentity">
+            <summary>É identity (auto-increment)?</summary>
+        </member>
+        <member name="P:RhSensoERP.API.Controllers.ColumnSchemaItem.IsForeignKey">
+            <summary>É chave estrangeira?</summary>
+        </member>
+        <member name="P:RhSensoERP.API.Controllers.ColumnSchemaItem.ForeignKeyTable">
+            <summary>Tabela referenciada (se FK).</summary>
+        </member>
+        <member name="P:RhSensoERP.API.Controllers.ColumnSchemaItem.ForeignKeyColumn">
+            <summary>Coluna referenciada (se FK).</summary>
+        </member>
+        <member name="P:RhSensoERP.API.Controllers.ColumnSchemaItem.MaxLength">
+            <summary>Tamanho máximo (para strings).</summary>
+        </member>
+        <member name="T:RhSensoERP.API.Controllers.TablesListResult">
+            <summary>
+            Resultado da listagem de tabelas.
+            </summary>
+        </member>
+        <member name="P:RhSensoERP.API.Controllers.TablesListResult.Database">
+            <summary>Nome do banco de dados.</summary>
+        </member>
+        <member name="P:RhSensoERP.API.Controllers.TablesListResult.Count">
+            <summary>Quantidade de tabelas.</summary>
+        </member>
+        <member name="P:RhSensoERP.API.Controllers.TablesListResult.Tables">
+            <summary>Lista de tabelas.</summary>
+        </member>
+        <member name="T:RhSensoERP.API.Controllers.TableInfo">
+            <summary>
+            Informações básicas de uma tabela.
+            </summary>
+        </member>
+        <member name="P:RhSensoERP.API.Controllers.TableInfo.TableName">
+            <summary>Nome da tabela.</summary>
+        </member>
+        <member name="P:RhSensoERP.API.Controllers.TableInfo.Schema">
+            <summary>Schema da tabela.</summary>
+        </member>
+        <member name="P:RhSensoERP.API.Controllers.TableInfo.ColumnCount">
+            <summary>Quantidade de colunas.</summary>
+        </member>
+        <member name="T:RhSensoERP.API.Controllers.SecurityMetricsController">
+            <summary>
+            Controller para métricas de segurança do sistema.
+            ✅ FASE 2: Protegido com rate limiting e desabilitado em produção
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.SecurityMetricsController.GetMetrics(System.Threading.CancellationToken)">
+            <summary>
+            Retorna métricas de segurança do sistema.
+            ✅ FASE 2: Desabilitado em produção por segurança
+            </summary>
+            <param name="ct">Token de cancelamento</param>
+            <returns>Métricas de segurança</returns>
+            <response code="200">Métricas retornadas com sucesso</response>
+            <response code="401">Não autorizado</response>
+            <response code="403">Acesso negado ou desabilitado em produção</response>
+            <response code="429">Limite de requisições excedido</response>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.SecurityMetricsController.CalculateSuccessRate(System.DateTime,System.Threading.CancellationToken)">
+            <summary>
+            Calcula a taxa de sucesso de login.
+            </summary>
+        </member>
+        <member name="T:RhSensoERP.API.Controllers.SwaggerTestController">
+            <summary>
+            Controller de teste para validar configuração do Swagger e detectar problemas.
+            ⚠️ REMOVER EM PRODUÇÃO - Apenas para diagnóstico.
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.SwaggerTestController.GetControllersInfo">
+            <summary>
+            Lista todos os controllers e seus GroupNames para diagnóstico.
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.SwaggerTestController.GetApiGroups">
+            <summary>
+            Lista todos os grupos (documentos) disponíveis no API Explorer.
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.SwaggerTestController.GetDiagnostics">
+            <summary>
+            Valida configuração e retorna diagnóstico completo.
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.SwaggerTestController.TestController(System.String)">
+            <summary>
+            Testa se um controller específico aparece no Swagger.
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.SwaggerTestController.GetSwaggerDocs">
+            <summary>
+            Lista todos os documentos Swagger disponíveis.
+            </summary>
+        </member>
+        <member name="T:RhSensoERP.API.Extensions.MetadataExtensions">
+            <summary>
+            Extensões para configuração do sistema de metadados.
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Extensions.MetadataExtensions.AddEntityMetadata(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            Adiciona o sistema de metadados ao container de DI.
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Extensions.MetadataExtensions.RegisterAllMetadata(RhSensoERP.Shared.Application.Metadata.MetadataRegistry)">
+            <summary>
+            Registra todos os MetadataProviders gerados pelo Source Generator.
+            </summary>
+        </member>
+        <member name="T:RhSensoERP.API.Extensions.ServiceCollectionExtensions">
+            <summary>
+            Extensões para configuração de serviços da API.
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Extensions.ServiceCollectionExtensions.AddJwtAuthentication(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration)">
+            <summary>
+            Configura autenticação JWT.
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Extensions.ServiceCollectionExtensions.AddCustomAuthorization(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            Configura autorização com políticas customizadas.
+            </summary>
+        </member>
+        <member name="T:RhSensoERP.API.Middleware.TenantMiddleware">
+            <summary>
+            Middleware que resolve o tenant atual baseado no hostname da requisição.
+            Armazena o TenantId no HttpContext.Items para uso posterior.
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Middleware.TenantMiddleware.ResolverTenantPorDominioAsync(RhSensoERP.Identity.Infrastructure.Persistence.Contexts.IdentityDbContext,System.String)">
+            <summary>
+            Resolve o tenant por domínio consultando a tabela SaasTenants.
+            </summary>
+        </member>
+        <member name="T:RhSensoERP.API.Middleware.TenantInfo">
+            <summary>
+            DTO para informações básicas do tenant.
+            </summary>
+        </member>
+        <member name="T:RhSensoERP.API.Middleware.TenantMiddlewareExtensions">
+            <summary>
+            Extension method para registrar o TenantMiddleware.
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Middleware.TenantMiddlewareExtensions.UseTenantResolution(Microsoft.AspNetCore.Builder.IApplicationBuilder)">
+            <summary>
+            Adiciona o TenantMiddleware ao pipeline de requisições.
+            Deve ser chamado ANTES da autenticação.
+            </summary>
+        </member>
+        <member name="T:RhSensoERP.API.SecretsConfig">
+            <summary>
+            Classe marcadora para User Secrets
+            </summary>
+        </member>
+        <member name="T:RhSensoERP.Shared.Api.Responses.ApiResponse`1">
+            <summary>
+            Resposta padrão da API.
+            </summary>
+            <typeparam name="T">Tipo dos dados</typeparam>
+        </member>
+        <member name="P:RhSensoERP.Shared.Api.Responses.ApiResponse`1.Success">
+            <summary>
+            Indica se a operação foi bem-sucedida.
+            </summary>
+        </member>
+        <member name="P:RhSensoERP.Shared.Api.Responses.ApiResponse`1.Data">
+            <summary>
+            Dados retornados.
+            </summary>
+        </member>
+        <member name="P:RhSensoERP.Shared.Api.Responses.ApiResponse`1.Message">
+            <summary>
+            Mensagem de sucesso ou erro.
+            </summary>
+        </member>
+        <member name="P:RhSensoERP.Shared.Api.Responses.ApiResponse`1.ErrorCode">
+            <summary>
+            Código do erro (se houver).
+            </summary>
+        </member>
+        <member name="P:RhSensoERP.Shared.Api.Responses.ApiResponse`1.ValidationErrors">
+            <summary>
+            Lista de erros de validação.
+            </summary>
+        </member>
+        <member name="P:RhSensoERP.Shared.Api.Responses.ApiResponse`1.Timestamp">
+            <summary>
+            Timestamp da resposta.
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.Shared.Api.Responses.ApiResponse`1.Ok(`0,System.String)">
+            <summary>
+            Cria uma resposta de sucesso.
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.Shared.Api.Responses.ApiResponse`1.Fail(System.String,System.String)">
+            <summary>
+            Cria uma resposta de erro.
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.Shared.Api.Responses.ApiResponse`1.ValidationFail(System.Collections.Generic.Dictionary{System.String,System.String[]})">
+            <summary>
+            Cria uma resposta de erro de validação.
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.Shared.Api.Responses.ApiResponse`1.FromResult(RhSensoERP.Shared.Core.Common.Result{`0},System.String)">
+            <summary>
+            Cria uma resposta a partir de um Result.
+            </summary>
+        </member>
+        <member name="T:RhSensoERP.Shared.Api.Responses.ApiResponse">
+            <summary>
+            Resposta padrão sem dados.
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.Shared.Api.Responses.ApiResponse.Ok(System.String)">
+            <summary>
+            Cria uma resposta de sucesso sem dados.
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.Shared.Api.Responses.ApiResponse.Fail(System.String,System.String)">
+            <summary>
+            Cria uma resposta de erro.
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.Shared.Api.Responses.ApiResponse.FromResult(RhSensoERP.Shared.Core.Common.Result,System.String)">
+            <summary>
+            Cria uma resposta a partir de um Result.
+            </summary>
+        </member>
+        <member name="T:RhSensoERP.Shared.Api.Responses.ResultActionExtensions">
+            <summary>
+            Extensões para converter Result em ActionResult.
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.Shared.Api.Responses.ResultActionExtensions.ToActionResult(RhSensoERP.Shared.Core.Common.Result)">
+            <summary>
+            Converte um Result em ActionResult.
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.Shared.Api.Responses.ResultActionExtensions.ToActionResult``1(RhSensoERP.Shared.Core.Common.Result{``0})">
+            <summary>
+            Converte um Result de T em ActionResult.
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.Shared.Api.Responses.ResultActionExtensions.ToApiResponse(RhSensoERP.Shared.Core.Common.Result,System.String)">
+            <summary>
+            Converte um Result em ActionResult com ApiResponse.
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.Shared.Api.Responses.ResultActionExtensions.ToApiResponse``1(RhSensoERP.Shared.Core.Common.Result{``0},System.String)">
+            <summary>
+            Converte um Result de T em ActionResult com ApiResponse.
+            </summary>
+        </member>
+        <member name="T:SecurityHeadersMiddleware">
+            <summary>
+            Middleware para adicionar headers de segurança HTTP.
+            ✅ FASE 4: Aprimorado com CSP mais restritiva e headers adicionais
+            </summary>
+        </member>
+        <member name="M:SecurityHeadersMiddleware.BuildDevelopmentCSP">
+            <summary>
+            Constrói CSP para ambiente de desenvolvimento.
+            Mais permissiva para permitir Swagger, hot reload, etc.
+            </summary>
+        </member>
+        <member name="M:SecurityHeadersMiddleware.BuildProductionCSP">
+            <summary>
+            Constrói CSP para ambiente de produção.
+            Mais restritiva para máxima segurança.
+            </summary>
+        </member>
+        <member name="M:SecurityHeadersMiddleware.LogSuspiciousRequests(Microsoft.AspNetCore.Http.HttpContext)">
+            <summary>
+            Loga requisições suspeitas para análise de segurança.
+            </summary>
+        </member>
+    </members>
+</doc>

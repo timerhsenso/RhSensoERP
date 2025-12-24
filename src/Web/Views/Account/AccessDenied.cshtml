@@ -1,0 +1,19 @@
+@{
+    ViewData["Title"] = "Acesso Negado";
+    Layout = "_Layout";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 text-center">
+            <i class="fas fa-lock fa-5x text-danger mb-4"></i>
+            <h1 class="display-4">Acesso Negado</h1>
+            <p class="lead mb-4">
+                Você não tem permissão para acessar este recurso.
+            </p>
+            <a asp-controller="Home" asp-action="Index" class="btn btn-primary">
+                <i class="fas fa-home me-2"></i>Voltar para Início
+            </a>
+        </div>
+    </div>
+</div>

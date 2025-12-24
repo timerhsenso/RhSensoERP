@@ -1,0 +1,704 @@
+@model List<GeradorEntidades.Services.ModuleInfo>
+@{
+    ViewData["Title"] = "Gerador Frontend - Backend Manifest";
+    Layout = null; // Página standalone sem layout
+}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+    <style>
+        body {
+            background-color: #f4f6f9;
+        }
+
+        .bg-gradient-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .accordion-button:not(.collapsed) {
+            background-color: #e7f1ff;
+        }
+
+        .entity-list .list-group-item:hover {
+            background-color: #f8f9fa;
+            cursor: pointer;
+        }
+
+        pre code {
+            font-size: 12px;
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+
+        .card {
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid py-4">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card bg-gradient-primary text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h2 class="mb-1">
+                                    <i class="fas fa-cloud-download-alt me-2"></i>
+                                    Gerar Frontend do Backend
+                                </h2>
+                                <p class="mb-0 opacity-75">
+                                    Selecione entidades do backend para gerar o frontend automaticamente
+                                </p>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge bg-light text-primary fs-6">
+                                    <i class="fas fa-database me-1"></i>
+                                    @ViewBag.TotalEntidades entidades
+                                </span>
+                                <span class="badge bg-light text-primary fs-6 ms-2">
+                                    <i class="fas fa-cubes me-1"></i>
+                                    @ViewBag.TotalModulos módulos
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @if (ViewBag.Error != null)
+        {
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                @ViewBag.Error
+                <hr>
+                <small>Certifique-se de que a API está rodando em: <strong>@ViewBag.ApiUrl</strong></small>
+            </div>
+        }
+
+        <!-- Toolbar -->
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body py-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <button type="button" class="btn btn-outline-primary btn-sm" id="btnRefresh">
+                                    <i class="fas fa-sync-alt me-1"></i> Atualizar Manifesto
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm ms-2" id="btnExpandAll">
+                                    <i class="fas fa-expand-alt me-1"></i> Expandir Todos
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" id="btnCollapseAll">
+                                    <i class="fas fa-compress-alt me-1"></i> Recolher Todos
+                                </button>
+                            </div>
+                            <div>
+                                <span class="text-muted small">
+                                    <i class="fas fa-clock me-1"></i>
+                                    Manifesto: @ViewBag.GeneratedAt
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Módulos e Entidades -->
+        <div class="row">
+            <div class="col-md-4">
+                <!-- Lista de Módulos -->
+                <div class="card">
+                    <div class="card-header bg-dark text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-cubes me-2"></i>Módulos
+                        </h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="accordion" id="modulesAccordion">
+                            @foreach (var module in Model)
+                            {
+                                var collapseId = $"collapse-{module.Name.Replace(" ", "").Replace(".", "")}";
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed module-btn" type="button"
+                                                data-bs-toggle="collapse" data-bs-target="#@collapseId"
+                                                data-module="@module.Name">
+                                            <span class="badge bg-primary me-2">@module.EntityCount</span>
+                                            @module.DisplayName
+                                        </button>
+                                    </h2>
+                                    <div id="@collapseId" class="accordion-collapse collapse"
+                                         data-bs-parent="#modulesAccordion" data-module="@module.Name">
+                                        <div class="accordion-body p-0">
+                                            <div class="list-group list-group-flush entity-list"
+                                                 id="entities-@module.Name.Replace(" ", "").Replace(".", "")">
+                                                <div class="text-center py-3 text-muted">
+                                                    <i class="fas fa-spinner fa-spin"></i> Carregando...
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-8">
+                <!-- Detalhes da Entidade Selecionada -->
+                <div class="card" id="entityDetails" style="display: none;">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <span id="entityTitle">Detalhes da Entidade</span>
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Info básica -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <table class="table table-sm">
+                                    <tr>
+                                        <th width="120">Entidade:</th>
+                                        <td><code id="detailEntityName"></code></td>
+                                    </tr>
+                                    <tr>
+                                        <th>Display:</th>
+                                        <td id="detailDisplayName"></td>
+                                    </tr>
+                                    <tr>
+                                        <th>Tabela:</th>
+                                        <td><code id="detailTableName"></code></td>
+                                    </tr>
+                                    <tr>
+                                        <th>Módulo:</th>
+                                        <td id="detailModule"></td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <table class="table table-sm">
+                                    <tr>
+                                        <th width="120">Rota API:</th>
+                                        <td><code id="detailRoute" class="text-success"></code></td>
+                                    </tr>
+                                    <tr>
+                                        <th>CdSistema:</th>
+                                        <td><code id="detailCdSistema"></code></td>
+                                    </tr>
+                                    <tr>
+                                        <th>CdFuncao:</th>
+                                        <td><code id="detailCdFuncao"></code></td>
+                                    </tr>
+                                    <tr>
+                                        <th>PK:</th>
+                                        <td><code id="detailPK"></code></td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Tabs: Propriedades e Navegações -->
+                        <ul class="nav nav-tabs" role="tablist">
+                            <li class="nav-item">
+                                <a class="nav-link active" data-bs-toggle="tab" href="#tabProperties">
+                                    <i class="fas fa-list me-1"></i>
+                                    Propriedades <span class="badge bg-secondary" id="propsCount">0</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" data-bs-toggle="tab" href="#tabNavigations">
+                                    <i class="fas fa-link me-1"></i>
+                                    Navegações <span class="badge bg-secondary" id="navsCount">0</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" data-bs-toggle="tab" href="#tabGenerate">
+                                    <i class="fas fa-cogs me-1"></i>
+                                    Gerar Frontend
+                                </a>
+                            </li>
+                        </ul>
+
+                        <div class="tab-content border border-top-0 p-3">
+                            <!-- Tab Propriedades -->
+                            <div class="tab-pane fade show active" id="tabProperties">
+                                <div class="table-responsive" style="max-height: 400px;">
+                                    <table class="table table-sm table-hover">
+                                        <thead class="table-light sticky-top">
+                                            <tr>
+                                                <th>Nome</th>
+                                                <th>Tipo</th>
+                                                <th>Display</th>
+                                                <th>Input</th>
+                                                <th class="text-center">PK</th>
+                                                <th class="text-center">Req</th>
+                                                <th class="text-center">Null</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="propertiesTable"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Tab Navegações -->
+                            <div class="tab-pane fade" id="tabNavigations">
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-hover">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Nome</th>
+                                                <th>Entidade Destino</th>
+                                                <th>Tipo</th>
+                                                <th>FK</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="navigationsTable"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Tab Gerar -->
+                            <div class="tab-pane fade" id="tabGenerate">
+                                <form id="generateForm">
+                                    <input type="hidden" id="genEntityName" />
+
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label">CdFuncao (override)</label>
+                                            <input type="text" class="form-control" id="genCdFuncao"
+                                                   placeholder="Deixe vazio para usar o do backend" />
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Display Name (override)</label>
+                                            <input type="text" class="form-control" id="genDisplayName"
+                                                   placeholder="Deixe vazio para usar o do backend" />
+                                        </div>
+                                    </div>
+
+                                    <div class="row mb-3">
+                                        <div class="col-md-4">
+                                            <label class="form-label">Ícone</label>
+                                            <input type="text" class="form-control" id="genIcone"
+                                                   value="fas fa-table" />
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">Menu Order</label>
+                                            <input type="number" class="form-control" id="genMenuOrder"
+                                                   value="10" min="1" />
+                                        </div>
+                                    </div>
+
+                                    <hr>
+
+                                    <h6>O que gerar:</h6>
+                                    <div class="row mb-3">
+                                        <div class="col-md-4">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="genController" checked>
+                                                <label class="form-check-label">Web Controller</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="genModels" checked>
+                                                <label class="form-check-label">Web Models</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="genServices" checked>
+                                                <label class="form-check-label">Web Services</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="genView" checked>
+                                                <label class="form-check-label">View (cshtml)</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="genJs" checked>
+                                                <label class="form-check-label">JavaScript</label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="d-flex gap-2">
+                                        <button type="button" class="btn btn-primary" id="btnGenerate">
+                                            <i class="fas fa-code me-1"></i> Gerar e Visualizar
+                                        </button>
+                                        <button type="button" class="btn btn-success" id="btnDownload">
+                                            <i class="fas fa-download me-1"></i> Download ZIP
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Resultado da Geração -->
+                <div class="card mt-3" id="generationResult" style="display: none;">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-check-circle me-2"></i>
+                            Arquivos Gerados
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="accordion" id="filesAccordion"></div>
+                    </div>
+                </div>
+
+                <!-- Placeholder quando nada selecionado -->
+                <div class="card" id="placeholderCard">
+                    <div class="card-body text-center py-5">
+                        <i class="fas fa-hand-pointer fa-4x text-muted mb-3"></i>
+                        <h4 class="text-muted">Selecione uma entidade</h4>
+                        <p class="text-muted">
+                            Clique em um módulo e depois em uma entidade para ver os detalhes
+                            e gerar o frontend.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // =========================================================================
+        // Variáveis globais
+        // =========================================================================
+        let currentEntity = null;
+        let loadedModules = {};
+
+        // =========================================================================
+        // Event Listeners (após DOM carregado)
+        // =========================================================================
+        document.addEventListener('DOMContentLoaded', function() {
+            // Botões da toolbar
+            document.getElementById('btnRefresh').addEventListener('click', refreshManifest);
+            document.getElementById('btnExpandAll').addEventListener('click', expandAll);
+            document.getElementById('btnCollapseAll').addEventListener('click', collapseAll);
+
+            // Botões de geração
+            document.getElementById('btnGenerate').addEventListener('click', generateFrontend);
+            document.getElementById('btnDownload').addEventListener('click', downloadFrontend);
+
+            // Botões de módulo (accordion)
+            document.querySelectorAll('.module-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const moduleName = this.getAttribute('data-module');
+                    loadEntities(moduleName);
+                });
+            });
+
+            console.log('Manifest UI inicializada');
+        });
+
+        // =========================================================================
+        // Carregar entidades de um módulo
+        // =========================================================================
+        function loadEntities(moduleName) {
+            const containerId = 'entities-' + moduleName.replace(/ /g, '').replace(/\./g, '');
+            const container = document.getElementById(containerId);
+
+            if (!container) {
+                console.error('Container não encontrado:', containerId);
+                return;
+            }
+
+            // Se já carregou, não recarrega
+            if (loadedModules[moduleName]) return;
+
+            console.log('Carregando entidades do módulo:', moduleName);
+
+            fetch('/Manifest/GetEntities?module=' + encodeURIComponent(moduleName))
+                .then(function(r) {
+                    if (!r.ok) throw new Error('HTTP ' + r.status);
+                    return r.json();
+                })
+                .then(function(entities) {
+                    loadedModules[moduleName] = true;
+
+                    if (!entities || entities.length === 0) {
+                        container.innerHTML = '<div class="text-center py-3 text-muted">Nenhuma entidade encontrada</div>';
+                        return;
+                    }
+
+                    let html = '';
+                    entities.forEach(function(e) {
+                        html += '<a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center entity-item" data-entity="' + e.entityName + '">' +
+                            '<div><i class="' + (e.icon || 'fas fa-table') + ' me-2 text-primary"></i>' + (e.displayName || e.entityName) + '</div>' +
+                            '<span class="badge ' + (e.hasCdFuncao ? 'bg-success' : 'bg-warning') + '" title="' + (e.hasCdFuncao ? e.cdFuncao : 'Sem CdFuncao') + '">' + e.propertiesCount + ' cols</span>' +
+                            '</a>';
+                    });
+                    container.innerHTML = html;
+
+                    // Adiciona eventos de clique
+                    container.querySelectorAll('.entity-item').forEach(function(item) {
+                        item.addEventListener('click', function(ev) {
+                            ev.preventDefault();
+                            selectEntity(this.getAttribute('data-entity'));
+                        });
+                    });
+                })
+                .catch(function(err) {
+                    console.error('Erro ao carregar entidades:', err);
+                    container.innerHTML = '<div class="text-center py-3 text-danger"><i class="fas fa-exclamation-triangle"></i> Erro ao carregar</div>';
+                });
+        }
+
+        // =========================================================================
+        // Selecionar entidade
+        // =========================================================================
+        function selectEntity(entityName) {
+            console.log('Selecionando entidade:', entityName);
+
+            fetch('/Manifest/GetEntity?name=' + encodeURIComponent(entityName))
+                .then(function(r) {
+                    if (!r.ok) throw new Error('HTTP ' + r.status);
+                    return r.json();
+                })
+                .then(function(entity) {
+                    currentEntity = entity;
+                    showEntityDetails(entity);
+                })
+                .catch(function(err) {
+                    console.error('Erro ao carregar entidade:', err);
+                    alert('Erro ao carregar entidade: ' + err);
+                });
+        }
+
+        // =========================================================================
+        // Mostrar detalhes da entidade
+        // =========================================================================
+        function showEntityDetails(entity) {
+            document.getElementById('placeholderCard').style.display = 'none';
+            document.getElementById('entityDetails').style.display = 'block';
+            document.getElementById('generationResult').style.display = 'none';
+
+            // Info básica
+            document.getElementById('entityTitle').textContent = entity.displayName || entity.entityName;
+            document.getElementById('detailEntityName').textContent = entity.entityName;
+            document.getElementById('detailDisplayName').textContent = entity.displayName;
+            document.getElementById('detailTableName').textContent = entity.tableName;
+            document.getElementById('detailModule').textContent = entity.moduleDisplayName || entity.moduleName;
+            document.getElementById('detailRoute').textContent = entity.route;
+            document.getElementById('detailCdSistema').textContent = entity.cdSistema || '-';
+            document.getElementById('detailCdFuncao').textContent = entity.cdFuncao || '⚠️ Não definido';
+            document.getElementById('detailPK').textContent = (entity.primaryKeyName || 'Id') + ' (' + (entity.primaryKeyType || 'int') + ')';
+
+            // Propriedades
+            let propsHtml = '';
+            if (entity.properties && entity.properties.length > 0) {
+                entity.properties.forEach(function(p) {
+                    propsHtml += '<tr>' +
+                        '<td><code>' + p.name + '</code></td>' +
+                        '<td><code class="text-info">' + p.type + '</code></td>' +
+                        '<td>' + (p.displayName || '') + '</td>' +
+                        '<td><span class="badge bg-secondary">' + (p.inputType || 'text') + '</span></td>' +
+                        '<td class="text-center">' + (p.isPrimaryKey ? '<i class="fas fa-key text-warning"></i>' : '') + '</td>' +
+                        '<td class="text-center">' + (p.isRequired ? '<i class="fas fa-check text-success"></i>' : '') + '</td>' +
+                        '<td class="text-center">' + (p.isNullable ? '<i class="fas fa-check text-muted"></i>' : '') + '</td>' +
+                        '</tr>';
+                });
+            }
+            document.getElementById('propertiesTable').innerHTML = propsHtml;
+            document.getElementById('propsCount').textContent = entity.properties ? entity.properties.length : 0;
+
+            // Navegações
+            let navsHtml = '';
+            if (entity.navigations && entity.navigations.length > 0) {
+                entity.navigations.forEach(function(n) {
+                    navsHtml += '<tr>' +
+                        '<td><code>' + n.name + '</code></td>' +
+                        '<td>' + n.targetEntity + '</td>' +
+                        '<td><span class="badge ' + (n.isCollection ? 'bg-info' : 'bg-primary') + '">' + n.relationType + '</span></td>' +
+                        '<td><code>' + (n.foreignKeyProperty || '-') + '</code></td>' +
+                        '</tr>';
+                });
+            } else {
+                navsHtml = '<tr><td colspan="4" class="text-center text-muted">Nenhuma navegação</td></tr>';
+            }
+            document.getElementById('navigationsTable').innerHTML = navsHtml;
+            document.getElementById('navsCount').textContent = entity.navigations ? entity.navigations.length : 0;
+
+            // Preenche form de geração
+            document.getElementById('genEntityName').value = entity.entityName;
+            document.getElementById('genCdFuncao').value = '';
+            document.getElementById('genCdFuncao').placeholder = entity.cdFuncao || 'Defina um CdFuncao';
+            document.getElementById('genDisplayName').value = '';
+            document.getElementById('genDisplayName').placeholder = entity.displayName || '';
+            document.getElementById('genIcone').value = entity.icon || 'fas fa-table';
+        }
+
+        // =========================================================================
+        // Gerar Frontend
+        // =========================================================================
+        function generateFrontend() {
+            var request = {
+                entityName: document.getElementById('genEntityName').value,
+                cdFuncao: document.getElementById('genCdFuncao').value || null,
+                displayName: document.getElementById('genDisplayName').value || null,
+                icone: document.getElementById('genIcone').value,
+                menuOrder: parseInt(document.getElementById('genMenuOrder').value) || 10,
+                gerarWebController: document.getElementById('genController').checked,
+                gerarWebModels: document.getElementById('genModels').checked,
+                gerarWebServices: document.getElementById('genServices').checked,
+                gerarView: document.getElementById('genView').checked,
+                gerarJavaScript: document.getElementById('genJs').checked
+            };
+
+            // Validação
+            if (!request.cdFuncao && currentEntity && !currentEntity.cdFuncao) {
+                alert('CdFuncao é obrigatório. Defina no campo "CdFuncao (override)".');
+                return;
+            }
+
+            console.log('Gerando frontend:', request);
+
+            fetch('/Manifest/GerarFrontend', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(request)
+            })
+            .then(function(r) {
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+                return r.json();
+            })
+            .then(function(result) {
+                if (result.error) {
+                    alert('Erro: ' + result.error);
+                    return;
+                }
+                showGeneratedFiles(result);
+            })
+            .catch(function(err) {
+                console.error('Erro ao gerar:', err);
+                alert('Erro ao gerar: ' + err);
+            });
+        }
+
+        // =========================================================================
+        // Mostrar arquivos gerados
+        // =========================================================================
+        function showGeneratedFiles(result) {
+            document.getElementById('generationResult').style.display = 'block';
+
+            var accordion = document.getElementById('filesAccordion');
+            var html = '';
+
+            if (result.files && result.files.length > 0) {
+                result.files.forEach(function(file, i) {
+                    html += '<div class="accordion-item">' +
+                        '<h2 class="accordion-header">' +
+                        '<button class="accordion-button ' + (i > 0 ? 'collapsed' : '') + '" type="button" data-bs-toggle="collapse" data-bs-target="#file-' + i + '">' +
+                        '<span class="badge bg-' + getFileColor(file.fileType) + ' me-2">' + file.fileType + '</span>' +
+                        file.fileName +
+                        '<small class="text-muted ms-2">' + file.relativePath + '</small>' +
+                        '</button></h2>' +
+                        '<div id="file-' + i + '" class="accordion-collapse collapse ' + (i === 0 ? 'show' : '') + '">' +
+                        '<div class="accordion-body p-0">' +
+                        '<pre class="m-0 p-3" style="max-height: 400px; overflow: auto; background: #1e1e1e; color: #d4d4d4;"><code>' + escapeHtml(file.content) + '</code></pre>' +
+                        '</div></div></div>';
+                });
+            }
+
+            accordion.innerHTML = html;
+
+            // Scroll para resultado
+            document.getElementById('generationResult').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function getFileColor(fileType) {
+            switch (fileType) {
+                case 'Controller': return 'primary';
+                case 'Model': return 'info';
+                case 'Service': return 'success';
+                case 'View': return 'warning';
+                case 'JavaScript': return 'dark';
+                default: return 'secondary';
+            }
+        }
+
+        function escapeHtml(text) {
+            var div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // =========================================================================
+        // Download ZIP
+        // =========================================================================
+        function downloadFrontend() {
+            var request = {
+                entityName: document.getElementById('genEntityName').value,
+                cdFuncao: document.getElementById('genCdFuncao').value || null,
+                displayName: document.getElementById('genDisplayName').value || null
+            };
+
+            if (!request.cdFuncao && currentEntity && !currentEntity.cdFuncao) {
+                alert('CdFuncao é obrigatório.');
+                return;
+            }
+
+            fetch('/Manifest/DownloadFrontendZip', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(request)
+            })
+            .then(function(r) { return r.blob(); })
+            .then(function(blob) {
+                var url = window.URL.createObjectURL(blob);
+                var a = document.createElement('a');
+                a.href = url;
+                a.download = request.entityName + '_Frontend.zip';
+                a.click();
+            })
+            .catch(function(err) {
+                alert('Erro ao baixar: ' + err);
+            });
+        }
+
+        // =========================================================================
+        // Utilitários
+        // =========================================================================
+        function refreshManifest() {
+            fetch('/Manifest/RefreshManifest', { method: 'POST' })
+                .then(function(r) { return r.json(); })
+                .then(function(result) {
+                    alert('Manifesto atualizado: ' + result.count + ' entidades');
+                    loadedModules = {};
+                    location.reload();
+                })
+                .catch(function(err) {
+                    alert('Erro ao atualizar: ' + err);
+                });
+        }
+
+        function expandAll() {
+            document.querySelectorAll('.accordion-collapse').forEach(function(el) {
+                el.classList.add('show');
+                var module = el.getAttribute('data-module');
+                if (module) loadEntities(module);
+            });
+        }
+
+        function collapseAll() {
+            document.querySelectorAll('.accordion-collapse').forEach(function(el) {
+                el.classList.remove('show');
+            });
+        }
+    </script>
+</body>
+</html>

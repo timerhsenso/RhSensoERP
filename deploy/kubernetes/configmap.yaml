@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rhsensoerp-config
+data:
+  ASPNETCORE_ENVIRONMENT: "Development"
+  Serilog__MinimumLevel: "Information"

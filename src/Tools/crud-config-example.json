@@ -1,0 +1,295 @@
+{
+  "$schema": "./crud-schema.json",
+  "solutionRoot": ".",
+  "apiProject": "src/RhSensoERP.API",
+  "webProject": "src/Web",
+  "entities": [
+    {
+      "name": "Sitc2",
+      "displayName": "Situação de Frequência",
+      "pluralName": "Sitc2s",
+      "module": "ControleDePonto",
+      "moduleRoute": "controledeponto",
+      "backendNamespace": "RhSensoERP.Modules.ControleDePonto.Application.DTOs.Sitc2s",
+      "tableName": "sitc2",
+      "cdSistema": "FRE",
+      "cdFuncao": "CPT_FM_SITC2",
+      "primaryKey": {
+        "property": "Id",
+        "type": "Guid",
+        "column": "id"
+      },
+      "properties": [
+        {
+          "name": "Id",
+          "type": "Guid",
+          "column": "id",
+          "displayName": "ID",
+          "isPrimaryKey": true,
+          "isReadOnly": true,
+          "required": false,
+          "list": { "show": false },
+          "form": { "show": false }
+        },
+        {
+          "name": "CdEmpresa",
+          "type": "int",
+          "column": "cdempresa",
+          "displayName": "Código Empresa",
+          "required": true,
+          "list": {
+            "show": true,
+            "order": 1,
+            "sortable": true,
+            "align": "right",
+            "format": "text",
+            "width": "120px"
+          },
+          "form": {
+            "show": true,
+            "order": 1,
+            "inputType": "number",
+            "placeholder": "Digite o código da empresa",
+            "helpText": "Código numérico da empresa",
+            "colSize": 4
+          }
+        },
+        {
+          "name": "CdFilial",
+          "type": "int",
+          "column": "cdfilial",
+          "displayName": "Código Filial",
+          "required": true,
+          "list": {
+            "show": true,
+            "order": 2,
+            "sortable": true,
+            "align": "right",
+            "format": "text",
+            "width": "120px"
+          },
+          "form": {
+            "show": true,
+            "order": 2,
+            "inputType": "number",
+            "placeholder": "Digite o código da filial",
+            "colSize": 4
+          }
+        },
+        {
+          "name": "NoMatric",
+          "type": "string",
+          "column": "nomatric",
+          "displayName": "Matrícula",
+          "maxLength": 8,
+          "required": true,
+          "list": {
+            "show": true,
+            "order": 3,
+            "sortable": true,
+            "align": "left",
+            "format": "text",
+            "width": "100px"
+          },
+          "form": {
+            "show": true,
+            "order": 3,
+            "inputType": "text",
+            "placeholder": "Ex: 00001234",
+            "helpText": "Matrícula do colaborador (8 caracteres)",
+            "colSize": 4
+          }
+        },
+        {
+          "name": "DtFrequen",
+          "type": "DateTime",
+          "column": "dtfrequen",
+          "displayName": "Data Frequência",
+          "required": true,
+          "list": {
+            "show": true,
+            "order": 4,
+            "sortable": true,
+            "align": "center",
+            "format": "date",
+            "width": "120px"
+          },
+          "form": {
+            "show": true,
+            "order": 4,
+            "inputType": "date",
+            "colSize": 4
+          }
+        },
+        {
+          "name": "FlSituacao",
+          "type": "int",
+          "column": "flsituacao",
+          "displayName": "Situação",
+          "required": true,
+          "list": {
+            "show": true,
+            "order": 5,
+            "sortable": true,
+            "align": "center",
+            "format": "text",
+            "width": "100px"
+          },
+          "form": {
+            "show": true,
+            "order": 5,
+            "inputType": "number",
+            "placeholder": "Código da situação",
+            "colSize": 4
+          }
+        },
+        {
+          "name": "CdUsuario",
+          "type": "string?",
+          "column": "cdusuario",
+          "displayName": "Código Usuário",
+          "maxLength": 20,
+          "required": false,
+          "list": {
+            "show": true,
+            "order": 6,
+            "sortable": true,
+            "align": "left",
+            "format": "text",
+            "width": "120px"
+          },
+          "form": {
+            "show": true,
+            "order": 6,
+            "inputType": "text",
+            "placeholder": "Usuário responsável",
+            "colSize": 4
+          }
+        },
+        {
+          "name": "DtUltMov",
+          "type": "DateTime",
+          "column": "dtultmov",
+          "displayName": "Data Última Movimentação",
+          "required": true,
+          "list": {
+            "show": true,
+            "order": 7,
+            "sortable": true,
+            "align": "center",
+            "format": "datetime",
+            "width": "150px"
+          },
+          "form": {
+            "show": true,
+            "order": 7,
+            "inputType": "datetime-local",
+            "colSize": 6
+          }
+        },
+        {
+          "name": "FlProcessado",
+          "type": "int",
+          "column": "FLPROCESSADO",
+          "displayName": "Processado",
+          "required": true,
+          "list": {
+            "show": true,
+            "order": 8,
+            "sortable": true,
+            "align": "center",
+            "format": "boolean",
+            "width": "100px"
+          },
+          "form": {
+            "show": true,
+            "order": 8,
+            "inputType": "checkbox",
+            "helpText": "0 = Não, 1 = Sim",
+            "colSize": 3
+          }
+        },
+        {
+          "name": "FlImportado",
+          "type": "int",
+          "column": "FLIMPORTADO",
+          "displayName": "Importado",
+          "required": true,
+          "list": {
+            "show": true,
+            "order": 9,
+            "sortable": true,
+            "align": "center",
+            "format": "boolean",
+            "width": "100px"
+          },
+          "form": {
+            "show": true,
+            "order": 9,
+            "inputType": "checkbox",
+            "colSize": 3
+          }
+        },
+        {
+          "name": "DtImportacao",
+          "type": "DateTime?",
+          "column": "DTIMPORTACAO",
+          "displayName": "Data Importação",
+          "required": false,
+          "list": {
+            "show": false
+          },
+          "form": {
+            "show": true,
+            "showOnCreate": false,
+            "showOnEdit": true,
+            "order": 10,
+            "inputType": "datetime-local",
+            "colSize": 6
+          }
+        },
+        {
+          "name": "DtProcessamento",
+          "type": "DateTime?",
+          "column": "DTPROCESSAMENTO",
+          "displayName": "Data Processamento",
+          "required": false,
+          "list": {
+            "show": false
+          },
+          "form": {
+            "show": true,
+            "showOnCreate": false,
+            "showOnEdit": true,
+            "order": 11,
+            "inputType": "datetime-local",
+            "colSize": 6
+          }
+        },
+        {
+          "name": "IdFuncionario",
+          "type": "Guid?",
+          "column": "idfuncionario",
+          "displayName": "Id Funcionário",
+          "required": false,
+          "list": { "show": false },
+          "form": {
+            "show": true,
+            "order": 12,
+            "inputType": "text",
+            "placeholder": "GUID do funcionário (opcional)",
+            "colSize": 12
+          }
+        }
+      ],
+      "generate": {
+        "apiController": false,
+        "webController": true,
+        "webModels": true,
+        "webServices": true,
+        "view": true,
+        "javascript": true
+      }
+    }
+  ]
+}

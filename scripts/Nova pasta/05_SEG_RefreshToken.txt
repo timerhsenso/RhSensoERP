@@ -1,0 +1,77 @@
+/****** 
+ * TABELA: SEG_RefreshToken
+ * DESCRIÇÃO: Gerenciamento de refresh tokens para renovação de JWT sem re-autenticação.
+ *             Suporta múltiplos dispositivos simultâneos (Web, Mobile, Desktop).
+ *             Implementa Token Rotation (cada refresh gera novo token, invalidando anterior).
+ * RELACIONAMENTO: N:1 com SEG_UserSecurity (um usuário pode ter vários refresh tokens ativos)
+ * SEGURANÇA: Tokens são hasheados, nunca em plain text. Revogação automática se SecurityStamp mudar.
+ ******/
+
+CREATE TABLE [dbo].[SEG_RefreshToken](
+    [Id] [uniqueidentifier] NOT NULL DEFAULT NEWSEQUENTIALID(),
+    [IdUserSecurity] [uniqueidentifier] NOT NULL,
+    
+    [TokenHash] [nvarchar](500) NOT NULL,
+    [DeviceId] [nvarchar](100) NULL,
+    [DeviceName] [nvarchar](200) NULL,
+    
+    [CreatedAt] [datetime2](7) NOT NULL DEFAULT GETUTCDATE(),
+    [ExpiresAt] [datetime2](7) NOT NULL,
+    [CreatedByIp] [varchar](45) NOT NULL,
+    
+    [IsRevoked] [bit] NOT NULL DEFAULT 0,
+    [RevokedAt] [datetime2](7) NULL,
+    [RevokedByIp] [varchar](45) NULL,
+    [RevokedReason] [varchar](100) NULL,
+    
+    [ReplacedByTokenId] [uniqueidentifier] NULL,
+    
+    CONSTRAINT [PK_SEG_RefreshToken] PRIMARY KEY CLUSTERED ([Id] ASC),
+    CONSTRAINT [FK_SEG_RefreshToken_UserSecurity] FOREIGN KEY([IdUserSecurity])
+        REFERENCES [dbo].[SEG_UserSecurity] ([Id]) ON DELETE CASCADE,
+    CONSTRAINT [FK_SEG_RefreshToken_ReplacedBy] FOREIGN KEY([ReplacedByTokenId])
+        REFERENCES [dbo].[SEG_RefreshToken] ([Id])
+) ON [PRIMARY]
+GO
+
+CREATE NONCLUSTERED INDEX [IX_SEG_RefreshToken_TokenHash] 
+    ON [dbo].[SEG_RefreshToken]([TokenHash]) 
+    WHERE [IsRevoked] = 0 AND [ExpiresAt] > GETUTCDATE()
+GO
+CREATE NONCLUSTERED INDEX [IX_SEG_RefreshToken_UserSecurity] 
+    ON [dbo].[SEG_RefreshToken]([IdUserSecurity]) 
+    INCLUDE ([DeviceName], [CreatedAt]) 
+    WHERE [IsRevoked] = 0
+GO
+
+-- EXTENDED PROPERTIES - TABELA
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Refresh Tokens para renovação de JWT sem re-login. Suporta múltiplos devices (Web+Mobile+Desktop). Implementa Token Rotation (cada uso gera novo token). Revogação automática quando SecurityStamp muda. Tokens sempre hasheados.' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_RefreshToken'
+GO
+
+-- EXTENDED PROPERTIES - COLUNAS
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Chave primária do refresh token' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_RefreshToken', @level2type=N'COLUMN', @level2name=N'Id'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'FK para SEG_UserSecurity.Id - Dono deste refresh token' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_RefreshToken', @level2type=N'COLUMN', @level2name=N'IdUserSecurity'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Hash SHA256 do refresh token. Token original (random 256-bit) é enviado ao cliente apenas no momento da criação. NUNCA armazenar token em plain text' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_RefreshToken', @level2type=N'COLUMN', @level2name=N'TokenHash'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Identificador único do dispositivo (Device Fingerprint). Ajuda detectar roubo de token' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_RefreshToken', @level2type=N'COLUMN', @level2name=N'DeviceId'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Nome amigável do dispositivo. Ex: "iPhone 13 de Carlos", "Chrome no Windows", "Tablet Samsung". Mostrado ao usuário na lista de sessões ativas' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_RefreshToken', @level2type=N'COLUMN', @level2name=N'DeviceName'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Data/hora UTC de criação do refresh token' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_RefreshToken', @level2type=N'COLUMN', @level2name=N'CreatedAt'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Data/hora UTC de expiração. Após esta data, token não pode mais ser usado. Duração definida em SEG_SecurityPolicy.RefreshTokenExpirationDays' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_RefreshToken', @level2type=N'COLUMN', @level2name=N'ExpiresAt'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'IP de onde o token foi criado (login inicial)' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_RefreshToken', @level2type=N'COLUMN', @level2name=N'CreatedByIp'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Se TRUE, token foi revogado e não pode mais ser usado. Revogação pode ser manual (logout) ou automática (SecurityStamp changed)' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_RefreshToken', @level2type=N'COLUMN', @level2name=N'IsRevoked'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Data/hora UTC da revogação do token' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_RefreshToken', @level2type=N'COLUMN', @level2name=N'RevokedAt'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'IP de onde a revogação foi solicitada (logout ou ação administrativa)' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_RefreshToken', @level2type=N'COLUMN', @level2name=N'RevokedByIp'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Motivo da revogação: Logout (manual), SecurityStampChanged (senha/permissões mudaram), TokenRotation (usado para gerar novo), Expired, AdminRevoked, SuspiciousActivity' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_RefreshToken', @level2type=N'COLUMN', @level2name=N'RevokedReason'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'FK para SEG_RefreshToken.Id - ID do novo token gerado que substituiu este (Token Rotation). Cria cadeia de auditoria' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_RefreshToken', @level2type=N'COLUMN', @level2name=N'ReplacedByTokenId'
+GO

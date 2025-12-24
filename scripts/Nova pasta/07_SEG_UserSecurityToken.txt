@@ -1,0 +1,62 @@
+/****** 
+ * TABELA: SEG_UserSecurityToken
+ * DESCRIÇÃO: Tokens de propósito específico: confirmação de email/telefone, reset de senha, etc.
+ *             Cada token tem tempo de expiração curto (15min - 24h dependendo do tipo).
+ *             Tokens são hasheados. Uso único (invalidados após uso ou expiração).
+ * RELACIONAMENTO: N:1 com SEG_UserSecurity
+ * TIPOS: EmailConfirmation, PasswordReset, PhoneConfirmation, ChangeEmail
+ ******/
+
+CREATE TABLE [dbo].[SEG_UserSecurityToken](
+    [Id] [uniqueidentifier] NOT NULL DEFAULT NEWSEQUENTIALID(),
+    [IdUserSecurity] [uniqueidentifier] NOT NULL,
+    
+    [TokenType] [varchar](50) NOT NULL,
+    [TokenHash] [nvarchar](500) NOT NULL,
+    
+    [CreatedAt] [datetime2](7) NOT NULL DEFAULT GETUTCDATE(),
+    [ExpiresAt] [datetime2](7) NOT NULL,
+    [RequestedFromIp] [varchar](45) NULL,
+    
+    [IsUsed] [bit] NOT NULL DEFAULT 0,
+    [UsedAt] [datetime2](7) NULL,
+    [UsedFromIp] [varchar](45) NULL,
+    
+    CONSTRAINT [PK_SEG_UserSecurityToken] PRIMARY KEY CLUSTERED ([Id] ASC),
+    CONSTRAINT [FK_SEG_UserSecurityToken_UserSecurity] FOREIGN KEY([IdUserSecurity])
+        REFERENCES [dbo].[SEG_UserSecurity] ([Id]) ON DELETE CASCADE,
+    CONSTRAINT [CK_SEG_UserSecurityToken_Type] 
+        CHECK ([TokenType] IN ('EmailConfirmation', 'PasswordReset', 'PhoneConfirmation', 'ChangeEmail'))
+) ON [PRIMARY]
+GO
+
+CREATE NONCLUSTERED INDEX [IX_SEG_UserSecurityToken_Hash_Type] 
+    ON [dbo].[SEG_UserSecurityToken]([TokenHash], [TokenType]) 
+    WHERE [IsUsed] = 0 AND [ExpiresAt] > GETUTCDATE()
+GO
+
+-- EXTENDED PROPERTIES - TABELA
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Tokens de segurança para operações específicas: confirmação de email/telefone, reset de senha, troca de email. Cada token tem propósito único, tempo de expiração curto, e é invalidado após uso. Tokens sempre hasheados.' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_UserSecurityToken'
+GO
+
+-- EXTENDED PROPERTIES - COLUNAS
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Chave primária do token de segurança' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_UserSecurityToken', @level2type=N'COLUMN', @level2name=N'Id'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'FK para SEG_UserSecurity.Id - Usuário que solicitou este token' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_UserSecurityToken', @level2type=N'COLUMN', @level2name=N'IdUserSecurity'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Tipo do token: EmailConfirmation (confirmar email novo usuário), PasswordReset (esqueci senha), PhoneConfirmation (confirmar celular), ChangeEmail (trocar email)' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_UserSecurityToken', @level2type=N'COLUMN', @level2name=N'TokenType'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Hash SHA256 do token. Token original (GUID ou código de 6 dígitos) é enviado por email/SMS. Ex: https://app.com/confirm?token=ABC123... onde ABC123 é hasheado antes de comparar' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_UserSecurityToken', @level2type=N'COLUMN', @level2name=N'TokenHash'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Data/hora UTC quando token foi gerado (envio de email/SMS)' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_UserSecurityToken', @level2type=N'COLUMN', @level2name=N'CreatedAt'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Data/hora UTC de expiração. Expiração típica: 15min (PasswordReset), 24h (EmailConfirmation), 5min (PhoneConfirmation)' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_UserSecurityToken', @level2type=N'COLUMN', @level2name=N'ExpiresAt'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'IP de onde token foi solicitado (ex: usuário clicou "esqueci senha")' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_UserSecurityToken', @level2type=N'COLUMN', @level2name=N'RequestedFromIp'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Se TRUE, token já foi usado (uso único). FALSE = ainda não usado' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_UserSecurityToken', @level2type=N'COLUMN', @level2name=N'IsUsed'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Data/hora UTC quando token foi usado (ex: usuário clicou no link de confirmação)' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_UserSecurityToken', @level2type=N'COLUMN', @level2name=N'UsedAt'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'IP de onde token foi usado. Ajuda detectar se token foi interceptado (IPs diferentes)' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_UserSecurityToken', @level2type=N'COLUMN', @level2name=N'UsedFromIp'
+GO

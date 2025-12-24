@@ -1,0 +1,17 @@
+src/
+ ├─ Shared/
+ │   ├─ Core/                 ✅ abstrações e classes base (reaproveitadas)
+ │   ├─ Application/          ✅ comportamentos genéricos (logging, validação, etc.)
+ │   ├─ Contracts/            ✅ DTOs e tipos comuns entre módulos
+ │   └─ Infrastructure/       ✅ implementações genéricas (log, email, cache, etc.)
+ │
+ ├─ RhSensoERP.Identity/
+ │   ├─ Domain/               ✅ suas entidades e lógica de domínio (ex: Sistema.cs)
+ │   ├─ Application/          ✅ CQRS, DTOs, Requests, Validators, Mapping
+ │   ├─ Infrastructure/       ✅ DbContext e Repositórios
+ │   └─ Configurations/       ✅ Fluent API do EF Core
+ │
+ ├─ RhSensoERP.API/
+ │   └─ Controllers/          ✅ endpoints REST
+ │
+ └─ RhSensoERP.Web/           ✅ front MVC (AdminLTE)

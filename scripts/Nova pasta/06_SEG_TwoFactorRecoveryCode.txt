@@ -1,0 +1,50 @@
+/****** 
+ * TABELA: SEG_TwoFactorRecoveryCode
+ * DESCRIÇÃO: Códigos de recuperação para 2FA (backup caso usuário perca acesso ao autenticador).
+ *             Cada código pode ser usado apenas uma vez. Tipicamente 8-10 códigos por usuário.
+ *             Gerados quando 2FA é ativado, podem ser regenerados pelo usuário.
+ * RELACIONAMENTO: N:1 com SEG_UserSecurity
+ * SEGURANÇA: Códigos são hasheados (SHA256). Mostrados em plain text ao usuário apenas na geração.
+ ******/
+
+CREATE TABLE [dbo].[SEG_TwoFactorRecoveryCode](
+    [Id] [uniqueidentifier] NOT NULL DEFAULT NEWSEQUENTIALID(),
+    [IdUserSecurity] [uniqueidentifier] NOT NULL,
+    
+    [CodeHash] [nvarchar](500) NOT NULL,
+    [GeneratedAt] [datetime2](7) NOT NULL DEFAULT GETUTCDATE(),
+    
+    [IsUsed] [bit] NOT NULL DEFAULT 0,
+    [UsedAt] [datetime2](7) NULL,
+    [UsedFromIp] [varchar](45) NULL,
+    
+    CONSTRAINT [PK_SEG_TwoFactorRecoveryCode] PRIMARY KEY CLUSTERED ([Id] ASC),
+    CONSTRAINT [FK_SEG_TwoFactorRecoveryCode_UserSecurity] FOREIGN KEY([IdUserSecurity])
+        REFERENCES [dbo].[SEG_UserSecurity] ([Id]) ON DELETE CASCADE
+) ON [PRIMARY]
+GO
+
+CREATE NONCLUSTERED INDEX [IX_SEG_TwoFactorRecoveryCode_UserSecurity] 
+    ON [dbo].[SEG_TwoFactorRecoveryCode]([IdUserSecurity]) 
+    WHERE [IsUsed] = 0
+GO
+
+-- EXTENDED PROPERTIES - TABELA
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Códigos de recuperação para 2FA (backup). Gerados quando 2FA é ativado (tipicamente 8-10 códigos). Cada código pode ser usado apenas uma vez. Se usuário perder acesso ao autenticator, pode usar um código de recuperação para fazer login e reconfigurar 2FA.' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_TwoFactorRecoveryCode'
+GO
+
+-- EXTENDED PROPERTIES - COLUNAS
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Chave primária do código de recuperação' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_TwoFactorRecoveryCode', @level2type=N'COLUMN', @level2name=N'Id'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'FK para SEG_UserSecurity.Id - Usuário dono destes códigos de recuperação' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_TwoFactorRecoveryCode', @level2type=N'COLUMN', @level2name=N'IdUserSecurity'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Hash SHA256 do código. Código original (8 caracteres alfanuméricos) é mostrado ao usuário apenas no momento da geração. Ex: X3K9-7HM2 (hasheado antes de salvar)' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_TwoFactorRecoveryCode', @level2type=N'COLUMN', @level2name=N'CodeHash'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Data/hora UTC quando códigos foram gerados (tipicamente quando 2FA foi ativado ou códigos foram regenerados)' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_TwoFactorRecoveryCode', @level2type=N'COLUMN', @level2name=N'GeneratedAt'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Se TRUE, código já foi utilizado e não pode ser reutilizado (uso único)' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_TwoFactorRecoveryCode', @level2type=N'COLUMN', @level2name=N'IsUsed'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Data/hora UTC quando código foi usado para fazer login' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_TwoFactorRecoveryCode', @level2type=N'COLUMN', @level2name=N'UsedAt'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'IP de onde código de recuperação foi usado. Auditoria de segurança' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_TwoFactorRecoveryCode', @level2type=N'COLUMN', @level2name=N'UsedFromIp'
+GO

@@ -1,0 +1,333 @@
+﻿@{
+    ViewData["Title"] = "Dashboard de Segurança";
+    Layout = "~/Views/Shared/_Layout.cshtml"; // ajuste se seu layout tiver outro caminho
+}
+
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1><i class="fas fa-shield-alt"></i> Dashboard de Segurança</h1>
+            </div>
+            <div class="col-sm-6 text-right">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "Home")">Home</a></li>
+                    <li class="breadcrumb-item active">Segurança</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="content">
+    <div class="container-fluid">
+
+        <!-- Linha 1: Cards principais -->
+        <div class="row">
+
+            <!-- Tentativas de login (24h) -->
+            <div class="col-md-3 col-sm-6 col-12">
+                <div class="info-box bg-info">
+                    <span class="info-box-icon"><i class="fas fa-sign-in-alt"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Tentativas de login (24h)</span>
+                        <span class="info-box-number" id="metric-login-last24h">--</span>
+                        <div class="progress">
+                            <div class="progress-bar" id="metric-login-failed-percentage"></div>
+                        </div>
+                        <span class="progress-description" id="metric-login-failed-text">
+                            Falhas: -- (--)
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- IPs únicos (7d) -->
+            <div class="col-md-3 col-sm-6 col-12">
+                <div class="info-box bg-warning">
+                    <span class="info-box-icon"><i class="fas fa-network-wired"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">IPs únicos (7 dias)</span>
+                        <span class="info-box-number" id="metric-unique-ips">--</span>
+                        <span class="progress-description">
+                            Possível variação de origem de acessos
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contas bloqueadas -->
+            <div class="col-md-3 col-sm-6 col-12">
+                <div class="info-box bg-danger">
+                    <span class="info-box-icon"><i class="fas fa-lock"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Contas bloqueadas</span>
+                        <span class="info-box-number" id="metric-locked-accounts">--</span>
+                        <span class="progress-description">
+                            Usuários sob lockout por tentativas excessivas
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2FA habilitado -->
+            <div class="col-md-3 col-sm-6 col-12">
+                <div class="info-box bg-success">
+                    <span class="info-box-icon"><i class="fas fa-user-shield"></i></span>
+                    <div class="info-box-content">
+                        <span class="info-box-text">Usuários com 2FA</span>
+                        <span class="info-box-number" id="metric-twofactor">--</span>
+                        <span class="progress-description">
+                            Contas com dupla proteção ativa
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Linha 2: Gráficos -->
+        <div class="row">
+            <!-- Gráfico de login (barra) -->
+            <div class="col-md-6">
+                <div class="card card-outline card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-chart-bar"></i> Tentativas de Login (24h)</h3>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="chartLoginAttempts" style="min-height: 250px; height: 250px; max-height: 300px;"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gráfico de saúde da segurança -->
+            <div class="col-md-6">
+                <div class="card card-outline card-secondary">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-chart-pie"></i> Saúde da Segurança</h3>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="chartSecurityHealth" style="min-height: 250px; height: 250px; max-height: 300px;"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Linha 3: Detalhes adicionais -->
+        <div class="row">
+            <!-- Senhas fracas -->
+            <div class="col-md-6">
+                <div class="card card-outline card-danger">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-exclamation-triangle"></i> Senhas Legadas / Fracas</h3>
+                    </div>
+                    <div class="card-body">
+                        <p>
+                            Usuários ainda utilizando <strong>SenhaUser</strong> (senha em texto plano herdada do sistema legado).
+                        </p>
+                        <p>
+                            <strong>Total:</strong> <span id="metric-weak-passwords">--</span>
+                        </p>
+                        <p class="text-muted">
+                            Recomendado: forçar migração gradual para senhas com hash (BCrypt) e expiração controlada.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Refresh tokens ativos -->
+            <div class="col-md-6">
+                <div class="card card-outline card-info">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-sync-alt"></i> Sessões / Refresh Tokens Ativos</h3>
+                    </div>
+                    <div class="card-body">
+                        <p>
+                            <strong>Refresh tokens ativos:</strong>
+                            <span id="metric-active-refresh-tokens">--</span>
+                        </p>
+                        <p class="text-muted">
+                            Cada refresh token representa uma sessão autenticada (dispositivo/navegador).
+                            Útil para monitorar uso e possíveis abusos de sessão.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Linha 4: Status de carregamento / erros -->
+        <div class="row">
+            <div class="col-md-12">
+                <div id="security-metrics-alert" class="alert alert-info" style="display:none;">
+                    Carregando métricas de segurança...
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+@section Scripts {
+    <!-- Se Chart.js ainda não estiver no layout, inclua -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        (function () {
+
+            const apiUrl = '/api/security/metrics'; // ajuste se a API estiver em outro host
+
+            let chartLoginAttempts;
+            let chartSecurityHealth;
+
+            function showAlert(message, type) {
+                const alertDiv = $('#security-metrics-alert');
+                alertDiv
+                    .removeClass('alert-info alert-danger alert-success')
+                    .addClass('alert-' + type)
+                    .text(message)
+                    .show();
+            }
+
+            function hideAlert() {
+                $('#security-metrics-alert').hide();
+            }
+
+            function loadMetrics() {
+                showAlert('Carregando métricas de segurança...', 'info');
+
+                $.getJSON(apiUrl)
+                    .done(function (data) {
+                        hideAlert();
+
+                        if (!data) {
+                            showAlert('Nenhuma métrica retornada pela API.', 'warning');
+                            return;
+                        }
+
+                        // Atualiza cards
+                        const loginAttempts = data.loginAttempts || {};
+                        const last24h = loginAttempts.last24h || 0;
+                        const failedLast24h = loginAttempts.failedLast24h || 0;
+                        const uniqueIPs = loginAttempts.uniqueIPs || 0;
+
+                        $('#metric-login-last24h').text(last24h);
+                        $('#metric-unique-ips').text(uniqueIPs);
+
+                        let failedPercent = 0;
+                        if (last24h > 0 && failedLast24h > 0) {
+                            failedPercent = Math.round((failedLast24h / last24h) * 100);
+                        }
+
+                        $('#metric-login-failed-text').text(`Falhas: ${failedLast24h} (${failedPercent}%)`);
+                        $('#metric-login-failed-percentage')
+                            .css('width', failedPercent + '%');
+
+                        $('#metric-locked-accounts').text(data.lockedAccounts || 0);
+                        $('#metric-twofactor').text(data.twoFactorEnabled || 0);
+                        $('#metric-weak-passwords').text(data.weakPasswords || 0);
+                        $('#metric-active-refresh-tokens').text(data.activeRefreshTokens || 0);
+
+                        // Atualiza gráficos
+                        renderLoginChart(last24h, failedLast24h, uniqueIPs);
+                        renderSecurityHealthChart(data);
+                    })
+                    .fail(function (jqXHR, textStatus) {
+                        showAlert('Erro ao carregar métricas de segurança: ' + textStatus, 'danger');
+                    });
+            }
+
+            function renderLoginChart(last24h, failedLast24h, uniqueIPs) {
+                const ctx = document.getElementById('chartLoginAttempts').getContext('2d');
+
+                if (chartLoginAttempts) {
+                    chartLoginAttempts.destroy();
+                }
+
+                chartLoginAttempts = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Tentativas 24h', 'Falhas 24h', 'IPs únicos (7d)'],
+                        datasets: [{
+                            label: 'Quantidade',
+                            data: [last24h, failedLast24h, uniqueIPs],
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                enabled: true
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    precision: 0
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            function renderSecurityHealthChart(data) {
+                const ctx = document.getElementById('chartSecurityHealth').getContext('2d');
+
+                if (chartSecurityHealth) {
+                    chartSecurityHealth.destroy();
+                }
+
+                const lockedAccounts = data.lockedAccounts || 0;
+                const weakPasswords = data.weakPasswords || 0;
+                const twoFactorEnabled = data.twoFactorEnabled || 0;
+                const activeRefreshTokens = data.activeRefreshTokens || 0;
+
+                chartSecurityHealth = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: [
+                            'Contas bloqueadas',
+                            'Senhas legadas',
+                            'Usuários com 2FA',
+                            'Refresh tokens ativos'
+                        ],
+                        datasets: [{
+                            data: [
+                                lockedAccounts,
+                                weakPasswords,
+                                twoFactorEnabled,
+                                activeRefreshTokens
+                            ],
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            },
+                            tooltip: {
+                                enabled: true
+                            }
+                        },
+                        cutout: '55%'
+                    }
+                });
+            }
+
+            // Auto-load ao abrir a página
+            $(document).ready(function () {
+                loadMetrics();
+
+                // Atualização automática a cada 60s (opcional)
+                setInterval(loadMetrics, 60000);
+            });
+
+        })();
+    </script>
+}

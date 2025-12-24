@@ -1,0 +1,45 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<!-- ✅ Source Generator -->
+	<ItemGroup>
+		<ProjectReference Include="..\..\Generators\RhSensoERP.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+	</ItemGroup>
+	
+	<ItemGroup>
+	  <Compile Remove="Application\Requests\**" />
+	  <EmbeddedResource Remove="Application\Requests\**" />
+	  <None Remove="Application\Requests\**" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Shared\Application\RhSensoERP.Shared.Application.csproj" />
+		<ProjectReference Include="..\Shared\Contracts\RhSensoERP.Shared.Contracts.csproj" />
+		<ProjectReference Include="..\Shared\Core\RhSensoERP.Shared.Core.csproj" />
+		<ProjectReference Include="..\Shared\Infrastructure\RhSensoERP.Shared.Infrastructure.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="BCrypt.Net-Next" />
+		<PackageReference Include="MediatR" />
+		<PackageReference Include="AutoMapper" />
+		<PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" />
+		<PackageReference Include="FluentValidation" />
+		<PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
+		<!-- ✅ NOVO - FASE 3: Active Directory -->
+		<PackageReference Include="System.DirectoryServices" />
+		<PackageReference Include="System.DirectoryServices.AccountManagement" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" />
+
+	</ItemGroup>
+	
+	<ItemGroup>
+	  <Folder Include="Application\DTOs\Common\" />
+	</ItemGroup>
+
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+
+</Project>

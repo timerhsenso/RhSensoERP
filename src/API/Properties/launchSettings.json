@@ -1,0 +1,139 @@
+{
+  // ============================================================================
+  // LAUNCHSETTINGS.JSON
+  // ============================================================================
+  // Configurações de execução para Visual Studio e Visual Studio Code.
+  // Este arquivo controla como a aplicação é iniciada durante desenvolvimento.
+  // 
+  // NÃO É USADO EM PRODUÇÃO - apenas em ambiente de desenvolvimento.
+  // 
+  // UTILIZADO: Sim - Visual Studio e VS Code leem automaticamente
+  // ============================================================================
+  
+  // Schema JSON para validação e IntelliSense
+  "$schema": "http://json.schemastore.org/launchsettings.json",
+  
+  // ============================================================================
+  // IIS SETTINGS - Configurações do IIS Express
+  // ============================================================================
+  // Usado apenas quando executando via IIS Express (Windows)
+  // ============================================================================
+  "iisSettings": {
+    // Desabilita autenticação Windows (API usa JWT)
+    "windowsAuthentication": false,
+    
+    // Habilita autenticação anônima (requisições sem credenciais Windows)
+    "anonymousAuthentication": true,
+    
+    // Configurações do IIS Express
+    "iisExpress": {
+      // URL HTTP do IIS Express
+      "applicationUrl": "http://localhost:15580",
+      
+      // Porta HTTPS do IIS Express
+      "sslPort": 44354
+    }
+  },
+  
+  // ============================================================================
+  // PROFILES - Perfis de Execução
+  // ============================================================================
+  // Cada perfil define uma forma diferente de executar a aplicação.
+  // Você pode selecionar o perfil no Visual Studio ou via:
+  // dotnet run --launch-profile <nome_do_perfil>
+  // ============================================================================
+  "profiles": {
+    
+    // ========================================================================
+    // PERFIL: HTTP
+    // ========================================================================
+    // Executa a aplicação apenas com HTTP (sem HTTPS)
+    // Útil para desenvolvimento quando não precisa testar SSL
+    // ========================================================================
+    "http": {
+      // Executa como projeto standalone (Kestrel)
+      "commandName": "Project",
+      
+      // Mostra mensagens de diagnóstico do dotnet run
+      "dotnetRunMessages": true,
+      
+      // Abre navegador automaticamente ao iniciar
+      "launchBrowser": true,
+      
+      // URL inicial do navegador (abre Swagger)
+      "launchUrl": "swagger",
+      
+      // URL onde a aplicação escuta (apenas HTTP)
+      "applicationUrl": "http://localhost:5174",
+      
+      // Variáveis de ambiente para este perfil
+      "environmentVariables": {
+        // Define ambiente como Development
+        // Isso faz o ASP.NET Core carregar appsettings.Development.json
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    },
+    
+    // ========================================================================
+    // PERFIL: HTTPS (PADRÃO)
+    // ========================================================================
+    // Executa a aplicação com HTTPS e HTTP
+    // Recomendado para desenvolvimento (simula produção)
+    // ========================================================================
+    "https": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": true,
+      "launchUrl": "swagger",
+      
+      // URLs onde a aplicação escuta (HTTPS e HTTP)
+      // HTTPS: https://localhost:7193
+      // HTTP:  http://localhost:5174
+      // O ponto-e-vírgula separa múltiplas URLs
+      "applicationUrl": "https://localhost:7193;http://localhost:5174",
+      
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    },
+    
+    // ========================================================================
+    // PERFIL: IIS EXPRESS
+    // ========================================================================
+    // Executa a aplicação via IIS Express (apenas Windows)
+    // Útil para testar integração com IIS antes de publicar
+    // ========================================================================
+    "IIS Express": {
+      // Executa via IIS Express
+      "commandName": "IISExpress",
+      
+      "launchBrowser": true,
+      "launchUrl": "swagger",
+      
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+      
+      // URLs são definidas em iisSettings.iisExpress acima
+    }
+  }
+  
+  // ============================================================================
+  // COMO USAR OS PERFIS
+  // ============================================================================
+  // 
+  // Visual Studio:
+  // - Selecione o perfil no dropdown ao lado do botão "Run"
+  // 
+  // Visual Studio Code:
+  // - Configure launch.json para usar o perfil desejado
+  // 
+  // Linha de comando:
+  // - dotnet run --launch-profile http
+  // - dotnet run --launch-profile https
+  // - dotnet run --launch-profile "IIS Express"
+  // 
+  // Sem especificar perfil:
+  // - dotnet run (usa o primeiro perfil: "http")
+  // ============================================================================
+}

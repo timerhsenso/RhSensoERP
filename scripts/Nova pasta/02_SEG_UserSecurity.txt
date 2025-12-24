@@ -1,0 +1,210 @@
+USE [bd_rhu_adn]
+GO
+
+/****** 
+ * TABELA: SEG_UserSecurity
+ * DESCRIÇÃO: Extensão 1:1 da tabela legada tuse1 contendo dados essenciais de segurança do usuário.
+ *             Armazena apenas informações que mudam por ação direta do usuário (senha, 2FA, lockout).
+ *             Separada de configurações (que ficam em SEG_SecurityPolicy) e auditoria (SEG_LoginAuditLog).
+ * RELACIONAMENTO: 1:1 com tuse1.id
+ * PADRÕES: ASP.NET Identity, OWASP, Clean Architecture
+ ******/
+
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[SEG_UserSecurity](
+    -- ========================================
+    -- IDENTIDADE
+    -- ========================================
+    [Id] [uniqueidentifier] NOT NULL DEFAULT NEWSEQUENTIALID(),
+    [IdUsuario] [uniqueidentifier] NOT NULL,
+    [IdSaaS] [uniqueidentifier] NULL,
+    
+    -- ========================================
+    -- SENHA
+    -- ========================================
+    [PasswordHash] [nvarchar](500) NOT NULL,
+    [PasswordSalt] [nvarchar](200) NOT NULL,
+    [PasswordAlgorithm] [varchar](50) NOT NULL DEFAULT 'PBKDF2-SHA512',
+    [PasswordVersion] [int] NOT NULL DEFAULT 1,
+    [PasswordChangedAt] [datetime2](7) NOT NULL DEFAULT GETUTCDATE(),
+    [MustChangePassword] [bit] NOT NULL DEFAULT 0,
+    [ForcePasswordChangeReason] [nvarchar](500) NULL,
+    
+    -- ========================================
+    -- LOCKOUT (Estado atual)
+    -- ========================================
+    [AccessFailedCount] [int] NOT NULL DEFAULT 0,
+    [LockoutEnd] [datetime2](7) NULL,
+    [LockoutEnabled] [bit] NOT NULL DEFAULT 1,
+    [AccountLockedReason] [nvarchar](500) NULL,
+    
+    -- ========================================
+    -- TWO-FACTOR AUTHENTICATION
+    -- ========================================
+    [TwoFactorEnabled] [bit] NOT NULL DEFAULT 0,
+    [TwoFactorSecret] [nvarchar](500) NULL,
+    [TwoFactorType] [varchar](20) NULL,
+    [TwoFactorActivatedAt] [datetime2](7) NULL,
+    
+    -- ========================================
+    -- CONFIRMAÇÕES
+    -- ========================================
+    [EmailConfirmed] [bit] NOT NULL DEFAULT 0,
+    [EmailConfirmedAt] [datetime2](7) NULL,
+    [PhoneNumber] [varchar](20) NULL,
+    [PhoneNumberConfirmed] [bit] NOT NULL DEFAULT 0,
+    [PhoneNumberConfirmedAt] [datetime2](7) NULL,
+    
+    -- ========================================
+    -- SECURITY STAMP (Invalidação de sessões)
+    -- ========================================
+    [SecurityStamp] [nvarchar](100) NOT NULL DEFAULT NEWID(),
+    [ConcurrencyStamp] [nvarchar](100) NOT NULL DEFAULT NEWID(),
+    
+    -- ========================================
+    -- ÚLTIMO ACESSO (Cache para performance)
+    -- ========================================
+    [LastLoginAt] [datetime2](7) NULL,
+    [LastLoginIP] [varchar](45) NULL,
+    
+    -- ========================================
+    -- AUDITORIA
+    -- ========================================
+    [IsActive] [bit] NOT NULL DEFAULT 1,
+    [IsDeleted] [bit] NOT NULL DEFAULT 0,
+    [CreatedAt] [datetime2](7) NOT NULL DEFAULT GETUTCDATE(),
+    [UpdatedAt] [datetime2](7) NOT NULL DEFAULT GETUTCDATE(),
+    [CreatedBy] [varchar](30) NULL,
+    [UpdatedBy] [varchar](30) NULL,
+    [DeletedAt] [datetime2](7) NULL,
+    [DeletedBy] [varchar](30) NULL,
+    
+    -- ========================================
+    -- CONSTRAINTS
+    -- ========================================
+    CONSTRAINT [PK_SEG_UserSecurity] PRIMARY KEY CLUSTERED ([Id] ASC)
+        WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, 
+              IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, 
+              ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
+    
+    CONSTRAINT [UK_SEG_UserSecurity_IdUsuario] UNIQUE NONCLUSTERED ([IdUsuario] ASC),
+    
+    CONSTRAINT [FK_SEG_UserSecurity_tuse1] FOREIGN KEY([IdUsuario])
+        REFERENCES [dbo].[tuse1] ([id]) 
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+    
+    CONSTRAINT [CK_SEG_UserSecurity_PasswordAlgorithm] 
+        CHECK ([PasswordAlgorithm] IN ('PBKDF2-SHA256', 'PBKDF2-SHA512', 'Bcrypt', 'Argon2id')),
+    
+    CONSTRAINT [CK_SEG_UserSecurity_TwoFactorType] 
+        CHECK ([TwoFactorType] IS NULL OR [TwoFactorType] IN ('TOTP', 'SMS', 'Email', 'Authenticator'))
+        
+) ON [PRIMARY]
+GO
+
+-- ========================================
+-- ÍNDICES
+-- ========================================
+CREATE NONCLUSTERED INDEX [IX_SEG_UserSecurity_IdSaaS] 
+    ON [dbo].[SEG_UserSecurity]([IdSaaS]) 
+    INCLUDE ([IdUsuario], [IsActive]) 
+    WHERE [IsDeleted] = 0
+GO
+
+CREATE NONCLUSTERED INDEX [IX_SEG_UserSecurity_SecurityStamp] 
+    ON [dbo].[SEG_UserSecurity]([SecurityStamp])
+GO
+
+CREATE NONCLUSTERED INDEX [IX_SEG_UserSecurity_LockoutEnd] 
+    ON [dbo].[SEG_UserSecurity]([LockoutEnd]) 
+    WHERE [LockoutEnd] IS NOT NULL AND [IsDeleted] = 0
+GO
+
+-- ========================================
+-- EXTENDED PROPERTIES - TABELA
+-- ========================================
+EXEC sys.sp_addextendedproperty 
+    @name=N'MS_Description', 
+    @value=N'Tabela de segurança complementar à tuse1 (relação 1:1). Armazena dados essenciais de autenticação do usuário: senha (hash/salt/algoritmo), controle de lockout, 2FA, confirmações e security stamp. Dados de configuração estão em SEG_SecurityPolicy e auditoria em SEG_LoginAuditLog.' , 
+    @level0type=N'SCHEMA', @level0name=N'dbo', 
+    @level1type=N'TABLE', @level1name=N'SEG_UserSecurity'
+GO
+
+-- ========================================
+-- EXTENDED PROPERTIES - COLUNAS
+-- ========================================
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Chave primária GUID gerada sequencialmente' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_UserSecurity', @level2type=N'COLUMN', @level2name=N'Id'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'FK para tuse1.id - Relacionamento 1:1 obrigatório com usuário legado' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_UserSecurity', @level2type=N'COLUMN', @level2name=N'IdUsuario'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Identificador do tenant/empresa no modelo SaaS multi-tenant. NULL para instalações OnPrem' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_UserSecurity', @level2type=N'COLUMN', @level2name=N'IdSaaS'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Hash da senha usando algoritmo especificado em PasswordAlgorithm (mínimo 100.000 iterações PBKDF2 ou equivalente Bcrypt/Argon2)' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_UserSecurity', @level2type=N'COLUMN', @level2name=N'PasswordHash'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Salt criptográfico único gerado randomicamente para cada usuário (mínimo 128 bits)' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_UserSecurity', @level2type=N'COLUMN', @level2name=N'PasswordSalt'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Algoritmo de hash utilizado: PBKDF2-SHA256, PBKDF2-SHA512, Bcrypt, Argon2id. Permite migração de algoritmos mantendo compatibilidade' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_UserSecurity', @level2type=N'COLUMN', @level2name=N'PasswordAlgorithm'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Versão do algoritmo de hash. Incrementado quando parâmetros mudam (ex: aumentar iterações PBKDF2)' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_UserSecurity', @level2type=N'COLUMN', @level2name=N'PasswordVersion'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Data/hora UTC da última alteração de senha. Usado para calcular expiração baseado em SEG_SecurityPolicy.PasswordExpirationDays' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_UserSecurity', @level2type=N'COLUMN', @level2name=N'PasswordChangedAt'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Se TRUE, força o usuário a trocar senha no próximo login. Usado em casos de reset administrativo ou senha comprometida' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_UserSecurity', @level2type=N'COLUMN', @level2name=N'MustChangePassword'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Motivo da troca forçada de senha. Ex: "Senha comprometida em vazamento", "Reset administrativo", "Política de segurança"' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_UserSecurity', @level2type=N'COLUMN', @level2name=N'ForcePasswordChangeReason'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Contador de tentativas de login falhadas consecutivas. Zerado após login bem-sucedido ou após tempo definido em SEG_SecurityPolicy.ResetFailedCountAfterMinutes' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_UserSecurity', @level2type=N'COLUMN', @level2name=N'AccessFailedCount'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Data/hora UTC até quando o usuário está bloqueado. NULL = não bloqueado. Após esta data, bloqueio é removido automaticamente' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_UserSecurity', @level2type=N'COLUMN', @level2name=N'LockoutEnd'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Se FALSE, desabilita o lockout automático para este usuário específico (útil para contas de serviço)' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_UserSecurity', @level2type=N'COLUMN', @level2name=N'LockoutEnabled'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Motivo do bloqueio manual da conta. NULL = bloqueio automático por tentativas. Ex: "Atividade suspeita", "Solicitação do usuário"' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_UserSecurity', @level2type=N'COLUMN', @level2name=N'AccountLockedReason'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Se TRUE, autenticação de dois fatores está ativa para este usuário. Requer código adicional após senha' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_UserSecurity', @level2type=N'COLUMN', @level2name=N'TwoFactorEnabled'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Segredo TOTP criptografado com chave do sistema. Base32 encoded. Usado para gerar códigos temporários de 6 dígitos' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_UserSecurity', @level2type=N'COLUMN', @level2name=N'TwoFactorSecret'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Tipo de 2FA: TOTP (Google Authenticator), SMS, Email, Authenticator (Microsoft/Authy)' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_UserSecurity', @level2type=N'COLUMN', @level2name=N'TwoFactorType'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Data/hora UTC quando 2FA foi ativado com sucesso pela primeira vez' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_UserSecurity', @level2type=N'COLUMN', @level2name=N'TwoFactorActivatedAt'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Se TRUE, email foi confirmado via token enviado. Obrigatório para recuperação de senha' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_UserSecurity', @level2type=N'COLUMN', @level2name=N'EmailConfirmed'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Data/hora UTC da confirmação do email' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_UserSecurity', @level2type=N'COLUMN', @level2name=N'EmailConfirmedAt'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Número de telefone para 2FA via SMS ou recuperação de conta. Formato: +5571999999999' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_UserSecurity', @level2type=N'COLUMN', @level2name=N'PhoneNumber'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Se TRUE, telefone foi confirmado via código SMS' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_UserSecurity', @level2type=N'COLUMN', @level2name=N'PhoneNumberConfirmed'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Data/hora UTC da confirmação do telefone' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_UserSecurity', @level2type=N'COLUMN', @level2name=N'PhoneNumberConfirmedAt'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'GUID alterado quando: senha muda, 2FA ativa/desativa, permissões mudam. Invalida TODOS os tokens JWT e refresh tokens do usuário. Verificado em cada request autenticado' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_UserSecurity', @level2type=N'COLUMN', @level2name=N'SecurityStamp'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'GUID para controle de concorrência otimista. Previne conflitos em updates simultâneos. Validado pelo EF Core' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_UserSecurity', @level2type=N'COLUMN', @level2name=N'ConcurrencyStamp'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Data/hora UTC do último login bem-sucedido. Cache denormalizado para performance (dados completos em SEG_LoginAuditLog)' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_UserSecurity', @level2type=N'COLUMN', @level2name=N'LastLoginAt'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'IP do último login bem-sucedido. Suporta IPv4 e IPv6. Cache denormalizado para performance' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_UserSecurity', @level2type=N'COLUMN', @level2name=N'LastLoginIP'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Se FALSE, usuário está desativado (não pode fazer login). Diferente de IsDeleted (soft delete)' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_UserSecurity', @level2type=N'COLUMN', @level2name=N'IsActive'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Soft delete. Se TRUE, registro foi excluído logicamente mas mantido no banco para auditoria' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_UserSecurity', @level2type=N'COLUMN', @level2name=N'IsDeleted'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Data/hora UTC de criação do registro (imutável)' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_UserSecurity', @level2type=N'COLUMN', @level2name=N'CreatedAt'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Data/hora UTC da última atualização. Atualizado automaticamente por trigger' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_UserSecurity', @level2type=N'COLUMN', @level2name=N'UpdatedAt'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Código do usuário (tuse1.cdusuario) que criou o registro' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_UserSecurity', @level2type=N'COLUMN', @level2name=N'CreatedBy'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Código do usuário (tuse1.cdusuario) que fez a última atualização' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_UserSecurity', @level2type=N'COLUMN', @level2name=N'UpdatedBy'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Data/hora UTC da exclusão lógica (soft delete)' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_UserSecurity', @level2type=N'COLUMN', @level2name=N'DeletedAt'
+GO
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'Código do usuário (tuse1.cdusuario) que fez a exclusão lógica' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'SEG_UserSecurity', @level2type=N'COLUMN', @level2name=N'DeletedBy'
+GO

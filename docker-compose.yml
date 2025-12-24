@@ -1,0 +1,82 @@
+version: '3.8'
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: rhsensoerp-sqlserver
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=YourStrong@Passw0rd
+      - MSSQL_PID=Developer
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+    networks:
+      - rhsensoerp-network
+    healthcheck:
+      test: /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "YourStrong@Passw0rd" -Q "SELECT 1" || exit 1
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
+  redis:
+    image: redis:7-alpine
+    container_name: rhsensoerp-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - rhsensoerp-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  seq:
+    image: datalust/seq:latest
+    container_name: rhsensoerp-seq
+    environment:
+      - ACCEPT_EULA=Y
+    ports:
+      - "5341:80"
+    volumes:
+      - seq-data:/data
+    networks:
+      - rhsensoerp-network
+
+  api:
+    build:
+      context: .
+      dockerfile: src/API/Dockerfile
+    container_name: rhsensoerp-api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=RhSensoERPDB;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;
+      - Redis__Configuration=redis:6379
+      - Serilog__WriteTo__0__Args__serverUrl=http://seq:5341
+    ports:
+      - "5000:80"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      seq:
+        condition: service_started
+    networks:
+      - rhsensoerp-network
+    restart: unless-stopped
+
+volumes:
+  sqlserver-data:
+  redis-data:
+  seq-data:
+
+networks:
+  rhsensoerp-network:
+    driver: bridge

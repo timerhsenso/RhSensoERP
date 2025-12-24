@@ -1,0 +1,491 @@
+/* ========================================
+   CRUD BASE - Estilos Modernos
+   Arquivo: wwwroot/css/crud-base.css
+   ======================================== */
+
+/* ========================================
+   1. VARIÁVEIS CSS
+   ======================================== */
+:root {
+    --crud-primary: #667eea;
+    --crud-primary-dark: #764ba2;
+    --crud-success: #1cc88a;
+    --crud-success-dark: #13855c;
+    --crud-danger: #e74a3b;
+    --crud-danger-dark: #be2617;
+    --crud-warning: #f6c23e;
+    --crud-warning-dark: #dda20a;
+    --crud-info: #36b9cc;
+    --crud-info-dark: #258391;
+    --crud-secondary: #858796;
+    --crud-light: #f8f9fc;
+    --crud-dark: #5a5c69;
+    --crud-border: #e3e6f0;
+    --crud-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    --crud-shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.15);
+    --crud-radius: 8px;
+    --crud-radius-sm: 4px;
+    --crud-radius-lg: 12px;
+    --crud-transition: all 0.3s ease;
+}
+
+/* ========================================
+   2. CONTAINER E LAYOUT
+   ======================================== */
+.crud-container {
+    background: #fff;
+    border-radius: var(--crud-radius);
+    box-shadow: var(--crud-shadow);
+    padding: 0;
+    margin-bottom: 30px;
+}
+
+.crud-header {
+    background: linear-gradient(135deg, var(--crud-primary) 0%, var(--crud-primary-dark) 100%);
+    color: #fff;
+    padding: 25px 30px;
+    border-radius: var(--crud-radius) var(--crud-radius) 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.crud-header-title {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin: 0;
+}
+
+.crud-header-title i {
+    font-size: 2rem;
+    opacity: 0.9;
+}
+
+.crud-header-title h2 {
+    margin: 0;
+    font-size: 1.75rem;
+    font-weight: 600;
+}
+
+.crud-header-title p {
+    margin: 5px 0 0 0;
+    opacity: 0.9;
+    font-size: 0.95rem;
+}
+
+.crud-header-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* ========================================
+   3. TOOLBAR E FILTROS
+   ======================================== */
+.crud-toolbar {
+    background: var(--crud-light);
+    padding: 20px 30px;
+    border-bottom: 1px solid var(--crud-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.crud-toolbar-left {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.crud-toolbar-right {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.crud-search-box {
+    position: relative;
+    min-width: 300px;
+}
+
+.crud-search-box input {
+    padding-left: 40px;
+    border-radius: 25px;
+    border: 1px solid var(--crud-border);
+}
+
+.crud-search-box i {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--crud-secondary);
+}
+
+.crud-selected-count {
+    background: var(--crud-info);
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* ========================================
+   4. DATATABLE CUSTOMIZADO
+   ======================================== */
+.crud-body {
+    padding: 30px;
+}
+
+.table-crud {
+    width: 100% !important;
+    margin-bottom: 0;
+}
+
+.table-crud thead th {
+    background: var(--crud-light);
+    border-bottom: 2px solid var(--crud-border);
+    color: var(--crud-primary);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    padding: 15px 12px;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+.table-crud tbody td {
+    padding: 12px;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--crud-border);
+}
+
+.table-crud tbody tr {
+    transition: var(--crud-transition);
+}
+
+.table-crud tbody tr:hover {
+    background-color: var(--crud-light);
+}
+
+.table-crud tbody tr.selected {
+    background-color: #e3f2fd !important;
+}
+
+/* Checkbox de seleção */
+.dt-checkboxes-cell {
+    text-align: center !important;
+    width: 40px;
+}
+
+.dt-checkboxes {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: var(--crud-primary);
+}
+
+/* Coluna de ações */
+.action-buttons {
+    display: flex;
+    gap: 5px;
+    justify-content: flex-end;
+    flex-wrap: nowrap;
+}
+
+.action-buttons .btn {
+    padding: 5px 10px;
+    font-size: 0.875rem;
+}
+
+.action-buttons .btn i {
+    font-size: 0.875rem;
+}
+
+/* ========================================
+   5. BADGES E STATUS
+   ======================================== */
+.badge-status {
+    padding: 6px 12px;
+    border-radius: var(--crud-radius-lg);
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.badge-status.active {
+    background-color: var(--crud-success);
+    color: #fff;
+}
+
+.badge-status.inactive {
+    background-color: var(--crud-danger);
+    color: #fff;
+}
+
+.badge-status.pending {
+    background-color: var(--crud-warning);
+    color: #fff;
+}
+
+/* ========================================
+   6. BOTÕES CUSTOMIZADOS
+   ======================================== */
+.btn-crud {
+    border-radius: 25px;
+    padding: 10px 20px;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.875rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: var(--crud-transition);
+    border: none;
+}
+
+.btn-crud:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--crud-shadow-hover);
+}
+
+.btn-crud i {
+    font-size: 1rem;
+}
+
+.btn-crud-primary {
+    background: linear-gradient(135deg, var(--crud-primary) 0%, var(--crud-primary-dark) 100%);
+    color: #fff;
+}
+
+.btn-crud-success {
+    background: linear-gradient(135deg, var(--crud-success) 0%, var(--crud-success-dark) 100%);
+    color: #fff;
+}
+
+.btn-crud-danger {
+    background: linear-gradient(135deg, var(--crud-danger) 0%, var(--crud-danger-dark) 100%);
+    color: #fff;
+}
+
+.btn-crud-warning {
+    background: linear-gradient(135deg, var(--crud-warning) 0%, var(--crud-warning-dark) 100%);
+    color: #fff;
+}
+
+.btn-crud-info {
+    background: linear-gradient(135deg, var(--crud-info) 0%, var(--crud-info-dark) 100%);
+    color: #fff;
+}
+
+.btn-crud-secondary {
+    background: var(--crud-secondary);
+    color: #fff;
+}
+
+/* Botões da toolbar */
+.btn-toolbar-action {
+    border-radius: var(--crud-radius);
+    padding: 8px 16px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: var(--crud-transition);
+}
+
+.btn-toolbar-action:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--crud-shadow);
+}
+
+/* ========================================
+   7. DATATABLES CUSTOMIZADO
+   ======================================== */
+div.dataTables_wrapper div.dataTables_length label {
+    font-weight: 600;
+    color: var(--crud-dark);
+}
+
+div.dataTables_wrapper div.dataTables_filter label {
+    font-weight: 600;
+    color: var(--crud-dark);
+}
+
+div.dataTables_wrapper div.dataTables_info {
+    padding-top: 15px;
+    color: var(--crud-secondary);
+    font-weight: 500;
+}
+
+div.dataTables_wrapper div.dataTables_paginate {
+    padding-top: 15px;
+}
+
+.page-link {
+    color: var(--crud-primary);
+    border-radius: 50%;
+    margin: 0 2px;
+    border: none;
+    transition: var(--crud-transition);
+}
+
+.page-link:hover {
+    background-color: var(--crud-primary);
+    color: #fff;
+}
+
+.page-item.active .page-link {
+    background-color: var(--crud-primary);
+    border-color: var(--crud-primary);
+}
+
+/* Botões de exportação do DataTables */
+.dt-buttons {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.dt-button {
+    border-radius: var(--crud-radius);
+    padding: 8px 16px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border: 1px solid var(--crud-border);
+    background: #fff;
+    color: var(--crud-dark);
+    transition: var(--crud-transition);
+}
+
+.dt-button:hover {
+    background: var(--crud-light);
+    border-color: var(--crud-primary);
+    color: var(--crud-primary);
+}
+
+/* ========================================
+   8. MODALS CUSTOMIZADOS
+   ======================================== */
+.modal-header-crud {
+    background: linear-gradient(135deg, var(--crud-primary) 0%, var(--crud-primary-dark) 100%);
+    color: #fff;
+    border-radius: var(--crud-radius) var(--crud-radius) 0 0;
+}
+
+.modal-header-crud .btn-close {
+    filter: brightness(0) invert(1);
+}
+
+.modal-footer-crud {
+    background: var(--crud-light);
+    border-top: 1px solid var(--crud-border);
+}
+
+/* ========================================
+   9. LOADING OVERLAY
+   ======================================== */
+.crud-loading {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.crud-loading.active {
+    display: flex;
+}
+
+.crud-loading-spinner {
+    width: 60px;
+    height: 60px;
+    border: 5px solid rgba(255, 255, 255, 0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ========================================
+   10. RESPONSIVIDADE
+   ======================================== */
+@media (max-width: 768px) {
+    .crud-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .crud-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .crud-toolbar-left,
+    .crud-toolbar-right {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .crud-search-box {
+        min-width: 100%;
+    }
+
+    .action-buttons {
+        justify-content: center;
+    }
+
+    .crud-body {
+        padding: 15px;
+    }
+}
+
+/* ========================================
+   11. VALIDAÇÃO DE FORMULÁRIOS
+   ======================================== */
+.is-invalid {
+    border-color: var(--crud-danger) !important;
+}
+
+.invalid-feedback {
+    display: block;
+    color: var(--crud-danger);
+    font-size: 0.875rem;
+    margin-top: 5px;
+}
+
+.is-valid {
+    border-color: var(--crud-success) !important;
+}
+
+.valid-feedback {
+    display: block;
+    color: var(--crud-success);
+    font-size: 0.875rem;
+    margin-top: 5px;
+}
