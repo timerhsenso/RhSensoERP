@@ -3,6 +3,8 @@
 // =============================================================================
 // Arquivo: src/API/Controllers/ManifestController.cs
 // Descrição: Expõe manifesto das entidades para o GeradorfullStack consumir
+// Versão: 1.1 - CORRIGIDO: IsNullable agora respeita atributo [Required]
+// Data: 2025-12-25
 // =============================================================================
 
 using Microsoft.AspNetCore.Authorization;
@@ -18,6 +20,11 @@ namespace RhSensoERP.API.Controllers;
 /// Controller que expõe manifesto das entidades do backend.
 /// Usado pelo GeradorfullStack para gerar frontend automaticamente.
 /// </summary>
+/// <remarks>
+/// Este controller usa Reflection em runtime para extrair metadados das entidades
+/// marcadas com [GenerateCrud]. Os metadados incluem propriedades, tipos, validações
+/// e configurações de UI que o frontend consome para renderização dinâmica.
+/// </remarks>
 #if DEBUG
 [EnableCors("ManifestDev")]
 #endif
@@ -98,15 +105,16 @@ public class ManifestController : ControllerBase
     }
 
     /// <summary>
-    /// Retorna entidade específica.
+    /// Retorna uma entidade específica pelo nome.
     /// </summary>
-    [HttpGet("entities/{name}")]
+    [HttpGet("{name}")]
     [AllowAnonymous]
     public IActionResult GetEntity(string name)
     {
         var manifest = GetOrBuildManifest();
-        var entity = manifest.Entities.FirstOrDefault(e =>
-            e.EntityName.Equals(name, StringComparison.OrdinalIgnoreCase));
+
+        var entity = manifest.Entities
+            .FirstOrDefault(e => e.EntityName.Equals(name, StringComparison.OrdinalIgnoreCase));
 
         if (entity == null)
             return NotFound(new { error = $"Entidade '{name}' não encontrada" });
@@ -345,6 +353,19 @@ public class ManifestController : ControllerBase
         return item;
     }
 
+    /// <summary>
+    /// Extrai propriedades da entidade via Reflection.
+    /// </summary>
+    /// <param name="type">Tipo da entidade</param>
+    /// <returns>Lista de metadados das propriedades</returns>
+    /// <remarks>
+    /// CORREÇÃO v1.1: IsNullable agora respeita o atributo [Required].
+    /// Anteriormente, string com [Required] era marcada incorretamente como nullable=true.
+    /// 
+    /// Lógica de IsNullable:
+    /// - Se tem [Required] → IsNullable = false (mesmo para reference types como string)
+    /// - Se não tem [Required] → IsNullable baseado no tipo (string=true, int?=true, int=false)
+    /// </remarks>
     private static IEnumerable<PropertyManifestItem> ExtractProperties(Type type)
     {
         var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
@@ -356,15 +377,22 @@ public class ManifestController : ControllerBase
             if (IsNavigationProperty(prop))
                 continue;
 
+            // ✅ CORREÇÃO v1.1: Detecta [Required] e sobrescreve IsNullable
+            // ANTES: IsNullable = IsNullable(prop) - nunca verificava [Required]
+            // DEPOIS: Se tem [Required], força IsNullable = false
+            var hasRequiredAttribute = HasAttribute(prop, "RequiredAttribute");
+            var isNullableFromType = IsNullable(prop);
+            var isNullable = hasRequiredAttribute ? false : isNullableFromType;
+
             var item = new PropertyManifestItem
             {
                 Name = prop.Name,
                 Type = GetTypeName(prop.PropertyType),
-                IsNullable = IsNullable(prop),
+                IsNullable = isNullable,  // ✅ Agora respeita [Required]
                 IsPrimaryKey = HasAttribute(prop, "KeyAttribute") ||
                                prop.Name.Equals("Id", StringComparison.OrdinalIgnoreCase),
-                IsRequired = HasAttribute(prop, "RequiredAttribute") ||
-                             (!IsNullable(prop) && GetTypeName(prop.PropertyType) != "string"),
+                IsRequired = hasRequiredAttribute ||
+                             (!isNullableFromType && GetTypeName(prop.PropertyType) != "string"),
                 IsIdentity = HasDatabaseGeneratedIdentity(prop),
                 DisplayName = GetDisplayName(prop),
                 ColumnName = GetColumnName(prop),
@@ -454,6 +482,8 @@ public class ManifestController : ControllerBase
     {
         "GestaoDeTerceiros" => "Gestão de Terceiros",
         "GestaoDePessoas" => "Gestão de Pessoas",
+        "AdministracaoPessoal" => "Administração de Pessoal",
+        "TreinamentoDesenvolvimento" => "Treinamento e Desenvolvimento",
         "ControleAcessoPortaria" => "Controle de Acesso e Portaria",
         "ControleDePonto" => "Controle de Ponto",
         "SaudeOcupacional" => "Saúde Ocupacional",
@@ -496,6 +526,15 @@ public class ManifestController : ControllerBase
         return result.ToString();
     }
 
+    /// <summary>
+    /// Determina se uma propriedade é de navegação (relacionamento EF).
+    /// </summary>
+    /// <remarks>
+    /// Navigation properties incluem:
+    /// - Coleções genéricas (ICollection, List, IEnumerable)
+    /// - Classes de domínio (não System.*) 
+    /// Exclui: string, byte[], tipos primitivos
+    /// </remarks>
     private static bool IsNavigationProperty(PropertyInfo prop)
     {
         var propType = prop.PropertyType;
@@ -526,6 +565,9 @@ public class ManifestController : ControllerBase
         return false;
     }
 
+    /// <summary>
+    /// Converte Type em string amigável (ex: int?, DateTime, Guid).
+    /// </summary>
     private static string GetTypeName(Type type)
     {
         if (type == typeof(string)) return "string";
@@ -558,6 +600,14 @@ public class ManifestController : ControllerBase
         return type.Name;
     }
 
+    /// <summary>
+    /// Determina se uma propriedade é nullable baseado no tipo.
+    /// </summary>
+    /// <remarks>
+    /// Para Value Types: nullable se for Nullable&lt;T&gt; (ex: int?)
+    /// Para Reference Types: nullable por padrão (string, classes)
+    /// NOTA: Este método NÃO verifica [Required]. Isso é feito em ExtractProperties.
+    /// </remarks>
     private static bool IsNullable(PropertyInfo prop)
     {
         var type = prop.PropertyType;
@@ -658,6 +708,9 @@ public class ManifestController : ControllerBase
         return null;
     }
 
+    /// <summary>
+    /// Determina o tipo de input HTML baseado no tipo da propriedade.
+    /// </summary>
     private static string DetermineInputType(PropertyManifestItem prop)
     {
         if (prop.Type.Contains("DateTime")) return "datetime-local";
@@ -676,6 +729,9 @@ public class ManifestController : ControllerBase
 
 #region Manifest Models
 
+/// <summary>
+/// Modelo de dados do manifesto completo.
+/// </summary>
 public class ManifestData
 {
     public string GeneratedAt { get; set; } = "";
@@ -683,6 +739,9 @@ public class ManifestData
     public List<EntityManifestItem> Entities { get; set; } = new();
 }
 
+/// <summary>
+/// Metadados de uma entidade individual.
+/// </summary>
 public class EntityManifestItem
 {
     // Identificação
@@ -721,6 +780,9 @@ public class EntityManifestItem
     public List<NavigationManifestItem> Navigations { get; set; } = new();
 }
 
+/// <summary>
+/// Metadados de uma propriedade individual.
+/// </summary>
 public class PropertyManifestItem
 {
     public string Name { get; set; } = "";
@@ -728,13 +790,27 @@ public class PropertyManifestItem
     public string DisplayName { get; set; } = "";
     public string ColumnName { get; set; } = "";
     public string InputType { get; set; } = "text";
+
+    /// <summary>
+    /// Indica se a propriedade aceita null.
+    /// Para campos com [Required], este valor será false mesmo se for reference type.
+    /// </summary>
     public bool IsNullable { get; set; }
+
     public bool IsPrimaryKey { get; set; }
+
+    /// <summary>
+    /// Indica se a propriedade tem [Required] ou é obrigatória por tipo.
+    /// </summary>
     public bool IsRequired { get; set; }
+
     public bool IsIdentity { get; set; }
     public int? MaxLength { get; set; }
 }
 
+/// <summary>
+/// Metadados de uma navigation property (relacionamento).
+/// </summary>
 public class NavigationManifestItem
 {
     public string Name { get; set; } = "";

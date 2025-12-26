@@ -846,6 +846,11 @@
             Controller que expõe manifesto das entidades do backend.
             Usado pelo GeradorfullStack para gerar frontend automaticamente.
             </summary>
+            <remarks>
+            Este controller usa Reflection em runtime para extrair metadados das entidades
+            marcadas com [GenerateCrud]. Os metadados incluem propriedades, tipos, validações
+            e configurações de UI que o frontend consome para renderização dinâmica.
+            </remarks>
         </member>
         <member name="M:RhSensoERP.API.Controllers.ManifestController.GetManifest">
             <summary>
@@ -864,7 +869,7 @@
         </member>
         <member name="M:RhSensoERP.API.Controllers.ManifestController.GetEntity(System.String)">
             <summary>
-            Retorna entidade específica.
+            Retorna uma entidade específica pelo nome.
             </summary>
         </member>
         <member name="M:RhSensoERP.API.Controllers.ManifestController.RefreshManifest">
@@ -875,6 +880,83 @@
         <member name="M:RhSensoERP.API.Controllers.ManifestController.DownloadManifest">
             <summary>
             Download do JSON.
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.ManifestController.ExtractProperties(System.Type)">
+            <summary>
+            Extrai propriedades da entidade via Reflection.
+            </summary>
+            <param name="type">Tipo da entidade</param>
+            <returns>Lista de metadados das propriedades</returns>
+            <remarks>
+            CORREÇÃO v1.1: IsNullable agora respeita o atributo [Required].
+            Anteriormente, string com [Required] era marcada incorretamente como nullable=true.
+            
+            Lógica de IsNullable:
+            - Se tem [Required] → IsNullable = false (mesmo para reference types como string)
+            - Se não tem [Required] → IsNullable baseado no tipo (string=true, int?=true, int=false)
+            </remarks>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.ManifestController.IsNavigationProperty(System.Reflection.PropertyInfo)">
+            <summary>
+            Determina se uma propriedade é de navegação (relacionamento EF).
+            </summary>
+            <remarks>
+            Navigation properties incluem:
+            - Coleções genéricas (ICollection, List, IEnumerable)
+            - Classes de domínio (não System.*) 
+            Exclui: string, byte[], tipos primitivos
+            </remarks>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.ManifestController.GetTypeName(System.Type)">
+            <summary>
+            Converte Type em string amigável (ex: int?, DateTime, Guid).
+            </summary>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.ManifestController.IsNullable(System.Reflection.PropertyInfo)">
+            <summary>
+            Determina se uma propriedade é nullable baseado no tipo.
+            </summary>
+            <remarks>
+            Para Value Types: nullable se for Nullable&lt;T&gt; (ex: int?)
+            Para Reference Types: nullable por padrão (string, classes)
+            NOTA: Este método NÃO verifica [Required]. Isso é feito em ExtractProperties.
+            </remarks>
+        </member>
+        <member name="M:RhSensoERP.API.Controllers.ManifestController.DetermineInputType(RhSensoERP.API.Controllers.PropertyManifestItem)">
+            <summary>
+            Determina o tipo de input HTML baseado no tipo da propriedade.
+            </summary>
+        </member>
+        <member name="T:RhSensoERP.API.Controllers.ManifestData">
+            <summary>
+            Modelo de dados do manifesto completo.
+            </summary>
+        </member>
+        <member name="T:RhSensoERP.API.Controllers.EntityManifestItem">
+            <summary>
+            Metadados de uma entidade individual.
+            </summary>
+        </member>
+        <member name="T:RhSensoERP.API.Controllers.PropertyManifestItem">
+            <summary>
+            Metadados de uma propriedade individual.
+            </summary>
+        </member>
+        <member name="P:RhSensoERP.API.Controllers.PropertyManifestItem.IsNullable">
+            <summary>
+            Indica se a propriedade aceita null.
+            Para campos com [Required], este valor será false mesmo se for reference type.
+            </summary>
+        </member>
+        <member name="P:RhSensoERP.API.Controllers.PropertyManifestItem.IsRequired">
+            <summary>
+            Indica se a propriedade tem [Required] ou é obrigatória por tipo.
+            </summary>
+        </member>
+        <member name="T:RhSensoERP.API.Controllers.NavigationManifestItem">
+            <summary>
+            Metadados de uma navigation property (relacionamento).
             </summary>
         </member>
         <member name="T:RhSensoERP.API.Controllers.MetadataController">
