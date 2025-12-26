@@ -18,11 +18,7 @@ public static class ValidatorsTemplate
         var rules = GenerateValidationRules(validatableProps, info);
 
         return $$"""
-// =============================================================================
-// ARQUIVO GERADO AUTOMATICAMENTE - NÃO EDITAR MANUALMENTE
-// Generator: RhSensoERP.Generators v3.7
-// Entity: {{info.EntityName}}
-// =============================================================================
+{{info.FileHeader}}
 using System;
 using System.Collections.Generic;
 using FluentValidation;
@@ -53,11 +49,7 @@ public sealed class Create{{info.EntityName}}RequestValidator
         var rules = GenerateValidationRules(validatableProps, info);
 
         return $$"""
-// =============================================================================
-// ARQUIVO GERADO AUTOMATICAMENTE - NÃO EDITAR MANUALMENTE
-// Generator: RhSensoERP.Generators v3.7
-// Entity: {{info.EntityName}}
-// =============================================================================
+{{info.FileHeader}}
 using FluentValidation;
 using {{info.DtoNamespace}};
 

@@ -27,11 +27,7 @@ public static class MapperTemplate
         var updateIgnores = GenerateUpdateIgnores(info);
 
         return $$"""
-// =============================================================================
-// ARQUIVO GERADO AUTOMATICAMENTE - NÃO EDITAR MANUALMENTE
-// Generator: RhSensoERP.Generators v3.7
-// Entity: {{info.EntityName}}
-// =============================================================================
+{{info.FileHeader}}
 using System;
 using System.Collections.Generic;
 using AutoMapper;

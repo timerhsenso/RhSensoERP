@@ -1,5 +1,5 @@
 // =============================================================================
-// RHSENSOERP GENERATOR v3.8 - DTO TEMPLATE
+// RHSENSOERP GENERATOR v3.9 - DTO TEMPLATE
 // =============================================================================
 using RhSensoERP.Generators.Models;
 using System.Collections.Generic;
@@ -12,19 +12,16 @@ public static class DtoTemplate
     public static string GenerateDto(EntityInfo info)
     {
         var props = new List<string>();
-        foreach (global::RhSensoERP.Generators.Models.PropertyInfo p in info.DtoProperties)
+        foreach (var p in info.DtoProperties)
         {
             props.Add($"    public {p.Type} {p.Name} {{ get; set; }}{GetDefaultValue(p)}");
         }
 
         return $$"""
-// =============================================================================
-// ARQUIVO GERADO AUTOMATICAMENTE - NÃO EDITAR MANUALMENTE
-// Generator: RhSensoERP.Generators v3.8
-// Entity: {{info.EntityName}}
-// =============================================================================
+{{info.FileHeader}}
 using System;
 using System.Collections.Generic;
+using {{info.Namespace}};
 
 namespace {{info.DtoNamespace}};
 
@@ -45,19 +42,16 @@ public sealed class {{info.EntityName}}Dto
             .ToList();
 
         var props = new List<string>();
-        foreach (global::RhSensoERP.Generators.Models.PropertyInfo p in filteredProps)
+        foreach (var p in filteredProps)
         {
             props.Add($"    public {p.Type} {p.Name} {{ get; set; }}{GetDefaultValue(p)}");
         }
 
         return $$"""
-// =============================================================================
-// ARQUIVO GERADO AUTOMATICAMENTE - NÃO EDITAR MANUALMENTE
-// Generator: RhSensoERP.Generators v3.8
-// Entity: {{info.EntityName}}
-// =============================================================================
+{{info.FileHeader}}
 using System;
 using System.Collections.Generic;
+using {{info.Namespace}};
 
 namespace {{info.DtoNamespace}};
 
@@ -78,19 +72,16 @@ public sealed class Create{{info.EntityName}}Request
             .ToList();
 
         var props = new List<string>();
-        foreach (global::RhSensoERP.Generators.Models.PropertyInfo p in filteredProps)
+        foreach (var p in filteredProps)
         {
             props.Add($"    public {p.Type} {p.Name} {{ get; set; }}{GetDefaultValue(p)}");
         }
 
         return $$"""
-// =============================================================================
-// ARQUIVO GERADO AUTOMATICAMENTE - NÃO EDITAR MANUALMENTE
-// Generator: RhSensoERP.Generators v3.8
-// Entity: {{info.EntityName}}
-// =============================================================================
+{{info.FileHeader}}
 using System;
 using System.Collections.Generic;
+using {{info.Namespace}};
 
 namespace {{info.DtoNamespace}};
 
@@ -104,7 +95,7 @@ public sealed class Update{{info.EntityName}}Request
 """;
     }
 
-    private static string GetDefaultValue(global::RhSensoERP.Generators.Models.PropertyInfo prop)
+    private static string GetDefaultValue(RhSensoERP.Generators.Models.PropertyInfo prop)
     {
         if (!string.IsNullOrEmpty(prop.DefaultValue))
             return $" = {prop.DefaultValue};";
@@ -123,7 +114,7 @@ public sealed class Update{{info.EntityName}}Request
             name == info.UpdatedByField)
             return true;
 
-        var tenantFields = new[] { "TenantId", "IdSaas", "IdTenant" };
+        var tenantFields = new[] { "TenantId", "IdSaaS", "IdSaas", "IdTenant" };
         return tenantFields.Contains(name);
     }
 }

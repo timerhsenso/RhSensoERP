@@ -24,11 +24,7 @@ public static class ApiControllerTemplate
         var batchEndpoint = info.SupportsBatchDelete ? GenerateBatchDeleteEndpoint(info) : "";
 
         return $$"""
-// =============================================================================
-// ARQUIVO GERADO AUTOMATICAMENTE - NÃO EDITAR MANUALMENTE
-// Generator: RhSensoERP.Generators v3.1
-// Entity: {{info.EntityName}}
-// =============================================================================
+{{info.FileHeader}}
 using System;
 using System.Collections.Generic;
 using MediatR;

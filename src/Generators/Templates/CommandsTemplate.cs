@@ -29,11 +29,7 @@ public static class CommandsTemplate
         var currentUserAssign = info.IsLegacyTable ? "" : "\n        _currentUser = currentUser;";
 
         return $$"""
-// =============================================================================
-// ARQUIVO GERADO AUTOMATICAMENTE - NÃO EDITAR MANUALMENTE
-// Generator: RhSensoERP.Generators v3.8
-// Entity: {{info.EntityName}}
-// =============================================================================
+{{info.FileHeader}}
 using System;
 using System.Collections.Generic;
 using AutoMapper;
@@ -120,11 +116,7 @@ public sealed class Create{{info.EntityName}}Handler
         var currentUserAssign = info.IsLegacyTable ? "" : "\n        _currentUser = currentUser;";
 
         return $$"""
-// =============================================================================
-// ARQUIVO GERADO AUTOMATICAMENTE - NÃO EDITAR MANUALMENTE
-// Generator: RhSensoERP.Generators v3.8
-// Entity: {{info.EntityName}}
-// =============================================================================
+{{info.FileHeader}}
 using System;
 using System.Collections.Generic;
 using AutoMapper;
@@ -221,11 +213,7 @@ public sealed class Update{{info.EntityName}}Handler
         var currentUserAssign = info.IsLegacyTable ? "" : "\n        _currentUser = currentUser;";
 
         return $$"""
-// =============================================================================
-// ARQUIVO GERADO AUTOMATICAMENTE - NÃO EDITAR MANUALMENTE
-// Generator: RhSensoERP.Generators v3.8
-// Entity: {{info.EntityName}}
-// =============================================================================
+{{info.FileHeader}}
 using System;
 using System.Collections.Generic;
 using MediatR;
@@ -307,11 +295,7 @@ public sealed class Delete{{info.EntityName}}Handler
         var currentUserAssign = info.IsLegacyTable ? "" : "\n        _currentUser = currentUser;";
 
         return $$"""
-// =============================================================================
-// ARQUIVO GERADO AUTOMATICAMENTE - NÃO EDITAR MANUALMENTE
-// Generator: RhSensoERP.Generators v3.8
-// Entity: {{info.EntityName}}
-// =============================================================================
+{{info.FileHeader}}
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -414,14 +398,18 @@ public sealed class Delete{{info.PluralName}}Handler
         if (info.IsLegacyTable)
             return "            // Tabela legada: sem TenantId";
 
-        return @"            // ✅ OBRIGATÓRIO: Atribui TenantId do contexto do usuário
+        var tenantProp = info.Properties.FirstOrDefault(p => p.Name == "TenantId");
+        var isString = tenantProp?.IsString == true;
+        var valueExpression = isString ? "tenantId.ToString()" : "tenantId";
+
+        return $@"            // ✅ OBRIGATÓRIO: Atribui TenantId do contexto do usuário
             var tenantId = _currentUser.TenantId;
             if (tenantId == Guid.Empty)
-            {
-                return Result<" + info.PrimaryKeyType + @">.Failure(
+            {{
+                return Result<{info.PrimaryKeyType}>.Failure(
                     Error.Unauthorized(""User.TenantNotFound"", ""TenantId não encontrado no contexto do usuário""));
-            }
-            entity.TenantId = tenantId;";
+            }}
+            entity.TenantId = {valueExpression};";
     }
 
     private static string GenerateTenantValidation(EntityInfo info)
@@ -429,20 +417,24 @@ public sealed class Delete{{info.PluralName}}Handler
         if (info.IsLegacyTable)
             return "            // Tabela legada: sem validação de tenant";
 
-        return @"            // ✅ OBRIGATÓRIO: Valida se pertence ao tenant do usuário
+        var tenantProp = info.Properties.FirstOrDefault(p => p.Name == "TenantId");
+        var isString = tenantProp?.IsString == true;
+        var comparison = isString ? "entity.TenantId != tenantId.ToString()" : "entity.TenantId != tenantId";
+
+        return $@"            // ✅ OBRIGATÓRIO: Valida se pertence ao tenant do usuário
             var tenantId = _currentUser.TenantId;
-            if (entity.TenantId != tenantId)
-            {
+            if ({comparison})
+            {{
                 _logger.LogWarning(
-                    ""Tentativa de acesso cross-tenant: Usuário {UserId} (Tenant {UserTenant}) tentou acessar {Id} (Tenant {RecordTenant})"",
+                    ""Tentativa de acesso cross-tenant: Usuário {{UserId}} (Tenant {{UserTenant}}) tentou acessar {{Id}} (Tenant {{RecordTenant}})"",
                     _currentUser.UserId,
                     tenantId,
                     command.Id,
                     entity.TenantId);
                 
                 return Result<bool>.Failure(
-                    Error.Forbidden(""" + info.EntityName + @".Forbidden"", ""Acesso negado ao recurso""));
-            }";
+                    Error.Forbidden(""{info.EntityName}.Forbidden"", ""Acesso negado ao recurso""));
+            }}";
     }
 
     private static string GenerateTenantFilterForBatch(EntityInfo info)
@@ -454,16 +446,20 @@ public sealed class Delete{{info.PluralName}}Handler
                 .ToListAsync(cancellationToken);";
         }
 
-        return @"            // ✅ OBRIGATÓRIO: Filtra por TenantId
+        var tenantProp = info.Properties.FirstOrDefault(p => p.Name == "TenantId");
+        var isString = tenantProp?.IsString == true;
+        var comparison = isString ? "e.TenantId == tenantId.ToString()" : "e.TenantId == tenantId";
+
+        return $@"            // ✅ OBRIGATÓRIO: Filtra por TenantId
             var tenantId = _currentUser.TenantId;
             if (tenantId == Guid.Empty)
-            {
+            {{
                 return Result<bool>.Failure(
                     Error.Unauthorized(""User.TenantNotFound"", ""TenantId não encontrado no contexto do usuário""));
-            }
+            }}
 
             var entities = await _repository.Query()
-                .Where(e => ids.Contains(e." + info.PrimaryKeyProperty + @") && e.TenantId == tenantId)
+                .Where(e => ids.Contains(e.{info.PrimaryKeyProperty}) && {comparison})
                 .ToListAsync(cancellationToken);";
     }
 
@@ -485,7 +481,11 @@ public sealed class Delete{{info.PluralName}}Handler
 
         if (!string.IsNullOrEmpty(info.CreatedByField) && !info.IsLegacyTable)
         {
-            lines.Add($"            entity.{info.CreatedByField} = _currentUser.UserId;");
+            var prop = info.Properties.FirstOrDefault(p => p.Name == info.CreatedByField);
+            var isString = prop?.IsString == true;
+            var value = isString ? "_currentUser.UserId.ToString()" : "_currentUser.UserId";
+            
+            lines.Add($"            entity.{info.CreatedByField} = {value};");
         }
 
         return string.Join("\n", lines);
@@ -505,7 +505,11 @@ public sealed class Delete{{info.PluralName}}Handler
 
         if (!string.IsNullOrEmpty(info.UpdatedByField) && !info.IsLegacyTable)
         {
-            lines.Add($"            entity.{info.UpdatedByField} = _currentUser.UserId;");
+            var prop = info.Properties.FirstOrDefault(p => p.Name == info.UpdatedByField);
+            var isString = prop?.IsString == true;
+            var value = isString ? "_currentUser.UserId.ToString()" : "_currentUser.UserId";
+
+            lines.Add($"            entity.{info.UpdatedByField} = {value};");
         }
 
         return string.Join("\n", lines);

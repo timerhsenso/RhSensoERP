@@ -19,11 +19,7 @@ public static class WebControllerTemplate
         var pkType = info.PrimaryKeyType;
 
         return $$"""
-// =============================================================================
-// ARQUIVO GERADO AUTOMATICAMENTE - NÃO EDITAR MANUALMENTE
-// Generator: RhSensoERP.Generators v3.0
-// Entity: {{info.EntityName}}
-// =============================================================================
+{{info.FileHeader}}
 using System;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Authorization;

@@ -1,21 +1,16 @@
 // =============================================================================
-// RHSENSOERP GENERATOR v3.3 - EF CONFIG TEMPLATE
+// RHSENSOERP GENERATOR v4.1 - EF CONFIG TEMPLATE (HOTFIX)
 // =============================================================================
-// Arquivo: src/Generators/Templates/EfConfigTemplate.cs
-// Versão: 3.3 - Suporte a navegações/relacionamentos
+// Versão: 4.1 - CORREÇÃO CRÍTICA: Só gera HasForeignKey se FK existe
+// ✅ Verifica se ForeignKeyProperty está preenchido
+// ✅ Ignora navegações sem FK explícita (shadow properties)
 // =============================================================================
 using RhSensoERP.Generators.Models;
 
 namespace RhSensoERP.Generators.Templates;
 
-/// <summary>
-/// Template para geração de Entity Framework Configuration.
-/// </summary>
 public static class EfConfigTemplate
 {
-    /// <summary>
-    /// Gera a Configuration do Entity Framework.
-    /// </summary>
     public static string GenerateConfig(EntityInfo info)
     {
         var entityNs = info.Namespace;
@@ -24,11 +19,7 @@ public static class EfConfigTemplate
         var additionalUsings = GenerateAdditionalUsings(info);
 
         return $$"""
-// =============================================================================
-// ARQUIVO GERADO AUTOMATICAMENTE - NÃO EDITAR MANUALMENTE
-// Generator: RhSensoERP.Generators v3.3
-// Entity: {{info.EntityName}}
-// =============================================================================
+{{info.FileHeader}}
 using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
@@ -69,9 +60,6 @@ public sealed class {{info.EntityName}}Configuration : IEntityTypeConfiguration<
 """;
     }
 
-    /// <summary>
-    /// Gera as configurações de propriedades.
-    /// </summary>
     private static string GeneratePropertyConfigurations(EntityInfo info)
     {
         var configs = new List<string>();
@@ -80,26 +68,22 @@ public sealed class {{info.EntityName}}Configuration : IEntityTypeConfiguration<
         {
             var propConfig = new List<string>();
 
-            // Nome da coluna (se diferente)
             if (!string.IsNullOrEmpty(prop.ColumnName) &&
                 !prop.ColumnName.Equals(prop.Name, StringComparison.OrdinalIgnoreCase))
             {
                 propConfig.Add($".HasColumnName(\"{prop.ColumnName}\")");
             }
 
-            // Required
             if (prop.IsRequired && !prop.IsNullable)
             {
                 propConfig.Add(".IsRequired()");
             }
 
-            // MaxLength para strings
             if (prop.IsString && prop.MaxLength.HasValue)
             {
                 propConfig.Add($".HasMaxLength({prop.MaxLength.Value})");
             }
 
-            // Só adiciona se tem configuração
             if (propConfig.Count > 0)
             {
                 var config = $"        builder.Property(e => e.{prop.Name})\n            {string.Join("\n            ", propConfig)};";
@@ -112,9 +96,10 @@ public sealed class {{info.EntityName}}Configuration : IEntityTypeConfiguration<
             : "        // Configurações de propriedades usam convenções padrão";
     }
 
-    /// <summary>
-    /// Gera as configurações de relacionamentos.
-    /// </summary>
+    // =========================================================================
+    // ✅ CORREÇÃO v4.1: GenerateRelationshipConfigurations
+    // SÓ gera HasForeignKey se ForeignKeyProperty existir
+    // =========================================================================
     private static string GenerateRelationshipConfigurations(EntityInfo info)
     {
         if (!info.HasNavigations)
@@ -137,24 +122,41 @@ public sealed class {{info.EntityName}}Configuration : IEntityTypeConfiguration<
                 _ => "DeleteBehavior.Restrict"
             };
 
-            // Se tem propriedade inversa, usa WithMany(e => e.Propriedade)
-            // Senão, usa WithMany() sem parâmetros
             var withMany = string.IsNullOrEmpty(nav.InverseProperty)
                 ? ".WithMany()"
                 : $".WithMany(e => e.{nav.InverseProperty})";
 
-            var config = $"""
+            // ✅ CORREÇÃO v4.1: Só gera HasForeignKey se FK existe
+            string config;
+
+            if (!string.IsNullOrEmpty(nav.ForeignKeyProperty))
+            {
+                // ✅ FK existe → Configuração completa
+                config = $"""
         // Relacionamento: {info.EntityName} -> {nav.TargetEntity}
         builder.HasOne(e => e.{nav.Name})
             {withMany}
             .HasForeignKey(e => e.{nav.ForeignKeyProperty})
             .OnDelete({deleteBehavior});
 """;
+            }
+            else
+            {
+                // ❌ FK não existe → IGNORA navegação (shadow property ou mapeamento manual)
+                config = $"""
+        // Relacionamento: {info.EntityName} -> {nav.TargetEntity}
+        // ⚠️ ATENÇÃO: FK não encontrada na entidade.
+        // Se usar shadow property, configure manualmente no DbContext.
+        // Caso contrário, adicione a propriedade FK na entidade.
+        builder.Ignore(e => e.{nav.Name});
+""";
+            }
+
             configs.Add(config);
         }
 
         // =====================================================================
-        // OneToMany / Navegações sem FK - Gera Ignore para evitar ambiguidade
+        // OneToMany - Ignora (sem FK)
         // =====================================================================
         foreach (var nav in info.OneToManyNavigations)
         {
@@ -170,9 +172,6 @@ public sealed class {{info.EntityName}}Configuration : IEntityTypeConfiguration<
             : "        // Relacionamentos configurados via convenção";
     }
 
-    /// <summary>
-    /// Gera usings adicionais para entidades relacionadas.
-    /// </summary>
     private static string GenerateAdditionalUsings(EntityInfo info)
     {
         if (!info.HasNavigations)

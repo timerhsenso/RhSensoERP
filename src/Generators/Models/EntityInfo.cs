@@ -1,8 +1,7 @@
 // =============================================================================
-// RHSENSOERP GENERATOR v3.6.2 - ENTITY INFO MODEL
+// RHSENSOERP GENERATOR v3.9.1 - ENTITY INFO MODEL
 // =============================================================================
-// Arquivo: src/Generators/Models/EntityInfo.cs
-// Versão: 3.6.2 - BaseNamespace agora é PÚBLICO
+// Versão: 3.9.1 - CORREÇÃO: Nullable reference types
 // =============================================================================
 
 namespace RhSensoERP.Generators.Models;
@@ -22,12 +21,8 @@ public class EntityInfo
     public string Schema { get; set; } = "dbo";
     public string Namespace { get; set; } = string.Empty;
     public string ModuleName { get; set; } = string.Empty;
-    
-    /// <summary>
-    /// Versão do gerador que criou este arquivo.
-    /// Útil para debug.
-    /// </summary>
     public string GeneratorVersion { get; set; } = string.Empty;
+    public string FileHeader { get; set; } = string.Empty;
 
     // =========================================================================
     // CHAVE PRIMÁRIA
@@ -51,13 +46,13 @@ public class EntityInfo
     public string ApiFullRoute { get; set; } = string.Empty;
 
     // =========================================================================
-    // AUDITORIA - v3.6
+    // AUDITORIA - v3.9.1 - NULLABLE CORRETO
     // =========================================================================
     public bool HasAuditFields { get; set; }
-    public string? CreatedAtField { get; set; }
-    public string? CreatedByField { get; set; }
-    public string? UpdatedAtField { get; set; }
-    public string? UpdatedByField { get; set; }
+    public string CreatedAtField { get; set; } = string.Empty;
+    public string CreatedByField { get; set; } = string.Empty;
+    public string UpdatedAtField { get; set; } = string.Empty;
+    public string UpdatedByField { get; set; } = string.Empty;
 
     public bool HasCreationAudit => !string.IsNullOrEmpty(CreatedAtField) || !string.IsNullOrEmpty(CreatedByField);
     public bool HasUpdateAudit => !string.IsNullOrEmpty(UpdatedAtField) || !string.IsNullOrEmpty(UpdatedByField);
@@ -122,23 +117,14 @@ public class EntityInfo
         Navigations.Where(n => n.RelationshipType == NavigationRelationshipType.OneToMany).ToList();
 
     // =========================================================================
-    // NAMESPACE BASE - v3.6.2 - AGORA É PÚBLICO
+    // NAMESPACE BASE
     // =========================================================================
-
-    /// <summary>
-    /// Calcula o namespace base removendo sufixos de entidade.
-    /// 
-    /// Exemplos:
-    /// - RhSensoERP.Identity.Core.Entities → RhSensoERP.Identity
-    /// - RhSensoERP.Modules.XXX.Core.Entities → RhSensoERP.Modules.XXX
-    /// </summary>
     public string BaseNamespace
     {
         get
         {
             var ns = Namespace;
 
-            // Remove sufixos de entidades
             if (ns.EndsWith(".Domain.Entities"))
                 return ns.Replace(".Domain.Entities", "");
             if (ns.EndsWith(".Core.Entities"))
@@ -151,7 +137,7 @@ public class EntityInfo
     }
 
     // =========================================================================
-    // NAMESPACES - v3.6.2 CORRIGIDOS
+    // NAMESPACES
     // =========================================================================
     public string DtoNamespace => $"{BaseNamespace}.Application.DTOs.{PluralName}";
     public string CommandsNamespace => $"{BaseNamespace}.Application.Features.{PluralName}.Commands";
@@ -168,29 +154,16 @@ public class EntityInfo
     public string ModuleNamespace => BaseNamespace;
 
     // =========================================================================
-    // DbContext - v3.6.2
+    // DbContext
     // =========================================================================
     public string DbContextName => $"{ModuleName}DbContext";
 
-    /// <summary>
-    /// Calcula o namespace correto do DbContext.
-    /// 
-    /// REGRA:
-    /// - Identity: RhSensoERP.Identity.Infrastructure.Persistence.Contexts (COM Contexts)
-    /// - Modules: RhSensoERP.Modules.XXX.Infrastructure.Persistence.Contexts (COM Contexts)
-    /// 
-    /// Exemplos:
-    /// - RhSensoERP.Identity.Core.Entities → RhSensoERP.Identity.Infrastructure.Persistence.Contexts
-    /// - RhSensoERP.Modules.TreinamentoDesenvolvimento.Core.Entities → RhSensoERP.Modules.TreinamentoDesenvolvimento.Infrastructure.Persistence.Contexts
-    /// </summary>
     public string DbContextNamespace
     {
         get
         {
             var baseNs = BaseNamespace;
             var persistenceNs = $"{baseNs}.Infrastructure.Persistence";
-
-            // ✅ TODOS COM Contexts agora (Identity também foi padronizado)
             return $"{persistenceNs}.Contexts";
         }
     }
@@ -198,10 +171,6 @@ public class EntityInfo
     // =========================================================================
     // MÉTODOS AUXILIARES
     // =========================================================================
-
-    /// <summary>
-    /// Verifica se um campo é de auditoria.
-    /// </summary>
     private bool IsAuditField(string propertyName)
     {
         return propertyName == CreatedAtField ||

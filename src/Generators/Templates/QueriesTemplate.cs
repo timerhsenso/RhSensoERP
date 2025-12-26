@@ -24,11 +24,7 @@ public static class QueriesTemplate
         var currentUserAssign = info.IsLegacyTable ? "" : "\n        _currentUser = currentUser;";
 
         return $$"""
-// =============================================================================
-// ARQUIVO GERADO AUTOMATICAMENTE - NÃO EDITAR MANUALMENTE
-// Generator: RhSensoERP.Generators v3.7
-// Entity: {{info.EntityName}}
-// =============================================================================
+{{info.FileHeader}}
 using System;
 using System.Collections.Generic;
 using AutoMapper;
@@ -125,11 +121,7 @@ public sealed class GetBy{{info.EntityName}}IdHandler
         var currentUserAssign = info.IsLegacyTable ? "" : "\n        _currentUser = currentUser;";
 
         return $$"""
-// =============================================================================
-// ARQUIVO GERADO AUTOMATICAMENTE - NÃO EDITAR MANUALMENTE
-// Generator: RhSensoERP.Generators v3.7
-// Entity: {{info.EntityName}}
-// =============================================================================
+{{info.FileHeader}}
 using System;
 using System.Collections.Generic;
 using AutoMapper;

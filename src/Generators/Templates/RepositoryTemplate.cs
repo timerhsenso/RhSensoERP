@@ -22,11 +22,7 @@ public static class RepositoryTemplate
         var entityNs = $"{info.BaseNamespace}.Core.Entities";
 
         return $$"""
-// =============================================================================
-// ARQUIVO GERADO AUTOMATICAMENTE - NÃO EDITAR MANUALMENTE
-// Generator: RhSensoERP.Generators v3.6
-// Entity: {{info.EntityName}}
-// =============================================================================
+{{info.FileHeader}}
 using {{entityNs}};
 
 namespace {{info.RepositoryInterfaceNamespace}};
@@ -87,11 +83,7 @@ public interface I{{info.EntityName}}Repository
         var entityNs = $"{info.BaseNamespace}.Core.Entities";
 
         return $$"""
-// =============================================================================
-// ARQUIVO GERADO AUTOMATICAMENTE - NÃO EDITAR MANUALMENTE
-// Generator: RhSensoERP.Generators v3.6
-// Entity: {{info.EntityName}}
-// =============================================================================
+{{info.FileHeader}}
 using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;

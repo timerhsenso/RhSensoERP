@@ -28,11 +28,7 @@ public static class MetadataTemplate
         var isIdentity = pkProp?.IsIdentity ?? false;
 
         return $$"""
-// =============================================================================
-// ARQUIVO GERADO AUTOMATICAMENTE - NÃO EDITAR MANUALMENTE
-// Generator: RhSensoERP.Generators v3.2
-// Entity: {{info.EntityName}}
-// =============================================================================
+{{info.FileHeader}}
 using System;
 using System.Collections.Generic;
 using RhSensoERP.Shared.Application.Metadata;
@@ -235,8 +231,8 @@ public static class {{info.EntityName}}MetadataProvider
     {
         if (prop.IsBool) return "checkbox";
 
-        // ✅ CORRIGIDO: Detecta TimeSpan especificamente
-        if (prop.Type.Contains("TimeSpan")) return "time";
+        // ✅ CORRIGIDO: Detecta TimeSpan e TimeOnly especificamente
+        if (prop.Type.Contains("TimeSpan") || prop.Type.Contains("TimeOnly")) return "time";
 
         if (prop.IsDateTime) return prop.Type.Contains("Time") ? "datetime-local" : "date";
         if (prop.IsNumeric) return "number";
@@ -260,8 +256,8 @@ public static class {{info.EntityName}}MetadataProvider
     {
         if (prop.IsBool) return "boolean";
 
-        // ✅ CORRIGIDO: TimeSpan formatado como time
-        if (prop.Type.Contains("TimeSpan")) return "time";
+        // ✅ CORRIGIDO: TimeSpan e TimeOnly formatado como time
+        if (prop.Type.Contains("TimeSpan") || prop.Type.Contains("TimeOnly")) return "time";
 
         if (prop.IsDateTime) return prop.Type.Contains("Time") ? "datetime" : "date";
 
@@ -310,8 +306,8 @@ public static class {{info.EntityName}}MetadataProvider
     /// </summary>
     private static string GetPlaceholder(PropertyInfo prop)
     {
-        // ✅ CORRIGIDO: Placeholder específico para TimeSpan
-        if (prop.Type.Contains("TimeSpan"))
+        // ✅ CORRIGIDO: Placeholder específico para TimeSpan e TimeOnly
+        if (prop.Type.Contains("TimeSpan") || prop.Type.Contains("TimeOnly"))
             return "00:00";
 
         return $"Digite {prop.DisplayName.ToLower()}...";
