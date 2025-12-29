@@ -2,7 +2,7 @@
 // ARQUIVO GERADO POR GeradorFullStack v3.3
 // Entity: CapResponsaveisContrato
 // Module: ControleAcessoPortaria
-// Data: 2025-12-24 01:15:50
+// Data: 2025-12-28 20:29:17
 // AUTO-REGISTRO: Compatível com AddCrudToolServicesAutomatically()
 // =============================================================================
 using RhSensoERP.Web.Models.ControleAcessoPortaria.CapResponsaveisContrato;

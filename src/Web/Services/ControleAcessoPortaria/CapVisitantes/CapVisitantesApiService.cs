@@ -3,7 +3,7 @@
 // Entity: CapVisitantes
 // Module: ControleAcessoPortaria
 // ApiRoute: api/gestaoterceirosprestadores/capvisitantes
-// Data: 2025-12-24 01:10:14
+// Data: 2025-12-28 19:08:36
 // AUTO-REGISTRO: Compatível com AddCrudToolServicesAutomatically()
 // =============================================================================
 // NOTA: Este serviço usa HttpClient TIPADO injetado pelo DI.

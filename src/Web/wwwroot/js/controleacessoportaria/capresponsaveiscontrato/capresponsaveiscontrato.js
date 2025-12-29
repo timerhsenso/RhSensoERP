@@ -4,9 +4,9 @@
  * ============================================================================
  * Arquivo: wwwroot/js/controleacessoportaria/capresponsaveiscontrato/capresponsaveiscontrato.js
  * Módulo: ControleAcessoPortaria
- * Versão: 3.7 (Geração automática de colunas)
- * Gerado por: GeradorFullStack v3.7
- * Data: 2025-12-24 01:15:50
+ * Versão: 3.9 (PascalCase para model binding)
+ * Gerado por: GeradorFullStack v3.9
+ * Data: 2025-12-28 20:29:17
  * 
  * Implementação específica do CRUD de CapResponsaveisContrato.
  * Estende a classe CrudBase com customizações necessárias.
@@ -75,33 +75,72 @@ class CapResponsaveisContratoCrud extends CrudBase {
     }
 
     /**
-     * Customização antes de submeter.
-     * Converte tipos e valida campos obrigatórios.
+     * ⭐ v3.9 CORRIGIDO: Retorna objeto em PascalCase
+     * Remove campos de auditoria, converte tipos e valida campos obrigatórios.
      */
     beforeSubmit(formData, isEdit) {
-        // Converte campos inteiros
-        ['idContrato', 'idFuncionarioLegado'].forEach(field => {
-            if (formData[field] !== undefined && formData[field] !== '') {
-                formData[field] = parseInt(formData[field], 10);
-            }
-        });
+        console.log('📥 [CapResponsaveisContrato] Dados ANTES:', JSON.parse(JSON.stringify(formData)));
 
-        // Converte checkboxes para 0/1
-        ['Ativo'].forEach(field => {
-            const key = field.charAt(0).toLowerCase() + field.slice(1);
-            const checkbox = document.getElementById(field);
-            if (checkbox) {
-                formData[key] = checkbox.checked ? 1 : 0;
-            } else if (formData[key] === true || formData[key] === 'true' || formData[key] === 'on') {
-                formData[key] = 1;
-            } else if (formData[key] === false || formData[key] === 'false' || formData[key] === '' || formData[key] === undefined) {
-                formData[key] = 0;
-            }
-        });
+        // =====================================================================
+        // ⭐ CRÍTICO: Remove campos de auditoria (backend preenche automaticamente)
+        // =====================================================================
+        delete formData.createdAtUtc;
+        delete formData.updatedAtUtc;
+        delete formData.createdByUserId;
+        delete formData.updatedByUserId;
+        delete formData.tenantId;
+        delete formData.id;
+        delete formData.CreatedAtUtc;
+        delete formData.UpdatedAtUtc;
+        delete formData.CreatedByUserId;
+        delete formData.UpdatedByUserId;
+        delete formData.TenantId;
+        delete formData.Id;
+        delete formData.dataCriacao;
+        delete formData.dataAtualizacao;
+        delete formData.usuarioCriacao;
+        delete formData.usuarioAtualizacao;
+        delete formData.createdAt;
+        delete formData.updatedAt;
+        delete formData.createdBy;
+        delete formData.updatedBy;
+
+        // =====================================================================
+        // ⭐ v3.9: CRIA OBJETO LIMPO EM PASCALCASE (model binding ASP.NET Core)
+        // =====================================================================
+        const cleanData = {};
+
+        // String fields - PascalCase
+        cleanData.TipoResponsabilidade = formData.tipoResponsabilidade || formData.TipoResponsabilidade || '';
+
+        // Integer nullable fields - PascalCase
+        if (formData.idFuncionarioLegado !== undefined && formData.idFuncionarioLegado !== null && formData.idFuncionarioLegado !== '') {
+            const val = parseInt(formData.idFuncionarioLegado, 10);
+            cleanData.IdFuncionarioLegado = isNaN(val) ? null : val;
+        } else if (formData.IdFuncionarioLegado !== undefined && formData.IdFuncionarioLegado !== null && formData.IdFuncionarioLegado !== '') {
+            const val = parseInt(formData.IdFuncionarioLegado, 10);
+            cleanData.IdFuncionarioLegado = isNaN(val) ? null : val;
+        } else {
+            cleanData.IdFuncionarioLegado = null;
+        }
+
+        // Integer required fields - PascalCase
+        cleanData.IdContrato = parseInt(formData.idContrato || formData.IdContrato || 0, 10);
+
+        // ⭐ Boolean fields - PascalCase - Pega direto do DOM (checkbox)
+        const checkboxAtivo = document.getElementById('Ativo');
+        if (checkboxAtivo) {
+            cleanData.Ativo = checkboxAtivo.checked;
+        } else {
+            cleanData.Ativo = formData.ativo === true || 
+                                    formData.Ativo === true || 
+                                    formData.ativo === 'true' || 
+                                    formData.ativo === 1;
+        }
 
 
-        console.log('📤 [CapResponsaveisContrato] Dados a enviar:', formData);
-        return formData;
+        console.log('📤 [CapResponsaveisContrato] Dados DEPOIS (PascalCase):', JSON.parse(JSON.stringify(cleanData)));
+        return cleanData;
     }
 
     /**
@@ -109,13 +148,18 @@ class CapResponsaveisContratoCrud extends CrudBase {
      */
     afterSubmit(data, isEdit) {
         console.log('✅ [CapResponsaveisContrato] Registro salvo:', data);
+        
+        // Atualiza a grid automaticamente
+        if (this.table) {
+            this.table.ajax.reload(null, false); // Mantém paginação
+        }
     }
 
     /**
      * Override do método getRowId para extrair ID corretamente.
      */
     getRowId(row) {
-        const id = row[this.config.idField] || row.id || row.Id || row.id || row.Id || '';
+        const id = row[this.config.idField] || row.id || row.Id || '';
         return typeof id === 'string' ? id.trim() : id;
     }
 }
@@ -149,7 +193,7 @@ $(document).ready(function () {
 
         // Tenta várias variações do nome do campo
         let id = row[fieldName] || row[fieldName.toLowerCase()] || row[fieldName.toUpperCase()] || 
-                 row['id'] || row['Id'] || row['id'] || row['Id'] || '';
+                 row['id'] || row['Id'] || '';
 
         // Converte para string e faz trim
         id = String(id).trim();
@@ -182,14 +226,6 @@ $(document).ready(function () {
                 }
                 return '';
             }
-        },
-        // Id
-        {
-            data: 'id',
-            name: 'Id',
-            title: 'Id',
-            orderable: true,
-            className: 'text-left'
         },
         // IdContrato
         {
@@ -268,8 +304,6 @@ $(document).ready(function () {
             render: function (data, type, row) {
                 const id = getCleanId(row, 'id');
 
-                console.log('🔧 [CapResponsaveisContrato] Renderizando ações | ID:', id, '| Row:', row);
-
                 let actions = '<div class="btn-group btn-group-sm" role="group">';
 
                 // Botão Editar (somente se tiver permissão)
@@ -305,7 +339,8 @@ $(document).ready(function () {
         columns: columns,
         permissions: window.crudPermissions,
         dataTableOptions: {
-            order: [[1, 'asc']]
+            order: [[1, 'asc']],
+            pageLength: 25
         }
     });
 
@@ -314,5 +349,5 @@ $(document).ready(function () {
     // =========================================================================
 
     // CrudBase inicializa automaticamente no construtor
-    console.log('✅ [CapResponsaveisContrato] CRUD inicializado com sucesso');
+    console.log('✅ [CapResponsaveisContrato] CRUD inicializado com sucesso (v3.9 - PascalCase)');
 });

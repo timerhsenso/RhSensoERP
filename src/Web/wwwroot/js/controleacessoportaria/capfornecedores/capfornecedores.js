@@ -4,9 +4,9 @@
  * ============================================================================
  * Arquivo: wwwroot/js/controleacessoportaria/capfornecedores/capfornecedores.js
  * Módulo: ControleAcessoPortaria
- * Versão: 3.7 (Geração automática de colunas)
- * Gerado por: GeradorFullStack v3.7
- * Data: 2025-12-24 01:02:36
+ * Versão: 3.9 (PascalCase para model binding)
+ * Gerado por: GeradorFullStack v3.9
+ * Data: 2025-12-28 17:46:18
  * 
  * Implementação específica do CRUD de CapFornecedores.
  * Estende a classe CrudBase com customizações necessárias.
@@ -75,33 +75,83 @@ class CapFornecedoresCrud extends CrudBase {
     }
 
     /**
-     * Customização antes de submeter.
-     * Converte tipos e valida campos obrigatórios.
+     * ⭐ v3.9 CORRIGIDO: Retorna objeto em PascalCase
+     * Remove campos de auditoria, converte tipos e valida campos obrigatórios.
      */
     beforeSubmit(formData, isEdit) {
-        // Converte campos inteiros
-        ['idUf'].forEach(field => {
-            if (formData[field] !== undefined && formData[field] !== '') {
-                formData[field] = parseInt(formData[field], 10);
-            }
-        });
+        console.log('📥 [CapFornecedores] Dados ANTES:', JSON.parse(JSON.stringify(formData)));
 
-        // Converte checkboxes para 0/1
-        ['Ativo'].forEach(field => {
-            const key = field.charAt(0).toLowerCase() + field.slice(1);
-            const checkbox = document.getElementById(field);
-            if (checkbox) {
-                formData[key] = checkbox.checked ? 1 : 0;
-            } else if (formData[key] === true || formData[key] === 'true' || formData[key] === 'on') {
-                formData[key] = 1;
-            } else if (formData[key] === false || formData[key] === 'false' || formData[key] === '' || formData[key] === undefined) {
-                formData[key] = 0;
-            }
-        });
+        // =====================================================================
+        // ⭐ CRÍTICO: Remove campos de auditoria (backend preenche automaticamente)
+        // =====================================================================
+        delete formData.createdAtUtc;
+        delete formData.updatedAtUtc;
+        delete formData.createdByUserId;
+        delete formData.updatedByUserId;
+        delete formData.tenantId;
+        delete formData.id;
+        delete formData.CreatedAtUtc;
+        delete formData.UpdatedAtUtc;
+        delete formData.CreatedByUserId;
+        delete formData.UpdatedByUserId;
+        delete formData.TenantId;
+        delete formData.Id;
+        delete formData.dataCriacao;
+        delete formData.dataAtualizacao;
+        delete formData.usuarioCriacao;
+        delete formData.usuarioAtualizacao;
+        delete formData.createdAt;
+        delete formData.updatedAt;
+        delete formData.createdBy;
+        delete formData.updatedBy;
+
+        // =====================================================================
+        // ⭐ v3.9: CRIA OBJETO LIMPO EM PASCALCASE (model binding ASP.NET Core)
+        // =====================================================================
+        const cleanData = {};
+
+        // String fields - PascalCase
+        cleanData.Bairro = formData.bairro || formData.Bairro || '';
+        cleanData.Cep = formData.cep || formData.Cep || '';
+        cleanData.Cidade = formData.cidade || formData.Cidade || '';
+        cleanData.Cnpj = formData.cnpj || formData.Cnpj || '';
+        cleanData.Complemento = formData.complemento || formData.Complemento || '';
+        cleanData.Contato = formData.contato || formData.Contato || '';
+        cleanData.ContatoEmail = formData.contatoEmail || formData.ContatoEmail || '';
+        cleanData.ContatoTelefone = formData.contatoTelefone || formData.ContatoTelefone || '';
+        cleanData.Cpf = formData.cpf || formData.Cpf || '';
+        cleanData.Email = formData.email || formData.Email || '';
+        cleanData.Endereco = formData.endereco || formData.Endereco || '';
+        cleanData.NomeFantasia = formData.nomeFantasia || formData.NomeFantasia || '';
+        cleanData.Numero = formData.numero || formData.Numero || '';
+        cleanData.RazaoSocial = formData.razaoSocial || formData.RazaoSocial || '';
+        cleanData.Telefone = formData.telefone || formData.Telefone || '';
+
+        // Integer nullable fields - PascalCase
+        if (formData.idUf !== undefined && formData.idUf !== null && formData.idUf !== '') {
+            const val = parseInt(formData.idUf, 10);
+            cleanData.IdUf = isNaN(val) ? null : val;
+        } else if (formData.IdUf !== undefined && formData.IdUf !== null && formData.IdUf !== '') {
+            const val = parseInt(formData.IdUf, 10);
+            cleanData.IdUf = isNaN(val) ? null : val;
+        } else {
+            cleanData.IdUf = null;
+        }
+
+        // ⭐ Boolean fields - PascalCase - Pega direto do DOM (checkbox)
+        const checkboxAtivo = document.getElementById('Ativo');
+        if (checkboxAtivo) {
+            cleanData.Ativo = checkboxAtivo.checked;
+        } else {
+            cleanData.Ativo = formData.ativo === true || 
+                                    formData.Ativo === true || 
+                                    formData.ativo === 'true' || 
+                                    formData.ativo === 1;
+        }
 
 
-        console.log('📤 [CapFornecedores] Dados a enviar:', formData);
-        return formData;
+        console.log('📤 [CapFornecedores] Dados DEPOIS (PascalCase):', JSON.parse(JSON.stringify(cleanData)));
+        return cleanData;
     }
 
     /**
@@ -109,13 +159,18 @@ class CapFornecedoresCrud extends CrudBase {
      */
     afterSubmit(data, isEdit) {
         console.log('✅ [CapFornecedores] Registro salvo:', data);
+        
+        // Atualiza a grid automaticamente
+        if (this.table) {
+            this.table.ajax.reload(null, false); // Mantém paginação
+        }
     }
 
     /**
      * Override do método getRowId para extrair ID corretamente.
      */
     getRowId(row) {
-        const id = row[this.config.idField] || row.id || row.Id || row.id || row.Id || '';
+        const id = row[this.config.idField] || row.id || row.Id || '';
         return typeof id === 'string' ? id.trim() : id;
     }
 }
@@ -149,7 +204,7 @@ $(document).ready(function () {
 
         // Tenta várias variações do nome do campo
         let id = row[fieldName] || row[fieldName.toLowerCase()] || row[fieldName.toUpperCase()] || 
-                 row['id'] || row['Id'] || row['id'] || row['Id'] || '';
+                 row['id'] || row['Id'] || '';
 
         // Converte para string e faz trim
         id = String(id).trim();
@@ -191,14 +246,6 @@ $(document).ready(function () {
             orderable: true,
             className: 'text-left'
         },
-        // NomeFantasia
-        {
-            data: 'nomeFantasia',
-            name: 'NomeFantasia',
-            title: 'NomeFantasia',
-            orderable: true,
-            className: 'text-left'
-        },
         // Email
         {
             data: 'email',
@@ -215,11 +262,11 @@ $(document).ready(function () {
             orderable: true,
             className: 'text-left'
         },
-        // Bairro
+        // Contato
         {
-            data: 'bairro',
-            name: 'Bairro',
-            title: 'Bairro',
+            data: 'contato',
+            name: 'Contato',
+            title: 'Contato',
             orderable: true,
             className: 'text-left'
         },
@@ -247,8 +294,6 @@ $(document).ready(function () {
             width: '130px',
             render: function (data, type, row) {
                 const id = getCleanId(row, 'id');
-
-                console.log('🔧 [CapFornecedores] Renderizando ações | ID:', id, '| Row:', row);
 
                 let actions = '<div class="btn-group btn-group-sm" role="group">';
 
@@ -285,7 +330,8 @@ $(document).ready(function () {
         columns: columns,
         permissions: window.crudPermissions,
         dataTableOptions: {
-            order: [[1, 'asc']]
+            order: [[1, 'asc']],
+            pageLength: 25
         }
     });
 
@@ -294,5 +340,5 @@ $(document).ready(function () {
     // =========================================================================
 
     // CrudBase inicializa automaticamente no construtor
-    console.log('✅ [CapFornecedores] CRUD inicializado com sucesso');
+    console.log('✅ [CapFornecedores] CRUD inicializado com sucesso (v3.9 - PascalCase)');
 });

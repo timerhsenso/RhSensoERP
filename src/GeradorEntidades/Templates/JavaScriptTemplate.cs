@@ -1,6 +1,8 @@
 // =============================================================================
-// GERADOR FULL-STACK v3.7 - JAVASCRIPT TEMPLATE (CORRIGIDO)
+// GERADOR FULL-STACK v3.9 - JAVASCRIPT TEMPLATE (CORRIGIDO - PASCALCASE)
 // Baseado em RhSensoERP.CrudTool v2.5
+// v3.9 - ✅ CORRIGIDO: Gera código em PascalCase para model binding ASP.NET Core
+// v3.8 - ✅ CORRIGIDO: Remove automaticamente campos de auditoria no beforeSubmit
 // v3.7 - ✅ CORRIGIDO: Gera TODAS as colunas relevantes automaticamente
 // v3.2 - Organiza JavaScript por módulo/entidade
 // =============================================================================
@@ -12,6 +14,8 @@ namespace GeradorEntidades.Templates;
 
 /// <summary>
 /// Gera JavaScript que estende a classe CrudBase existente.
+/// v3.9: beforeSubmit retorna objeto em PascalCase para compatibilidade com ASP.NET Core.
+/// v3.8: Remove automaticamente campos de auditoria e TenantId no beforeSubmit.
 /// v3.7: Auto-gera colunas se o usuário não configurou no Wizard.
 /// </summary>
 public static class JavaScriptTemplate
@@ -38,8 +42,8 @@ public static class JavaScriptTemplate
  * ============================================================================
  * Arquivo: wwwroot/js/{modulePathLower}/{entity.NameLower}/{entity.NameLower}.js
  * Módulo: {entity.Module}
- * Versão: 3.7 (Geração automática de colunas)
- * Gerado por: GeradorFullStack v3.7
+ * Versão: 3.9 (PascalCase para model binding)
+ * Gerado por: GeradorFullStack v3.9
  * Data: {DateTime.Now:yyyy-MM-dd HH:mm:ss}
  * 
  * Implementação específica do CRUD de {entity.DisplayName}.
@@ -109,13 +113,14 @@ class {entity.Name}Crud extends CrudBase {{
     }}
 
     /**
-     * Customização antes de submeter.
-     * Converte tipos e valida campos obrigatórios.
+     * ⭐ v3.9 CORRIGIDO: Retorna objeto em PascalCase
+     * Remove campos de auditoria, converte tipos e valida campos obrigatórios.
      */
     beforeSubmit(formData, isEdit) {{
+        console.log('📥 [{entity.Name}] Dados ANTES:', JSON.parse(JSON.stringify(formData)));
 {beforeSubmitLogic}
-        console.log('📤 [{entity.Name}] Dados a enviar:', formData);
-        return formData;
+        console.log('📤 [{entity.Name}] Dados DEPOIS (PascalCase):', JSON.parse(JSON.stringify(cleanData)));
+        return cleanData;
     }}
 
     /**
@@ -123,13 +128,18 @@ class {entity.Name}Crud extends CrudBase {{
      */
     afterSubmit(data, isEdit) {{
         console.log('✅ [{entity.Name}] Registro salvo:', data);
+        
+        // Atualiza a grid automaticamente
+        if (this.table) {{
+            this.table.ajax.reload(null, false); // Mantém paginação
+        }}
     }}
 
     /**
      * Override do método getRowId para extrair ID corretamente.
      */
     getRowId(row) {{
-        const id = row[this.config.idField] || row.{idFieldLower} || row.{entity.PrimaryKey?.Name ?? "Id"} || row.id || row.Id || '';
+        const id = row[this.config.idField] || row.id || row.Id || '';
         return typeof id === 'string' ? id.trim() : id;
     }}
 }}
@@ -163,7 +173,7 @@ $(document).ready(function () {{
 
         // Tenta várias variações do nome do campo
         let id = row[fieldName] || row[fieldName.toLowerCase()] || row[fieldName.toUpperCase()] || 
-                 row['{idFieldLower}'] || row['{entity.PrimaryKey?.Name ?? "Id"}'] || row['id'] || row['Id'] || '';
+                 row['id'] || row['Id'] || '';
 
         // Converte para string e faz trim
         id = String(id).trim();
@@ -209,8 +219,6 @@ $(document).ready(function () {{
             render: function (data, type, row) {{
                 const id = getCleanId(row, '{idFieldLower}');
 
-                console.log('🔧 [{entity.Name}] Renderizando ações | ID:', id, '| Row:', row);
-
                 let actions = '<div class=""btn-group btn-group-sm"" role=""group"">';
 
                 // Botão Editar (somente se tiver permissão)
@@ -246,7 +254,8 @@ $(document).ready(function () {{
         columns: columns,
         permissions: window.crudPermissions,
         dataTableOptions: {{
-            order: [[1, 'asc']]
+            order: [[1, 'asc']],
+            pageLength: 25
         }}
     }});
 
@@ -255,7 +264,7 @@ $(document).ready(function () {{
     // =========================================================================
 
     // CrudBase inicializa automaticamente no construtor
-    console.log('✅ [{entity.Name}] CRUD inicializado com sucesso');
+    console.log('✅ [{entity.Name}] CRUD inicializado com sucesso (v3.9 - PascalCase)');
 }});
 ";
 
@@ -271,22 +280,17 @@ $(document).ready(function () {{
     #region Helper Methods
 
     /// <summary>
-    /// ✅ v3.7 CORRIGIDO: Gera TODAS as colunas relevantes automaticamente.
-    /// Se usuário configurou no Wizard, usa a configuração.
-    /// Senão, gera automaticamente para TODAS as propriedades visíveis.
+    /// ✅ v3.7: Gera as colunas do DataTables.
+    /// Auto-gera se não configuradas pelo usuário.
     /// </summary>
     private static string GenerateColumns(EntityConfig entity)
     {
         var sb = new StringBuilder();
 
-        // ✅ CORREÇÃO: Pega propriedades com List.Show OU auto-gera
-        var listProps = entity.Properties
-            .Where(p => p.List?.Show == true)
-            .OrderBy(p => p.List!.Order)
-            .ToList();
+        // Usa colunas configuradas pelo wizard OU auto-gera
+        var listProps = entity.Properties.Where(p => p.List?.Show == true).ToList();
 
-        // ✅ SE NENHUMA COLUNA CONFIGURADA, GERA AUTOMATICAMENTE
-        if (listProps.Count == 0)
+        if (!listProps.Any())
         {
             // Auto-gera colunas para propriedades relevantes
             listProps = entity.Properties
@@ -374,128 +378,199 @@ $(document).ready(function () {{
     {
         var auditFields = new[]
         {
-            "DataCriacao", "DtCriacao", "CreatedAt", "CreatedDate",
-            "UsuarioCriacao", "CreatedBy", "CreatedByUser", "CriadoPor",
-            "DataAtualizacao", "DtAtualizacao", "UpdatedAt", "ModifiedAt", "ModifiedDate",
-            "UsuarioAtualizacao", "UpdatedBy", "ModifiedBy", "ModifiedByUser", "AtualizadoPor"
+            "DataCriacao", "DtCriacao", "CreatedAt", "CreatedDate", "CreatedAtUtc",
+            "UsuarioCriacao", "CreatedBy", "CreatedByUser", "CriadoPor", "CreatedByUserId",
+            "DataAtualizacao", "DtAtualizacao", "UpdatedAt", "ModifiedAt", "ModifiedDate", "UpdatedAtUtc",
+            "UsuarioAtualizacao", "UpdatedBy", "ModifiedBy", "ModifiedByUser", "AtualizadoPor", "UpdatedByUserId",
+            "TenantId", "IdSaaS", "IdSaas"
         };
 
         return auditFields.Any(f => prop.Name.Equals(f, StringComparison.OrdinalIgnoreCase));
     }
 
     /// <summary>
-    /// Gera lógica do beforeSubmit para tratamento de dados.
+    /// ⭐ v3.9 REESCRITO: Gera lógica do beforeSubmit retornando objeto em PascalCase.
+    /// Compatível com ASP.NET Core model binding (System.Text.Json e Newtonsoft.Json).
     /// </summary>
     private static string GenerateBeforeSubmitLogic(EntityConfig entity)
     {
         var sb = new StringBuilder();
 
-        // Campos inteiros (inclui PKs de texto que são int)
-        var intProps = entity.Properties
-            .Where(p => (p.IsInt || p.IsLong) && p.Form?.Show == true)
-            .Where(p => !p.IsPrimaryKey || (!p.IsIdentity && !p.IsGuid))
+        // =====================================================================
+        // STEP 1: Remove campos de auditoria
+        // =====================================================================
+        sb.AppendLine($@"
+        // =====================================================================
+        // ⭐ CRÍTICO: Remove campos de auditoria (backend preenche automaticamente)
+        // =====================================================================
+        delete formData.createdAtUtc;
+        delete formData.updatedAtUtc;
+        delete formData.createdByUserId;
+        delete formData.updatedByUserId;
+        delete formData.tenantId;
+        delete formData.id;
+        delete formData.CreatedAtUtc;
+        delete formData.UpdatedAtUtc;
+        delete formData.CreatedByUserId;
+        delete formData.UpdatedByUserId;
+        delete formData.TenantId;
+        delete formData.Id;
+        delete formData.dataCriacao;
+        delete formData.dataAtualizacao;
+        delete formData.usuarioCriacao;
+        delete formData.usuarioAtualizacao;
+        delete formData.createdAt;
+        delete formData.updatedAt;
+        delete formData.createdBy;
+        delete formData.updatedBy;
+");
+
+        // =====================================================================
+        // STEP 2: Cria objeto limpo em PascalCase
+        // =====================================================================
+        sb.AppendLine($@"        // =====================================================================
+        // ⭐ v3.9: CRIA OBJETO LIMPO EM PASCALCASE (model binding ASP.NET Core)
+        // =====================================================================
+        const cleanData = {{}};
+");
+
+        // =====================================================================
+        // STEP 3: Mapeia campos para PascalCase
+        // =====================================================================
+
+        // Pega todos os campos que devem estar no formulário (exceto auditoria e PKs auto-geradas)
+        var formProps = entity.Properties
+            .Where(p => p.Form?.Show == true)
+            .Where(p => !IsAuditField(p))
+            .Where(p => !p.IsPrimaryKey || (!p.IsIdentity && !p.IsGuid)) // PKs de texto são incluídas
+            .OrderBy(p => p.Name)
             .ToList();
 
+        // String fields
+        var stringProps = formProps.Where(p => p.IsString).ToList();
+        if (stringProps.Any())
+        {
+            sb.AppendLine($@"        // String fields - PascalCase");
+            foreach (var prop in stringProps)
+            {
+                var propNameCamel = char.ToLower(prop.Name[0]) + prop.Name.Substring(1);
+                sb.AppendLine($@"        cleanData.{prop.Name} = formData.{propNameCamel} || formData.{prop.Name} || '';");
+            }
+            sb.AppendLine();
+        }
+
+        // Integer fields (nullable)
+        var intProps = formProps.Where(p => (p.IsInt || p.IsLong) && p.IsNullable).ToList();
         if (intProps.Any())
         {
-            var intFieldNames = string.Join(", ", intProps.Select(p => $"'{char.ToLower(p.Name[0]) + p.Name.Substring(1)}'"));
-            sb.AppendLine($@"        // Converte campos inteiros
-        [{intFieldNames}].forEach(field => {{
-            if (formData[field] !== undefined && formData[field] !== '') {{
-                formData[field] = parseInt(formData[field], 10);
-            }}
-        }});
-");
-        }
-
-        // Campos decimais
-        var decimalProps = entity.Properties
-            .Where(p => p.IsDecimal && p.Form?.Show == true)
-            .ToList();
-
-        if (decimalProps.Any())
-        {
-            var decFieldNames = string.Join(", ", decimalProps.Select(p => $"'{char.ToLower(p.Name[0]) + p.Name.Substring(1)}'"));
-            sb.AppendLine($@"        // Converte campos decimais
-        [{decFieldNames}].forEach(field => {{
-            if (formData[field] !== undefined && formData[field] !== '') {{
-                formData[field] = parseFloat(formData[field].toString().replace(',', '.'));
-            }}
-        }});
-");
-        }
-
-        // Campos booleanos/checkbox (int 0/1)
-        var boolProps = entity.Properties
-            .Where(p => p.IsBool && p.Form?.Show == true)
-            .ToList();
-
-        if (boolProps.Any())
-        {
-            var boolFieldNames = string.Join(", ", boolProps.Select(p => $"'{p.Name}'"));
-            sb.AppendLine($@"        // Converte checkboxes para 0/1
-        [{boolFieldNames}].forEach(field => {{
-            const key = field.charAt(0).toLowerCase() + field.slice(1);
-            const checkbox = document.getElementById(field);
-            if (checkbox) {{
-                formData[key] = checkbox.checked ? 1 : 0;
-            }} else if (formData[key] === true || formData[key] === 'true' || formData[key] === 'on') {{
-                formData[key] = 1;
-            }} else if (formData[key] === false || formData[key] === 'false' || formData[key] === '' || formData[key] === undefined) {{
-                formData[key] = 0;
-            }}
-        }});
-");
-        }
-
-        // Campos Guid nullable (não PK)
-        var guidProps = entity.Properties
-            .Where(p => p.IsGuid && p.Form?.Show == true && !p.IsPrimaryKey && p.IsNullable)
-            .ToList();
-
-        if (guidProps.Any())
-        {
-            foreach (var prop in guidProps)
+            sb.AppendLine($@"        // Integer nullable fields - PascalCase");
+            foreach (var prop in intProps)
             {
-                var propNameLower = char.ToLower(prop.Name[0]) + prop.Name.Substring(1);
-                sb.AppendLine($@"        // Trata {prop.Name} nullable (Guid)
-        if (formData.{propNameLower} === '' || formData.{propNameLower} === undefined) {{
-            formData.{propNameLower} = null;
+                var propNameCamel = char.ToLower(prop.Name[0]) + prop.Name.Substring(1);
+                sb.AppendLine($@"        if (formData.{propNameCamel} !== undefined && formData.{propNameCamel} !== null && formData.{propNameCamel} !== '') {{
+            const val = parseInt(formData.{propNameCamel}, 10);
+            cleanData.{prop.Name} = isNaN(val) ? null : val;
+        }} else if (formData.{prop.Name} !== undefined && formData.{prop.Name} !== null && formData.{prop.Name} !== '') {{
+            const val = parseInt(formData.{prop.Name}, 10);
+            cleanData.{prop.Name} = isNaN(val) ? null : val;
+        }} else {{
+            cleanData.{prop.Name} = null;
         }}
 ");
             }
         }
 
-        // Campos DateTime opcionais
-        var dateProps = entity.Properties
-            .Where(p => p.IsDateTime && p.Form?.Show == true && p.IsNullable)
-            .ToList();
-
-        if (dateProps.Any())
+        // Integer fields (required)
+        var intPropsRequired = formProps.Where(p => (p.IsInt || p.IsLong) && !p.IsNullable).ToList();
+        if (intPropsRequired.Any())
         {
-            var dateFieldNames = string.Join(", ", dateProps.Select(p => $"'{char.ToLower(p.Name[0]) + p.Name.Substring(1)}'"));
-            sb.AppendLine($@"        // Trata campos de data opcionais
-        [{dateFieldNames}].forEach(field => {{
-            if (formData[field] === '') {{
-                formData[field] = null;
-            }}
-        }});
+            sb.AppendLine($@"        // Integer required fields - PascalCase");
+            foreach (var prop in intPropsRequired)
+            {
+                var propNameCamel = char.ToLower(prop.Name[0]) + prop.Name.Substring(1);
+                sb.AppendLine($@"        cleanData.{prop.Name} = parseInt(formData.{propNameCamel} || formData.{prop.Name} || 0, 10);
 ");
+            }
         }
 
-        // Garante que PK de texto seja incluída no formData
-        var pkTexto = entity.PrimaryKey != null && !entity.PrimaryKey.IsIdentity && !entity.PrimaryKey.IsGuid
-            ? entity.PrimaryKey
-            : null;
-
-        if (pkTexto != null && pkTexto.IsString)
+        // Decimal fields
+        var decimalProps = formProps.Where(p => p.IsDecimal).ToList();
+        if (decimalProps.Any())
         {
-            var pkNameLower = char.ToLower(pkTexto.Name[0]) + pkTexto.Name.Substring(1);
-            sb.AppendLine($@"        // Garante que PK de texto seja string trimada
-        if (formData.{pkNameLower}) {{
-            formData.{pkNameLower} = String(formData.{pkNameLower}).trim();
+            sb.AppendLine($@"        // Decimal fields - PascalCase");
+            foreach (var prop in decimalProps)
+            {
+                var propNameCamel = char.ToLower(prop.Name[0]) + prop.Name.Substring(1);
+                if (prop.IsNullable)
+                {
+                    sb.AppendLine($@"        if (formData.{propNameCamel} !== undefined && formData.{propNameCamel} !== null && formData.{propNameCamel} !== '') {{
+            cleanData.{prop.Name} = parseFloat((formData.{propNameCamel} || '0').toString().replace(',', '.'));
+        }} else {{
+            cleanData.{prop.Name} = null;
         }}
 ");
+                }
+                else
+                {
+                    sb.AppendLine($@"        cleanData.{prop.Name} = parseFloat((formData.{propNameCamel} || formData.{prop.Name} || '0').toString().replace(',', '.'));
+");
+                }
+            }
+        }
+
+        // Boolean fields - PEGA DO DOM (checkbox)
+        var boolProps = formProps.Where(p => p.IsBool).ToList();
+        if (boolProps.Any())
+        {
+            sb.AppendLine($@"        // ⭐ Boolean fields - PascalCase - Pega direto do DOM (checkbox)");
+            foreach (var prop in boolProps)
+            {
+                var propNameCamel = char.ToLower(prop.Name[0]) + prop.Name.Substring(1);
+                sb.AppendLine($@"        const checkbox{prop.Name} = document.getElementById('{prop.Name}');
+        if (checkbox{prop.Name}) {{
+            cleanData.{prop.Name} = checkbox{prop.Name}.checked;
+        }} else {{
+            cleanData.{prop.Name} = formData.{propNameCamel} === true || 
+                                    formData.{prop.Name} === true || 
+                                    formData.{propNameCamel} === 'true' || 
+                                    formData.{propNameCamel} === 1;
+        }}
+");
+            }
+        }
+
+        // DateTime fields
+        var dateProps = formProps.Where(p => p.IsDateTime).ToList();
+        if (dateProps.Any())
+        {
+            sb.AppendLine($@"        // DateTime fields - PascalCase");
+            foreach (var prop in dateProps)
+            {
+                var propNameCamel = char.ToLower(prop.Name[0]) + prop.Name.Substring(1);
+                if (prop.IsNullable)
+                {
+                    sb.AppendLine($@"        cleanData.{prop.Name} = (formData.{propNameCamel} || formData.{prop.Name}) || null;
+");
+                }
+                else
+                {
+                    sb.AppendLine($@"        cleanData.{prop.Name} = formData.{propNameCamel} || formData.{prop.Name} || new Date().toISOString();
+");
+                }
+            }
+        }
+
+        // Guid fields (nullable, não PK)
+        var guidProps = formProps.Where(p => p.IsGuid && p.IsNullable).ToList();
+        if (guidProps.Any())
+        {
+            sb.AppendLine($@"        // Guid nullable fields - PascalCase");
+            foreach (var prop in guidProps)
+            {
+                var propNameCamel = char.ToLower(prop.Name[0]) + prop.Name.Substring(1);
+                sb.AppendLine($@"        cleanData.{prop.Name} = (formData.{propNameCamel} || formData.{prop.Name}) || null;
+");
+            }
         }
 
         return sb.ToString();

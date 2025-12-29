@@ -1,66 +1,60 @@
 // =============================================================================
-// ARQUIVO GERADO POR GeradorFullStack v3.6
+// ARQUIVO GERADO POR GeradorFullStack v3.8
 // Entity: CapVisitantes
 // Module: ControleAcessoPortaria
-// Data: 2025-12-24 01:10:14
+// Data: 2025-12-28 19:08:36
 // =============================================================================
 using System.ComponentModel.DataAnnotations;
 
 namespace RhSensoERP.Web.Models.ControleAcessoPortaria.CapVisitantes;
 
 /// <summary>
-/// Request para atualização de CapVisitantes.
-/// Compatível com backend: UpdateCapVisitantesRequest
+/// Request para atualizacao de CapVisitantes.
+/// Compativel com backend: UpdateCapVisitantesRequest
 /// </summary>
 public class UpdateCapVisitantesRequest
 {
     /// <summary>
-    /// Tenant Id
-    /// </summary>
-    [Display(Name = "Tenant Id")]
-    [Required(ErrorMessage = "Tenant Id é obrigatório")]
-    public Guid TenantId { get; set; }
-
-    /// <summary>
     /// Nome
     /// </summary>
     [Display(Name = "Nome")]
-    [StringLength(255, ErrorMessage = "Nome deve ter no máximo {1} caracteres")]
+    [Required(ErrorMessage = "Nome e obrigatorio")]
+    [StringLength(255, ErrorMessage = "Nome deve ter no maximo {1} caracteres")]
     public string Nome { get; set; } = string.Empty;
 
     /// <summary>
-    /// Cpf
+    /// CPF
     /// </summary>
-    [Display(Name = "Cpf")]
-    [StringLength(14, ErrorMessage = "Cpf deve ter no máximo {1} caracteres")]
+    [Display(Name = "CPF")]
+    [StringLength(14, ErrorMessage = "CPF deve ter no maximo {1} caracteres")]
     public string Cpf { get; set; } = string.Empty;
 
     /// <summary>
     /// RG
     /// </summary>
     [Display(Name = "RG")]
-    [StringLength(20, ErrorMessage = "RG deve ter no máximo {1} caracteres")]
+    [StringLength(20, ErrorMessage = "RG deve ter no maximo {1} caracteres")]
     public string Rg { get; set; } = string.Empty;
 
     /// <summary>
-    /// Email
+    /// E-mail
     /// </summary>
-    [Display(Name = "Email")]
-    [StringLength(100, ErrorMessage = "Email deve ter no máximo {1} caracteres")]
+    [Display(Name = "E-mail")]
+    [StringLength(100, ErrorMessage = "E-mail deve ter no maximo {1} caracteres")]
     public string Email { get; set; } = string.Empty;
 
     /// <summary>
     /// Telefone
     /// </summary>
     [Display(Name = "Telefone")]
-    [StringLength(20, ErrorMessage = "Telefone deve ter no máximo {1} caracteres")]
+    [StringLength(20, ErrorMessage = "Telefone deve ter no maximo {1} caracteres")]
     public string Telefone { get; set; } = string.Empty;
 
     /// <summary>
     /// Empresa
     /// </summary>
     [Display(Name = "Empresa")]
-    [StringLength(255, ErrorMessage = "Empresa deve ter no máximo {1} caracteres")]
+    [StringLength(255, ErrorMessage = "Empresa deve ter no maximo {1} caracteres")]
     public string Empresa { get; set; } = string.Empty;
 
     /// <summary>
@@ -73,39 +67,13 @@ public class UpdateCapVisitantesRequest
     /// Requer Responsável
     /// </summary>
     [Display(Name = "Requer Responsável")]
-    [Required(ErrorMessage = "Requer Responsável é obrigatório")]
+    [Required(ErrorMessage = "Requer Responsável e obrigatorio")]
     public bool RequerResponsavel { get; set; }
 
     /// <summary>
     /// Ativo
     /// </summary>
     [Display(Name = "Ativo")]
-    [Required(ErrorMessage = "Ativo é obrigatório")]
+    [Required(ErrorMessage = "Ativo e obrigatorio")]
     public bool Ativo { get; set; }
-
-    /// <summary>
-    /// Created At Utc
-    /// </summary>
-    [Display(Name = "Created At Utc")]
-    [Required(ErrorMessage = "Created At Utc é obrigatório")]
-    public DateTime CreatedAtUtc { get; set; }
-
-    /// <summary>
-    /// Created By User Id
-    /// </summary>
-    [Display(Name = "Created By User Id")]
-    public Guid? CreatedByUserId { get; set; }
-
-    /// <summary>
-    /// Updated At Utc
-    /// </summary>
-    [Display(Name = "Updated At Utc")]
-    [Required(ErrorMessage = "Updated At Utc é obrigatório")]
-    public DateTime UpdatedAtUtc { get; set; }
-
-    /// <summary>
-    /// Updated By User Id
-    /// </summary>
-    [Display(Name = "Updated By User Id")]
-    public Guid? UpdatedByUserId { get; set; }
 }

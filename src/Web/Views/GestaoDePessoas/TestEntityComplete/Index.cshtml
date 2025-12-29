@@ -1,0 +1,515 @@
+@model RhSensoERP.Web.Models.GestaoDePessoas.TestEntityComplete.TestEntityCompleteListViewModel
+@{
+    ViewData["Title"] = Model.PageTitle;
+    Layout = "_CrudLayout";
+    ViewData["EntityName"] = "Test Entity Complete";
+    ViewData["IconClass"] = "fas fa-table";
+}
+
+@* ============================================================================
+   Permissões injetadas para JavaScript (ANTES do script específico)
+   ============================================================================ *@
+<script>
+    window.crudPermissions = {
+        canCreate: @Model.CanCreate.ToString().ToLower(),
+        canEdit: @Model.CanEdit.ToString().ToLower(),
+        canDelete: @Model.CanDelete.ToString().ToLower(),
+        canView: @Model.CanView.ToString().ToLower(),
+        actions: "@Model.UserPermissions"
+    };
+</script>
+
+@* ============================================================================
+   Tabela usando partial _CrudTable (toolbar + datatable)
+   ============================================================================ *@
+@await Html.PartialAsync("_CrudTable", Model)
+
+@* ============================================================================
+   Conteúdo do Modal (apenas campos do formulário)
+   O wrapper do modal está no _CrudLayout
+   ============================================================================ *@
+@section ModalContent {
+    <input type="hidden" id="Id" name="Id" />
+    <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="TenantId" class="form-label">
+                        Tenant <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" class="form-control" id="TenantId" name="TenantId" 
+                           placeholder="" required  />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="IdEmpresa" class="form-label">
+                        IdEmpresa
+                    </label>
+                    <input type="text" class="form-control" id="IdEmpresa" name="IdEmpresa" 
+                           placeholder=""   />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="IdFilial" class="form-label">
+                        IdFilial
+                    </label>
+                    <input type="text" class="form-control" id="IdFilial" name="IdFilial" 
+                           placeholder=""   />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Codigo" class="form-label">
+                        Codigo <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" class="form-control" id="Codigo" name="Codigo" 
+                           placeholder="" required  maxlength="20" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Nome" class="form-label">
+                        Nome <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" class="form-control" id="Nome" name="Nome" 
+                           placeholder="" required  maxlength="200" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Descricao" class="form-label">
+                        Descrição
+                    </label>
+                    <input type="text" class="form-control" id="Descricao" name="Descricao" 
+                           placeholder=""   maxlength="1000" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="ObservacoesMax" class="form-label">
+                        Observações Ilimitadas
+                    </label>
+                    <input type="text" class="form-control" id="ObservacoesMax" name="ObservacoesMax" 
+                           placeholder=""   />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="TextoPlano" class="form-label">
+                        Texto Plano (text)
+                    </label>
+                    <input type="text" class="form-control" id="TextoPlano" name="TextoPlano" 
+                           placeholder=""   />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Email" class="form-label">
+                        E-mail
+                    </label>
+                    <input type="text" class="form-control" id="Email" name="Email" 
+                           placeholder=""   maxlength="254" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Url" class="form-label">
+                        URL
+                    </label>
+                    <input type="text" class="form-control" id="Url" name="Url" 
+                           placeholder=""   maxlength="500" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Telefone" class="form-label">
+                        Telefone
+                    </label>
+                    <input type="text" class="form-control" id="Telefone" name="Telefone" 
+                           placeholder=""   maxlength="20" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Cpf" class="form-label">
+                        CPF
+                    </label>
+                    <input type="text" class="form-control" id="Cpf" name="Cpf" 
+                           placeholder=""   maxlength="11" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Cnpj" class="form-label">
+                        CNPJ
+                    </label>
+                    <input type="text" class="form-control" id="Cnpj" name="Cnpj" 
+                           placeholder=""   maxlength="14" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="IntField" class="form-label">
+                        Campo Int <span class="text-danger">*</span>
+                    </label>
+                    <input type="number" class="form-control" id="IntField" name="IntField" 
+                           placeholder="" required  />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="IntNullable" class="form-label">
+                        Campo Int Nullable
+                    </label>
+                    <input type="text" class="form-control" id="IntNullable" name="IntNullable" 
+                           placeholder=""   />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="LongField" class="form-label">
+                        Campo Long <span class="text-danger">*</span>
+                    </label>
+                    <input type="number" class="form-control" id="LongField" name="LongField" 
+                           placeholder="" required  />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="LongNullable" class="form-label">
+                        Campo Long Nullable
+                    </label>
+                    <input type="text" class="form-control" id="LongNullable" name="LongNullable" 
+                           placeholder=""   />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="ShortField" class="form-label">
+                        Campo Short <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" class="form-control" id="ShortField" name="ShortField" 
+                           placeholder="" required  />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="ShortNullable" class="form-label">
+                        Campo Short Nullable
+                    </label>
+                    <input type="text" class="form-control" id="ShortNullable" name="ShortNullable" 
+                           placeholder=""   />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="ByteField" class="form-label">
+                        Campo Byte <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" class="form-control" id="ByteField" name="ByteField" 
+                           placeholder="" required  />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="ByteNullable" class="form-label">
+                        Campo Byte Nullable
+                    </label>
+                    <input type="text" class="form-control" id="ByteNullable" name="ByteNullable" 
+                           placeholder=""   />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="QuantidadeComRange" class="form-label">
+                        Quantidade (com Range) <span class="text-danger">*</span>
+                    </label>
+                    <input type="number" class="form-control" id="QuantidadeComRange" name="QuantidadeComRange" 
+                           placeholder="" required  />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="DecimalPadrao" class="form-label">
+                        Decimal Padrão (18,2) <span class="text-danger">*</span>
+                    </label>
+                    <input type="number" class="form-control" id="DecimalPadrao" name="DecimalPadrao" 
+                           placeholder="" required  step="0.01" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="DecimalPreciso" class="form-label">
+                        Decimal Preciso (18,4) <span class="text-danger">*</span>
+                    </label>
+                    <input type="number" class="form-control" id="DecimalPreciso" name="DecimalPreciso" 
+                           placeholder="" required  step="0.01" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="DecimalMoeda" class="form-label">
+                        Valor Monetário <span class="text-danger">*</span>
+                    </label>
+                    <input type="number" class="form-control" id="DecimalMoeda" name="DecimalMoeda" 
+                           placeholder="" required  step="0.01" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="DecimalPercentual" class="form-label">
+                        Percentual <span class="text-danger">*</span>
+                    </label>
+                    <input type="number" class="form-control" id="DecimalPercentual" name="DecimalPercentual" 
+                           placeholder="" required  step="0.01" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="DecimalNullable" class="form-label">
+                        Decimal Nullable
+                    </label>
+                    <input type="number" class="form-control" id="DecimalNullable" name="DecimalNullable" 
+                           placeholder=""   step="0.01" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="DoubleField" class="form-label">
+                        Campo Double <span class="text-danger">*</span>
+                    </label>
+                    <input type="number" class="form-control" id="DoubleField" name="DoubleField" 
+                           placeholder="" required  step="0.01" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="DoubleNullable" class="form-label">
+                        Campo Double Nullable
+                    </label>
+                    <input type="number" class="form-control" id="DoubleNullable" name="DoubleNullable" 
+                           placeholder=""   step="0.01" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="FloatField" class="form-label">
+                        Campo Float <span class="text-danger">*</span>
+                    </label>
+                    <input type="number" class="form-control" id="FloatField" name="FloatField" 
+                           placeholder="" required  step="0.01" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="FloatNullable" class="form-label">
+                        Campo Float Nullable
+                    </label>
+                    <input type="number" class="form-control" id="FloatNullable" name="FloatNullable" 
+                           placeholder=""   step="0.01" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="DataHoraPadrao" class="form-label">
+                        Data/Hora Padrão <span class="text-danger">*</span>
+                    </label>
+                    <input type="datetime-local" class="form-control" id="DataHoraPadrao" name="DataHoraPadrao" 
+                           placeholder="" required  />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="DataHoraNullable" class="form-label">
+                        Data/Hora Nullable
+                    </label>
+                    <input type="datetime-local" class="form-control" id="DataHoraNullable" name="DataHoraNullable" 
+                           placeholder=""   />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="DataHoraSemPrecisao" class="form-label">
+                        Data/Hora sem Precisão
+                    </label>
+                    <input type="datetime-local" class="form-control" id="DataHoraSemPrecisao" name="DataHoraSemPrecisao" 
+                           placeholder=""   />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="DataHoraAltaPrecisao" class="form-label">
+                        Data/Hora Alta Precisão
+                    </label>
+                    <input type="datetime-local" class="form-control" id="DataHoraAltaPrecisao" name="DataHoraAltaPrecisao" 
+                           placeholder=""   />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="DataAntiga" class="form-label">
+                        Data Antiga (datetime legacy)
+                    </label>
+                    <input type="datetime-local" class="form-control" id="DataAntiga" name="DataAntiga" 
+                           placeholder=""   />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="DataSmallDateTime" class="form-label">
+                        SmallDateTime
+                    </label>
+                    <input type="datetime-local" class="form-control" id="DataSmallDateTime" name="DataSmallDateTime" 
+                           placeholder=""   />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="DataNascimento" class="form-label">
+                        Data de Nascimento
+                    </label>
+                    <input type="datetime-local" class="form-control" id="DataNascimento" name="DataNascimento" 
+                           placeholder=""   />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="HoraInicio" class="form-label">
+                        Hora de Início
+                    </label>
+                    <input type="text" class="form-control" id="HoraInicio" name="HoraInicio" 
+                           placeholder=""   />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="DuracaoTimeSpan" class="form-label">
+                        Duração (TimeSpan)
+                    </label>
+                    <input type="text" class="form-control" id="DuracaoTimeSpan" name="DuracaoTimeSpan" 
+                           placeholder=""   />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="DataComOffset" class="form-label">
+                        Data com Offset
+                    </label>
+                    <input type="text" class="form-control" id="DataComOffset" name="DataComOffset" 
+                           placeholder=""   />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="Ativo" name="Ativo"  />
+                        <label class="form-check-label" for="Ativo">Ativo</label>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="BoolNullable" name="BoolNullable"  />
+                        <label class="form-check-label" for="BoolNullable">Bool Nullable</label>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="Bloqueado" name="Bloqueado"  />
+                        <label class="form-check-label" for="Bloqueado">Bloqueado</label>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="GuidField" class="form-label">
+                        GUID <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" class="form-control" id="GuidField" name="GuidField" 
+                           placeholder="" required  />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="GuidNullable" class="form-label">
+                        GUID Nullable
+                    </label>
+                    <input type="text" class="form-control" id="GuidNullable" name="GuidNullable" 
+                           placeholder=""   />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="ExternalId" class="form-label">
+                        ID Externo
+                    </label>
+                    <input type="text" class="form-control" id="ExternalId" name="ExternalId" 
+                           placeholder=""   />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="BinaryData" class="form-label">
+                        Dados Binários <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" class="form-control" id="BinaryData" name="BinaryData" 
+                           placeholder="" required  />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="ImagemPequena" class="form-label">
+                        Imagem Pequena <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" class="form-control" id="ImagemPequena" name="ImagemPequena" 
+                           placeholder="" required  maxlength="8000" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Status" class="form-label">
+                        Status <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" class="form-control" id="Status" name="Status" 
+                           placeholder="" required  />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="StatusNullable" class="form-label">
+                        Status Nullable
+                    </label>
+                    <input type="text" class="form-control" id="StatusNullable" name="StatusNullable" 
+                           placeholder=""   />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Prioridade" class="form-label">
+                        Prioridade <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" class="form-control" id="Prioridade" name="Prioridade" 
+                           placeholder="" required  />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="JsonData" class="form-label">
+                        Dados JSON (string)
+                    </label>
+                    <input type="text" class="form-control" id="JsonData" name="JsonData" 
+                           placeholder=""   />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="JsonConfig" class="form-label">
+                        Configuração JSON
+                    </label>
+                    <input type="text" class="form-control" id="JsonConfig" name="JsonConfig" 
+                           placeholder=""   />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="JsonMetadata" class="form-label">
+                        Metadados JSON
+                    </label>
+                    <input type="text" class="form-control" id="JsonMetadata" name="JsonMetadata" 
+                           placeholder=""   />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="XmlContent" class="form-label">
+                        Conteúdo XML
+                    </label>
+                    <input type="text" class="form-control" id="XmlContent" name="XmlContent" 
+                           placeholder=""   />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="XmlSettings" class="form-label">
+                        Configurações XML
+                    </label>
+                    <input type="text" class="form-control" id="XmlSettings" name="XmlSettings" 
+                           placeholder=""   />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="ParentId" class="form-label">
+                        ID Pai
+                    </label>
+                    <input type="text" class="form-control" id="ParentId" name="ParentId" 
+                           placeholder=""   />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="CategoryId" class="form-label">
+                        ID Categoria
+                    </label>
+                    <input type="text" class="form-control" id="CategoryId" name="CategoryId" 
+                           placeholder=""   />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="OwnerId" class="form-label">
+                        ID Proprietário
+                    </label>
+                    <input type="text" class="form-control" id="OwnerId" name="OwnerId" 
+                           placeholder=""   />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="CreatedAtUtc" class="form-label">
+                        Criado em <span class="text-danger">*</span>
+                    </label>
+                    <input type="datetime-local" class="form-control" id="CreatedAtUtc" name="CreatedAtUtc" 
+                           placeholder="" required  />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="CreatedByUserId" class="form-label">
+                        ID Usuário Criador
+                    </label>
+                    <input type="text" class="form-control" id="CreatedByUserId" name="CreatedByUserId" 
+                           placeholder=""   />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="UpdatedAtUtc" class="form-label">
+                        Atualizado em
+                    </label>
+                    <input type="datetime-local" class="form-control" id="UpdatedAtUtc" name="UpdatedAtUtc" 
+                           placeholder=""   />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="UpdatedByUserId" class="form-label">
+                        ID Usuário Atualizador
+                    </label>
+                    <input type="text" class="form-control" id="UpdatedByUserId" name="UpdatedByUserId" 
+                           placeholder=""   />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="DeletedAtUtc" class="form-label">
+                        Excluído em
+                    </label>
+                    <input type="datetime-local" class="form-control" id="DeletedAtUtc" name="DeletedAtUtc" 
+                           placeholder=""   />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="DeletedBy" class="form-label">
+                        Excluído por
+                    </label>
+                    <input type="text" class="form-control" id="DeletedBy" name="DeletedBy" 
+                           placeholder=""   maxlength="100" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="DeletedByUserId" class="form-label">
+                        ID Usuário que Excluiu
+                    </label>
+                    <input type="text" class="form-control" id="DeletedByUserId" name="DeletedByUserId" 
+                           placeholder=""   />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="IsDeleted" name="IsDeleted"  />
+                        <label class="form-check-label" for="IsDeleted">Está Excluído</label>
+                    </div>
+                </div>
+    </div>
+
+}
+
+@* ============================================================================
+   Script específico da entidade
+   ============================================================================ *@
+@section PageScripts {
+    <script src="~/js/gestaodepessoas/testentitycomplete/testentitycomplete.js" asp-append-version="true"></script>
+}

@@ -1,0 +1,140 @@
+@model RhSensoERP.Web.Models.ControleAcessoPortaria.CapContatosEmergencia.CapContatosEmergenciaListViewModel
+@{
+    ViewData["Title"] = Model.PageTitle;
+    Layout = "_CrudLayout";
+    ViewData["EntityName"] = "CapContatosEmergencia";
+    ViewData["IconClass"] = "fas fa-table";
+}
+
+@* ============================================================================
+   Permissões injetadas para JavaScript (ANTES do script específico)
+   ============================================================================ *@
+<script>
+    window.crudPermissions = {
+        canCreate: @Model.CanCreate.ToString().ToLower(),
+        canEdit: @Model.CanEdit.ToString().ToLower(),
+        canDelete: @Model.CanDelete.ToString().ToLower(),
+        canView: @Model.CanView.ToString().ToLower(),
+        actions: "@Model.UserPermissions"
+    };
+</script>
+
+@* ============================================================================
+   Tabela usando partial _CrudTable (toolbar + datatable)
+   ============================================================================ *@
+@await Html.PartialAsync("_CrudTable", Model)
+
+@* ============================================================================
+   Conteúdo do Modal (apenas campos do formulário)
+   O wrapper do modal está no _CrudLayout
+   ============================================================================ *@
+@section ModalContent {
+    <input type="hidden" id="Id" name="Id" />
+    <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="IdFuncionarioLegado" class="form-label">
+                        ID Funcionário Legado
+                    </label>
+                    <input type="text" class="form-control" id="IdFuncionarioLegado" name="IdFuncionarioLegado" 
+                           placeholder=""   />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="IdColaboradorFornecedor" class="form-label">
+                        ID Colaborador Fornecedor
+                    </label>
+                    <input type="text" class="form-control" id="IdColaboradorFornecedor" name="IdColaboradorFornecedor" 
+                           placeholder=""   />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Nome" class="form-label">
+                        Nome <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" class="form-control" id="Nome" name="Nome" 
+                           placeholder="" required  maxlength="255" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="IdParentesco" class="form-label">
+                        IdParentesco
+                    </label>
+                    <input type="text" class="form-control" id="IdParentesco" name="IdParentesco" 
+                           placeholder=""   />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="TelefonePrincipal" class="form-label">
+                        Telefone Principal <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" class="form-control" id="TelefonePrincipal" name="TelefonePrincipal" 
+                           placeholder="" required  maxlength="20" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="TelefoneSecundario" class="form-label">
+                        Telefone Secundário
+                    </label>
+                    <input type="text" class="form-control" id="TelefoneSecundario" name="TelefoneSecundario" 
+                           placeholder=""   maxlength="20" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Email" class="form-label">
+                        E-mail
+                    </label>
+                    <input type="text" class="form-control" id="Email" name="Email" 
+                           placeholder=""   maxlength="100" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Endereco" class="form-label">
+                        Endereço
+                    </label>
+                    <input type="text" class="form-control" id="Endereco" name="Endereco" 
+                           placeholder=""   maxlength="500" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Cidade" class="form-label">
+                        Cidade
+                    </label>
+                    <input type="text" class="form-control" id="Cidade" name="Cidade" 
+                           placeholder=""   maxlength="100" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="IdUf" class="form-label">
+                        ID UF
+                    </label>
+                    <input type="text" class="form-control" id="IdUf" name="IdUf" 
+                           placeholder=""   />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Cep" class="form-label">
+                        CEP
+                    </label>
+                    <input type="text" class="form-control" id="Cep" name="Cep" 
+                           placeholder=""   maxlength="10" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="OrdemPrioridade" class="form-label">
+                        Ordem Prioridade <span class="text-danger">*</span>
+                    </label>
+                    <input type="number" class="form-control" id="OrdemPrioridade" name="OrdemPrioridade" 
+                           placeholder="" required  />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Observacoes" class="form-label">
+                        Observações
+                    </label>
+                    <input type="text" class="form-control" id="Observacoes" name="Observacoes" 
+                           placeholder=""   maxlength="500" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="Ativo" name="Ativo"  />
+                        <label class="form-check-label" for="Ativo">Ativo</label>
+                    </div>
+                </div>
+    </div>
+
+}
+
+@* ============================================================================
+   Script específico da entidade
+   ============================================================================ *@
+@section PageScripts {
+    <script src="~/js/controleacessoportaria/capcontatosemergencia/capcontatosemergencia.js" asp-append-version="true"></script>
+}

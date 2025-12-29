@@ -4,9 +4,9 @@
  * ============================================================================
  * Arquivo: wwwroot/js/gestaodepessoas/tretipostreinamento/tretipostreinamento.js
  * Módulo: GestaoDePessoas
- * Versão: 3.2 (Organização por módulo)
- * Gerado por: GeradorFullStack v3.2
- * Data: 2025-12-21 22:11:32
+ * Versão: 3.9 (PascalCase para model binding)
+ * Gerado por: GeradorFullStack v3.9
+ * Data: 2025-12-28 14:07:48
  * 
  * Implementação específica do CRUD de Tipos de Treinamento.
  * Estende a classe CrudBase com customizações necessárias.
@@ -75,26 +75,92 @@ class TreTiposTreinamentoCrud extends CrudBase {
     }
 
     /**
-     * Customização antes de submeter.
-     * Converte tipos e valida campos obrigatórios.
+     * ⭐ v3.9 CORRIGIDO: Retorna objeto em PascalCase
+     * Remove campos de auditoria, converte tipos e valida campos obrigatórios.
      */
     beforeSubmit(formData, isEdit) {
-        // Converte checkboxes para 0/1
-        ['Obrigatorio', 'Ativo'].forEach(field => {
-            const key = field.charAt(0).toLowerCase() + field.slice(1);
-            const checkbox = document.getElementById(field);
-            if (checkbox) {
-                formData[key] = checkbox.checked ? 1 : 0;
-            } else if (formData[key] === true || formData[key] === 'true' || formData[key] === 'on') {
-                formData[key] = 1;
-            } else if (formData[key] === false || formData[key] === 'false' || formData[key] === '' || formData[key] === undefined) {
-                formData[key] = 0;
-            }
-        });
+        console.log('📥 [TreTiposTreinamento] Dados ANTES:', JSON.parse(JSON.stringify(formData)));
+
+        // =====================================================================
+        // ⭐ CRÍTICO: Remove campos de auditoria (backend preenche automaticamente)
+        // =====================================================================
+        delete formData.createdAtUtc;
+        delete formData.updatedAtUtc;
+        delete formData.createdByUserId;
+        delete formData.updatedByUserId;
+        delete formData.tenantId;
+        delete formData.id;
+        delete formData.CreatedAtUtc;
+        delete formData.UpdatedAtUtc;
+        delete formData.CreatedByUserId;
+        delete formData.UpdatedByUserId;
+        delete formData.TenantId;
+        delete formData.Id;
+        delete formData.dataCriacao;
+        delete formData.dataAtualizacao;
+        delete formData.usuarioCriacao;
+        delete formData.usuarioAtualizacao;
+        delete formData.createdAt;
+        delete formData.updatedAt;
+        delete formData.createdBy;
+        delete formData.updatedBy;
+
+        // =====================================================================
+        // ⭐ v3.9: CRIA OBJETO LIMPO EM PASCALCASE (model binding ASP.NET Core)
+        // =====================================================================
+        const cleanData = {};
+
+        // String fields - PascalCase
+        cleanData.AplicavelA = formData.aplicavelA || formData.AplicavelA || '';
+        cleanData.CodigoNr = formData.codigoNr || formData.CodigoNr || '';
+        cleanData.Descricao = formData.descricao || formData.Descricao || '';
+        cleanData.Nome = formData.nome || formData.Nome || '';
+
+        // Integer nullable fields - PascalCase
+        if (formData.cargaHoraria !== undefined && formData.cargaHoraria !== null && formData.cargaHoraria !== '') {
+            const val = parseInt(formData.cargaHoraria, 10);
+            cleanData.CargaHoraria = isNaN(val) ? null : val;
+        } else if (formData.CargaHoraria !== undefined && formData.CargaHoraria !== null && formData.CargaHoraria !== '') {
+            const val = parseInt(formData.CargaHoraria, 10);
+            cleanData.CargaHoraria = isNaN(val) ? null : val;
+        } else {
+            cleanData.CargaHoraria = null;
+        }
+
+        if (formData.diasPrazoValidade !== undefined && formData.diasPrazoValidade !== null && formData.diasPrazoValidade !== '') {
+            const val = parseInt(formData.diasPrazoValidade, 10);
+            cleanData.DiasPrazoValidade = isNaN(val) ? null : val;
+        } else if (formData.DiasPrazoValidade !== undefined && formData.DiasPrazoValidade !== null && formData.DiasPrazoValidade !== '') {
+            const val = parseInt(formData.DiasPrazoValidade, 10);
+            cleanData.DiasPrazoValidade = isNaN(val) ? null : val;
+        } else {
+            cleanData.DiasPrazoValidade = null;
+        }
+
+        // ⭐ Boolean fields - PascalCase - Pega direto do DOM (checkbox)
+        const checkboxAtivo = document.getElementById('Ativo');
+        if (checkboxAtivo) {
+            cleanData.Ativo = checkboxAtivo.checked;
+        } else {
+            cleanData.Ativo = formData.ativo === true || 
+                                    formData.Ativo === true || 
+                                    formData.ativo === 'true' || 
+                                    formData.ativo === 1;
+        }
+
+        const checkboxObrigatorio = document.getElementById('Obrigatorio');
+        if (checkboxObrigatorio) {
+            cleanData.Obrigatorio = checkboxObrigatorio.checked;
+        } else {
+            cleanData.Obrigatorio = formData.obrigatorio === true || 
+                                    formData.Obrigatorio === true || 
+                                    formData.obrigatorio === 'true' || 
+                                    formData.obrigatorio === 1;
+        }
 
 
-        console.log('📤 [TreTiposTreinamento] Dados a enviar:', formData);
-        return formData;
+        console.log('📤 [TreTiposTreinamento] Dados DEPOIS (PascalCase):', JSON.parse(JSON.stringify(cleanData)));
+        return cleanData;
     }
 
     /**
@@ -102,13 +168,18 @@ class TreTiposTreinamentoCrud extends CrudBase {
      */
     afterSubmit(data, isEdit) {
         console.log('✅ [TreTiposTreinamento] Registro salvo:', data);
+        
+        // Atualiza a grid automaticamente
+        if (this.table) {
+            this.table.ajax.reload(null, false); // Mantém paginação
+        }
     }
 
     /**
      * Override do método getRowId para extrair ID corretamente.
      */
     getRowId(row) {
-        const id = row[this.config.idField] || row.id || row.Id || row.id || row.Id || '';
+        const id = row[this.config.idField] || row.id || row.Id || '';
         return typeof id === 'string' ? id.trim() : id;
     }
 }
@@ -142,7 +213,7 @@ $(document).ready(function () {
 
         // Tenta várias variações do nome do campo
         let id = row[fieldName] || row[fieldName.toLowerCase()] || row[fieldName.toUpperCase()] || 
-                 row['id'] || row['Id'] || row['id'] || row['Id'] || '';
+                 row['id'] || row['Id'] || '';
 
         // Converte para string e faz trim
         id = String(id).trim();
@@ -184,27 +255,37 @@ $(document).ready(function () {
             orderable: true,
             className: 'text-left'
         },
-        // Descricao
+        // CodigoNr
         {
-            data: 'descricao',
-            name: 'Descricao',
-            title: 'Descricao',
+            data: 'codigoNr',
+            name: 'CodigoNr',
+            title: 'CodigoNr',
             orderable: true,
             className: 'text-left'
         },
-        // Obrigatorio
+        // DiasPrazoValidade
         {
-            data: 'obrigatorio',
-            name: 'Obrigatorio',
-            title: 'Obrigatorio',
+            data: 'diasPrazoValidade',
+            name: 'DiasPrazoValidade',
+            title: 'DiasPrazoValidade',
             orderable: true,
-            className: 'text-left',
-            render: function (data) {
-                const isTrue = data === true || data === 1 || data === '1';
-                return isTrue
-                    ? '<span class="badge bg-success"><i class="fas fa-check"></i></span>'
-                    : '<span class="badge bg-secondary"><i class="fas fa-times"></i></span>';
-            }
+            className: 'text-left'
+        },
+        // AplicavelA
+        {
+            data: 'aplicavelA',
+            name: 'AplicavelA',
+            title: 'AplicavelA',
+            orderable: true,
+            className: 'text-left'
+        },
+        // CargaHoraria
+        {
+            data: 'cargaHoraria',
+            name: 'CargaHoraria',
+            title: 'CargaHoraria',
+            orderable: true,
+            className: 'text-left'
         },
         // Ativo
         {
@@ -230,8 +311,6 @@ $(document).ready(function () {
             width: '130px',
             render: function (data, type, row) {
                 const id = getCleanId(row, 'id');
-
-                console.log('🔧 [TreTiposTreinamento] Renderizando ações | ID:', id, '| Row:', row);
 
                 let actions = '<div class="btn-group btn-group-sm" role="group">';
 
@@ -268,7 +347,8 @@ $(document).ready(function () {
         columns: columns,
         permissions: window.crudPermissions,
         dataTableOptions: {
-            order: [[1, 'asc']]
+            order: [[1, 'asc']],
+            pageLength: 25
         }
     });
 
@@ -277,5 +357,5 @@ $(document).ready(function () {
     // =========================================================================
 
     // CrudBase inicializa automaticamente no construtor
-    console.log('✅ [TreTiposTreinamento] CRUD inicializado com sucesso');
+    console.log('✅ [TreTiposTreinamento] CRUD inicializado com sucesso (v3.9 - PascalCase)');
 });

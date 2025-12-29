@@ -2,7 +2,7 @@
 // ARQUIVO GERADO POR GeradorFullStack v3.6
 // Entity: CapFornecedores
 // Module: ControleAcessoPortaria
-// Data: 2025-12-24 01:02:36
+// Data: 2025-12-28 17:46:18
 // =============================================================================
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

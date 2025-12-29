@@ -3,7 +3,7 @@
 // Entity: CapResponsaveisContrato
 // Module: ControleAcessoPortaria
 // ApiRoute: api/gestaoterceirosprestadores/capresponsaveiscontrato
-// Data: 2025-12-24 01:15:50
+// Data: 2025-12-28 20:29:17
 // AUTO-REGISTRO: Compatível com AddCrudToolServicesAutomatically()
 // =============================================================================
 // NOTA: Este serviço usa HttpClient TIPADO injetado pelo DI.

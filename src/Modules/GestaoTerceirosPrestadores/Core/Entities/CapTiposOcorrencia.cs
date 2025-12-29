@@ -20,6 +20,8 @@ namespace RhSensoERP.Modules.GestaoTerceirosPrestadores.Core.Entities;
     GenerateApiController = true
 )]
 [Table("cap_tipos_ocorrencia")]
+[HasDatabaseTriggers("Auditoria automática de CreatedAt/UpdatedAt via triggers SQL Server")]
+
 public class CapTiposOcorrencia
 {
     [Key]

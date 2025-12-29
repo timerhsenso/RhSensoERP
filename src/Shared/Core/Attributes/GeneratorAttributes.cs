@@ -2,7 +2,7 @@
 // RHSENSOERP - ATRIBUTOS PARA SOURCE GENERATOR
 // =============================================================================
 // Arquivo: src/Shared/Core/Attributes/GeneratorAttributes.cs
-// Versão: 3.5 - Adicionado UsePluralRoute (padrão: singular)
+// Versão: 3.6 - Adicionado HasDatabaseTriggersAttribute
 // =============================================================================
 // IMPORTANTE: Este arquivo deve estar sincronizado com:
 // src/Generators/Attributes/GenerateCrudAttribute.cs
@@ -234,29 +234,26 @@ public sealed class ListConfigAttribute : Attribute
     public int Order { get; set; } = 0;
 
     /// <summary>
-    /// Largura da coluna em pixels. 0 = automático.
+    /// Largura da coluna (em pixels ou percentual).
+    /// Exemplo: "150px", "20%"
     /// </summary>
-    public int Width { get; set; } = 0;
+    public string Width { get; set; } = string.Empty;
 
     /// <summary>
-    /// Permite ordenação por esta coluna.
+    /// Permite ordenação por este campo.
     /// </summary>
     public bool Sortable { get; set; } = true;
 
     /// <summary>
-    /// Permite filtro por esta coluna.
+    /// Permite busca/filtro por este campo.
     /// </summary>
-    public bool Filterable { get; set; } = true;
+    public bool Searchable { get; set; } = true;
 
     /// <summary>
-    /// Formato de exibição: "date", "datetime", "currency", "percent", "boolean"
+    /// Formato de exibição do valor.
+    /// Exemplos: "date", "datetime", "currency", "percentage", "boolean"
     /// </summary>
     public string Format { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Classe CSS adicional para a coluna.
-    /// </summary>
-    public string CssClass { get; set; } = string.Empty;
 
     /// <summary>
     /// Alinhamento: "left", "center", "right"
@@ -493,4 +490,67 @@ public sealed class FilterConfigAttribute : Attribute
     /// Placeholder do campo de filtro.
     /// </summary>
     public string Placeholder { get; set; } = string.Empty;
+}
+
+// =============================================================================
+// ATRIBUTOS DE INFRAESTRUTURA - BANCO DE DADOS
+// =============================================================================
+
+/// <summary>
+/// Indica que a entidade possui triggers no banco de dados (auditoria, validações, etc).
+/// Entidades marcadas com este atributo terão UseSqlOutputClause(false) aplicado
+/// automaticamente no DbContext para evitar conflitos com triggers SQL Server.
+/// 
+/// PROBLEMA: SQL Server não permite OUTPUT INSERTED/DELETED em tabelas com triggers AFTER.
+/// SOLUÇÃO: Entity Framework Core desabilita OUTPUT e faz SELECT separado após INSERT/UPDATE.
+/// 
+/// USO:
+/// <code>
+/// [HasDatabaseTriggers("Auditoria automática via triggers")]
+/// public class MinhaEntidade
+/// {
+///     // ... propriedades
+/// }
+/// </code>
+/// </summary>
+[AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
+public sealed class HasDatabaseTriggersAttribute : Attribute
+{
+    /// <summary>
+    /// Descrição dos triggers aplicados (opcional, para documentação).
+    /// Exemplos: "Auditoria automática", "Validação de regras de negócio", "Logs de alteração"
+    /// </summary>
+    public string Description { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Lista de triggers conhecidos na tabela (opcional, para documentação).
+    /// </summary>
+    public string[] TriggerNames { get; set; } = Array.Empty<string>();
+
+    /// <summary>
+    /// Construtor padrão.
+    /// </summary>
+    public HasDatabaseTriggersAttribute()
+    {
+    }
+
+    /// <summary>
+    /// Construtor com descrição.
+    /// </summary>
+    /// <param name="description">Descrição dos triggers</param>
+    public HasDatabaseTriggersAttribute(string description)
+    {
+        Description = description;
+    }
+
+    /// <summary>
+    /// Construtor com descrição e lista de triggers.
+    /// </summary>
+    /// <param name="description">Descrição dos triggers</param>
+    /// <param name="triggerNames">Nomes dos triggers</param>
+    public HasDatabaseTriggersAttribute(string description, params string[] triggerNames)
+    {
+        Description = description;
+        TriggerNames = triggerNames;
+    }
 }

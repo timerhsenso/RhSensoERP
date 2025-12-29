@@ -1,15 +1,15 @@
 // =============================================================================
-// ARQUIVO GERADO POR GeradorFullStack v3.6
+// ARQUIVO GERADO POR GeradorFullStack v3.8
 // Entity: CapResponsaveisContrato
 // Module: ControleAcessoPortaria
-// Data: 2025-12-24 01:15:50
+// Data: 2025-12-28 20:29:17
 // =============================================================================
 
 namespace RhSensoERP.Web.Models.ControleAcessoPortaria.CapResponsaveisContrato;
 
 /// <summary>
 /// DTO de leitura para CapResponsaveisContrato.
-/// Compatível com backend: RhSensoERP.Modules.ControleAcessoPortaria.Application.DTOs.CapResponsaveisContratoDto
+/// Compativel com backend: RhSensoERP.Modules.ControleAcessoPortaria.Application.DTOs.CapResponsaveisContratoDto
 /// </summary>
 public class CapResponsaveisContratoDto
 {
@@ -19,7 +19,7 @@ public class CapResponsaveisContratoDto
     public int Id { get; set; }
 
     /// <summary>
-    /// Tenant ID
+    /// Tenant Id
     /// </summary>
     public Guid TenantId { get; set; }
 

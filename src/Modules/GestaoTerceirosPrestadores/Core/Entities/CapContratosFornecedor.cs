@@ -20,6 +20,8 @@ namespace RhSensoERP.Modules.GestaoTerceirosPrestadores.Core.Entities;
     GenerateApiController = true
 )]
 [Table("cap_contratos_fornecedor")]
+[HasDatabaseTriggers("Auditoria automática de CreatedAt/UpdatedAt via triggers SQL Server")]
+
 public class CapContratosFornecedor
 {
     [Key]

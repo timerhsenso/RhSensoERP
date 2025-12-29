@@ -1,4 +1,4 @@
-using System;
+Ôªøusing System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using RhSensoERP.Shared.Core.Attributes;
@@ -6,7 +6,7 @@ using RhSensoERP.Shared.Core.Attributes;
 namespace RhSensoERP.Modules.TreinamentoDesenvolvimento.Core.Entities;
 
 /// <summary>
-/// Tipos de Treinamento do Sistema de Gest„o de Treinamentos
+/// Tipos de Treinamento do Sistema de Gest√£o de Treinamentos
 /// Tabela: dbo.tre_tipos_treinamento
 /// </summary>
 [GenerateCrud(
@@ -18,10 +18,11 @@ namespace RhSensoERP.Modules.TreinamentoDesenvolvimento.Core.Entities;
     GenerateApiController = true
 )]
 [Table("tre_tipos_treinamento")]
+[HasDatabaseTriggers("Auditoria autom√°tica de CreatedAt/UpdatedAt via triggers SQL Server")]
 public class TreTiposTreinamento
 {
     /// <summary>
-    /// Identificador interno (chave tÈcnica).
+    /// Identificador interno (chave t√©cnica).
     /// SQL: Id INT IDENTITY(1,1) PRIMARY KEY
     /// </summary>
     [Key]
@@ -50,21 +51,21 @@ public class TreTiposTreinamento
     public string Nome { get; set; } = string.Empty;
 
     /// <summary>
-    /// DescriÁ„o detalhada / observaÁıes do tipo.
+    /// Descri√ß√£o detalhada / observa√ß√µes do tipo.
     /// SQL: Descricao NVARCHAR(500) NULL
     /// </summary>
     [StringLength(500)]
     [Column("Descricao")]
-    [Display(Name = "DescriÁ„o")]
+    [Display(Name = "Descri√ß√£o")]
     public string? Descricao { get; set; }
 
     /// <summary>
-    /// CÛdigo normativo/regulatÛrio (ex.: NR-01, NR-10, NR-35). Pode ser NULL.
+    /// C√≥digo normativo/regulat√≥rio (ex.: NR-01, NR-10, NR-35). Pode ser NULL.
     /// SQL: CodigoNr NVARCHAR(20) NULL
     /// </summary>
     [StringLength(20)]
     [Column("CodigoNr")]
-    [Display(Name = "CÛdigo NR")]
+    [Display(Name = "C√≥digo NR")]
     public string? CodigoNr { get; set; }
 
     /// <summary>
@@ -76,33 +77,33 @@ public class TreTiposTreinamento
     public int? DiasPrazoValidade { get; set; }
 
     /// <summary>
-    /// Indica se este treinamento È obrigatÛrio.
+    /// Indica se este treinamento √© obrigat√≥rio.
     /// SQL: Obrigatorio BIT NOT NULL DEFAULT 0
     /// </summary>
     [Required]
     [Column("Obrigatorio")]
-    [Display(Name = "ObrigatÛrio")]
+    [Display(Name = "Obrigat√≥rio")]
     public bool Obrigatorio { get; set; }
 
     /// <summary>
-    /// Texto livre com o p˙blico aplic·vel (ex.: "Todos", "Terceiros", "Operadores").
+    /// Texto livre com o p√∫blico aplic√°vel (ex.: "Todos", "Terceiros", "Operadores").
     /// SQL: AplicavelA NVARCHAR(100) NULL
     /// </summary>
     [StringLength(100)]
     [Column("AplicavelA")]
-    [Display(Name = "Aplic·vel a")]
+    [Display(Name = "Aplic√°vel a")]
     public string? AplicavelA { get; set; }
 
     /// <summary>
-    /// Carga hor·ria em horas (ex.: 4, 8, 16, 40). NULL = n„o informado.
+    /// Carga hor√°ria em horas (ex.: 4, 8, 16, 40). NULL = n√£o informado.
     /// SQL: CargaHoraria INT NULL (CHECK >= 0)
     /// </summary>
     [Column("CargaHoraria")]
-    [Display(Name = "Carga hor·ria (h)")]
+    [Display(Name = "Carga hor√°ria (h)")]
     public int? CargaHoraria { get; set; }
 
     /// <summary>
-    /// Indica se o tipo est· ativo para uso no sistema.
+    /// Indica se o tipo est√° ativo para uso no sistema.
     /// SQL: Ativo BIT NOT NULL DEFAULT 1
     /// </summary>
     [Required]
@@ -111,8 +112,9 @@ public class TreTiposTreinamento
     public bool Ativo { get; set; } = true;
 
     /// <summary>
-    /// Data/hora (UTC) de criaÁ„o do registro (gerada automaticamente pelo banco).
+    /// Data/hora (UTC) de cria√ß√£o do registro (gerada automaticamente pelo banco).
     /// SQL: CreatedAtUtc DATETIME2(3) NOT NULL DEFAULT SYSUTCDATETIME()
+    /// ‚ö†Ô∏è PREENCHIDO POR TRIGGER - N√ÉO ENVIAR NO INSERT
     /// </summary>
     [Required]
     [Column("CreatedAtUtc", TypeName = "datetime2(3)")]
@@ -120,16 +122,18 @@ public class TreTiposTreinamento
     public DateTime CreatedAtUtc { get; set; }
 
     /// <summary>
-    /// Usu·rio (GUID) que criou o registro (FK para dbo.tuse1.Id). Pode ser NULL.
+    /// Usu√°rio (GUID) que criou o registro (FK para dbo.tuse1.Id). Pode ser NULL.
     /// SQL: CreatedByUserId UNIQUEIDENTIFIER NULL
+    /// ‚ö†Ô∏è PREENCHIDO POR TRIGGER - N√ÉO ENVIAR NO INSERT
     /// </summary>
     [Column("CreatedByUserId", TypeName = "uniqueidentifier")]
-    [Display(Name = "Criado por (Usu·rio)")]
+    [Display(Name = "Criado por (Usu√°rio)")]
     public Guid? CreatedByUserId { get; set; }
 
     /// <summary>
-    /// Data/hora (UTC) da ˙ltima atualizaÁ„o (gerada no INSERT e atualizada por trigger).
+    /// Data/hora (UTC) da √∫ltima atualiza√ß√£o (gerada no INSERT e atualizada por trigger).
     /// SQL: UpdatedAtUtc DATETIME2(3) NOT NULL DEFAULT SYSUTCDATETIME()
+    /// ‚ö†Ô∏è PREENCHIDO POR TRIGGER - N√ÉO ENVIAR NO UPDATE
     /// </summary>
     [Required]
     [Column("UpdatedAtUtc", TypeName = "datetime2(3)")]
@@ -137,10 +141,11 @@ public class TreTiposTreinamento
     public DateTime UpdatedAtUtc { get; set; }
 
     /// <summary>
-    /// Usu·rio (GUID) que atualizou por ˙ltimo (FK para dbo.tuse1.Id). Pode ser NULL.
+    /// Usu√°rio (GUID) que atualizou por √∫ltimo (FK para dbo.tuse1.Id). Pode ser NULL.
     /// SQL: UpdatedByUserId UNIQUEIDENTIFIER NULL
+    /// ‚ö†Ô∏è PREENCHIDO POR TRIGGER - N√ÉO ENVIAR NO UPDATE
     /// </summary>
     [Column("UpdatedByUserId", TypeName = "uniqueidentifier")]
-    [Display(Name = "Atualizado por (Usu·rio)")]
+    [Display(Name = "Atualizado por (Usu√°rio)")]
     public Guid? UpdatedByUserId { get; set; }
 }

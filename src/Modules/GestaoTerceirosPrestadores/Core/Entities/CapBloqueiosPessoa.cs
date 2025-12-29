@@ -20,6 +20,8 @@ namespace RhSensoERP.Modules.GestaoTerceirosPrestadores.Core.Entities;
     GenerateApiController = true
 )]
 [Table("cap_bloqueios_pessoa")]
+[HasDatabaseTriggers("Auditoria automática de CreatedAt/UpdatedAt via triggers SQL Server")]
+
 public class CapBloqueiosPessoa
 {
     [Key]

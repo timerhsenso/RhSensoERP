@@ -1,8 +1,8 @@
 // =============================================================================
-// ARQUIVO GERADO POR GeradorFullStack v3.6
+// ARQUIVO GERADO POR GeradorFullStack v3.8
 // Entity: CapFornecedores
 // Module: ControleAcessoPortaria
-// Data: 2025-12-24 01:02:36
+// Data: 2025-12-28 17:46:18
 // =============================================================================
 using RhSensoERP.Web.Models.Base;
 
@@ -10,16 +10,16 @@ namespace RhSensoERP.Web.Models.ControleAcessoPortaria.CapFornecedores;
 
 /// <summary>
 /// ViewModel para listagem de CapFornecedores.
-/// Herda de BaseListViewModel que já contém permissões e configurações de DataTables.
+/// Herda de BaseListViewModel que ja contem permissoes e configuracoes de DataTables.
 /// </summary>
 public class CapFornecedoresListViewModel : BaseListViewModel
 {
     public CapFornecedoresListViewModel()
     {
-        // Inicializa propriedades padrão
+        // Inicializa propriedades padrao
         InitializeDefaults("CapFornecedores", "CapFornecedores");
         
-        // Configurações específicas
+        // Configuracoes especificas
         PageTitle = "CapFornecedores";
         PageIcon = "fas fa-table";
         CdFuncao = "CAP_FM_FORNECEDORES";

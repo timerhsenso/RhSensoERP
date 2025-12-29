@@ -3,7 +3,7 @@
 // Entity: CapFornecedores
 // Module: ControleAcessoPortaria
 // ApiRoute: api/gestaoterceirosprestadores/capfornecedores
-// Data: 2025-12-24 01:02:36
+// Data: 2025-12-28 17:46:18
 // AUTO-REGISTRO: Compatível com AddCrudToolServicesAutomatically()
 // =============================================================================
 // NOTA: Este serviço usa HttpClient TIPADO injetado pelo DI.

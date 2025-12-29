@@ -1,15 +1,15 @@
 // =============================================================================
-// ARQUIVO GERADO POR GeradorFullStack v3.6
+// ARQUIVO GERADO POR GeradorFullStack v3.8
 // Entity: CapFornecedores
 // Module: ControleAcessoPortaria
-// Data: 2025-12-24 01:02:36
+// Data: 2025-12-28 17:46:18
 // =============================================================================
 
 namespace RhSensoERP.Web.Models.ControleAcessoPortaria.CapFornecedores;
 
 /// <summary>
 /// DTO de leitura para CapFornecedores.
-/// Compatível com backend: RhSensoERP.Modules.ControleAcessoPortaria.Application.DTOs.CapFornecedoresDto
+/// Compativel com backend: RhSensoERP.Modules.ControleAcessoPortaria.Application.DTOs.CapFornecedoresDto
 /// </summary>
 public class CapFornecedoresDto
 {
@@ -29,7 +29,7 @@ public class CapFornecedoresDto
     public string RazaoSocial { get; set; } = string.Empty;
 
     /// <summary>
-    /// NomeFantasia
+    /// Nome Fantasia
     /// </summary>
     public string NomeFantasia { get; set; } = string.Empty;
 

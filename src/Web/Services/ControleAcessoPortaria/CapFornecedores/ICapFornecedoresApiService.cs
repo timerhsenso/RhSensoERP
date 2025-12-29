@@ -2,7 +2,7 @@
 // ARQUIVO GERADO POR GeradorFullStack v3.3
 // Entity: CapFornecedores
 // Module: ControleAcessoPortaria
-// Data: 2025-12-24 01:02:36
+// Data: 2025-12-28 17:46:18
 // AUTO-REGISTRO: Compatível com AddCrudToolServicesAutomatically()
 // =============================================================================
 using RhSensoERP.Web.Models.ControleAcessoPortaria.CapFornecedores;
