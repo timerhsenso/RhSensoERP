@@ -1,14 +1,12 @@
 // =============================================================================
-// ARQUIVO GERADO POR GeradorFullStack v3.3
+// ARQUIVO GERADO POR GeradorFullStack v4.0 FINAL
 // Entity: TreTiposTreinamento
 // Module: GestaoDePessoas
 // ApiRoute: api/treinamentodesenvolvimento/tretipostreinamento
-// Data: 2025-12-28 14:07:48
+// Data: 2025-12-30 05:27:05
 // AUTO-REGISTRO: Compatível com AddCrudToolServicesAutomatically()
 // =============================================================================
-// NOTA: Este serviço usa HttpClient TIPADO injetado pelo DI.
-// O Timeout e políticas de resiliência (Polly) são configurados em:
-// ServiceCollectionExtensions.AddCrudToolServicesAutomatically()
+// v4.0 FINAL: Parâmetros corretos (sortBy, desc) para ordenação server-side
 // =============================================================================
 using System.Net.Http.Headers;
 using System.Text;
@@ -22,18 +20,8 @@ namespace RhSensoERP.Web.Services.GestaoDePessoas.TreTiposTreinamento;
 
 /// <summary>
 /// Implementação do serviço de API para Tipos de Treinamento.
-/// Consome a API backend gerada pelo Source Generator.
+/// v4.0 FINAL: Corrigido para usar sortBy e desc (compatível com backend).
 /// </summary>
-/// <remarks>
-/// Este serviço é registrado automaticamente no DI via:
-/// <code>services.AddCrudToolServicesAutomatically(apiSettings)</code>
-/// 
-/// HttpClient já vem configurado com:
-/// - BaseAddress
-/// - Timeout
-/// - Retry Policy (Polly)
-/// - Circuit Breaker (Polly)
-/// </remarks>
 public class TreTiposTreinamentoApiService : ITreTiposTreinamentoApiService
 {
     private readonly HttpClient _httpClient;
@@ -41,9 +29,6 @@ public class TreTiposTreinamentoApiService : ITreTiposTreinamentoApiService
     private readonly ILogger<TreTiposTreinamentoApiService> _logger;
     private readonly JsonSerializerOptions _jsonOptions;
 
-    // =========================================================================
-    // v3.2 - ROTA API DO MANIFESTO (não mais construída automaticamente)
-    // =========================================================================
     private const string ApiRoute = "api/treinamentodesenvolvimento/tretipostreinamento";
 
     public TreTiposTreinamentoApiService(
@@ -55,9 +40,6 @@ public class TreTiposTreinamentoApiService : ITreTiposTreinamentoApiService
         _httpContextAccessor = httpContextAccessor;
         _logger = logger;
         
-        // NOTA: Timeout e BaseAddress já configurados pelo DI (ServiceCollectionExtensions)
-        // NÃO configurar aqui para evitar conflito com Polly
-        
         _jsonOptions = new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true,
@@ -67,16 +49,11 @@ public class TreTiposTreinamentoApiService : ITreTiposTreinamentoApiService
 
     #region Private Helpers
 
-    /// <summary>
-    /// Configura header de autenticação com token JWT.
-    /// Token está em AuthenticationTokens (StoreTokens no AccountController).
-    /// </summary>
     private async Task SetAuthHeaderAsync()
     {
         var context = _httpContextAccessor.HttpContext;
         if (context?.User?.Identity?.IsAuthenticated == true)
         {
-            // Token está em AuthenticationTokens, não em Claims
             var token = await context.GetTokenAsync("access_token");
             
             if (!string.IsNullOrEmpty(token))
@@ -96,28 +73,18 @@ public class TreTiposTreinamentoApiService : ITreTiposTreinamentoApiService
         }
     }
 
-    /// <summary>
-    /// Cria ApiResponse de sucesso.
-    /// </summary>
     private static ApiResponse<T> Success<T>(T? data) => new()
     {
         Success = true,
         Data = data
     };
 
-    /// <summary>
-    /// Cria ApiResponse de erro.
-    /// NOTA: Message é computed (=> Error?.Message), então usamos Error.
-    /// </summary>
     private static ApiResponse<T> Fail<T>(string message) => new()
     {
         Success = false,
         Error = new ApiError { Message = message }
     };
 
-    /// <summary>
-    /// Processa resposta HTTP do backend.
-    /// </summary>
     private async Task<ApiResponse<T>> ProcessResponseAsync<T>(
         HttpResponseMessage response, 
         string operation)
@@ -139,15 +106,16 @@ public class TreTiposTreinamentoApiService : ITreTiposTreinamentoApiService
 
             if (backendResult.IsSuccess)
             {
-                return Success(backendResult.Value ?? backendResult.Data);
+                var data = backendResult.Value ?? backendResult.Data;
+                return Success(data);
             }
 
-            return Fail<T>(backendResult.Error?.Message ?? $"Erro HTTP {(int)response.StatusCode}");
+            return Fail<T>(backendResult.Error?.Message ?? "Erro desconhecido");
         }
-        catch (JsonException)
+        catch (JsonException ex)
         {
-            // Tenta como string simples
-            return Fail<T>($"Erro: {content}");
+            _logger.LogError(ex, "[TRETIPOSTREINAMENTO] Erro JSON em {Op}", operation);
+            return Fail<T>("Erro ao processar resposta do servidor");
         }
     }
 
@@ -155,75 +123,76 @@ public class TreTiposTreinamentoApiService : ITreTiposTreinamentoApiService
 
     #region IApiService Implementation
 
-    public async Task<ApiResponse<IEnumerable<TreTiposTreinamentoDto>>> GetAllAsync()
-    {
-        try
-        {
-            await SetAuthHeaderAsync();
-            var response = await _httpClient.GetAsync(ApiRoute);
-            
-            if (!response.IsSuccessStatusCode)
-                return await ProcessResponseAsync<IEnumerable<TreTiposTreinamentoDto>>(response, "GetAll");
-
-            var content = await response.Content.ReadAsStringAsync();
-            var backendResult = JsonSerializer.Deserialize<BackendResult<List<TreTiposTreinamentoDto>>>(content, _jsonOptions);
-            
-            if (backendResult?.IsSuccess == true)
-            {
-                IEnumerable<TreTiposTreinamentoDto> items = backendResult.Value ?? backendResult.Data ?? new List<TreTiposTreinamentoDto>();
-                return Success(items);
-            }
-
-            return Fail<IEnumerable<TreTiposTreinamentoDto>>(backendResult?.Error?.Message ?? "Erro ao buscar registros");
-        }
-        catch (HttpRequestException ex)
-        {
-            _logger.LogError(ex, "[TRETIPOSTREINAMENTO] Erro de conexão em GetAllAsync");
-            return Fail<IEnumerable<TreTiposTreinamentoDto>>("Erro de conexão com o servidor");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "[TRETIPOSTREINAMENTO] Exceção em GetAllAsync");
-            return Fail<IEnumerable<TreTiposTreinamentoDto>>(ex.Message);
-        }
-    }
-
-    public async Task<ApiResponse<PagedResult<TreTiposTreinamentoDto>>> GetPagedAsync(int page, int pageSize, string? search = null)
+    /// <summary>
+    /// ✅ v4.0 FINAL: GetPagedAsync com parâmetros corretos (sortBy, desc).
+    /// </summary>
+    public async Task<ApiResponse<PagedResult<TreTiposTreinamentoDto>>> GetPagedAsync(
+        int page, 
+        int pageSize, 
+        string? search = null,
+        string? sortBy = null,      // ✅ CORRETO: sortBy (não orderBy)
+        bool desc = false)          // ✅ CORRETO: desc (não ascending)
     {
         try
         {
             await SetAuthHeaderAsync();
             
-            var queryParams = $"?page={page}&pageSize={pageSize}";
-            if (!string.IsNullOrEmpty(search))
-                queryParams += $"&search={Uri.EscapeDataString(search)}";
+            // ================================================================
+            // ✅ CONSTRÓI QUERY STRING COM PARÂMETROS CORRETOS
+            // ================================================================
+            var query = $"?page={page}&pageSize={pageSize}";
             
-            var response = await _httpClient.GetAsync($"{ApiRoute}{queryParams}");
+            if (!string.IsNullOrWhiteSpace(search))
+                query += $"&search={Uri.EscapeDataString(search)}";
             
-            if (!response.IsSuccessStatusCode)
-                return await ProcessResponseAsync<PagedResult<TreTiposTreinamentoDto>>(response, "GetPaged");
+            // ✅ CORRETO: sortBy (não orderBy)
+            if (!string.IsNullOrWhiteSpace(sortBy))
+                query += $"&sortBy={Uri.EscapeDataString(sortBy)}";
+            
+            // ✅ CORRETO: desc (não ascending)
+            query += $"&desc={desc.ToString().ToLower()}";
 
-            var content = await response.Content.ReadAsStringAsync();
-            var backendResult = JsonSerializer.Deserialize<BackendResult<PagedResult<TreTiposTreinamentoDto>>>(content, _jsonOptions);
-            
-            if (backendResult?.IsSuccess == true)
-            {
-                var pagedResult = backendResult.Value ?? backendResult.Data;
-                if (pagedResult != null)
-                    return Success(pagedResult);
-            }
+            _logger.LogDebug(
+                "[TRETIPOSTREINAMENTO] GET {Route}{Query} - SortBy: {SortBy}, Desc: {Desc}", 
+                ApiRoute, query, sortBy ?? "null", desc
+            );
 
-            return Fail<PagedResult<TreTiposTreinamentoDto>>(backendResult?.Error?.Message ?? "Erro ao buscar registros paginados");
+            var response = await _httpClient.GetAsync($"{ApiRoute}{query}");
+            return await ProcessResponseAsync<PagedResult<TreTiposTreinamentoDto>>(response, "GetPaged");
         }
         catch (HttpRequestException ex)
         {
             _logger.LogError(ex, "[TRETIPOSTREINAMENTO] Erro de conexão em GetPagedAsync");
             return Fail<PagedResult<TreTiposTreinamentoDto>>("Erro de conexão com o servidor");
         }
+        catch (TaskCanceledException)
+        {
+            return Fail<PagedResult<TreTiposTreinamentoDto>>("Tempo limite excedido");
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "[TRETIPOSTREINAMENTO] Exceção em GetPagedAsync");
             return Fail<PagedResult<TreTiposTreinamentoDto>>(ex.Message);
+        }
+    }
+
+    public async Task<ApiResponse<IEnumerable<TreTiposTreinamentoDto>>> GetAllAsync()
+    {
+        try
+        {
+            await SetAuthHeaderAsync();
+            var response = await _httpClient.GetAsync($"{ApiRoute}?page=1&pageSize=10000");
+            var result = await ProcessResponseAsync<PagedResult<TreTiposTreinamentoDto>>(response, "GetAll");
+            
+            if (result.Success && result.Data != null)
+                return Success<IEnumerable<TreTiposTreinamentoDto>>(result.Data.Items);
+            
+            return Fail<IEnumerable<TreTiposTreinamentoDto>>(result.Error?.Message ?? "Erro ao buscar dados");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[TRETIPOSTREINAMENTO] Exceção em GetAllAsync");
+            return Fail<IEnumerable<TreTiposTreinamentoDto>>(ex.Message);
         }
     }
 
@@ -233,19 +202,7 @@ public class TreTiposTreinamentoApiService : ITreTiposTreinamentoApiService
         {
             await SetAuthHeaderAsync();
             var response = await _httpClient.GetAsync($"{ApiRoute}/{id}");
-            
-            if (!response.IsSuccessStatusCode)
-                return await ProcessResponseAsync<TreTiposTreinamentoDto>(response, "GetById");
-
-            var content = await response.Content.ReadAsStringAsync();
-            var backendResult = JsonSerializer.Deserialize<BackendResult<TreTiposTreinamentoDto>>(content, _jsonOptions);
-            
-            if (backendResult?.IsSuccess == true)
-            {
-                return Success(backendResult.Value ?? backendResult.Data);
-            }
-
-            return Fail<TreTiposTreinamentoDto>(backendResult?.Error?.Message ?? "Registro não encontrado");
+            return await ProcessResponseAsync<TreTiposTreinamentoDto>(response, "GetById");
         }
         catch (HttpRequestException ex)
         {
@@ -280,7 +237,6 @@ public class TreTiposTreinamentoApiService : ITreTiposTreinamentoApiService
             
             if (createResult?.IsSuccess == true)
             {
-                // v3.3 FIX: Usa ternário em vez de ?? (value types não são nullable)
                 var createdId = createResult.Value != 0 ? createResult.Value : createResult.Data;
                     
                 if (createdId != 0)
@@ -433,10 +389,6 @@ public class TreTiposTreinamentoApiService : ITreTiposTreinamentoApiService
 
     #region Backend DTOs
 
-    /// <summary>
-    /// DTO para deserializar resposta do backend.
-    /// Backend pode retornar Value ou Data dependendo do endpoint.
-    /// </summary>
     private sealed class BackendResult<T>
     {
         public bool IsSuccess { get; set; }

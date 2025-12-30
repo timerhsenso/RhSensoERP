@@ -2,7 +2,7 @@
 // ARQUIVO GERADO POR GeradorFullStack v3.8
 // Entity: TreTiposTreinamento
 // Module: GestaoDePessoas
-// Data: 2025-12-28 14:07:48
+// Data: 2025-12-30 05:27:05
 // =============================================================================
 
 namespace RhSensoERP.Web.Models.GestaoDePessoas.TreTiposTreinamento;
@@ -39,7 +39,7 @@ public class TreTiposTreinamentoDto
     public string CodigoNr { get; set; } = string.Empty;
 
     /// <summary>
-    /// DiasPrazoValidade
+    /// Validade (dias)
     /// </summary>
     public int? DiasPrazoValidade { get; set; }
 
@@ -49,12 +49,12 @@ public class TreTiposTreinamentoDto
     public bool Obrigatorio { get; set; }
 
     /// <summary>
-    /// AplicavelA
+    /// Aplicável a
     /// </summary>
     public string AplicavelA { get; set; } = string.Empty;
 
     /// <summary>
-    /// CargaHoraria
+    /// Carga horária (h)
     /// </summary>
     public int? CargaHoraria { get; set; }
 

@@ -1,6 +1,7 @@
 // =============================================================================
-// GERADOR FULL-STACK v3.9 - JAVASCRIPT TEMPLATE (CORRIGIDO - PASCALCASE)
+// GERADOR FULL-STACK v4.0 - JAVASCRIPT TEMPLATE (COM ORDENAÇÃO)
 // Baseado em RhSensoERP.CrudTool v2.5
+// v4.0 - ✅ ADICIONADO: Suporte a ordenação server-side do DataTables
 // v3.9 - ✅ CORRIGIDO: Gera código em PascalCase para model binding ASP.NET Core
 // v3.8 - ✅ CORRIGIDO: Remove automaticamente campos de auditoria no beforeSubmit
 // v3.7 - ✅ CORRIGIDO: Gera TODAS as colunas relevantes automaticamente
@@ -14,6 +15,7 @@ namespace GeradorEntidades.Templates;
 
 /// <summary>
 /// Gera JavaScript que estende a classe CrudBase existente.
+/// v4.0: Adiciona ordenação server-side funcional.
 /// v3.9: beforeSubmit retorna objeto em PascalCase para compatibilidade com ASP.NET Core.
 /// v3.8: Remove automaticamente campos de auditoria e TenantId no beforeSubmit.
 /// v3.7: Auto-gera colunas se o usuário não configurou no Wizard.
@@ -38,13 +40,18 @@ public static class JavaScriptTemplate
 
         var content = $@"/**
  * ============================================================================
- * {entity.DisplayName.ToUpper()} - JavaScript com Controle de Permissões
+ * {entity.DisplayName.ToUpper()} - JavaScript com Ordenação Server-Side
  * ============================================================================
  * Arquivo: wwwroot/js/{modulePathLower}/{entity.NameLower}/{entity.NameLower}.js
  * Módulo: {entity.Module}
- * Versão: 3.9 (PascalCase para model binding)
- * Gerado por: GeradorFullStack v3.9
+ * Versão: 4.0 (COM ORDENAÇÃO FUNCIONAL)
+ * Gerado por: GeradorFullStack v4.0
  * Data: {DateTime.Now:yyyy-MM-dd HH:mm:ss}
+ * 
+ * Changelog v4.0:
+ *   ✅ Ordenação server-side habilitada por padrão
+ *   ✅ Colunas mapeadas com 'name' em PascalCase para backend
+ *   ✅ Render functions para compatibilidade PascalCase/camelCase
  * 
  * Implementação específica do CRUD de {entity.DisplayName}.
  * Estende a classe CrudBase com customizações necessárias.
@@ -187,13 +194,14 @@ $(document).ready(function () {{
     }}
 
     // =========================================================================
-    // CONFIGURAÇÃO DAS COLUNAS DO DATATABLES
+    // ✅ v4.0: CONFIGURAÇÃO DAS COLUNAS COM ORDENAÇÃO
     // =========================================================================
 
     const columns = [
         // Coluna de seleção (checkbox)
         {{
             data: null,
+            name: null,                    // ✅ Não ordena
             orderable: false,
             searchable: false,
             className: 'dt-checkboxes-cell',
@@ -211,6 +219,7 @@ $(document).ready(function () {{
         // Coluna de ações
         {{
             data: null,
+            name: null,                    // ✅ Não ordena
             orderable: false,
             searchable: false,
             className: 'text-end no-export',
@@ -244,7 +253,7 @@ $(document).ready(function () {{
     ];
 
     // =========================================================================
-    // INICIALIZAÇÃO DO CRUD
+    // ✅ v4.0: INICIALIZAÇÃO DO CRUD COM ORDENAÇÃO HABILITADA
     // =========================================================================
 
     window.{entity.NameLower}Crud = new {entity.Name}Crud({{
@@ -254,8 +263,34 @@ $(document).ready(function () {{
         columns: columns,
         permissions: window.crudPermissions,
         dataTableOptions: {{
+            // ✅ CRÍTICO: Habilita server-side processing e ordenação
+            serverSide: true,
+            processing: true,
+            ordering: true,
+            
+            // ✅ Ordenação inicial (primeira coluna de dados)
             order: [[1, 'asc']],
-            pageLength: 25
+            
+            pageLength: 25,
+            
+            // Idioma PT-BR
+            language: {{
+                processing: ""Processando..."",
+                emptyTable: ""Nenhum registro encontrado"",
+                info: ""Mostrando _START_ até _END_ de _TOTAL_ registros"",
+                infoEmpty: ""Mostrando 0 até 0 de 0 registros"",
+                infoFiltered: ""(filtrado de _MAX_ registros)"",
+                lengthMenu: ""Mostrar _MENU_ registros"",
+                loadingRecords: ""Carregando..."",
+                search: ""Buscar:"",
+                zeroRecords: ""Nenhum registro encontrado"",
+                paginate: {{
+                    first: ""Primeiro"",
+                    previous: ""Anterior"",
+                    next: ""Próximo"",
+                    last: ""Último""
+                }}
+            }}
         }}
     }});
 
@@ -264,7 +299,7 @@ $(document).ready(function () {{
     // =========================================================================
 
     // CrudBase inicializa automaticamente no construtor
-    console.log('✅ [{entity.Name}] CRUD inicializado com sucesso (v3.9 - PascalCase)');
+    console.log('✅ [{entity.Name}] CRUD inicializado com ordenação server-side (v4.0)');
 }});
 ";
 
@@ -280,7 +315,7 @@ $(document).ready(function () {{
     #region Helper Methods
 
     /// <summary>
-    /// ✅ v3.7: Gera as colunas do DataTables.
+    /// ✅ v4.0: Gera as colunas do DataTables COM ORDENAÇÃO.
     /// Auto-gera se não configuradas pelo usuário.
     /// </summary>
     private static string GenerateColumns(EntityConfig entity)
@@ -308,50 +343,62 @@ $(document).ready(function () {{
             var format = prop.List?.Format ?? GetDefaultFormat(prop);
             var width = !string.IsNullOrEmpty(prop.List?.Width) ? $"\n            width: '{prop.List!.Width}'," : "";
 
-            // Nome da propriedade em camelCase para o JSON
+            // ✅ v4.0: Nome da propriedade em camelCase para 'data' e PascalCase para 'name'
             var dataName = char.ToLower(prop.Name[0]) + prop.Name.Substring(1);
+            var pascalName = prop.Name; // Já está em PascalCase
 
+            // ✅ v4.0: Adiciona render function para compatibilidade PascalCase/camelCase
             string render = format switch
             {
                 "date" => $@",
-            render: function (data) {{
-                if (!data) return '-';
-                const date = new Date(data);
+            render: function (data, type, row) {{
+                const valor = row.{dataName} || row.{pascalName};
+                if (!valor) return '-';
+                const date = new Date(valor);
                 return date.toLocaleDateString('pt-BR');
             }}",
                 "datetime" => $@",
-            render: function (data) {{
-                if (!data) return '-';
-                const date = new Date(data);
+            render: function (data, type, row) {{
+                const valor = row.{dataName} || row.{pascalName};
+                if (!valor) return '-';
+                const date = new Date(valor);
                 return date.toLocaleDateString('pt-BR') + ' ' + 
                        date.toLocaleTimeString('pt-BR', {{ hour: '2-digit', minute: '2-digit' }});
             }}",
                 "currency" => $@",
-            render: function (data) {{
-                if (data == null) return '-';
-                return 'R$ ' + parseFloat(data).toLocaleString('pt-BR', {{ minimumFractionDigits: 2 }});
+            render: function (data, type, row) {{
+                const valor = row.{dataName} !== undefined ? row.{dataName} : row.{pascalName};
+                if (valor == null) return '-';
+                return 'R$ ' + parseFloat(valor).toLocaleString('pt-BR', {{ minimumFractionDigits: 2 }});
             }}",
                 "percentage" => $@",
-            render: function (data) {{
-                if (data == null) return '-';
-                return parseFloat(data).toFixed(2) + '%';
+            render: function (data, type, row) {{
+                const valor = row.{dataName} !== undefined ? row.{dataName} : row.{pascalName};
+                if (valor == null) return '-';
+                return parseFloat(valor).toFixed(2) + '%';
             }}",
                 "boolean" => $@",
-            render: function (data) {{
-                const isTrue = data === true || data === 1 || data === '1';
+            render: function (data, type, row) {{
+                const valor = row.{dataName} !== undefined ? row.{dataName} : row.{pascalName};
+                const isTrue = valor === true || valor === 1 || valor === '1';
                 return isTrue
                     ? '<span class=""badge bg-success""><i class=""fas fa-check""></i></span>'
                     : '<span class=""badge bg-secondary""><i class=""fas fa-times""></i></span>';
             }}",
-                _ => ""
+                _ => $@",
+            render: function (data, type, row) {{
+                return row.{dataName} || row.{pascalName} || '';
+            }}"
             };
 
-            sb.AppendLine($@"        // {prop.DisplayName}
+            // ✅ v4.0: Adiciona 'name' em PascalCase para ordenação no backend
+            sb.AppendLine($@"        // ✅ {prop.DisplayName} - Ordenável
         {{
             data: '{dataName}',
-            name: '{prop.Name}',
+            name: '{pascalName}',          // ✅ PascalCase para backend
             title: '{prop.DisplayName}',{width}
-            orderable: {sortable},
+            orderable: {sortable},         // ✅ CRÍTICO
+            searchable: true,
             className: 'text-{align}'{render}
         }},");
         }

@@ -1,8 +1,8 @@
 // =============================================================================
-// ARQUIVO GERADO POR GeradorFullStack v3.3
+// ARQUIVO GERADO POR GeradorFullStack v4.0
 // Entity: CapVisitantes
 // Module: ControleAcessoPortaria
-// Data: 2025-12-28 19:08:36
+// Data: 2025-12-30 04:08:11
 // AUTO-REGISTRO: Compatível com AddCrudToolServicesAutomatically()
 // =============================================================================
 using RhSensoERP.Web.Models.ControleAcessoPortaria.CapVisitantes;
@@ -14,6 +14,7 @@ namespace RhSensoERP.Web.Services.ControleAcessoPortaria.CapVisitantes;
 /// <summary>
 /// Interface do serviço de API para CapVisitantes.
 /// Herda de IApiService e IBatchDeleteService existentes.
+/// v4.0: Suporta ordenação server-side.
 /// </summary>
 public interface ICapVisitantesApiService 
     : IApiService<CapVisitantesDto, CreateCapVisitantesRequest, UpdateCapVisitantesRequest, int>,

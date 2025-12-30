@@ -30,95 +30,63 @@
    ============================================================================ *@
 @section ModalContent {
     <input type="hidden" id="Id" name="Id" />
-
     <div class="row">
-        @* Seção 1: Informações Básicas *@
-        <div class="col-12">
-            <h6 class="text-muted mb-3">
-                <i class="fas fa-info-circle"></i> Informações Básicas
-            </h6>
-        </div>
-
-        <div class="col-md-6 mb-3">
-            <label for="Nome" class="form-label">
-                Nome <span class="text-danger">*</span>
-            </label>
-            <input type="text" class="form-control" id="Nome" name="Nome"
-                   placeholder="" required maxlength="100" />
-        </div>
-
-        <div class="col-md-6 mb-3">
-            <label for="CodigoNr" class="form-label">
-                Código
-            </label>
-            <input type="text" class="form-control" id="CodigoNr" name="CodigoNr"
-                   placeholder="" maxlength="20" />
-        </div>
-
-        <div class="col-12 mb-3">
-            <label for="Descricao" class="form-label">
-                Descrição
-            </label>
-            <input type="text" class="form-control" id="Descricao" name="Descricao"
-                   placeholder="" maxlength="500" />
-        </div>
-
-        @* Seção 2: Configurações de Treinamento *@
-        <div class="col-12 mt-4">
-            <h6 class="text-muted mb-3">
-                <i class="fas fa-cog"></i> Configurações de Treinamento
-            </h6>
-        </div>
-
-        <div class="col-md-6 mb-3">
-            <label for="CargaHoraria" class="form-label">
-                Carga Horária
-            </label>
-            <input type="text" class="form-control" id="CargaHoraria" name="CargaHoraria"
-                   placeholder="" />
-        </div>
-
-        <div class="col-md-6 mb-3">
-            <label for="DiasPrazoValidade" class="form-label">
-                Dias Prazo Validade
-            </label>
-            <input type="text" class="form-control" id="DiasPrazoValidade" name="DiasPrazoValidade"
-                   placeholder="" />
-        </div>
-
-        <div class="col-md-6 mb-3">
-            <label for="AplicavelA" class="form-label">
-                Aplicável A
-            </label>
-            <input type="text" class="form-control" id="AplicavelA" name="AplicavelA"
-                   placeholder="" maxlength="100" />
-        </div>
-
-        @* Seção 3: Status e Opções *@
-        <div class="col-12 mt-4">
-            <h6 class="text-muted mb-3">
-                <i class="fas fa-toggle-on"></i> Status e Opções
-            </h6>
-        </div>
-
-        <div class="col-md-6 mb-3">
-            <div class="form-check form-switch">
-                <input type="checkbox" class="form-check-input" id="Obrigatorio" name="Obrigatorio" />
-                <label class="form-check-label" for="Obrigatorio">
-                    Obrigatório
-                </label>
-            </div>
-        </div>
-
-        <div class="col-md-6 mb-3">
-            <div class="form-check form-switch">
-                <input type="checkbox" class="form-check-input" id="Ativo" name="Ativo" />
-                <label class="form-check-label" for="Ativo">
-                    Ativo
-                </label>
-            </div>
-        </div>
+                <div class="col-md-6 mb-3">
+                    <label for="CodigoNr" class="form-label">
+                        CodigoNr
+                    </label>
+                    <input type="text" class="form-control" id="CodigoNr" name="CodigoNr" 
+                           placeholder=""   maxlength="20" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Nome" class="form-label">
+                        Nome <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" class="form-control" id="Nome" name="Nome" 
+                           placeholder="" required  maxlength="100" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Descricao" class="form-label">
+                        Descrição
+                    </label>
+                    <input type="text" class="form-control" id="Descricao" name="Descricao" 
+                           placeholder=""   maxlength="500" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="DiasPrazoValidade" class="form-label">
+                        Validade (dias)
+                    </label>
+                    <input type="text" class="form-control" id="DiasPrazoValidade" name="DiasPrazoValidade" 
+                           placeholder=""   />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="Obrigatorio" name="Obrigatorio"  />
+                        <label class="form-check-label" for="Obrigatorio">Obrigatório</label>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="AplicavelA" class="form-label">
+                        Aplicável a
+                    </label>
+                    <input type="text" class="form-control" id="AplicavelA" name="AplicavelA" 
+                           placeholder=""   maxlength="100" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="CargaHoraria" class="form-label">
+                        Carga horária (h)
+                    </label>
+                    <input type="text" class="form-control" id="CargaHoraria" name="CargaHoraria" 
+                           placeholder=""   />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="Ativo" name="Ativo"  />
+                        <label class="form-check-label" for="Ativo">Ativo</label>
+                    </div>
+                </div>
     </div>
+
 }
 
 @* ============================================================================

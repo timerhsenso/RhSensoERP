@@ -2,7 +2,7 @@
 // ARQUIVO GERADO POR GeradorFullStack v3.8
 // Entity: CapVisitantes
 // Module: ControleAcessoPortaria
-// Data: 2025-12-28 19:08:36
+// Data: 2025-12-30 04:08:11
 // =============================================================================
 using System.ComponentModel.DataAnnotations;
 
@@ -23,10 +23,10 @@ public class CreateCapVisitantesRequest
     public string Nome { get; set; } = string.Empty;
 
     /// <summary>
-    /// CPF
+    /// Cpf
     /// </summary>
-    [Display(Name = "CPF")]
-    [StringLength(14, ErrorMessage = "CPF deve ter no maximo {1} caracteres")]
+    [Display(Name = "Cpf")]
+    [StringLength(14, ErrorMessage = "Cpf deve ter no maximo {1} caracteres")]
     public string Cpf { get; set; } = string.Empty;
 
     /// <summary>
@@ -37,10 +37,10 @@ public class CreateCapVisitantesRequest
     public string Rg { get; set; } = string.Empty;
 
     /// <summary>
-    /// E-mail
+    /// Email
     /// </summary>
-    [Display(Name = "E-mail")]
-    [StringLength(100, ErrorMessage = "E-mail deve ter no maximo {1} caracteres")]
+    [Display(Name = "Email")]
+    [StringLength(100, ErrorMessage = "Email deve ter no maximo {1} caracteres")]
     public string Email { get; set; } = string.Empty;
 
     /// <summary>

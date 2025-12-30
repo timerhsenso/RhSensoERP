@@ -1193,6 +1193,12 @@
             Configura autorização com políticas customizadas.
             </summary>
         </member>
+        <member name="T:RhSensoERP.API.Middleware.ExceptionHandlingMiddleware">
+            <summary>
+            Middleware para tratamento centralizado de exceções.
+            Captura exceções e retorna respostas HTTP padronizadas.
+            </summary>
+        </member>
         <member name="T:RhSensoERP.API.Middleware.TenantMiddleware">
             <summary>
             Middleware que resolve o tenant atual baseado no hostname da requisição.

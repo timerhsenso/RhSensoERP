@@ -2,7 +2,7 @@
 // ARQUIVO GERADO POR GeradorFullStack v3.8
 // Entity: CapVisitantes
 // Module: ControleAcessoPortaria
-// Data: 2025-12-28 19:08:36
+// Data: 2025-12-30 04:08:11
 // =============================================================================
 using RhSensoERP.Web.Models.Base;
 

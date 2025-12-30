@@ -1,8 +1,13 @@
 // =============================================================================
-// RHSENSOERP GENERATOR v3.7 - QUERIES TEMPLATE
+// RHSENSOERP GENERATOR v4.0 - QUERIES TEMPLATE (FINAL WORKING)
 // =============================================================================
 // Arquivo: src/Generators/Templates/QueriesTemplate.cs
-// Versão: 3.7 - Multi-tenancy com filtro automático de tenant
+// Versão: 4.0 - FINAL - Usa SortBy/Desc da classe PagedRequest
+// Changelog:
+//   v4.0 - ✅ CORRIGIDO: Usa SortBy (não OrderBy) e Desc (não Ascending)
+//   v4.0 - ✅ Ordenação dinâmica ASC/DESC completa
+//   v4.0 - ✅ Zero dependências externas
+//   v3.7 - Multi-tenancy com filtro automático de tenant
 // =============================================================================
 using RhSensoERP.Generators.Models;
 using System.Linq;
@@ -97,7 +102,8 @@ public sealed class GetBy{{info.EntityName}}IdHandler
     }
 
     /// <summary>
-    /// Gera a Query GetPaged com filtro de tenant.
+    /// Gera a Query GetPaged com filtro de tenant e ordenação dinâmica.
+    /// v4.0: Ordenação dinâmica ASC/DESC usando SortBy e Desc.
     /// </summary>
     public static string GenerateGetPagedQuery(EntityInfo info)
     {
@@ -120,10 +126,17 @@ public sealed class GetBy{{info.EntityName}}IdHandler
         var currentUserParam = info.IsLegacyTable ? "" : ",\n        ICurrentUser currentUser";
         var currentUserAssign = info.IsLegacyTable ? "" : "\n        _currentUser = currentUser;";
 
+        // ✅ v4.0: Gera casos do switch para ordenação ASC
+        var orderByAscCases = GenerateOrderByCases(info, ascending: true);
+
+        // ✅ v4.0: Gera casos do switch para ordenação DESC
+        var orderByDescCases = GenerateOrderByCases(info, ascending: false);
+
         return $$"""
 {{info.FileHeader}}
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using AutoMapper;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -143,6 +156,7 @@ public sealed record Get{{info.PluralName}}PagedQuery(PagedRequest Request)
 
 /// <summary>
 /// Handler da query de listagem paginada.
+/// v4.0: Suporte a ordenação dinâmica via SortBy/Desc.
 /// </summary>
 public sealed class Get{{info.PluralName}}PagedHandler
     : IRequestHandler<Get{{info.PluralName}}PagedQuery, Result<PagedResult<{{info.EntityName}}Dto>>>
@@ -169,10 +183,12 @@ public sealed class Get{{info.PluralName}}PagedHandler
         {
             var request = query.Request;
             _logger.LogDebug(
-                "Buscando {{info.DisplayName}} - Página {Page}, Tamanho {Size}, Busca '{Search}'",
+                "Buscando {{info.DisplayName}} - Página {Page}, Tamanho {Size}, Busca '{Search}', SortBy: {SortBy}, Desc: {Desc}",
                 request.Page,
                 request.PageSize,
-                request.Search);
+                request.Search,
+                request.SortBy ?? "null",
+                request.Desc);
 
 {{tenantFilter}}
 
@@ -186,9 +202,46 @@ public sealed class Get{{info.PluralName}}PagedHandler
             // Conta total
             var totalCount = await queryable.CountAsync(cancellationToken);
 
+            // =========================================================================
+            // ✅ v4.0: ORDENAÇÃO DINÂMICA ASC/DESC
+            // =========================================================================
+            if (!string.IsNullOrWhiteSpace(request.SortBy))
+            {
+                if (request.Desc)
+                {
+                    // Ordenação DESCENDENTE
+                    switch (request.SortBy)
+                    {
+{{orderByDescCases}}
+                        default:
+                            queryable = queryable.OrderByDescending(e => e.{{info.PrimaryKeyProperty}});
+                            break;
+                    }
+                    
+                    _logger.LogDebug("✅ Ordenando por: {SortBy} DESC", request.SortBy);
+                }
+                else
+                {
+                    // Ordenação ASCENDENTE
+                    switch (request.SortBy)
+                    {
+{{orderByAscCases}}
+                        default:
+                            queryable = queryable.OrderBy(e => e.{{info.PrimaryKeyProperty}});
+                            break;
+                    }
+                    
+                    _logger.LogDebug("✅ Ordenando por: {SortBy} ASC", request.SortBy);
+                }
+            }
+            else
+            {
+                // Ordenação padrão (ASC por PK)
+                queryable = queryable.OrderBy(e => e.{{info.PrimaryKeyProperty}});
+            }
+
             // Aplica paginação
             var items = await queryable
-                .OrderBy(e => e.{{info.PrimaryKeyProperty}})
                 .Skip((request.Page - 1) * request.PageSize)
                 .Take(request.PageSize)
                 .ToListAsync(cancellationToken);
@@ -218,6 +271,25 @@ public sealed class Get{{info.PluralName}}PagedHandler
     // =========================================================================
     // MÉTODOS AUXILIARES
     // =========================================================================
+
+    /// <summary>
+    /// v4.0: Gera casos do switch para ordenação ASC ou DESC.
+    /// </summary>
+    private static string GenerateOrderByCases(EntityInfo info, bool ascending)
+    {
+        var cases = new List<string>();
+        var orderMethod = ascending ? "OrderBy" : "OrderByDescending";
+
+        // Propriedades (exceto PK que é o default)
+        foreach (var prop in info.Properties.Where(p => !p.IsNavigation && p.Name != info.PrimaryKeyProperty))
+        {
+            cases.Add($@"                        case ""{prop.Name}"":
+                            queryable = queryable.{orderMethod}(e => e.{prop.Name});
+                            break;");
+        }
+
+        return string.Join("\n", cases);
+    }
 
     private static string GenerateTenantValidationForQuery(EntityInfo info)
     {

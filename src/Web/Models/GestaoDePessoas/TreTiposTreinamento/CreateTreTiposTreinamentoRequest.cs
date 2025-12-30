@@ -2,7 +2,7 @@
 // ARQUIVO GERADO POR GeradorFullStack v3.8
 // Entity: TreTiposTreinamento
 // Module: GestaoDePessoas
-// Data: 2025-12-28 14:07:48
+// Data: 2025-12-30 05:27:05
 // =============================================================================
 using System.ComponentModel.DataAnnotations;
 
@@ -37,9 +37,9 @@ public class CreateTreTiposTreinamentoRequest
     public string CodigoNr { get; set; } = string.Empty;
 
     /// <summary>
-    /// DiasPrazoValidade
+    /// Validade (dias)
     /// </summary>
-    [Display(Name = "DiasPrazoValidade")]
+    [Display(Name = "Validade (dias)")]
     public int? DiasPrazoValidade { get; set; }
 
     /// <summary>
@@ -50,16 +50,16 @@ public class CreateTreTiposTreinamentoRequest
     public bool Obrigatorio { get; set; }
 
     /// <summary>
-    /// AplicavelA
+    /// Aplicável a
     /// </summary>
-    [Display(Name = "AplicavelA")]
-    [StringLength(100, ErrorMessage = "AplicavelA deve ter no maximo {1} caracteres")]
+    [Display(Name = "Aplicável a")]
+    [StringLength(100, ErrorMessage = "Aplicável a deve ter no maximo {1} caracteres")]
     public string AplicavelA { get; set; } = string.Empty;
 
     /// <summary>
-    /// CargaHoraria
+    /// Carga horária (h)
     /// </summary>
-    [Display(Name = "CargaHoraria")]
+    [Display(Name = "Carga horária (h)")]
     public int? CargaHoraria { get; set; }
 
     /// <summary>

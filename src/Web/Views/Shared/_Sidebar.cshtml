@@ -1,0 +1,106 @@
+@using RhSensoERP.Web.Services.Menu
+
+<aside class="sidebar bg-dark-sidebar d-flex flex-column flex-shrink-0 shadow-lg" id="sidebar">
+    <!-- LOGO HEADER -->
+    <div class="sidebar-header d-flex align-items-center justify-content-between px-3 py-3 border-bottom border-white border-opacity-10">
+        <a asp-area="" asp-controller="Home" asp-action="Index" class="d-flex align-items-center text-decoration-none text-white overflow-hidden">
+            <div class="sidebar-brand-icon d-flex align-items-center justify-content-center" style="min-width: 32px; height: 32px;">
+                <i class="fas fa-layer-group fa-lg text-primary"></i>
+            </div>
+            <span class="fs-5 fw-bold text-white ms-2 sidebar-text text-nowrap">RhSensoERP</span>
+        </a>
+        
+        <!-- Toggle Button (Desktop) -->
+        <button class="btn btn-sm btn-link text-white-50 d-none d-lg-block p-0 ms-2" id="sidebarCollapseBtn">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+
+        <!-- Close Button (Mobile) -->
+        <button class="btn btn-sm btn-link text-white-50 d-lg-none" id="sidebarClose">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
+    <!-- MAIN NAVIGATION -->
+    <div class="sidebar-content flex-grow-1 overflow-auto custom-scrollbar">
+        <ul class="nav nav-pills flex-column mb-auto pt-3 pb-3 gap-1">
+            <li class="nav-item">
+                <a asp-controller="Home" asp-action="Index" 
+                   class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Home" ? "active" : "")"
+                   title="Dashboard">
+                    <i class="fas fa-home width-24 text-center"></i>
+                    <span class="sidebar-text ms-2">Dashboard</span>
+                </a>
+            </li>
+
+            @* DYNAMIC MENU COMPONENT *@
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <div class="mt-3 mb-2 px-3 text-xs fw-bold text-uppercase text-white-50 small tracking-wider sidebar-text">
+                    Módulos
+                </div>
+                @await Component.InvokeAsync("DynamicMenu")
+            }
+        </ul>
+    </div>
+
+    <!-- FOOTER / USER PROFILE -->
+    <div class="sidebar-footer border-top border-white border-opacity-10 p-3 mt-auto">
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <div class="dropdown w-100">
+                <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle w-100" 
+                   id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
+                    
+                    <!-- Avatar -->
+                    <div class="avatar-circle bg-primary text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0 rounded-circle shadow-sm" style="width: 36px; height: 36px;">
+                        @User.Identity.Name?.Substring(0, 1).ToUpper()
+                    </div>
+                    
+                    <!-- Info Text -->
+                    <div class="d-flex flex-column ms-2 text-truncate sidebar-text user-info">
+                        <span class="small fw-semibold text-truncate">@User.Identity.Name</span>
+                        <span class="xs text-white-50 text-truncate">@User.FindFirst("cdusuario")?.Value</span>
+                    </div>
+                </a>
+                
+                <ul class="dropdown-menu dropdown-menu-dark text-small shadow border-0" aria-labelledby="dropdownUser1">
+                    <li>
+                        <a class="dropdown-item" asp-controller="Account" asp-action="Dashboard">
+                             <i class="fas fa-id-badge me-2 width-20 text-center"></i>Minha Conta
+                        </a>
+                    </li>
+                    <li><hr class="dropdown-divider border-white border-opacity-10"></li>
+                    <li>
+                        <button id="theme-toggle-sidebar" class="dropdown-item d-flex align-items-center justify-content-between">
+                             <span><i class="fas fa-adjust me-2 width-20 text-center"></i>Tema</span>
+                             <span id="theme-icon-sidebar"><i class="fas fa-moon"></i></span>
+                        </button>
+                    </li>
+                    <li><hr class="dropdown-divider border-white border-opacity-10"></li>
+                    <li>
+                        <form asp-controller="Account" asp-action="Logout" method="post">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="dropdown-item text-danger">
+                                <i class="fas fa-sign-out-alt me-2 width-20 text-center"></i>Sair
+                            </button>
+                        </form>
+                    </li>
+                </ul>
+            </div>
+        }
+        else
+        {
+            <a asp-controller="Account" asp-action="Login" class="btn btn-primary w-100 btn-sm d-flex align-items-center justify-content-center">
+                <i class="fas fa-sign-in-alt"></i>
+                <span class="sidebar-text ms-2">Entrar</span>
+            </a>
+        }
+    </div>
+</aside>
+
+<style>
+    /* Utility for icons width */
+    .width-24 { width: 24px; display: inline-block; }
+    .width-20 { width: 20px; display: inline-block; }
+</style>

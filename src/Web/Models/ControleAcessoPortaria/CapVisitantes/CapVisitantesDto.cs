@@ -2,7 +2,7 @@
 // ARQUIVO GERADO POR GeradorFullStack v3.8
 // Entity: CapVisitantes
 // Module: ControleAcessoPortaria
-// Data: 2025-12-28 19:08:36
+// Data: 2025-12-30 04:08:11
 // =============================================================================
 
 namespace RhSensoERP.Web.Models.ControleAcessoPortaria.CapVisitantes;
@@ -29,7 +29,7 @@ public class CapVisitantesDto
     public string Nome { get; set; } = string.Empty;
 
     /// <summary>
-    /// CPF
+    /// Cpf
     /// </summary>
     public string Cpf { get; set; } = string.Empty;
 
@@ -39,7 +39,7 @@ public class CapVisitantesDto
     public string Rg { get; set; } = string.Empty;
 
     /// <summary>
-    /// E-mail
+    /// Email
     /// </summary>
     public string Email { get; set; } = string.Empty;
 

@@ -1,0 +1,364 @@
+================================================================================
+ESTRUTURA DO PROJETO RHSENSOERP
+================================================================================
+
+📁 deploy/
+  ├── 📁 kubernetes/
+📁 docs/
+📁 Prompt/
+📁 scripts/
+  ├── 📁 Nova pasta/
+📁 src/
+  ├── 📁 API/
+    ├── 📁 Authorization/
+        📄 RequirePermissionAttribute.cs
+    ├── 📁 BackgroundServices/
+        📄 AuditCleanupBackgroundService.cs
+    ├── 📁 Configuration/
+        📄 ModuleGroupConvention.cs
+        📄 RateLimitingConfiguration.cs
+        📄 RateLimitSettings.cs
+        📄 SwaggerConfiguration.cs
+        📄 SwaggerFilters.cs
+    ├── 📁 Controllers/
+      ├── 📁 Base/
+      ├── 📁 Identity/
+        📄 AuditReportsController.cs
+        📄 DiagnosticsController.cs
+        📄 HealthCheckController.cs
+        📄 ManifestController.cs
+        📄 SchemaController.cs
+        📄 SecurityMetricsController.cs
+        📄 SwaggerTestController.cs
+    ├── 📁 Extensions/
+        📄 MetadataExtensions.cs
+        📄 ServiceCollectionExtensions.cs
+    ├── 📁 logs/
+    ├── 📁 Middleware/
+        📄 SecurityHeadersMiddleware.cs
+        📄 TenantMiddleware.cs
+    ├── 📁 Properties/
+      ├── 📁 PublishProfiles/
+        ⚙️ launchSettings.json
+    ├── 📁 Responses/
+        📄 ApiResponseFactory.cs
+      ⚙️ appsettings.Development.json
+      ⚙️ appsettings.json
+      ⚙️ appsettings.Staging.json
+      📄 Program.cs
+      🔧 RhSensoERP.API.csproj
+      📄 SecretsConfig.cs
+  ├── 📁 Generators/
+    ├── 📁 Attributes/
+        📄 GenerateCrudAttribute.cs
+    ├── 📁 Extractors/
+        📄 EntityInfoExtractor.cs
+    ├── 📁 Generators/
+        📄 CrudGenerator.cs
+    ├── 📁 Models/
+        📄 EntityInfo.cs
+        📄 NavigationInfo.cs
+        📄 PropertyInfo.cs
+    ├── 📁 Templates/
+        📄 ApiControllerTemplate.cs
+        📄 CommandsTemplate.cs
+        📄 DtoTemplate.cs
+        📄 EfConfigTemplate.cs
+        📄 MapperTemplate.cs
+        📄 MetadataTemplate.cs
+        📄 QueriesTemplate.cs
+        📄 RepositoryTemplate.cs
+        📄 ValidatorsTemplate.cs
+        📄 WebControllerTemplate.cs
+        📄 WebModelsTemplate.cs
+        📄 WebServicesTemplate.cs
+      🔧 RhSensoERP.Generators.csproj
+  ├── 📁 GeradorEntidades/
+    ├── 📁 Controllers/
+      ├── 📁 Api/
+        📄 GeneratorController.cs
+        📄 HomeController.cs
+        📄 ManifestController.cs
+        📄 TabSheetApiController.cs
+        📄 TabSheetController.cs
+    ├── 📁 Models/
+        📄 Models.cs
+        📄 WizardRequest.cs
+    ├── 📁 Properties/
+        ⚙️ launchSettings.json
+    ├── 📁 Services/
+        📄 CodeGeneratorService.cs
+        📄 DatabaseService.cs
+        📄 FullStackGeneratorService.cs
+        📄 ManifestService.cs
+    ├── 📁 TabSheet/
+      ├── 📁 Attributes/
+      ├── 📁 Models/
+      ├── 📁 Services/
+      ├── 📁 Templates/
+    ├── 📁 Templates/
+        📄 EntityTemplate.cs
+        📄 JavaScriptTemplate.cs
+        📄 ViewTemplate.cs
+        📄 WebControllerTemplate.cs
+        📄 WebModelsTemplate.cs
+        📄 WebServicesTemplate.cs
+    ├── 📁 Views/
+      ├── 📁 Generator/
+      ├── 📁 Home/
+      ├── 📁 Manifest/
+        🌐 _ViewImports.cshtml
+        🌐 _ViewStart.cshtml
+    ├── 📁 wwwroot/
+      ├── 📁 css/
+      ├── 📁 js/
+      ⚙️ appsettings.json
+      🔧 GeradorFullStack.csproj
+      📦 GeradorFullStack.sln
+      📄 Program.cs
+  ├── 📁 Identity/
+    ├── 📁 Application/
+      ├── 📁 DTOs/
+      ├── 📁 Features/
+      ├── 📁 Mapping/
+      ├── 📁 Services/
+      ├── 📁 Validators/
+    ├── 📁 Core/
+      ├── 📁 Entities/
+      ├── 📁 Interfaces/
+    ├── 📁 Infrastructure/
+      ├── 📁 Persistence/
+      ├── 📁 Repositories/
+      ├── 📁 Services/
+      📄 IdentityDependencyInjection.cs
+      🔧 RhSensoERP.Identity.csproj
+  ├── 📁 Modules/
+    ├── 📁 AdministracaoPessoal/
+      ├── 📁 Core/
+      ├── 📁 Infrastructure/
+        📄 AdministracaoPessoalDependencyInjection.cs
+        🔧 RhSensoERP.Modules.AdministracaoPessoal.csproj
+    ├── 📁 CargosSalariosRemuneracao/
+      ├── 📁 Core/
+      ├── 📁 Infrastructure/
+        📄 CargosSalariosRemuneracaoDependencyInjection.cs
+        🔧 RhSensoERP.Modules.CargosSalariosRemuneracao.csproj
+    ├── 📁 ComplianceTrabalhistaJuridico/
+      ├── 📁 Core/
+      ├── 📁 Infrastructure/
+        📄 ComplianceTrabalhistaJuridicoDependencyInjection.cs
+        🔧 RhSensoERP.Modules.ComplianceTrabalhistaJuridico.csproj
+    ├── 📁 FolhaPagamentoEncargos/
+      ├── 📁 Core/
+      ├── 📁 Infrastructure/
+        📄 FolhaPagamentoEncargosDependencyInjection.cs
+        🔧 RhSensoERP.Modules.FolhaPagamentoEncargos.csproj
+    ├── 📁 GestaoBeneficios/
+      ├── 📁 Core/
+      ├── 📁 Infrastructure/
+        📄 GestaoBeneficiosDependencyInjection.cs
+        🔧 RhSensoERP.Modules.GestaoBeneficios.csproj
+    ├── 📁 GestaoDocumental/
+      ├── 📁 Core/
+      ├── 📁 Infrastructure/
+        📄 GestaoDocumentalDependencyInjection.cs
+        🔧 RhSensoERP.Modules.GestaoDocumental.csproj
+    ├── 📁 GestaoJornadaPonto/
+      ├── 📁 Core/
+      ├── 📁 Infrastructure/
+        📄 GestaoJornadaPontoDependencyInjection.cs
+        🔧 RhSensoERP.Modules.GestaoJornadaPonto.csproj
+    ├── 📁 GestaoPortariaAcesso/
+      ├── 📁 Core/
+      ├── 📁 Infrastructure/
+        📄 GestaoPortariaAcessoDependencyInjection.cs
+        🔧 RhSensoERP.Modules.GestaoPortariaAcesso.csproj
+    ├── 📁 GestaoTalentosDesempenho/
+      ├── 📁 Core/
+      ├── 📁 Infrastructure/
+        📄 GestaoTalentosDesempenhoDependencyInjection.cs
+        🔧 RhSensoERP.Modules.GestaoTalentosDesempenho.csproj
+    ├── 📁 GestaoTerceirosPrestadores/
+      ├── 📁 Core/
+      ├── 📁 Infrastructure/
+        📄 GestaoTerceirosPrestadoresDependencyInjection.cs
+        🔧 RhSensoERP.Modules.GestaoTerceirosPrestadores.csproj
+    ├── 📁 IntegracoesMensageria/
+      ├── 📁 Core/
+      ├── 📁 Infrastructure/
+        📄 IntegracoesMensageriaDependencyInjection.cs
+        🔧 RhSensoERP.Modules.IntegracoesMensageria.csproj
+    ├── 📁 MultiTenant/
+      ├── 📁 Core/
+      ├── 📁 Infrastructure/
+        📄 MultiTenantDependencyInjection.cs
+        🔧 RhSensoERP.Modules.MultiTenant.csproj
+    ├── 📁 PeopleAnalyticsBI/
+      ├── 📁 Core/
+      ├── 📁 Infrastructure/
+        📄 PeopleAnalyticsBIDependencyInjection.cs
+        🔧 RhSensoERP.Modules.PeopleAnalyticsBI.csproj
+    ├── 📁 PortalColaborador/
+      ├── 📁 Core/
+      ├── 📁 Infrastructure/
+        📄 PortalColaboradorDependencyInjection.cs
+        🔧 RhSensoERP.Modules.PortalColaborador.csproj
+    ├── 📁 RecrutamentoSelecao/
+      ├── 📁 Core/
+      ├── 📁 Infrastructure/
+        📄 RecrutamentoSelecaoDependencyInjection.cs
+        🔧 RhSensoERP.Modules.RecrutamentoSelecao.csproj
+    ├── 📁 SaudeSegurancaTrabalho/
+      ├── 📁 Core/
+      ├── 📁 Infrastructure/
+      ├── 📁 Properties/
+        🔧 RhSensoERP.Modules.SaudeSegurancaTrabalho.csproj
+        📄 SaudeSegurancaTrabalhoDependencyInjection.cs
+    ├── 📁 TreinamentoDesenvolvimento/
+      ├── 📁 Core/
+      ├── 📁 Infrastructure/
+        🔧 RhSensoERP.Modules.TreinamentoDesenvolvimento.csproj
+        📄 TreinamentoDesenvolvimentoDependencyInjection.cs
+    ├── 📁 ViagensDespesas/
+      ├── 📁 Core/
+      ├── 📁 Infrastructure/
+        🔧 RhSensoERP.Modules.ViagensDespesas.csproj
+        📄 ViagensDespesasDependencyInjection.cs
+  ├── 📁 Shared/
+    ├── 📁 Application/
+      ├── 📁 Behaviors/
+      ├── 📁 DTOs/
+      ├── 📁 Exceptions/
+      ├── 📁 Interfaces/
+      ├── 📁 Metadata/
+      ├── 📁 Services/
+      ├── 📁 Specifications/
+        🔧 RhSensoERP.Shared.Application.csproj
+    ├── 📁 Contracts/
+      ├── 📁 Common/
+      ├── 📁 DTOs/
+      ├── 📁 Esocial/
+        🔧 RhSensoERP.Shared.Contracts.csproj
+    ├── 📁 Core/
+      ├── 📁 Abstractions/
+      ├── 📁 Attributes/
+      ├── 📁 Common/
+      ├── 📁 Domain/
+      ├── 📁 Primitives/
+        🔧 RhSensoERP.Shared.Core.csproj
+    ├── 📁 Infrastructure/
+      ├── 📁 Extensions/
+      ├── 📁 Persistence/
+      ├── 📁 Services/
+        📄 DependencyInjection.cs
+        🔧 RhSensoERP.Shared.Infrastructure.csproj
+  ├── 📁 Tools/
+    ├── 📁 Generators/
+        📄 CrudGenerator.cs
+    ├── 📁 Models/
+        📄 CrudConfig.cs
+    ├── 📁 Templates/
+        📄 JavaScriptTemplate.cs
+        📄 ViewTemplate.cs
+        📄 WebControllerTemplate.cs
+        📄 WebModelsTemplate.cs
+        📄 WebServicesTemplate.cs
+      ⚙️ crud-config-example.json
+      ⚙️ crud-config-Sitc2.json
+      ⚙️ crud-config-Taux1.json
+      📄 Program.cs
+      🔧 RhSensoERP.CrudTool.csproj
+  ├── 📁 Web/
+    ├── 📁 Attributes/
+        📄 MenuItemAttribute.cs
+    ├── 📁 Configuration/
+        📄 ApiSettings.cs
+    ├── 📁 Controllers/
+      ├── 📁 Base/
+      ├── 📁 ControleAcessoPortaria/
+      ├── 📁 GestaoDePessoas/
+        📄 AccountController.cs
+        📄 FavoritesController.cs
+        📄 HomeController.cs
+        📄 MenuDiagnosticController.cs
+        📄 MetadataController.cs
+        📄 ScreenController.cs
+        📄 TestMenuController.cs
+        📄 TsistemasController.cs
+    ├── 📁 Extensions/
+        📄 ClaimsPrincipalExtensions.cs
+        📄 PermissionServicesExtensions.cs
+        📄 ServiceCollectionExtensions.cs
+    ├── 📁 Filters/
+        📄 GlobalExceptionFilter.cs
+    ├── 📁 logs/
+    ├── 📁 Models/
+      ├── 📁 Account/
+      ├── 📁 Base/
+      ├── 📁 Common/
+      ├── 📁 ControleAcessoPortaria/
+      ├── 📁 GestaoDePessoas/
+      ├── 📁 Tsistemas/
+        📄 ErrorViewModel.cs
+    ├── 📁 Properties/
+      ├── 📁 PublishProfiles/
+        ⚙️ launchSettings.json
+    ├── 📁 Routing/
+        📄 GuidRouteTransformer.cs
+        📄 IScreenRouteRegistry.cs
+        📄 ScreenKey.cs
+        📄 ScreenRouteRegistry.cs
+    ├── 📁 Security/
+        📄 IScreenLinkService.cs
+        📄 ScreenLinkService.cs
+    ├── 📁 Services/
+      ├── 📁 Base/
+      ├── 📁 ControleAcessoPortaria/
+      ├── 📁 Favorites/
+      ├── 📁 GestaoDePessoas/
+      ├── 📁 Menu/
+      ├── 📁 Permissions/
+      ├── 📁 Tsistemas/
+        📄 AuthApiService.cs
+        📄 IAuthApiService.cs
+        📄 MetadataService.cs
+    ├── 📁 TagHelpers/
+        📄 PermissionTagHelper.cs
+    ├── 📁 ViewComponents/
+        📄 DynamicMenuViewComponent.cs
+    ├── 📁 Views/
+      ├── 📁 Account/
+      ├── 📁 ControleAcessoPortaria/
+      ├── 📁 GestaoDePessoas/
+      ├── 📁 Home/
+      ├── 📁 Shared/
+      ├── 📁 Tsistemas/
+        🌐 _ViewImports.cshtml
+        🌐 _ViewStart.cshtml
+    ├── 📁 wwwroot/
+      ├── 📁 css/
+      ├── 📁 js/
+      ├── 📁 lib/
+      ⚙️ appsettings.Development.json
+      ⚙️ appsettings.json
+      📄 Program.cs
+      🔧 RhSensoERP.Web.csproj
+📁 tests/
+  ├── 📁 Architecture/
+      🔧 RhSensoERP.ArchitectureTests.csproj
+  ├── 📁 E2E/
+      🔧 RhSensoERP.E2ETests.csproj
+  ├── 📁 Integration/
+      🔧 RhSensoERP.IntegrationTests.csproj
+  ├── 📁 Unit/
+      🔧 RhSensoERP.UnitTests.csproj
+  ⚙️ appsettings.Staging.json
+  ⚙️ crud-config.json
+  ⚙️ global.json
+  ⚙️ mda.json
+  📦 RhSensoERP.sln
+
+================================================================================
+Total de Projetos (.csproj): 32
+Total de Arquivos .cs: 446
+================================================================================

@@ -1,14 +1,12 @@
 // =============================================================================
-// ARQUIVO GERADO POR GeradorFullStack v3.3
+// ARQUIVO GERADO POR GeradorFullStack v4.0
 // Entity: CapVisitantes
 // Module: ControleAcessoPortaria
 // ApiRoute: api/gestaoterceirosprestadores/capvisitantes
-// Data: 2025-12-28 19:08:36
+// Data: 2025-12-30 04:08:11
 // AUTO-REGISTRO: Compatível com AddCrudToolServicesAutomatically()
 // =============================================================================
-// NOTA: Este serviço usa HttpClient TIPADO injetado pelo DI.
-// O Timeout e políticas de resiliência (Polly) são configurados em:
-// ServiceCollectionExtensions.AddCrudToolServicesAutomatically()
+// v4.0: Suporte a ordenação server-side (orderBy, ascending)
 // =============================================================================
 using System.Net.Http.Headers;
 using System.Text;
@@ -22,18 +20,8 @@ namespace RhSensoERP.Web.Services.ControleAcessoPortaria.CapVisitantes;
 
 /// <summary>
 /// Implementação do serviço de API para CapVisitantes.
-/// Consome a API backend gerada pelo Source Generator.
+/// v4.0: Suporte a ordenação server-side.
 /// </summary>
-/// <remarks>
-/// Este serviço é registrado automaticamente no DI via:
-/// <code>services.AddCrudToolServicesAutomatically(apiSettings)</code>
-/// 
-/// HttpClient já vem configurado com:
-/// - BaseAddress
-/// - Timeout
-/// - Retry Policy (Polly)
-/// - Circuit Breaker (Polly)
-/// </remarks>
 public class CapVisitantesApiService : ICapVisitantesApiService
 {
     private readonly HttpClient _httpClient;
@@ -41,9 +29,6 @@ public class CapVisitantesApiService : ICapVisitantesApiService
     private readonly ILogger<CapVisitantesApiService> _logger;
     private readonly JsonSerializerOptions _jsonOptions;
 
-    // =========================================================================
-    // v3.2 - ROTA API DO MANIFESTO (não mais construída automaticamente)
-    // =========================================================================
     private const string ApiRoute = "api/gestaoterceirosprestadores/capvisitantes";
 
     public CapVisitantesApiService(
@@ -55,9 +40,6 @@ public class CapVisitantesApiService : ICapVisitantesApiService
         _httpContextAccessor = httpContextAccessor;
         _logger = logger;
         
-        // NOTA: Timeout e BaseAddress já configurados pelo DI (ServiceCollectionExtensions)
-        // NÃO configurar aqui para evitar conflito com Polly
-        
         _jsonOptions = new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true,
@@ -67,16 +49,11 @@ public class CapVisitantesApiService : ICapVisitantesApiService
 
     #region Private Helpers
 
-    /// <summary>
-    /// Configura header de autenticação com token JWT.
-    /// Token está em AuthenticationTokens (StoreTokens no AccountController).
-    /// </summary>
     private async Task SetAuthHeaderAsync()
     {
         var context = _httpContextAccessor.HttpContext;
         if (context?.User?.Identity?.IsAuthenticated == true)
         {
-            // Token está em AuthenticationTokens, não em Claims
             var token = await context.GetTokenAsync("access_token");
             
             if (!string.IsNullOrEmpty(token))
@@ -96,28 +73,18 @@ public class CapVisitantesApiService : ICapVisitantesApiService
         }
     }
 
-    /// <summary>
-    /// Cria ApiResponse de sucesso.
-    /// </summary>
     private static ApiResponse<T> Success<T>(T? data) => new()
     {
         Success = true,
         Data = data
     };
 
-    /// <summary>
-    /// Cria ApiResponse de erro.
-    /// NOTA: Message é computed (=> Error?.Message), então usamos Error.
-    /// </summary>
     private static ApiResponse<T> Fail<T>(string message) => new()
     {
         Success = false,
         Error = new ApiError { Message = message }
     };
 
-    /// <summary>
-    /// Processa resposta HTTP do backend.
-    /// </summary>
     private async Task<ApiResponse<T>> ProcessResponseAsync<T>(
         HttpResponseMessage response, 
         string operation)
@@ -139,15 +106,16 @@ public class CapVisitantesApiService : ICapVisitantesApiService
 
             if (backendResult.IsSuccess)
             {
-                return Success(backendResult.Value ?? backendResult.Data);
+                var data = backendResult.Value ?? backendResult.Data;
+                return Success(data);
             }
 
-            return Fail<T>(backendResult.Error?.Message ?? $"Erro HTTP {(int)response.StatusCode}");
+            return Fail<T>(backendResult.Error?.Message ?? "Erro desconhecido");
         }
-        catch (JsonException)
+        catch (JsonException ex)
         {
-            // Tenta como string simples
-            return Fail<T>($"Erro: {content}");
+            _logger.LogError(ex, "[CAPVISITANTES] Erro JSON em {Op}", operation);
+            return Fail<T>("Erro ao processar resposta do servidor");
         }
     }
 
@@ -155,75 +123,75 @@ public class CapVisitantesApiService : ICapVisitantesApiService
 
     #region IApiService Implementation
 
-    public async Task<ApiResponse<IEnumerable<CapVisitantesDto>>> GetAllAsync()
-    {
-        try
-        {
-            await SetAuthHeaderAsync();
-            var response = await _httpClient.GetAsync(ApiRoute);
-            
-            if (!response.IsSuccessStatusCode)
-                return await ProcessResponseAsync<IEnumerable<CapVisitantesDto>>(response, "GetAll");
-
-            var content = await response.Content.ReadAsStringAsync();
-            var backendResult = JsonSerializer.Deserialize<BackendResult<List<CapVisitantesDto>>>(content, _jsonOptions);
-            
-            if (backendResult?.IsSuccess == true)
-            {
-                IEnumerable<CapVisitantesDto> items = backendResult.Value ?? backendResult.Data ?? new List<CapVisitantesDto>();
-                return Success(items);
-            }
-
-            return Fail<IEnumerable<CapVisitantesDto>>(backendResult?.Error?.Message ?? "Erro ao buscar registros");
-        }
-        catch (HttpRequestException ex)
-        {
-            _logger.LogError(ex, "[CAPVISITANTES] Erro de conexão em GetAllAsync");
-            return Fail<IEnumerable<CapVisitantesDto>>("Erro de conexão com o servidor");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "[CAPVISITANTES] Exceção em GetAllAsync");
-            return Fail<IEnumerable<CapVisitantesDto>>(ex.Message);
-        }
-    }
-
-    public async Task<ApiResponse<PagedResult<CapVisitantesDto>>> GetPagedAsync(int page, int pageSize, string? search = null)
+    /// <summary>
+    /// ✅ v4.0: GetPagedAsync com 5 parâmetros (orderBy, ascending).
+    /// </summary>
+    public async Task<ApiResponse<PagedResult<CapVisitantesDto>>> GetPagedAsync(
+        int page, 
+        int pageSize, 
+        string? search = null,
+        string? orderBy = null,      // ✅ NOVO
+        bool ascending = true)        // ✅ NOVO
     {
         try
         {
             await SetAuthHeaderAsync();
             
-            var queryParams = $"?page={page}&pageSize={pageSize}";
-            if (!string.IsNullOrEmpty(search))
-                queryParams += $"&search={Uri.EscapeDataString(search)}";
+            // ================================================================
+            // ✅ CONSTRÓI QUERY STRING COM ORDENAÇÃO
+            // ================================================================
+            var query = $"?page={page}&pageSize={pageSize}";
             
-            var response = await _httpClient.GetAsync($"{ApiRoute}{queryParams}");
+            if (!string.IsNullOrWhiteSpace(search))
+                query += $"&search={Uri.EscapeDataString(search)}";
             
-            if (!response.IsSuccessStatusCode)
-                return await ProcessResponseAsync<PagedResult<CapVisitantesDto>>(response, "GetPaged");
+            // ✅ Adiciona ordenação
+            if (!string.IsNullOrWhiteSpace(orderBy))
+                query += $"&orderBy={Uri.EscapeDataString(orderBy)}";
+            
+            query += $"&ascending={ascending.ToString().ToLower()}";
 
-            var content = await response.Content.ReadAsStringAsync();
-            var backendResult = JsonSerializer.Deserialize<BackendResult<PagedResult<CapVisitantesDto>>>(content, _jsonOptions);
-            
-            if (backendResult?.IsSuccess == true)
-            {
-                var pagedResult = backendResult.Value ?? backendResult.Data;
-                if (pagedResult != null)
-                    return Success(pagedResult);
-            }
+            _logger.LogDebug(
+                "[CAPVISITANTES] GET {Route}{Query} - OrderBy: {OrderBy}, Ascending: {Ascending}", 
+                ApiRoute, query, orderBy ?? "null", ascending
+            );
 
-            return Fail<PagedResult<CapVisitantesDto>>(backendResult?.Error?.Message ?? "Erro ao buscar registros paginados");
+            var response = await _httpClient.GetAsync($"{ApiRoute}{query}");
+            return await ProcessResponseAsync<PagedResult<CapVisitantesDto>>(response, "GetPaged");
         }
         catch (HttpRequestException ex)
         {
             _logger.LogError(ex, "[CAPVISITANTES] Erro de conexão em GetPagedAsync");
             return Fail<PagedResult<CapVisitantesDto>>("Erro de conexão com o servidor");
         }
+        catch (TaskCanceledException)
+        {
+            return Fail<PagedResult<CapVisitantesDto>>("Tempo limite excedido");
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "[CAPVISITANTES] Exceção em GetPagedAsync");
             return Fail<PagedResult<CapVisitantesDto>>(ex.Message);
+        }
+    }
+
+    public async Task<ApiResponse<IEnumerable<CapVisitantesDto>>> GetAllAsync()
+    {
+        try
+        {
+            await SetAuthHeaderAsync();
+            var response = await _httpClient.GetAsync($"{ApiRoute}?page=1&pageSize=10000");
+            var result = await ProcessResponseAsync<PagedResult<CapVisitantesDto>>(response, "GetAll");
+            
+            if (result.Success && result.Data != null)
+                return Success<IEnumerable<CapVisitantesDto>>(result.Data.Items);
+            
+            return Fail<IEnumerable<CapVisitantesDto>>(result.Error?.Message ?? "Erro ao buscar dados");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[CAPVISITANTES] Exceção em GetAllAsync");
+            return Fail<IEnumerable<CapVisitantesDto>>(ex.Message);
         }
     }
 
@@ -233,19 +201,7 @@ public class CapVisitantesApiService : ICapVisitantesApiService
         {
             await SetAuthHeaderAsync();
             var response = await _httpClient.GetAsync($"{ApiRoute}/{id}");
-            
-            if (!response.IsSuccessStatusCode)
-                return await ProcessResponseAsync<CapVisitantesDto>(response, "GetById");
-
-            var content = await response.Content.ReadAsStringAsync();
-            var backendResult = JsonSerializer.Deserialize<BackendResult<CapVisitantesDto>>(content, _jsonOptions);
-            
-            if (backendResult?.IsSuccess == true)
-            {
-                return Success(backendResult.Value ?? backendResult.Data);
-            }
-
-            return Fail<CapVisitantesDto>(backendResult?.Error?.Message ?? "Registro não encontrado");
+            return await ProcessResponseAsync<CapVisitantesDto>(response, "GetById");
         }
         catch (HttpRequestException ex)
         {
@@ -280,7 +236,6 @@ public class CapVisitantesApiService : ICapVisitantesApiService
             
             if (createResult?.IsSuccess == true)
             {
-                // v3.3 FIX: Usa ternário em vez de ?? (value types não são nullable)
                 var createdId = createResult.Value != 0 ? createResult.Value : createResult.Data;
                     
                 if (createdId != 0)
@@ -433,10 +388,6 @@ public class CapVisitantesApiService : ICapVisitantesApiService
 
     #region Backend DTOs
 
-    /// <summary>
-    /// DTO para deserializar resposta do backend.
-    /// Backend pode retornar Value ou Data dependendo do endpoint.
-    /// </summary>
     private sealed class BackendResult<T>
     {
         public bool IsSuccess { get; set; }

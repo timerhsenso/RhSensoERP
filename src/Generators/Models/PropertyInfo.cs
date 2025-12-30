@@ -31,4 +31,35 @@ public class PropertyInfo
 
     public int? MaxLength { get; set; }
     public int? MinLength { get; set; }
+
+    // ✅ ADICIONAR estas propriedades ao final da classe PropertyInfo existente:
+
+    // =========================================================================
+    // UNIQUE VALIDATION
+    // =========================================================================
+
+    /// <summary>
+    /// Indica se a propriedade tem [Unique].
+    /// </summary>
+    public bool IsUnique { get; set; }
+
+    /// <summary>
+    /// Escopo da unicidade (Global ou Tenant).
+    /// </summary>
+    public string UniqueScope { get; set; } = "Tenant";
+
+    /// <summary>
+    /// Nome para exibição em erro de duplicata.
+    /// </summary>
+    public string UniqueDisplayName { get; set; } = "";
+
+    /// <summary>
+    /// Mensagem de erro customizada.
+    /// </summary>
+    public string UniqueErrorMessage { get; set; } = "";
+
+    /// <summary>
+    /// Se permite null na validação de unicidade.
+    /// </summary>
+    public bool UniqueAllowNull { get; set; } = true;
 }

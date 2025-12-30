@@ -1,13 +1,12 @@
 // =============================================================================
-// RHSENSOERP GENERATOR v4.2 FINAL - ENTITY INFO EXTRACTOR
+// RHSENSOERP GENERATOR v4.3 - ENTITY INFO EXTRACTOR
 // =============================================================================
-// Versão: 4.2 FINAL - TODOS OS BUGS CORRIGIDOS
+// Versão: 4.3 - ADICIONADO: Suporte a [Unique] para validação automática
 // 
-// ✅ CORREÇÕES v4.2:
-// 1. IsNullable CORRIGIDO: Verifica [Required] e sobrescreve
-// 2. GetTypeName CORRIGIDO: int? retorna "int?" e não "object"
-// 3. FindForeignKeyProperty: Valida se FK existe
-// 4. Logs de debug para troubleshooting
+// ✅ NOVIDADES v4.3:
+// 1. Detecta [Unique] e popula PropertyInfo.IsUnique
+// 2. Extrai UniqueScope, UniqueDisplayName, UniqueErrorMessage, UniqueAllowNull
+// 3. Mantém todas as correções da v4.2
 // 
 // =============================================================================
 using Microsoft.CodeAnalysis;
@@ -24,7 +23,7 @@ namespace RhSensoERP.Generators.Extractors;
 
 public static class EntityInfoExtractor
 {
-    private const string GENERATOR_VERSION = "v4.2";
+    private const string GENERATOR_VERSION = "v4.3";
 
     // =========================================================================
     // 📌 DICIONÁRIO DE MAPEAMENTOS (BRASIL)
@@ -83,7 +82,6 @@ public static class EntityInfoExtractor
         info.ModuleName = CalculateModuleName(info.Namespace);
         info.PluralName = CalculatePluralName(info.EntityName);
 
-        // ✅ v4.2: Extrai propriedades E navegações (com validação de FK)
         ExtractPropertiesAndNavigations(classSymbol, info);
 
         IdentifyPrimaryKey(info);
@@ -94,14 +92,14 @@ public static class EntityInfoExtractor
     }
 
     // =========================================================================
-    // ✅ v4.2: ExtractPropertiesAndNavigations COM VALIDAÇÃO DE FK
+    // ExtractPropertiesAndNavigations
     // =========================================================================
     private static void ExtractPropertiesAndNavigations(INamedTypeSymbol classSymbol, EntityInfo info)
     {
         var properties = new List<RhSensoERP.Generators.Models.PropertyInfo>();
         var navigations = new List<NavigationInfo>();
 
-        // ✅ PRIMEIRA PASSAGEM: Extrai todas as propriedades escalares
+        // PRIMEIRA PASSAGEM: Extrai todas as propriedades escalares
         foreach (var member in classSymbol.GetMembers().OfType<IPropertySymbol>())
         {
             if (HasAttribute(member, "NotMappedAttribute"))
@@ -120,7 +118,7 @@ public static class EntityInfoExtractor
 
         info.Properties = properties;
 
-        // ✅ SEGUNDA PASSAGEM: Extrai navegações E VALIDA se FK existe
+        // SEGUNDA PASSAGEM: Extrai navegações E VALIDA se FK existe
         foreach (var member in classSymbol.GetMembers().OfType<IPropertySymbol>())
         {
             if (HasAttribute(member, "NotMappedAttribute"))
@@ -128,7 +126,6 @@ public static class EntityInfoExtractor
 
             if (member.IsVirtual || IsCollectionType(member.Type))
             {
-                // ✅ v4.2: Passa a lista de properties para validar FK
                 var nav = ExtractNavigation(member, properties);
                 if (nav != null)
                     navigations.Add(nav);
@@ -139,14 +136,14 @@ public static class EntityInfoExtractor
     }
 
     // =========================================================================
-    // ✅ v4.2: ExtractProperty COM CORREÇÃO DE IsNullable
+    // ✅ v4.3: ExtractProperty COM DETECÇÃO DE [Unique]
     // =========================================================================
     private static RhSensoERP.Generators.Models.PropertyInfo ExtractProperty(IPropertySymbol member)
     {
         var typeName = GetTypeName(member.Type);
         var isNullableFromType = IsNullableType(member.Type);
 
-        // ✅ v4.2 FIX: Verifica [Required] e SOBRESCREVE IsNullable
+        // Verifica [Required] e SOBRESCREVE IsNullable
         var hasRequiredAttribute = HasAttribute(member, "RequiredAttribute");
         var isNullable = hasRequiredAttribute ? false : isNullableFromType;
 
@@ -160,7 +157,7 @@ public static class EntityInfoExtractor
         {
             Name = member.Name,
             Type = typeName,
-            IsNullable = isNullable,  // ✅ v4.2: CORRIGIDO
+            IsNullable = isNullable,
             IsString = isString,
             IsBool = isBool,
             IsNumeric = isNumeric,
@@ -174,6 +171,7 @@ public static class EntityInfoExtractor
             ExcludeFromDto = false
         };
 
+        // Extrai ColumnName
         var columnAttr = GetAttribute(member, "ColumnAttribute");
         if (columnAttr != null && columnAttr.ConstructorArguments.Length > 0)
         {
@@ -184,8 +182,10 @@ public static class EntityInfoExtractor
             propInfo.ColumnName = member.Name;
         }
 
+        // Extrai DisplayName
         propInfo.DisplayName = GetDisplayName(member);
 
+        // Extrai StringLength/MaxLength
         var stringLengthAttr = GetAttribute(member, "StringLengthAttribute");
         if (stringLengthAttr != null && stringLengthAttr.ConstructorArguments.Length > 0)
         {
@@ -198,6 +198,7 @@ public static class EntityInfoExtractor
             propInfo.MaxLength = (int?)maxLengthAttr.ConstructorArguments[0].Value;
         }
 
+        // DefaultValue
         if (propInfo.IsString && !propInfo.IsNullable)
         {
             propInfo.DefaultValue = "string.Empty";
@@ -205,11 +206,86 @@ public static class EntityInfoExtractor
 
         propInfo.RequiredOnCreate = propInfo.IsRequired && !propInfo.IsPrimaryKey;
 
+        // ✅ v4.3 NOVO: Detectar [Unique]
+        var uniqueAttr = GetAttribute(member, "UniqueAttribute");
+        if (uniqueAttr != null)
+        {
+            propInfo.IsUnique = true;
+
+            // Extrai Scope (padrão: Tenant)
+            var scopeArg = uniqueAttr.NamedArguments
+                .FirstOrDefault(a => a.Key == "Scope");
+
+            if (scopeArg.Value.Value != null)
+            {
+                var scopeValue = scopeArg.Value.Value.ToString();
+                propInfo.UniqueScope = scopeValue == "0" ? "Global" : "Tenant";
+            }
+            else
+            {
+                // Se não especificado, tenta pegar do construtor
+                if (uniqueAttr.ConstructorArguments.Length > 0)
+                {
+                    var firstArg = uniqueAttr.ConstructorArguments[0].Value?.ToString();
+                    propInfo.UniqueScope = firstArg == "0" ? "Global" : "Tenant";
+                }
+                else
+                {
+                    propInfo.UniqueScope = "Tenant"; // Padrão
+                }
+            }
+
+            // Extrai DisplayName customizado
+            var displayNameArg = uniqueAttr.NamedArguments
+                .FirstOrDefault(a => a.Key == "DisplayName");
+
+            if (displayNameArg.Value.Value != null)
+            {
+                propInfo.UniqueDisplayName = displayNameArg.Value.Value.ToString() ?? "";
+            }
+            else
+            {
+                // Tenta pegar do construtor [Unique(UniqueScope.Tenant, "CPF")]
+                if (uniqueAttr.ConstructorArguments.Length > 1)
+                {
+                    propInfo.UniqueDisplayName = uniqueAttr.ConstructorArguments[1].Value?.ToString() ?? "";
+                }
+            }
+
+            // Se não foi especificado, usa o DisplayName da propriedade
+            if (string.IsNullOrEmpty(propInfo.UniqueDisplayName))
+            {
+                propInfo.UniqueDisplayName = propInfo.DisplayName;
+            }
+
+            // Extrai ErrorMessage customizada
+            var errorMsgArg = uniqueAttr.NamedArguments
+                .FirstOrDefault(a => a.Key == "ErrorMessage");
+
+            if (errorMsgArg.Value.Value != null)
+            {
+                propInfo.UniqueErrorMessage = errorMsgArg.Value.Value.ToString() ?? "";
+            }
+
+            // Extrai AllowNull (padrão: true)
+            var allowNullArg = uniqueAttr.NamedArguments
+                .FirstOrDefault(a => a.Key == "AllowNull");
+
+            if (allowNullArg.Value.Value != null)
+            {
+                propInfo.UniqueAllowNull = (bool)allowNullArg.Value.Value;
+            }
+            else
+            {
+                propInfo.UniqueAllowNull = true; // Padrão
+            }
+        }
+
         return propInfo;
     }
 
     // =========================================================================
-    // ✅ v4.2: ExtractNavigation COM VALIDAÇÃO DE FK
+    // ExtractNavigation
     // =========================================================================
     private static NavigationInfo? ExtractNavigation(
         IPropertySymbol member,
@@ -219,7 +295,7 @@ public static class EntityInfoExtractor
 
         if (type is INamedTypeSymbol namedType)
         {
-            // ✅ ICollection<T>, List<T> → OneToMany
+            // ICollection<T>, List<T> → OneToMany
             if (namedType.IsGenericType && namedType.TypeArguments.Length == 1)
             {
                 var targetType = namedType.TypeArguments[0];
@@ -229,17 +305,16 @@ public static class EntityInfoExtractor
                     Name = member.Name,
                     TargetEntity = targetType.Name,
                     TargetEntityFullName = targetType.ToDisplayString(),
-                    ForeignKeyProperty = string.Empty,  // ✅ Sem FK (coleção)
+                    ForeignKeyProperty = string.Empty,
                     RelationshipType = NavigationRelationshipType.OneToMany,
                     IsNullable = true,
                     OnDelete = NavigationDeleteBehavior.Restrict
                 };
             }
 
-            // ✅ Navegação ManyToOne (ex: Banco, Agencia)
+            // Navegação ManyToOne (ex: Banco, Agencia)
             if (!namedType.IsGenericType)
             {
-                // ✅ v4.2: VALIDA se FK existe
                 var fkPropertyName = FindForeignKeyProperty(member.Name, properties);
 
                 return new NavigationInfo
@@ -247,7 +322,7 @@ public static class EntityInfoExtractor
                     Name = member.Name,
                     TargetEntity = namedType.Name,
                     TargetEntityFullName = namedType.ToDisplayString(),
-                    ForeignKeyProperty = fkPropertyName,  // ✅ Vazio se não existe
+                    ForeignKeyProperty = fkPropertyName,
                     RelationshipType = NavigationRelationshipType.ManyToOne,
                     IsNullable = type.NullableAnnotation == NullableAnnotation.Annotated,
                     OnDelete = NavigationDeleteBehavior.Restrict
@@ -259,22 +334,20 @@ public static class EntityInfoExtractor
     }
 
     // =========================================================================
-    // ✅ v4.2: FindForeignKeyProperty - VALIDA se FK existe
+    // FindForeignKeyProperty
     // =========================================================================
     private static string FindForeignKeyProperty(
         string navigationPropertyName,
         List<RhSensoERP.Generators.Models.PropertyInfo> properties)
     {
-        // ✅ Convenções de FK (do mais específico ao mais genérico)
         var candidates = new[]
         {
-            $"Id{navigationPropertyName}",           // IdBanco
-            $"{navigationPropertyName}Id",           // BancoId
-            $"id{navigationPropertyName}",           // idBanco (legado)
-            $"{navigationPropertyName.ToLower()}id"  // bancoid (legado)
+            $"Id{navigationPropertyName}",
+            $"{navigationPropertyName}Id",
+            $"id{navigationPropertyName}",
+            $"{navigationPropertyName.ToLower()}id"
         };
 
-        // ✅ Verifica se EXISTE alguma propriedade com esse nome
         foreach (var candidate in candidates)
         {
             var exists = properties.Any(p =>
@@ -282,13 +355,11 @@ public static class EntityInfoExtractor
 
             if (exists)
             {
-                // ✅ Retorna o nome EXATO da propriedade (case-sensitive)
                 return properties.First(p =>
                     p.Name.Equals(candidate, StringComparison.OrdinalIgnoreCase)).Name;
             }
         }
 
-        // ❌ FK não encontrada → Retorna vazio (shadow property ou sem FK)
         return string.Empty;
     }
 
@@ -550,9 +621,6 @@ public static class EntityInfoExtractor
         return false;
     }
 
-    // =========================================================================
-    // ✅ v4.2: GetTypeName CORRIGIDO para int?
-    // =========================================================================
     private static string GetTypeName(ITypeSymbol type)
     {
         var underlying = GetUnderlyingType(type);
@@ -578,7 +646,6 @@ public static class EntityInfoExtractor
                 break;
         }
 
-        // ✅ v4.2 FIX: Adiciona ? se nullable (exceto string/object/arrays)
         if (isNullable && typeName != "string" && typeName != "object" && !typeName.EndsWith("[]"))
         {
             return $"{typeName}?";
@@ -587,9 +654,6 @@ public static class EntityInfoExtractor
         return typeName;
     }
 
-    // =========================================================================
-    // ✅ v4.2: GetNameBasedType CORRIGIDO
-    // =========================================================================
     private static string GetNameBasedType(ITypeSymbol type)
     {
         if (type is IArrayTypeSymbol arraySym)
@@ -602,8 +666,6 @@ public static class EntityInfoExtractor
 
         var name = type.Name;
 
-        // ✅ v4.2 FIX: REMOVIDO "Nullable" => "object"
-        // Agora nullable types são tratados corretamente em GetTypeName
         return name switch
         {
             "Int32" => "int",

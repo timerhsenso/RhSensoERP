@@ -1,11 +1,10 @@
 // =============================================================================
-// RHSENSOERP GENERATOR v4.1 - EF CONFIG TEMPLATE (HOTFIX)
-// =============================================================================
-// Versão: 4.1 - CORREÇÃO CRÍTICA: Só gera HasForeignKey se FK existe
-// ✅ Verifica se ForeignKeyProperty está preenchido
-// ✅ Ignora navegações sem FK explícita (shadow properties)
+// RHSENSOERP GENERATOR v4.2 - EF CONFIG TEMPLATE
 // =============================================================================
 using RhSensoERP.Generators.Models;
+using System.Collections.Generic;
+using System.Linq;
+using System;
 
 namespace RhSensoERP.Generators.Templates;
 
@@ -15,6 +14,7 @@ public static class EfConfigTemplate
     {
         var entityNs = info.Namespace;
         var propertyConfigs = GeneratePropertyConfigurations(info);
+        var uniqueIndexes = GenerateUniqueIndexes(info);
         var relationshipConfigs = GenerateRelationshipConfigurations(info);
         var additionalUsings = GenerateAdditionalUsings(info);
 
@@ -50,6 +50,11 @@ public sealed class {{info.EntityName}}Configuration : IEntityTypeConfiguration<
         // Propriedades
         // =====================================================================
 {{propertyConfigs}}
+
+        // =====================================================================
+        // Índices Únicos
+        // =====================================================================
+{{uniqueIndexes}}
 
         // =====================================================================
         // Relacionamentos
@@ -97,9 +102,58 @@ public sealed class {{info.EntityName}}Configuration : IEntityTypeConfiguration<
     }
 
     // =========================================================================
-    // ✅ CORREÇÃO v4.1: GenerateRelationshipConfigurations
-    // SÓ gera HasForeignKey se ForeignKeyProperty existir
+    // ✅ CORRIGIDO: GenerateUniqueIndexes (sem chaves duplas problemáticas)
     // =========================================================================
+    private static string GenerateUniqueIndexes(EntityInfo info)
+    {
+        var uniqueProps = info.Properties
+            .Where(p => p.IsUnique)
+            .ToList();
+
+        if (uniqueProps.Count == 0)
+        {
+            return "        // Sem índices únicos configurados";
+        }
+
+        var configs = new List<string>();
+
+        foreach (var prop in uniqueProps)
+        {
+            var columnName = string.IsNullOrEmpty(prop.ColumnName) ? prop.Name : prop.ColumnName;
+            var indexName = $"UX_{info.EntityName}_{prop.Name}";
+            var filterClause = prop.UniqueAllowNull
+                ? $"\n            .HasFilter(\"{columnName} IS NOT NULL\")"
+                : "";
+
+            // ✅ CORRIGIDO: Construção da string sem problemas de raw literal
+            if (prop.UniqueScope == "Tenant" && info.Properties.Any(p => p.Name == "TenantId"))
+            {
+                indexName = $"UX_{info.EntityName}_Tenant_{prop.Name}";
+
+                // ✅ Usa interpolação simples ao invés de raw literal aninhado
+                var indexDef = $"builder.HasIndex(e => new {{ e.TenantId, e.{prop.Name} }}, \"{indexName}\")";
+
+                var config = $"""
+        // Índice único: {prop.UniqueDisplayName} (por tenant)
+        {indexDef}
+            .IsUnique(){filterClause};
+""";
+                configs.Add(config);
+            }
+            else
+            {
+                var config = $"""
+        // Índice único: {prop.UniqueDisplayName} (global)
+        builder.HasIndex(e => e.{prop.Name}, "{indexName}")
+            .IsUnique(){filterClause};
+""";
+                configs.Add(config);
+            }
+        }
+
+        return string.Join("\n\n", configs);
+    }
+
     private static string GenerateRelationshipConfigurations(EntityInfo info)
     {
         if (!info.HasNavigations)
@@ -109,9 +163,6 @@ public sealed class {{info.EntityName}}Configuration : IEntityTypeConfiguration<
 
         var configs = new List<string>();
 
-        // =====================================================================
-        // ManyToOne (HasOne) - Ex: Agencia -> Banco
-        // =====================================================================
         foreach (var nav in info.ManyToOneNavigations)
         {
             var deleteBehavior = nav.OnDelete switch
@@ -126,12 +177,10 @@ public sealed class {{info.EntityName}}Configuration : IEntityTypeConfiguration<
                 ? ".WithMany()"
                 : $".WithMany(e => e.{nav.InverseProperty})";
 
-            // ✅ CORREÇÃO v4.1: Só gera HasForeignKey se FK existe
             string config;
 
             if (!string.IsNullOrEmpty(nav.ForeignKeyProperty))
             {
-                // ✅ FK existe → Configuração completa
                 config = $"""
         // Relacionamento: {info.EntityName} -> {nav.TargetEntity}
         builder.HasOne(e => e.{nav.Name})
@@ -142,7 +191,6 @@ public sealed class {{info.EntityName}}Configuration : IEntityTypeConfiguration<
             }
             else
             {
-                // ❌ FK não existe → IGNORA navegação (shadow property ou mapeamento manual)
                 config = $"""
         // Relacionamento: {info.EntityName} -> {nav.TargetEntity}
         // ⚠️ ATENÇÃO: FK não encontrada na entidade.
@@ -155,9 +203,6 @@ public sealed class {{info.EntityName}}Configuration : IEntityTypeConfiguration<
             configs.Add(config);
         }
 
-        // =====================================================================
-        // OneToMany - Ignora (sem FK)
-        // =====================================================================
         foreach (var nav in info.OneToManyNavigations)
         {
             var config = $"""

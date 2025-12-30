@@ -1,3 +1,20 @@
+﻿// =============================================================================
+// RHSENSOERP - ENTITY CAPVISITANTES
+// =============================================================================
+// Módulo: Gestão de Terceiros e Prestadores (CAP)
+// Tabela: cap_visitantes
+// Schema: dbo
+// Multi-tenant: ✅ SIM (TenantId obrigatório)
+// 
+// ✅ VALIDAÇÃO AUTOMÁTICA DE UNICIDADE:
+// - CPF: Único por tenant
+// - Email: Único por tenant
+// 
+// O Source Generator irá criar automaticamente:
+// 1. Índices únicos no banco de dados
+// 2. Validação de duplicatas no pipeline MediatR (ANTES do SaveChanges)
+// 3. Retorno HTTP 409 Conflict em caso de duplicata
+// =============================================================================
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -20,8 +37,7 @@ namespace RhSensoERP.Modules.GestaoTerceirosPrestadores.Core.Entities;
     GenerateApiController = true
 )]
 [Table("cap_visitantes")]
-[HasDatabaseTriggers("Auditoria autom�tica de CreatedAt/UpdatedAt via triggers SQL Server")]
-
+[HasDatabaseTriggers("Auditoria automática de CreatedAt/UpdatedAt via triggers SQL Server")]
 public class CapVisitantes
 {
     [Key]
@@ -41,6 +57,16 @@ public class CapVisitantes
     [Display(Name = "Nome")]
     public string Nome { get; set; } = string.Empty;
 
+    // =========================================================================
+    // ✅ CPF - VALIDAÇÃO AUTOMÁTICA DE UNICIDADE POR TENANT
+    // =========================================================================
+    // [Unique] faz com que o Source Generator crie:
+    // 1. Índice único: CREATE UNIQUE INDEX UX_CapVisitantes_Tenant_Cpf 
+    //    ON cap_visitantes (TenantId, Cpf) WHERE Cpf IS NOT NULL
+    // 2. Validação no UniqueValidationBehavior ANTES de SaveChanges
+    // 3. Exception DuplicateEntityException → HTTP 409 Conflict
+    // =========================================================================
+    [Unique(UniqueScope.Tenant, "CPF")]
     [Column("Cpf", TypeName = "nvarchar(14)")]
     [StringLength(14)]
     [Display(Name = "CPF")]
@@ -51,6 +77,12 @@ public class CapVisitantes
     [Display(Name = "RG")]
     public string? Rg { get; set; }
 
+    // =========================================================================
+    // ✅ EMAIL - VALIDAÇÃO AUTOMÁTICA DE UNICIDADE POR TENANT
+    // =========================================================================
+    // Mensagem de erro customizada: "E-mail '{valor}' já está em uso."
+    // =========================================================================
+    [Unique(UniqueScope.Tenant, DisplayName = "E-mail", ErrorMessage = "E-mail '{PropertyValue}' já está em uso.")]
     [Column("Email", TypeName = "nvarchar(100)")]
     [StringLength(100)]
     [Display(Name = "E-mail")]
@@ -67,12 +99,12 @@ public class CapVisitantes
     public string? Empresa { get; set; }
 
     [Column("IdFuncionarioResponsavel")]
-    [Display(Name = "ID Funcion�rio Respons�vel")]
+    [Display(Name = "ID Funcionário Responsável")]
     public int? IdFuncionarioResponsavel { get; set; }
 
     [Required]
     [Column("RequerResponsavel")]
-    [Display(Name = "Requer Respons�vel")]
+    [Display(Name = "Requer Responsável")]
     public bool RequerResponsavel { get; set; } = false;
 
     [Required]
@@ -80,10 +112,12 @@ public class CapVisitantes
     [Display(Name = "Ativo")]
     public bool Ativo { get; set; } = true;
 
-    // Auditoria (defaults controlados pelo banco: SYSUTCDATETIME())
+    // =========================================================================
+    // AUDITORIA (defaults controlados pelo banco: SYSUTCDATETIME())
+    // =========================================================================
     [Required]
     [Column("CreatedAtUtc", TypeName = "datetime2(3)")]
-    [Display(Name = "Data Cria��o (UTC)")]
+    [Display(Name = "Data Criação (UTC)")]
     public DateTime CreatedAtUtc { get; set; }
 
     [Column("CreatedByUserId")]
@@ -92,21 +126,26 @@ public class CapVisitantes
 
     [Required]
     [Column("UpdatedAtUtc", TypeName = "datetime2(3)")]
-    [Display(Name = "Data Atualiza��o (UTC)")]
+    [Display(Name = "Data Atualização (UTC)")]
     public DateTime UpdatedAtUtc { get; set; }
 
     [Column("UpdatedByUserId")]
     [Display(Name = "Atualizado Por")]
     public Guid? UpdatedByUserId { get; set; }
 
-    // Navigation Properties
-  //  [ForeignKey(nameof(CreatedByUserId))]
- //   public virtual Usuario? CreatedByUser { get; set; }
+    // =========================================================================
+    // NAVIGATION PROPERTIES
+    // =========================================================================
+    // Comentado: Aguardando implementação completa da entidade Usuario
+    // [ForeignKey(nameof(CreatedByUserId))]
+    // public virtual Usuario? CreatedByUser { get; set; }
 
-  //  [ForeignKey(nameof(UpdatedByUserId))]
-  //  public virtual Usuario? UpdatedByUser { get; set; }
+    // [ForeignKey(nameof(UpdatedByUserId))]
+    // public virtual Usuario? UpdatedByUser { get; set; }
 
-    // Inverse Navigation
+    // =========================================================================
+    // INVERSE NAVIGATION
+    // =========================================================================
     [InverseProperty(nameof(CapBloqueiosPessoa.Visitante))]
     public virtual ICollection<CapBloqueiosPessoa> Bloqueios { get; set; } = new List<CapBloqueiosPessoa>();
 

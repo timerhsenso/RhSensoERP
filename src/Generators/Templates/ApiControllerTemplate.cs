@@ -1,10 +1,17 @@
 // =============================================================================
-// RHSENSOERP GENERATOR v3.1 - API CONTROLLER TEMPLATE
+// RHSENSOERP GENERATOR v4.2 - API CONTROLLER TEMPLATE
 // =============================================================================
 // Arquivo: src/Generators/Templates/ApiControllerTemplate.cs
-// CORRIGIDO: Usa PagedRequest no construtor da Query (alinhado com QueriesTemplate)
+// Versão: 4.2 - DELETE com FK handling + BatchDeleteResult
+// 
+// ✅ CORREÇÕES v4.2:
+// - DELETE retorna HTTP 409 Conflict para Foreign Key violations
+// - DELETE BATCH retorna HTTP 200 OK com BatchDeleteResult detalhado
+// - HTTP 404 para registro não encontrado
+// - HTTP 403 para acesso cross-tenant
 // =============================================================================
 using RhSensoERP.Generators.Models;
+using System.Linq;
 
 namespace RhSensoERP.Generators.Templates;
 
@@ -23,13 +30,26 @@ public static class ApiControllerTemplate
         var authUsing = info.ApiRequiresAuth ? "\nusing Microsoft.AspNetCore.Authorization;" : "";
         var batchEndpoint = info.SupportsBatchDelete ? GenerateBatchDeleteEndpoint(info) : "";
 
+        // ✅ NOVO v4.0: CurrentUser para multi-tenancy e unique validation
+        var hasUniqueProps = info.Properties.Any(p => p.IsUnique);
+        var needsCurrentUser = !info.IsLegacyTable || hasUniqueProps;
+
+        var currentUserUsing = needsCurrentUser ? "\nusing RhSensoERP.Shared.Core.Abstractions;" : "";
+        var currentUserField = needsCurrentUser ? "\n    private readonly ICurrentUser _currentUser;" : "";
+        var currentUserParam = needsCurrentUser ? ",\n        ICurrentUser currentUser" : "";
+        var currentUserAssign = needsCurrentUser ? "\n        _currentUser = currentUser;" : "";
+
+        // ✅ Gera instanciação dos commands
+        var createCommandCode = GenerateCreateCommandInstantiation(info);
+        var updateCommandCode = GenerateUpdateCommandInstantiation(info);
+
         return $$"""
 {{info.FileHeader}}
 using System;
 using System.Collections.Generic;
 using MediatR;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;{{authUsing}}
+using Microsoft.AspNetCore.Mvc;{{authUsing}}{{currentUserUsing}}
 using {{info.DtoNamespace}};
 using {{info.CommandsNamespace}};
 using {{info.QueriesNamespace}};
@@ -46,16 +66,16 @@ namespace {{info.ApiControllerNamespace}};
 [ApiExplorerSettings(GroupName = "{{info.ApiGroup}}")]
 public sealed class {{info.PluralName}}Controller : ControllerBase
 {
-    private readonly IMediator _mediator;
+    private readonly IMediator _mediator;{{currentUserField}}
 
-    public {{info.PluralName}}Controller(IMediator mediator) => _mediator = mediator;
+    public {{info.PluralName}}Controller(IMediator mediator{{currentUserParam}})
+    {
+        _mediator = mediator;{{currentUserAssign}}
+    }
 
     /// <summary>
     /// Obtém um {{info.DisplayName}} pelo ID.
     /// </summary>
-    /// <param name="id">ID do registro</param>
-    /// <param name="ct">Token de cancelamento</param>
-    /// <returns>{{info.DisplayName}} encontrado</returns>
     [HttpGet("{id}")]
     [ProducesResponseType(typeof(Result<{{info.EntityName}}Dto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(Result<{{info.EntityName}}Dto>), StatusCodes.Status404NotFound)]
@@ -76,9 +96,6 @@ public sealed class {{info.PluralName}}Controller : ControllerBase
     /// <summary>
     /// Lista {{info.DisplayName}} com paginação.
     /// </summary>
-    /// <param name="request">Parâmetros de paginação</param>
-    /// <param name="ct">Token de cancelamento</param>
-    /// <returns>Lista paginada de {{info.DisplayName}}</returns>
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -101,9 +118,6 @@ public sealed class {{info.PluralName}}Controller : ControllerBase
     /// <summary>
     /// Cria um novo {{info.DisplayName}}.
     /// </summary>
-    /// <param name="body">Dados do registro</param>
-    /// <param name="ct">Token de cancelamento</param>
-    /// <returns>ID do registro criado</returns>
     [HttpPost]
     [ProducesResponseType(typeof(Result<{{pkType}}>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(Result<{{pkType}}>), StatusCodes.Status400BadRequest)]
@@ -111,7 +125,7 @@ public sealed class {{info.PluralName}}Controller : ControllerBase
         [FromBody] Create{{info.EntityName}}Request body,
         CancellationToken ct)
     {
-        var result = await _mediator.Send(new Create{{info.EntityName}}Command(body), ct);
+{{createCommandCode}}
 
         if (!result.IsSuccess)
         {
@@ -124,10 +138,6 @@ public sealed class {{info.PluralName}}Controller : ControllerBase
     /// <summary>
     /// Atualiza um {{info.DisplayName}} existente.
     /// </summary>
-    /// <param name="id">ID do registro</param>
-    /// <param name="body">Dados atualizados</param>
-    /// <param name="ct">Token de cancelamento</param>
-    /// <returns>Resultado da operação</returns>
     [HttpPut("{id}")]
     [ProducesResponseType(typeof(Result<bool>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(Result<bool>), StatusCodes.Status400BadRequest)]
@@ -136,7 +146,7 @@ public sealed class {{info.PluralName}}Controller : ControllerBase
         [FromBody] Update{{info.EntityName}}Request body,
         CancellationToken ct)
     {
-        var result = await _mediator.Send(new Update{{info.EntityName}}Command(id, body), ct);
+{{updateCommandCode}}
 
         if (!result.IsSuccess)
         {
@@ -147,14 +157,13 @@ public sealed class {{info.PluralName}}Controller : ControllerBase
     }
 
     /// <summary>
-    /// Remove um {{info.DisplayName}}.
+    /// Exclui um {{info.DisplayName}} por ID.
     /// </summary>
-    /// <param name="id">ID do registro</param>
-    /// <param name="ct">Token de cancelamento</param>
-    /// <returns>Resultado da operação</returns>
     [HttpDelete("{id}")]
     [ProducesResponseType(typeof(Result<bool>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(Result<bool>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(Result<bool>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(Result<bool>), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(Result<bool>), StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<Result<bool>>> Delete(
         [FromRoute] {{pkType}} id,
         CancellationToken ct)
@@ -163,6 +172,25 @@ public sealed class {{info.PluralName}}Controller : ControllerBase
 
         if (!result.IsSuccess)
         {
+            // ✅ CONFLICT (409) para Foreign Key Violation
+            if (result.Error.Code.Contains("ForeignKeyViolation"))
+            {
+                return Conflict(result);
+            }
+
+            // ✅ NOT FOUND (404) para registro não encontrado
+            if (result.Error.Code.Contains("NotFound"))
+            {
+                return NotFound(result);
+            }
+
+            // ✅ FORBIDDEN (403) para acesso negado (cross-tenant)
+            if (result.Error.Code.Contains("Forbidden"))
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, result);
+            }
+
+            // ✅ BAD REQUEST (400) para outros erros
             return BadRequest(result);
         }
 
@@ -174,7 +202,7 @@ public sealed class {{info.PluralName}}Controller : ControllerBase
     }
 
     /// <summary>
-    /// Gera o endpoint de exclusão em lote.
+    /// ✅ v4.2: Gera endpoint de exclusão em lote com BatchDeleteResult.
     /// </summary>
     private static string GenerateBatchDeleteEndpoint(EntityInfo info)
     {
@@ -184,27 +212,82 @@ public sealed class {{info.PluralName}}Controller : ControllerBase
 
 
     /// <summary>
-    /// Remove múltiplos {{info.DisplayName}} em lote.
+    /// Exclui múltiplos {{info.DisplayName}} em lote.
     /// </summary>
-    /// <param name="ids">Lista de IDs a serem removidos</param>
-    /// <param name="ct">Token de cancelamento</param>
-    /// <returns>Resultado da operação em lote</returns>
     [HttpDelete("batch")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> DeleteMultiple(
+    [ProducesResponseType(typeof(Result<BatchDeleteResult>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(Result<BatchDeleteResult>), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<Result<BatchDeleteResult>>> DeleteMultiple(
         [FromBody] List<{{pkType}}> ids,
         CancellationToken ct)
     {
-        var result = await _mediator.Send(new Delete{{info.PluralName}}Command(ids), ct);
-
-        if (!result.IsSuccess)
+        if (ids == null || ids.Count == 0)
         {
-            return BadRequest(result);
+            return BadRequest(Result<BatchDeleteResult>.Failure(
+                Error.Validation("{{info.EntityName}}.InvalidIds", "Nenhum ID foi fornecido para exclusão")));
         }
 
-        return Ok(result);
+        var result = await _mediator.Send(new Delete{{info.PluralName}}Command(ids), ct);
+
+        // ✅ SEMPRE RETORNA 200 OK com detalhes do processamento
+        // Mesmo se alguns não foram deletados, retorna sucesso parcial
+        if (result.IsSuccess)
+        {
+            return Ok(result);
+        }
+
+        // ✅ Se NENHUM foi deletado, retorna 400 Bad Request
+        return BadRequest(result);
     }
 """;
+    }
+
+    // =========================================================================
+    // ✅ CORRIGIDO v4.0: Métodos para instanciar Commands com TenantId
+    // Usa concatenação de strings ao invés de raw literals para evitar problemas com chaves
+    // =========================================================================
+
+    private static string GenerateCreateCommandInstantiation(EntityInfo info)
+    {
+        var hasUniqueProps = info.Properties.Any(p => p.IsUnique);
+        var needsTenantId = !info.IsLegacyTable && hasUniqueProps;
+
+        if (needsTenantId)
+        {
+            return
+                "        // ✅ Cria command com TenantId do usuário logado (necessário para validação de unicidade)\n" +
+                $"        var command = new Create{info.EntityName}Command(body)\n" +
+                "        {\n" +
+                "            TenantId = _currentUser.TenantId\n" +
+                "        };\n" +
+                "        \n" +
+                "        var result = await _mediator.Send(command, ct);";
+        }
+        else
+        {
+            return $"        var result = await _mediator.Send(new Create{info.EntityName}Command(body), ct);";
+        }
+    }
+
+    private static string GenerateUpdateCommandInstantiation(EntityInfo info)
+    {
+        var hasUniqueProps = info.Properties.Any(p => p.IsUnique);
+        var needsTenantId = !info.IsLegacyTable && hasUniqueProps;
+
+        if (needsTenantId)
+        {
+            return
+                "        // ✅ Cria command com TenantId do usuário logado (necessário para validação de unicidade)\n" +
+                $"        var command = new Update{info.EntityName}Command(id, body)\n" +
+                "        {\n" +
+                "            TenantId = _currentUser.TenantId\n" +
+                "        };\n" +
+                "        \n" +
+                "        var result = await _mediator.Send(command, ct);";
+        }
+        else
+        {
+            return $"        var result = await _mediator.Send(new Update{info.EntityName}Command(id, body), ct);";
+        }
     }
 }

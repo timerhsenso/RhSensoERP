@@ -2,7 +2,7 @@
 // ARQUIVO GERADO POR GeradorFullStack v3.8
 // Entity: TreTiposTreinamento
 // Module: GestaoDePessoas
-// Data: 2025-12-28 14:07:48
+// Data: 2025-12-30 05:27:05
 // =============================================================================
 using RhSensoERP.Web.Models.Base;
 

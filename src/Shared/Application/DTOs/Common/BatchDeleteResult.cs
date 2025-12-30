@@ -1,44 +1,45 @@
 ﻿// =============================================================================
 // RHSENSOERP - BATCH DELETE RESULT
 // =============================================================================
-// Arquivo: src/Shared/Application/DTOs/Common/BatchDeleteResult.cs
-// Descrição: DTO comum para resultado de exclusão em lote
+// Arquivo: src/Shared/Core/Common/BatchDeleteResult.cs
+// Versão: 1.0
+// Descrição: DTO para resultado de exclusão em lote com suporte a FK violations
 // =============================================================================
 
-namespace RhSensoERP.Shared.Application.DTOs.Common;
+namespace RhSensoERP.Shared.Core.Common;
 
 /// <summary>
 /// Resultado de operação de exclusão em lote.
 /// </summary>
-public sealed record BatchDeleteResult
+public sealed class BatchDeleteResult
 {
-    /// <summary>
-    /// Quantidade de registros excluídos com sucesso.
-    /// </summary>
-    public int SuccessCount { get; init; }
-
-    /// <summary>
-    /// Quantidade de registros que falharam.
-    /// </summary>
-    public int FailureCount { get; init; }
-
     /// <summary>
     /// Total de registros processados.
     /// </summary>
-    public int TotalCount => SuccessCount + FailureCount;
+    public int TotalProcessados { get; set; }
 
     /// <summary>
-    /// Lista de erros por código.
+    /// Quantidade de registros excluídos com sucesso.
     /// </summary>
-    public List<BatchDeleteError> Errors { get; init; } = [];
+    public int TotalDeletados { get; set; }
+
+    /// <summary>
+    /// Quantidade de registros que não puderam ser excluídos.
+    /// </summary>
+    public int TotalNaoDeletados { get; set; }
+
+    /// <summary>
+    /// Lista de erros detalhados.
+    /// </summary>
+    public List<string> Erros { get; set; } = new();
+
+    /// <summary>
+    /// Indica se pelo menos um registro foi deletado com sucesso.
+    /// </summary>
+    public bool Sucesso => TotalDeletados > 0;
 
     /// <summary>
     /// Indica se todas as exclusões foram bem-sucedidas.
     /// </summary>
-    public bool AllSucceeded => FailureCount == 0;
+    public bool TodosSucesso => TotalNaoDeletados == 0 && TotalDeletados > 0;
 }
-
-/// <summary>
-/// Erro de exclusão individual.
-/// </summary>
-public sealed record BatchDeleteError(string Code, string Message);

@@ -1,12 +1,17 @@
 /**
  * ============================================================================
- * CAPVISITANTES - JavaScript com Controle de Permissões
+ * CAPVISITANTES - JavaScript com Ordenação Server-Side
  * ============================================================================
  * Arquivo: wwwroot/js/controleacessoportaria/capvisitantes/capvisitantes.js
  * Módulo: ControleAcessoPortaria
- * Versão: 3.9 (PascalCase para model binding)
- * Gerado por: GeradorFullStack v3.9
- * Data: 2025-12-28 19:08:36
+ * Versão: 4.0 (COM ORDENAÇÃO FUNCIONAL)
+ * Gerado por: GeradorFullStack v4.0
+ * Data: 2025-12-30 04:08:11
+ * 
+ * Changelog v4.0:
+ *   ✅ Ordenação server-side habilitada por padrão
+ *   ✅ Colunas mapeadas com 'name' em PascalCase para backend
+ *   ✅ Render functions para compatibilidade PascalCase/camelCase
  * 
  * Implementação específica do CRUD de CapVisitantes.
  * Estende a classe CrudBase com customizações necessárias.
@@ -219,13 +224,14 @@ $(document).ready(function () {
     }
 
     // =========================================================================
-    // CONFIGURAÇÃO DAS COLUNAS DO DATATABLES
+    // ✅ v4.0: CONFIGURAÇÃO DAS COLUNAS COM ORDENAÇÃO
     // =========================================================================
 
     const columns = [
         // Coluna de seleção (checkbox)
         {
             data: null,
+            name: null,                    // ✅ Não ordena
             orderable: false,
             searchable: false,
             className: 'dt-checkboxes-cell',
@@ -239,31 +245,53 @@ $(document).ready(function () {
                 return '';
             }
         },
-        // Nome
+        // ✅ Nome - Ordenável
         {
             data: 'nome',
-            name: 'Nome',
+            name: 'Nome',          // ✅ PascalCase para backend
             title: 'Nome',
-            orderable: true,
-            className: 'text-left'
+            orderable: true,         // ✅ CRÍTICO
+            searchable: true,
+            className: 'text-left',
+            render: function (data, type, row) {
+                return row.nome || row.Nome || '';
+            }
         },
-        // Empresa
+        // ✅ Cpf - Ordenável
         {
-            data: 'empresa',
-            name: 'Empresa',
-            title: 'Empresa',
-            orderable: true,
-            className: 'text-left'
+            data: 'cpf',
+            name: 'Cpf',          // ✅ PascalCase para backend
+            title: 'Cpf',
+            orderable: true,         // ✅ CRÍTICO
+            searchable: true,
+            className: 'text-left',
+            render: function (data, type, row) {
+                return row.cpf || row.Cpf || '';
+            }
         },
-        // Ativo
+        // ✅ Email - Ordenável
+        {
+            data: 'email',
+            name: 'Email',          // ✅ PascalCase para backend
+            title: 'Email',
+            orderable: true,         // ✅ CRÍTICO
+            searchable: true,
+            className: 'text-left',
+            render: function (data, type, row) {
+                return row.email || row.Email || '';
+            }
+        },
+        // ✅ Ativo - Ordenável
         {
             data: 'ativo',
-            name: 'Ativo',
+            name: 'Ativo',          // ✅ PascalCase para backend
             title: 'Ativo',
-            orderable: true,
+            orderable: true,         // ✅ CRÍTICO
+            searchable: true,
             className: 'text-left',
-            render: function (data) {
-                const isTrue = data === true || data === 1 || data === '1';
+            render: function (data, type, row) {
+                const valor = row.ativo !== undefined ? row.ativo : row.Ativo;
+                const isTrue = valor === true || valor === 1 || valor === '1';
                 return isTrue
                     ? '<span class="badge bg-success"><i class="fas fa-check"></i></span>'
                     : '<span class="badge bg-secondary"><i class="fas fa-times"></i></span>';
@@ -272,6 +300,7 @@ $(document).ready(function () {
         // Coluna de ações
         {
             data: null,
+            name: null,                    // ✅ Não ordena
             orderable: false,
             searchable: false,
             className: 'text-end no-export',
@@ -305,7 +334,7 @@ $(document).ready(function () {
     ];
 
     // =========================================================================
-    // INICIALIZAÇÃO DO CRUD
+    // ✅ v4.0: INICIALIZAÇÃO DO CRUD COM ORDENAÇÃO HABILITADA
     // =========================================================================
 
     window.capvisitantesCrud = new CapVisitantesCrud({
@@ -315,8 +344,34 @@ $(document).ready(function () {
         columns: columns,
         permissions: window.crudPermissions,
         dataTableOptions: {
+            // ✅ CRÍTICO: Habilita server-side processing e ordenação
+            serverSide: true,
+            processing: true,
+            ordering: true,
+            
+            // ✅ Ordenação inicial (primeira coluna de dados)
             order: [[1, 'asc']],
-            pageLength: 25
+            
+            pageLength: 25,
+            
+            // Idioma PT-BR
+            language: {
+                processing: "Processando...",
+                emptyTable: "Nenhum registro encontrado",
+                info: "Mostrando _START_ até _END_ de _TOTAL_ registros",
+                infoEmpty: "Mostrando 0 até 0 de 0 registros",
+                infoFiltered: "(filtrado de _MAX_ registros)",
+                lengthMenu: "Mostrar _MENU_ registros",
+                loadingRecords: "Carregando...",
+                search: "Buscar:",
+                zeroRecords: "Nenhum registro encontrado",
+                paginate: {
+                    first: "Primeiro",
+                    previous: "Anterior",
+                    next: "Próximo",
+                    last: "Último"
+                }
+            }
         }
     });
 
@@ -325,5 +380,5 @@ $(document).ready(function () {
     // =========================================================================
 
     // CrudBase inicializa automaticamente no construtor
-    console.log('✅ [CapVisitantes] CRUD inicializado com sucesso (v3.9 - PascalCase)');
+    console.log('✅ [CapVisitantes] CRUD inicializado com ordenação server-side (v4.0)');
 });

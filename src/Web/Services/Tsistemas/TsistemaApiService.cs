@@ -1,12 +1,13 @@
 ﻿// =============================================================================
-// ARQUIVO GERADO POR GeradorFullStack v3.0
+// ARQUIVO GERADO POR GeradorFullStack v4.0 - CORRIGIDO
 // Entity: Tsistema
-// Data: 2025-12-02 02:25:04
+// Data: 2024-12-30 (Atualizado para suporte a ordenação)
 // AUTO-REGISTRO: Compatível com AddCrudToolServicesAutomatically()
 // =============================================================================
-// NOTA: Este serviço usa HttpClient TIPADO injetado pelo DI.
-// O Timeout e políticas de resiliência (Polly) são configurados em:
-// ServiceCollectionExtensions.AddCrudToolServicesAutomatically()
+// CHANGELOG v4.0:
+//   ✅ GetPagedAsync agora aceita orderBy e ascending (5 parâmetros)
+//   ✅ Compatível com nova interface IApiService
+//   ✅ Suporte a ordenação server-side do DataTables
 // =============================================================================
 using System.Net.Http.Headers;
 using System.Text;
@@ -21,17 +22,8 @@ namespace RhSensoERP.Web.Services.Tsistemas;
 /// <summary>
 /// Implementação do serviço de API para Tsistema.
 /// Consome a API backend gerada pelo Source Generator.
+/// v4.0: Adicionado suporte a ordenação (orderBy, ascending).
 /// </summary>
-/// <remarks>
-/// Este serviço é registrado automaticamente no DI via:
-/// <code>services.AddCrudToolServicesAutomatically(apiSettings)</code>
-/// 
-/// HttpClient já vem configurado com:
-/// - BaseAddress
-/// - Timeout
-/// - Retry Policy (Polly)
-/// - Circuit Breaker (Polly)
-/// </remarks>
 public class TsistemaApiService : ITsistemaApiService
 {
     private readonly HttpClient _httpClient;
@@ -49,10 +41,7 @@ public class TsistemaApiService : ITsistemaApiService
         _httpClient = httpClient;
         _httpContextAccessor = httpContextAccessor;
         _logger = logger;
-        
-        // NOTA: Timeout e BaseAddress já configurados pelo DI (ServiceCollectionExtensions)
-        // NÃO configurar aqui para evitar conflito com Polly
-        
+
         _jsonOptions = new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true,
@@ -64,19 +53,17 @@ public class TsistemaApiService : ITsistemaApiService
 
     /// <summary>
     /// Configura header de autenticação com token JWT.
-    /// Token está em AuthenticationTokens (StoreTokens no AccountController).
     /// </summary>
     private async Task SetAuthHeaderAsync()
     {
         var context = _httpContextAccessor.HttpContext;
         if (context?.User?.Identity?.IsAuthenticated == true)
         {
-            // Token está em AuthenticationTokens, não em Claims
             var token = await context.GetTokenAsync("access_token");
-            
+
             if (!string.IsNullOrEmpty(token))
             {
-                _httpClient.DefaultRequestHeaders.Authorization = 
+                _httpClient.DefaultRequestHeaders.Authorization =
                     new AuthenticationHeaderValue("Bearer", token);
                 _logger.LogDebug("[TSISTEMA] Token JWT configurado");
             }
@@ -102,7 +89,6 @@ public class TsistemaApiService : ITsistemaApiService
 
     /// <summary>
     /// Cria ApiResponse de erro.
-    /// NOTA: Message é computed (=> Error?.Message), então usamos Error.
     /// </summary>
     private static ApiResponse<T> Fail<T>(string message) => new()
     {
@@ -114,12 +100,12 @@ public class TsistemaApiService : ITsistemaApiService
     /// Processa resposta HTTP do backend.
     /// </summary>
     private async Task<ApiResponse<T>> ProcessResponseAsync<T>(
-        HttpResponseMessage response, 
+        HttpResponseMessage response,
         string operation)
     {
         var content = await response.Content.ReadAsStringAsync();
-        
-        _logger.LogDebug("[TSISTEMA] {Op} - Status: {Status}, Content: {Content}", 
+
+        _logger.LogDebug("[TSISTEMA] {Op} - Status: {Status}, Content: {Content}",
             operation, response.StatusCode, content);
 
         if (string.IsNullOrEmpty(content))
@@ -128,7 +114,7 @@ public class TsistemaApiService : ITsistemaApiService
         try
         {
             var backendResult = JsonSerializer.Deserialize<BackendResult<T>>(content, _jsonOptions);
-            
+
             if (backendResult == null)
                 return Fail<T>("Resposta inválida do servidor");
 
@@ -151,19 +137,38 @@ public class TsistemaApiService : ITsistemaApiService
 
     #region IApiService Implementation
 
+    /// <summary>
+    /// ✅ v4.0 CORRIGIDO: Agora aceita orderBy e ascending (5 parâmetros).
+    /// </summary>
     public async Task<ApiResponse<PagedResult<TsistemaDto>>> GetPagedAsync(
-        int page, 
-        int pageSize, 
-        string? search = null)
+        int page,
+        int pageSize,
+        string? search = null,
+        string? orderBy = null,      // ✅ NOVO
+        bool ascending = true)        // ✅ NOVO
     {
         try
         {
             await SetAuthHeaderAsync();
+
+            // ================================================================
+            // ✅ CONSTRÓI QUERY STRING COM ORDENAÇÃO
+            // ================================================================
             var query = $"?page={page}&pageSize={pageSize}";
+
             if (!string.IsNullOrWhiteSpace(search))
                 query += $"&search={Uri.EscapeDataString(search)}";
 
-            _logger.LogDebug("[TSISTEMA] GET {Route}{Query}", ApiRoute, query);
+            // ✅ Adiciona parâmetros de ordenação
+            if (!string.IsNullOrWhiteSpace(orderBy))
+                query += $"&orderBy={Uri.EscapeDataString(orderBy)}";
+
+            query += $"&ascending={ascending.ToString().ToLower()}";
+
+            _logger.LogDebug(
+                "[TSISTEMA] GET {Route}{Query} - OrderBy: {OrderBy}, Ascending: {Ascending}",
+                ApiRoute, query, orderBy ?? "null", ascending
+            );
 
             var response = await _httpClient.GetAsync($"{ApiRoute}{query}");
             return await ProcessResponseAsync<PagedResult<TsistemaDto>>(response, "GetPaged");
@@ -191,10 +196,10 @@ public class TsistemaApiService : ITsistemaApiService
             await SetAuthHeaderAsync();
             var response = await _httpClient.GetAsync($"{ApiRoute}?page=1&pageSize=10000");
             var result = await ProcessResponseAsync<PagedResult<TsistemaDto>>(response, "GetAll");
-            
+
             if (result.Success && result.Data != null)
                 return Success<IEnumerable<TsistemaDto>>(result.Data.Items);
-            
+
             return Fail<IEnumerable<TsistemaDto>>(result.Error?.Message ?? "Erro ao buscar dados");
         }
         catch (Exception ex)
@@ -231,24 +236,24 @@ public class TsistemaApiService : ITsistemaApiService
             await SetAuthHeaderAsync();
             var json = JsonSerializer.Serialize(request, _jsonOptions);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
-            
+
             _logger.LogDebug("[TSISTEMA] POST {Route} - Body: {Body}", ApiRoute, json);
-            
+
             var response = await _httpClient.PostAsync(ApiRoute, content);
-            
+
             if (!response.IsSuccessStatusCode)
                 return await ProcessResponseAsync<TsistemaDto>(response, "Create");
 
             // Backend retorna Result<string> com o ID criado
             var responseJson = await response.Content.ReadAsStringAsync();
             var createResult = JsonSerializer.Deserialize<BackendResult<string>>(responseJson, _jsonOptions);
-            
+
             if (createResult?.IsSuccess == true)
             {
                 var createdId = createResult.Value;
                 if (string.IsNullOrEmpty(createdId) && !string.IsNullOrEmpty(createResult.Data))
                     createdId = createResult.Data;
-                    
+
                 if (!string.IsNullOrEmpty(createdId))
                     return await GetByIdAsync(createdId);
             }
@@ -274,11 +279,11 @@ public class TsistemaApiService : ITsistemaApiService
             await SetAuthHeaderAsync();
             var json = JsonSerializer.Serialize(request, _jsonOptions);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
-            
+
             _logger.LogDebug("[TSISTEMA] PUT {Route}/{Id} - Body: {Body}", ApiRoute, id, json);
-            
+
             var response = await _httpClient.PutAsync($"{ApiRoute}/{id}", content);
-            
+
             if (!response.IsSuccessStatusCode)
                 return await ProcessResponseAsync<TsistemaDto>(response, "Update");
 
@@ -302,10 +307,10 @@ public class TsistemaApiService : ITsistemaApiService
         {
             await SetAuthHeaderAsync();
             var response = await _httpClient.DeleteAsync($"{ApiRoute}/{id}");
-            
+
             if (response.IsSuccessStatusCode)
                 return Success(true);
-            
+
             return await ProcessResponseAsync<bool>(response, "Delete");
         }
         catch (HttpRequestException ex)
@@ -325,10 +330,10 @@ public class TsistemaApiService : ITsistemaApiService
         try
         {
             var result = await DeleteBatchAsync(ids);
-            
+
             if (result.Success && result.Data != null)
                 return Success(result.Data.FailureCount == 0);
-            
+
             return Fail<bool>(result.Error?.Message ?? "Erro ao excluir registros");
         }
         catch (Exception ex)
@@ -349,9 +354,9 @@ public class TsistemaApiService : ITsistemaApiService
             await SetAuthHeaderAsync();
             var idsList = ids.ToList();
             var json = JsonSerializer.Serialize(idsList, _jsonOptions);
-            
+
             _logger.LogDebug("[TSISTEMA] DELETE {Route}/batch - Body: {Body}", ApiRoute, json);
-            
+
             var request = new HttpRequestMessage(HttpMethod.Delete, $"{ApiRoute}/batch")
             {
                 Content = new StringContent(json, Encoding.UTF8, "application/json")
@@ -360,7 +365,7 @@ public class TsistemaApiService : ITsistemaApiService
             var response = await _httpClient.SendAsync(request);
             var content = await response.Content.ReadAsStringAsync();
             var backendResult = JsonSerializer.Deserialize<BackendResult<BackendBatchDeleteResult>>(content, _jsonOptions);
-            
+
             if (backendResult?.IsSuccess == true)
             {
                 var data = backendResult.Value ?? backendResult.Data;
@@ -376,11 +381,11 @@ public class TsistemaApiService : ITsistemaApiService
                             Message = e.Message ?? string.Empty
                         }).ToList() ?? []
                     };
-                    
+
                     return Success(dto);
                 }
             }
-            
+
             return Fail<BatchDeleteResultDto>(backendResult?.Error?.Message ?? "Erro ao excluir em lote");
         }
         catch (HttpRequestException ex)

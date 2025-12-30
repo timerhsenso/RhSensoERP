@@ -31,6 +31,7 @@
 
 #region Usings
 
+using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using RhSensoERP.API.BackgroundServices;
@@ -53,12 +54,12 @@ using RhSensoERP.Modules.GestaoPortariaAcesso;
 using RhSensoERP.Modules.GestaoTalentosDesempenho;
 using RhSensoERP.Modules.GestaoTerceirosPrestadores;
 using RhSensoERP.Modules.IntegracoesMensageria;
+using RhSensoERP.Modules.MultiTenant;
 using RhSensoERP.Modules.PeopleAnalyticsBI;
 using RhSensoERP.Modules.PortalColaborador;
 using RhSensoERP.Modules.RecrutamentoSelecao;
 using RhSensoERP.Modules.SaudeSegurancaTrabalho;
 using RhSensoERP.Modules.TreinamentoDesenvolvimento;
-using RhSensoERP.Modules.MultiTenant;
 using RhSensoERP.Modules.ViagensDespesas;
 using RhSensoERP.Shared.Core.Abstractions;
 using RhSensoERP.Shared.Infrastructure;
@@ -231,6 +232,14 @@ Log.Information("✅ Módulo GestaoPortariaAcesso registrado");
 // 5.17 MultiTenant
 builder.Services.AddMultiTenantModule(builder.Configuration);
 Log.Information("✅ Módulo MultiTenant registrado");
+
+// ============================================================================
+// 🆕 5.18 REGISTRAR UNIQUE VALIDATION BEHAVIOR
+// ============================================================================
+builder.Services.AddTransient(
+    typeof(IPipelineBehavior<,>),
+    typeof(RhSensoERP.Shared.Application.Behaviors.UniqueValidationBehavior<,>));
+Log.Information("✅ UniqueValidationBehavior registrado");
 
 
 // ============================================================================
@@ -526,6 +535,10 @@ var app = builder.Build();
 // A ordem dos middlewares é crítica para o funcionamento correto.
 // ============================================================================
 
+// 🆕 Exception Handling (PRIMEIRO middleware - deve vir ANTES de tudo)
+app.UseMiddleware<ExceptionHandlingMiddleware>();
+
+
 // Exception Handling
 if (app.Environment.IsDevelopment())
 {
@@ -533,7 +546,7 @@ if (app.Environment.IsDevelopment())
 }
 else
 {
-    app.UseExceptionHandler("/error");
+    //app.UseExceptionHandler("/error");
     app.UseHsts();
 }
 

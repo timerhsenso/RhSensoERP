@@ -1,14 +1,16 @@
 // =============================================================================
-// GERADOR FULL-STACK v3.3 - WEB SERVICES TEMPLATE
+// GERADOR FULL-STACK v4.0 FINAL - WEB SERVICES TEMPLATE (COM ORDENAÇÃO CORRETA)
 // =============================================================================
 // Arquivo: GeradorEntidades/Templates/WebServicesTemplate.cs
 // Baseado em RhSensoERP.CrudTool v3.0
 // =============================================================================
 // CHANGELOG:
-// v3.3 - Corrigido CS0019: operador ?? não pode ser usado com int
-//        Agora usa operador ternário em vez de coalescência
-// v3.2 - Usa ApiRoute do manifesto (não mais construída automaticamente)
-// v3.1 - Versão inicial
+// v4.0 FINAL - ✅ CORRIGIDO: orderBy → sortBy, ascending → desc
+//              ✅ Compatível com backend PagedRequest (SortBy, Desc)
+// v4.0       - ✅ ADICIONADO: GetPagedAsync com 5 parâmetros (orderBy, ascending) [BUGADO]
+// v3.3       - Corrigido CS0019: operador ?? não pode ser usado com int
+// v3.2       - Usa ApiRoute do manifesto (não mais construída automaticamente)
+// v3.1       - Versão inicial
 // =============================================================================
 
 using GeradorEntidades.Models;
@@ -17,7 +19,7 @@ namespace GeradorEntidades.Templates;
 
 /// <summary>
 /// Gera Services que implementam IApiService e IBatchDeleteService existentes.
-/// v3.3: Corrigido bug do ?? com value types (int, Guid).
+/// v4.0 FINAL: GetPagedAsync com parâmetros corretos (sortBy, desc).
 /// </summary>
 public static class WebServicesTemplate
 {
@@ -30,7 +32,7 @@ public static class WebServicesTemplate
         var modulePath = GetModulePath(entity.Module);
 
         var content = $@"// =============================================================================
-// ARQUIVO GERADO POR GeradorFullStack v3.3
+// ARQUIVO GERADO POR GeradorFullStack v4.0 FINAL
 // Entity: {entity.Name}
 // Module: {entity.Module}
 // Data: {DateTime.Now:yyyy-MM-dd HH:mm:ss}
@@ -45,6 +47,7 @@ namespace RhSensoERP.Web.Services.{modulePath}.{entity.Name};
 /// <summary>
 /// Interface do serviço de API para {entity.DisplayName}.
 /// Herda de IApiService e IBatchDeleteService existentes.
+/// v4.0 FINAL: Suporta ordenação server-side com sortBy/desc.
 /// </summary>
 public interface I{entity.Name}ApiService 
     : IApiService<{entity.Name}Dto, Create{entity.Name}Request, Update{entity.Name}Request, {pkType}>,
@@ -64,7 +67,7 @@ public interface I{entity.Name}ApiService
 
     /// <summary>
     /// Gera a implementação do ApiService.
-    /// v3.3: Corrigido bug CS0019 - usa ternário em vez de ?? para value types.
+    /// v4.0 FINAL: GetPagedAsync com parâmetros corretos (sortBy, desc).
     /// </summary>
     public static GeneratedFile GenerateImplementation(EntityConfig entity)
     {
@@ -75,58 +78,42 @@ public interface I{entity.Name}ApiService
         var isStringPk = pkType.Equals("string", StringComparison.OrdinalIgnoreCase);
         var isLongPk = pkType.Equals("long", StringComparison.OrdinalIgnoreCase);
 
-        // =====================================================================
-        // v3.3 FIX: Lógica de extração de ID criado
-        // =====================================================================
-        // PROBLEMA: BackendResult<int>.Value é int (não int?)
-        //           Operador ?? só funciona com tipos nullable
-        // SOLUÇÃO:  Usar operador ternário (? :) em vez de coalescência (??)
-        // =====================================================================
-
+        // Lógica de extração de ID criado
         string extractIdExpression;
         string idNotEmptyCheck;
 
         if (isGuidPk)
         {
-            // Guid: verifica se é diferente de Guid.Empty
             extractIdExpression = "createResult.Value != Guid.Empty ? createResult.Value : createResult.Data";
             idNotEmptyCheck = "createdId != Guid.Empty";
         }
         else if (isStringPk)
         {
-            // string: verifica se não é null ou vazia (string é nullable, pode usar ??)
             extractIdExpression = "!string.IsNullOrEmpty(createResult.Value) ? createResult.Value : createResult.Data ?? string.Empty";
             idNotEmptyCheck = "!string.IsNullOrEmpty(createdId)";
         }
         else if (isLongPk)
         {
-            // long: verifica se é diferente de 0
             extractIdExpression = "createResult.Value != 0 ? createResult.Value : createResult.Data";
             idNotEmptyCheck = "createdId != 0";
         }
         else // int (default)
         {
-            // int: verifica se é diferente de 0
             extractIdExpression = "createResult.Value != 0 ? createResult.Value : createResult.Data";
             idNotEmptyCheck = "createdId != 0";
         }
 
-        // =====================================================================
-        // v3.2 - USA ApiRoute DO MANIFESTO
-        // =====================================================================
         var apiRoute = entity.ApiRoute;
 
         var content = $@"// =============================================================================
-// ARQUIVO GERADO POR GeradorFullStack v3.3
+// ARQUIVO GERADO POR GeradorFullStack v4.0 FINAL
 // Entity: {entity.Name}
 // Module: {entity.Module}
 // ApiRoute: {apiRoute}
 // Data: {DateTime.Now:yyyy-MM-dd HH:mm:ss}
 // AUTO-REGISTRO: Compatível com AddCrudToolServicesAutomatically()
 // =============================================================================
-// NOTA: Este serviço usa HttpClient TIPADO injetado pelo DI.
-// O Timeout e políticas de resiliência (Polly) são configurados em:
-// ServiceCollectionExtensions.AddCrudToolServicesAutomatically()
+// v4.0 FINAL: Parâmetros corretos (sortBy, desc) para ordenação server-side
 // =============================================================================
 using System.Net.Http.Headers;
 using System.Text;
@@ -140,18 +127,8 @@ namespace RhSensoERP.Web.Services.{modulePath}.{entity.Name};
 
 /// <summary>
 /// Implementação do serviço de API para {entity.DisplayName}.
-/// Consome a API backend gerada pelo Source Generator.
+/// v4.0 FINAL: Corrigido para usar sortBy e desc (compatível com backend).
 /// </summary>
-/// <remarks>
-/// Este serviço é registrado automaticamente no DI via:
-/// <code>services.AddCrudToolServicesAutomatically(apiSettings)</code>
-/// 
-/// HttpClient já vem configurado com:
-/// - BaseAddress
-/// - Timeout
-/// - Retry Policy (Polly)
-/// - Circuit Breaker (Polly)
-/// </remarks>
 public class {entity.Name}ApiService : I{entity.Name}ApiService
 {{
     private readonly HttpClient _httpClient;
@@ -159,9 +136,6 @@ public class {entity.Name}ApiService : I{entity.Name}ApiService
     private readonly ILogger<{entity.Name}ApiService> _logger;
     private readonly JsonSerializerOptions _jsonOptions;
 
-    // =========================================================================
-    // v3.2 - ROTA API DO MANIFESTO (não mais construída automaticamente)
-    // =========================================================================
     private const string ApiRoute = ""{apiRoute}"";
 
     public {entity.Name}ApiService(
@@ -173,9 +147,6 @@ public class {entity.Name}ApiService : I{entity.Name}ApiService
         _httpContextAccessor = httpContextAccessor;
         _logger = logger;
         
-        // NOTA: Timeout e BaseAddress já configurados pelo DI (ServiceCollectionExtensions)
-        // NÃO configurar aqui para evitar conflito com Polly
-        
         _jsonOptions = new JsonSerializerOptions
         {{
             PropertyNameCaseInsensitive = true,
@@ -185,16 +156,11 @@ public class {entity.Name}ApiService : I{entity.Name}ApiService
 
     #region Private Helpers
 
-    /// <summary>
-    /// Configura header de autenticação com token JWT.
-    /// Token está em AuthenticationTokens (StoreTokens no AccountController).
-    /// </summary>
     private async Task SetAuthHeaderAsync()
     {{
         var context = _httpContextAccessor.HttpContext;
         if (context?.User?.Identity?.IsAuthenticated == true)
         {{
-            // Token está em AuthenticationTokens, não em Claims
             var token = await context.GetTokenAsync(""access_token"");
             
             if (!string.IsNullOrEmpty(token))
@@ -214,28 +180,18 @@ public class {entity.Name}ApiService : I{entity.Name}ApiService
         }}
     }}
 
-    /// <summary>
-    /// Cria ApiResponse de sucesso.
-    /// </summary>
     private static ApiResponse<T> Success<T>(T? data) => new()
     {{
         Success = true,
         Data = data
     }};
 
-    /// <summary>
-    /// Cria ApiResponse de erro.
-    /// NOTA: Message é computed (=> Error?.Message), então usamos Error.
-    /// </summary>
     private static ApiResponse<T> Fail<T>(string message) => new()
     {{
         Success = false,
         Error = new ApiError {{ Message = message }}
     }};
 
-    /// <summary>
-    /// Processa resposta HTTP do backend.
-    /// </summary>
     private async Task<ApiResponse<T>> ProcessResponseAsync<T>(
         HttpResponseMessage response, 
         string operation)
@@ -257,15 +213,16 @@ public class {entity.Name}ApiService : I{entity.Name}ApiService
 
             if (backendResult.IsSuccess)
             {{
-                return Success(backendResult.Value ?? backendResult.Data);
+                var data = backendResult.Value ?? backendResult.Data;
+                return Success(data);
             }}
 
-            return Fail<T>(backendResult.Error?.Message ?? $""Erro HTTP {{(int)response.StatusCode}}"");
+            return Fail<T>(backendResult.Error?.Message ?? ""Erro desconhecido"");
         }}
-        catch (JsonException)
+        catch (JsonException ex)
         {{
-            // Tenta como string simples
-            return Fail<T>($""Erro: {{content}}"");
+            _logger.LogError(ex, ""[{entityUpper}] Erro JSON em {{Op}}"", operation);
+            return Fail<T>(""Erro ao processar resposta do servidor"");
         }}
     }}
 
@@ -273,75 +230,76 @@ public class {entity.Name}ApiService : I{entity.Name}ApiService
 
     #region IApiService Implementation
 
-    public async Task<ApiResponse<IEnumerable<{entity.Name}Dto>>> GetAllAsync()
-    {{
-        try
-        {{
-            await SetAuthHeaderAsync();
-            var response = await _httpClient.GetAsync(ApiRoute);
-            
-            if (!response.IsSuccessStatusCode)
-                return await ProcessResponseAsync<IEnumerable<{entity.Name}Dto>>(response, ""GetAll"");
-
-            var content = await response.Content.ReadAsStringAsync();
-            var backendResult = JsonSerializer.Deserialize<BackendResult<List<{entity.Name}Dto>>>(content, _jsonOptions);
-            
-            if (backendResult?.IsSuccess == true)
-            {{
-                IEnumerable<{entity.Name}Dto> items = backendResult.Value ?? backendResult.Data ?? new List<{entity.Name}Dto>();
-                return Success(items);
-            }}
-
-            return Fail<IEnumerable<{entity.Name}Dto>>(backendResult?.Error?.Message ?? ""Erro ao buscar registros"");
-        }}
-        catch (HttpRequestException ex)
-        {{
-            _logger.LogError(ex, ""[{entityUpper}] Erro de conexão em GetAllAsync"");
-            return Fail<IEnumerable<{entity.Name}Dto>>(""Erro de conexão com o servidor"");
-        }}
-        catch (Exception ex)
-        {{
-            _logger.LogError(ex, ""[{entityUpper}] Exceção em GetAllAsync"");
-            return Fail<IEnumerable<{entity.Name}Dto>>(ex.Message);
-        }}
-    }}
-
-    public async Task<ApiResponse<PagedResult<{entity.Name}Dto>>> GetPagedAsync(int page, int pageSize, string? search = null)
+    /// <summary>
+    /// ✅ v4.0 FINAL: GetPagedAsync com parâmetros corretos (sortBy, desc).
+    /// </summary>
+    public async Task<ApiResponse<PagedResult<{entity.Name}Dto>>> GetPagedAsync(
+        int page, 
+        int pageSize, 
+        string? search = null,
+        string? sortBy = null,      // ✅ CORRETO: sortBy (não orderBy)
+        bool desc = false)          // ✅ CORRETO: desc (não ascending)
     {{
         try
         {{
             await SetAuthHeaderAsync();
             
-            var queryParams = $""?page={{page}}&pageSize={{pageSize}}"";
-            if (!string.IsNullOrEmpty(search))
-                queryParams += $""&search={{Uri.EscapeDataString(search)}}"";
+            // ================================================================
+            // ✅ CONSTRÓI QUERY STRING COM PARÂMETROS CORRETOS
+            // ================================================================
+            var query = $""?page={{page}}&pageSize={{pageSize}}"";
             
-            var response = await _httpClient.GetAsync($""{{ApiRoute}}{{queryParams}}"");
+            if (!string.IsNullOrWhiteSpace(search))
+                query += $""&search={{Uri.EscapeDataString(search)}}"";
             
-            if (!response.IsSuccessStatusCode)
-                return await ProcessResponseAsync<PagedResult<{entity.Name}Dto>>(response, ""GetPaged"");
+            // ✅ CORRETO: sortBy (não orderBy)
+            if (!string.IsNullOrWhiteSpace(sortBy))
+                query += $""&sortBy={{Uri.EscapeDataString(sortBy)}}"";
+            
+            // ✅ CORRETO: desc (não ascending)
+            query += $""&desc={{desc.ToString().ToLower()}}"";
 
-            var content = await response.Content.ReadAsStringAsync();
-            var backendResult = JsonSerializer.Deserialize<BackendResult<PagedResult<{entity.Name}Dto>>>(content, _jsonOptions);
-            
-            if (backendResult?.IsSuccess == true)
-            {{
-                var pagedResult = backendResult.Value ?? backendResult.Data;
-                if (pagedResult != null)
-                    return Success(pagedResult);
-            }}
+            _logger.LogDebug(
+                ""[{entityUpper}] GET {{Route}}{{Query}} - SortBy: {{SortBy}}, Desc: {{Desc}}"", 
+                ApiRoute, query, sortBy ?? ""null"", desc
+            );
 
-            return Fail<PagedResult<{entity.Name}Dto>>(backendResult?.Error?.Message ?? ""Erro ao buscar registros paginados"");
+            var response = await _httpClient.GetAsync($""{{ApiRoute}}{{query}}"");
+            return await ProcessResponseAsync<PagedResult<{entity.Name}Dto>>(response, ""GetPaged"");
         }}
         catch (HttpRequestException ex)
         {{
             _logger.LogError(ex, ""[{entityUpper}] Erro de conexão em GetPagedAsync"");
             return Fail<PagedResult<{entity.Name}Dto>>(""Erro de conexão com o servidor"");
         }}
+        catch (TaskCanceledException)
+        {{
+            return Fail<PagedResult<{entity.Name}Dto>>(""Tempo limite excedido"");
+        }}
         catch (Exception ex)
         {{
             _logger.LogError(ex, ""[{entityUpper}] Exceção em GetPagedAsync"");
             return Fail<PagedResult<{entity.Name}Dto>>(ex.Message);
+        }}
+    }}
+
+    public async Task<ApiResponse<IEnumerable<{entity.Name}Dto>>> GetAllAsync()
+    {{
+        try
+        {{
+            await SetAuthHeaderAsync();
+            var response = await _httpClient.GetAsync($""{{ApiRoute}}?page=1&pageSize=10000"");
+            var result = await ProcessResponseAsync<PagedResult<{entity.Name}Dto>>(response, ""GetAll"");
+            
+            if (result.Success && result.Data != null)
+                return Success<IEnumerable<{entity.Name}Dto>>(result.Data.Items);
+            
+            return Fail<IEnumerable<{entity.Name}Dto>>(result.Error?.Message ?? ""Erro ao buscar dados"");
+        }}
+        catch (Exception ex)
+        {{
+            _logger.LogError(ex, ""[{entityUpper}] Exceção em GetAllAsync"");
+            return Fail<IEnumerable<{entity.Name}Dto>>(ex.Message);
         }}
     }}
 
@@ -351,19 +309,7 @@ public class {entity.Name}ApiService : I{entity.Name}ApiService
         {{
             await SetAuthHeaderAsync();
             var response = await _httpClient.GetAsync($""{{ApiRoute}}/{{id}}"");
-            
-            if (!response.IsSuccessStatusCode)
-                return await ProcessResponseAsync<{entity.Name}Dto>(response, ""GetById"");
-
-            var content = await response.Content.ReadAsStringAsync();
-            var backendResult = JsonSerializer.Deserialize<BackendResult<{entity.Name}Dto>>(content, _jsonOptions);
-            
-            if (backendResult?.IsSuccess == true)
-            {{
-                return Success(backendResult.Value ?? backendResult.Data);
-            }}
-
-            return Fail<{entity.Name}Dto>(backendResult?.Error?.Message ?? ""Registro não encontrado"");
+            return await ProcessResponseAsync<{entity.Name}Dto>(response, ""GetById"");
         }}
         catch (HttpRequestException ex)
         {{
@@ -398,7 +344,6 @@ public class {entity.Name}ApiService : I{entity.Name}ApiService
             
             if (createResult?.IsSuccess == true)
             {{
-                // v3.3 FIX: Usa ternário em vez de ?? (value types não são nullable)
                 var createdId = {extractIdExpression};
                     
                 if ({idNotEmptyCheck})
@@ -551,10 +496,6 @@ public class {entity.Name}ApiService : I{entity.Name}ApiService
 
     #region Backend DTOs
 
-    /// <summary>
-    /// DTO para deserializar resposta do backend.
-    /// Backend pode retornar Value ou Data dependendo do endpoint.
-    /// </summary>
     private sealed class BackendResult<T>
     {{
         public bool IsSuccess {{ get; set; }}
@@ -596,16 +537,11 @@ public class {entity.Name}ApiService : I{entity.Name}ApiService
         };
     }
 
-    /// <summary>
-    /// Converte nome do módulo para path de pasta.
-    /// Ex: "eSocial" -> "eSocial", "GestaoDePessoas" -> "GestaoDePessoas"
-    /// </summary>
     private static string GetModulePath(string moduleName)
     {
         if (string.IsNullOrEmpty(moduleName))
             return "Common";
 
-        // Mantém o nome original do módulo
         return moduleName;
     }
 }
