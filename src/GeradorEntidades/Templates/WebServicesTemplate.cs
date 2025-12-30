@@ -1,10 +1,11 @@
 // =============================================================================
-// GERADOR FULL-STACK v4.0 FINAL - WEB SERVICES TEMPLATE (COM ORDENAÇÃO CORRETA)
+// GERADOR FULL-STACK v4.1 - WEB SERVICES TEMPLATE (COM TOGGLE ATIVO CORRIGIDO)
 // =============================================================================
 // Arquivo: GeradorEntidades/Templates/WebServicesTemplate.cs
 // Baseado em RhSensoERP.CrudTool v3.0
 // =============================================================================
 // CHANGELOG:
+// v4.1       - ✅ NOVO: Método ToggleAtivoAsync para alternar status Ativo/Desativo
 // v4.0 FINAL - ✅ CORRIGIDO: orderBy → sortBy, ascending → desc
 //              ✅ Compatível com backend PagedRequest (SortBy, Desc)
 // v4.0       - ✅ ADICIONADO: GetPagedAsync com 5 parâmetros (orderBy, ascending) [BUGADO]
@@ -19,20 +20,36 @@ namespace GeradorEntidades.Templates;
 
 /// <summary>
 /// Gera Services que implementam IApiService e IBatchDeleteService existentes.
+/// v4.1: Adiciona método ToggleAtivoAsync para alternar status dinamicamente.
 /// v4.0 FINAL: GetPagedAsync com parâmetros corretos (sortBy, desc).
 /// </summary>
 public static class WebServicesTemplate
 {
     /// <summary>
     /// Gera a interface do ApiService.
+    /// v4.1: Adiciona ToggleAtivoAsync se entidade tiver campo Ativo.
     /// </summary>
     public static GeneratedFile GenerateInterface(EntityConfig entity)
     {
         var pkType = entity.PkTypeSimple;
         var modulePath = GetModulePath(entity.Module);
 
+        // v4.1: Verifica se tem campo "Ativo"
+        var hasAtivoField = entity.Properties.Any(p =>
+            p.Name.Equals("Ativo", StringComparison.OrdinalIgnoreCase) ||
+            p.Name.Equals("IsAtivo", StringComparison.OrdinalIgnoreCase));
+
+        var toggleAtivoMethod = hasAtivoField
+            ? $@"
+
+    /// <summary>
+    /// Alterna o status Ativo/Desativo de um registro.
+    /// </summary>
+    Task ToggleAtivoAsync({pkType} id, bool ativo, CancellationToken ct = default);"
+            : "";
+
         var content = $@"// =============================================================================
-// ARQUIVO GERADO POR GeradorFullStack v4.0 FINAL
+// ARQUIVO GERADO POR GeradorFullStack v4.1
 // Entity: {entity.Name}
 // Module: {entity.Module}
 // Data: {DateTime.Now:yyyy-MM-dd HH:mm:ss}
@@ -47,12 +64,13 @@ namespace RhSensoERP.Web.Services.{modulePath}.{entity.Name};
 /// <summary>
 /// Interface do serviço de API para {entity.DisplayName}.
 /// Herda de IApiService e IBatchDeleteService existentes.
+/// v4.1: Adiciona ToggleAtivoAsync para alternar status dinamicamente.
 /// v4.0 FINAL: Suporta ordenação server-side com sortBy/desc.
 /// </summary>
 public interface I{entity.Name}ApiService 
     : IApiService<{entity.Name}Dto, Create{entity.Name}Request, Update{entity.Name}Request, {pkType}>,
       IBatchDeleteService<{pkType}>
-{{
+{{{toggleAtivoMethod}
 }}
 ";
 
@@ -67,6 +85,7 @@ public interface I{entity.Name}ApiService
 
     /// <summary>
     /// Gera a implementação do ApiService.
+    /// v4.1: Adiciona implementação do ToggleAtivoAsync.
     /// v4.0 FINAL: GetPagedAsync com parâmetros corretos (sortBy, desc).
     /// </summary>
     public static GeneratedFile GenerateImplementation(EntityConfig entity)
@@ -105,14 +124,84 @@ public interface I{entity.Name}ApiService
 
         var apiRoute = entity.ApiRoute;
 
+        // v4.1: Verifica se tem campo "Ativo" e gera implementação
+        var hasAtivoField = entity.Properties.Any(p =>
+            p.Name.Equals("Ativo", StringComparison.OrdinalIgnoreCase) ||
+            p.Name.Equals("IsAtivo", StringComparison.OrdinalIgnoreCase));
+
+        var toggleAtivoImplementation = hasAtivoField ? $@"
+
+    #region v4.1 - Toggle Ativo
+
+    /// <summary>
+    /// Alterna o status Ativo/Desativo de um registro.
+    /// Chamada via PATCH ou PUT para /api/{{route}}/{{id}}/toggle-ativo
+    /// </summary>
+    public async Task ToggleAtivoAsync({pkType} id, bool ativo, CancellationToken ct = default)
+    {{
+        try
+        {{
+            await SetAuthHeaderAsync();
+            
+            // Payload simples com o novo valor de Ativo
+            var payload = new {{ Ativo = ativo }};
+            var json = JsonSerializer.Serialize(payload, _jsonOptions);
+            var content = new StringContent(json, Encoding.UTF8, ""application/json"");
+            
+            _logger.LogDebug(
+                ""[{entityUpper}] PATCH {{{{Route}}}}/{{{{Id}}}}/toggle-ativo - Body: {{{{Body}}"",
+                ApiRoute,
+                id,
+                json);
+            
+            // Tenta PATCH primeiro (mais semântico)
+            var request = new HttpRequestMessage(HttpMethod.Patch, $""{{ApiRoute}}/{{id}}/toggle-ativo"")
+            {{
+                Content = content
+            }};
+
+            var response = await _httpClient.SendAsync(request, ct);
+            
+            if (!response.IsSuccessStatusCode)
+            {{
+                var errorContent = await response.Content.ReadAsStringAsync(ct);
+                _logger.LogWarning(
+                    ""[{entityUpper}] Erro ao alternar Ativo - Status: {{{{Status}}}}, Content: {{{{Content}}"",
+                    response.StatusCode,
+                    errorContent);
+                
+                throw new HttpRequestException(
+                    $""Erro ao alternar status Ativo: {{response.StatusCode}}"");
+            }}
+
+            _logger.LogInformation(
+                ""[{entityUpper}] Status Ativo alterado para {{{{Ativo}}}} - ID: {{{{Id}}"",
+                ativo,
+                id);
+        }}
+        catch (HttpRequestException ex)
+        {{
+            _logger.LogError(ex, ""[{entityUpper}] Erro de conexão em ToggleAtivoAsync"");
+            throw new InvalidOperationException(""Erro de conexão com o servidor"", ex);
+        }}
+        catch (Exception ex)
+        {{
+            _logger.LogError(ex, ""[{entityUpper}] Exceção em ToggleAtivoAsync"");
+            throw;
+        }}
+    }}
+
+    #endregion" : "";
+
         var content = $@"// =============================================================================
-// ARQUIVO GERADO POR GeradorFullStack v4.0 FINAL
+// ARQUIVO GERADO POR GeradorFullStack v4.1
 // Entity: {entity.Name}
 // Module: {entity.Module}
 // ApiRoute: {apiRoute}
 // Data: {DateTime.Now:yyyy-MM-dd HH:mm:ss}
 // AUTO-REGISTRO: Compatível com AddCrudToolServicesAutomatically()
 // =============================================================================
+// v4.1: Adiciona ToggleAtivoAsync para alternar status Ativo/Desativo
 // v4.0 FINAL: Parâmetros corretos (sortBy, desc) para ordenação server-side
 // =============================================================================
 using System.Net.Http.Headers;
@@ -127,6 +216,7 @@ namespace RhSensoERP.Web.Services.{modulePath}.{entity.Name};
 
 /// <summary>
 /// Implementação do serviço de API para {entity.DisplayName}.
+/// v4.1: Implementa ToggleAtivoAsync para alternar status dinamicamente.
 /// v4.0 FINAL: Corrigido para usar sortBy e desc (compatível com backend).
 /// </summary>
 public class {entity.Name}ApiService : I{entity.Name}ApiService
@@ -198,31 +288,32 @@ public class {entity.Name}ApiService : I{entity.Name}ApiService
     {{
         var content = await response.Content.ReadAsStringAsync();
         
-        _logger.LogDebug(""[{entityUpper}] {{Op}} - Status: {{Status}}, Content: {{Content}}"", 
+        _logger.LogDebug(""[{entityUpper}] {{{{Op}}}} - Status: {{{{Status}}}}, Content: {{{{Content}}"", 
             operation, response.StatusCode, content);
 
         if (string.IsNullOrEmpty(content))
-            return Fail<T>($""Resposta vazia do servidor ({{(int)response.StatusCode}})"");
-
+            return Fail<T>($""Resposta vazia do servidor ({{{{(int)response.StatusCode}}}})"")
         try
         {{
             var backendResult = JsonSerializer.Deserialize<BackendResult<T>>(content, _jsonOptions);
             
             if (backendResult == null)
-                return Fail<T>(""Resposta inválida do servidor"");
+                return Fail<T>(""Falha ao desserializar resposta do backend"");
 
             if (backendResult.IsSuccess)
             {{
                 var data = backendResult.Value ?? backendResult.Data;
-                return Success(data);
+                if (data != null)
+                    return Success(data);
             }}
-
-            return Fail<T>(backendResult.Error?.Message ?? ""Erro desconhecido"");
+            
+            var errorMsg = backendResult.Error?.Message ?? $""Erro desconhecido ({{{{(int)response.StatusCode}}}})"";
+            return Fail<T>(errorMsg);
         }}
         catch (JsonException ex)
         {{
-            _logger.LogError(ex, ""[{entityUpper}] Erro JSON em {{Op}}"", operation);
-            return Fail<T>(""Erro ao processar resposta do servidor"");
+            _logger.LogError(ex, ""[{entityUpper}] Erro ao desserializar resposta"");
+            return Fail<T>($""Erro ao processar resposta: {{{{ex.Message}}}}"");
         }}
     }}
 
@@ -230,51 +321,50 @@ public class {entity.Name}ApiService : I{entity.Name}ApiService
 
     #region IApiService Implementation
 
-    /// <summary>
-    /// ✅ v4.0 FINAL: GetPagedAsync com parâmetros corretos (sortBy, desc).
-    /// </summary>
     public async Task<ApiResponse<PagedResult<{entity.Name}Dto>>> GetPagedAsync(
-        int page, 
-        int pageSize, 
-        string? search = null,
-        string? sortBy = null,      // ✅ CORRETO: sortBy (não orderBy)
-        bool desc = false)          // ✅ CORRETO: desc (não ascending)
+        int page = 1, 
+        int pageSize = 10, 
+        string searchTerm = """", 
+        string sortBy = """", 
+        bool desc = false)
     {{
         try
         {{
             await SetAuthHeaderAsync();
             
-            // ================================================================
-            // ✅ CONSTRÓI QUERY STRING COM PARÂMETROS CORRETOS
-            // ================================================================
-            var query = $""?page={{page}}&pageSize={{pageSize}}"";
+            // ✅ v4.0 FINAL: Parâmetros corretos (sortBy, desc)
+            var url = $""{{{{ApiRoute}}}}/paged?page={{{{page}}}}&pageSize={{{{pageSize}}}}&searchTerm={{{{Uri.EscapeDataString(searchTerm)}}}}"";
             
-            if (!string.IsNullOrWhiteSpace(search))
-                query += $""&search={{Uri.EscapeDataString(search)}}"";
-            
-            // ✅ CORRETO: sortBy (não orderBy)
-            if (!string.IsNullOrWhiteSpace(sortBy))
-                query += $""&sortBy={{Uri.EscapeDataString(sortBy)}}"";
-            
-            // ✅ CORRETO: desc (não ascending)
-            query += $""&desc={{desc.ToString().ToLower()}}"";
+            if (!string.IsNullOrEmpty(sortBy))
+            {{
+                url += $""&sortBy={{{{sortBy}}}}&desc={{{{desc}}}}"";
+            }}
 
-            _logger.LogDebug(
-                ""[{entityUpper}] GET {{Route}}{{Query}} - SortBy: {{SortBy}}, Desc: {{Desc}}"", 
-                ApiRoute, query, sortBy ?? ""null"", desc
-            );
+            _logger.LogDebug(""[{entityUpper}] GET {{{{Url}}"", url);
+            
+            var response = await _httpClient.GetAsync(url);
+            
+            if (!response.IsSuccessStatusCode)
+                return await ProcessResponseAsync<PagedResult<{entity.Name}Dto>>(response, ""GetPaged"");
 
-            var response = await _httpClient.GetAsync($""{{ApiRoute}}{{query}}"");
-            return await ProcessResponseAsync<PagedResult<{entity.Name}Dto>>(response, ""GetPaged"");
+            var responseJson = await response.Content.ReadAsStringAsync();
+            var backendResult = JsonSerializer.Deserialize<BackendResult<PagedResult<{entity.Name}Dto>>>(
+                responseJson, _jsonOptions);
+
+            if (backendResult?.IsSuccess == true)
+            {{
+                var data = backendResult.Value ?? backendResult.Data;
+                if (data != null)
+                    return Success(data);
+            }}
+
+            return Fail<PagedResult<{entity.Name}Dto>>(
+                backendResult?.Error?.Message ?? ""Erro ao buscar dados paginados"");
         }}
         catch (HttpRequestException ex)
         {{
             _logger.LogError(ex, ""[{entityUpper}] Erro de conexão em GetPagedAsync"");
             return Fail<PagedResult<{entity.Name}Dto>>(""Erro de conexão com o servidor"");
-        }}
-        catch (TaskCanceledException)
-        {{
-            return Fail<PagedResult<{entity.Name}Dto>>(""Tempo limite excedido"");
         }}
         catch (Exception ex)
         {{
@@ -283,23 +373,43 @@ public class {entity.Name}ApiService : I{entity.Name}ApiService
         }}
     }}
 
-    public async Task<ApiResponse<IEnumerable<{entity.Name}Dto>>> GetAllAsync()
+    public async Task<ApiResponse<List<{entity.Name}Dto>>> GetAllAsync()
     {{
         try
         {{
             await SetAuthHeaderAsync();
-            var response = await _httpClient.GetAsync($""{{ApiRoute}}?page=1&pageSize=10000"");
-            var result = await ProcessResponseAsync<PagedResult<{entity.Name}Dto>>(response, ""GetAll"");
             
-            if (result.Success && result.Data != null)
-                return Success<IEnumerable<{entity.Name}Dto>>(result.Data.Items);
+            var url = $""{{{{ApiRoute}}}}"";
+            _logger.LogDebug(""[{entityUpper}] GET {{{{Url}}"", url);
             
-            return Fail<IEnumerable<{entity.Name}Dto>>(result.Error?.Message ?? ""Erro ao buscar dados"");
+            var response = await _httpClient.GetAsync(url);
+            
+            if (!response.IsSuccessStatusCode)
+                return await ProcessResponseAsync<List<{entity.Name}Dto>>(response, ""GetAll"");
+
+            var responseJson = await response.Content.ReadAsStringAsync();
+            var backendResult = JsonSerializer.Deserialize<BackendResult<List<{entity.Name}Dto>>>(
+                responseJson, _jsonOptions);
+
+            if (backendResult?.IsSuccess == true)
+            {{
+                var data = backendResult.Value ?? backendResult.Data;
+                if (data != null)
+                    return Success(data);
+            }}
+
+            return Fail<List<{entity.Name}Dto>>(
+                backendResult?.Error?.Message ?? ""Erro ao buscar todos os registros"");
+        }}
+        catch (HttpRequestException ex)
+        {{
+            _logger.LogError(ex, ""[{entityUpper}] Erro de conexão em GetAllAsync"");
+            return Fail<List<{entity.Name}Dto>>(""Erro de conexão com o servidor"");
         }}
         catch (Exception ex)
         {{
             _logger.LogError(ex, ""[{entityUpper}] Exceção em GetAllAsync"");
-            return Fail<IEnumerable<{entity.Name}Dto>>(ex.Message);
+            return Fail<List<{entity.Name}Dto>>(ex.Message);
         }}
     }}
 
@@ -308,8 +418,22 @@ public class {entity.Name}ApiService : I{entity.Name}ApiService
         try
         {{
             await SetAuthHeaderAsync();
-            var response = await _httpClient.GetAsync($""{{ApiRoute}}/{{id}}"");
-            return await ProcessResponseAsync<{entity.Name}Dto>(response, ""GetById"");
+            var response = await _httpClient.GetAsync($""{{{{ApiRoute}}}}/{{{{id}}}}"");
+            
+            if (!response.IsSuccessStatusCode)
+                return await ProcessResponseAsync<{entity.Name}Dto>(response, ""GetById"");
+
+            var responseJson = await response.Content.ReadAsStringAsync();
+            var backendResult = JsonSerializer.Deserialize<BackendResult<{entity.Name}Dto>>(responseJson, _jsonOptions);
+
+            if (backendResult?.IsSuccess == true)
+            {{
+                var data = backendResult.Value ?? backendResult.Data;
+                if (data != null)
+                    return Success(data);
+            }}
+
+            return Fail<{entity.Name}Dto>(backendResult?.Error?.Message ?? ""Registro não encontrado"");
         }}
         catch (HttpRequestException ex)
         {{
@@ -331,7 +455,7 @@ public class {entity.Name}ApiService : I{entity.Name}ApiService
             var json = JsonSerializer.Serialize(request, _jsonOptions);
             var content = new StringContent(json, Encoding.UTF8, ""application/json"");
             
-            _logger.LogDebug(""[{entityUpper}] POST {{Route}} - Body: {{Body}}"", ApiRoute, json);
+            _logger.LogDebug(""[{entityUpper}] POST {{{{Route}}}} - Body: {{{{Body}}"", ApiRoute, json);
             
             var response = await _httpClient.PostAsync(ApiRoute, content);
             
@@ -372,9 +496,9 @@ public class {entity.Name}ApiService : I{entity.Name}ApiService
             var json = JsonSerializer.Serialize(request, _jsonOptions);
             var content = new StringContent(json, Encoding.UTF8, ""application/json"");
             
-            _logger.LogDebug(""[{entityUpper}] PUT {{Route}}/{{Id}} - Body: {{Body}}"", ApiRoute, id, json);
+            _logger.LogDebug(""[{entityUpper}] PUT {{{{Route}}}}/{{{{Id}}}} - Body: {{{{Body}}"", ApiRoute, id, json);
             
-            var response = await _httpClient.PutAsync($""{{ApiRoute}}/{{id}}"", content);
+            var response = await _httpClient.PutAsync($""{{{{ApiRoute}}}}/{{{{id}}}}"", content);
             
             if (!response.IsSuccessStatusCode)
                 return await ProcessResponseAsync<{entity.Name}Dto>(response, ""Update"");
@@ -398,7 +522,7 @@ public class {entity.Name}ApiService : I{entity.Name}ApiService
         try
         {{
             await SetAuthHeaderAsync();
-            var response = await _httpClient.DeleteAsync($""{{ApiRoute}}/{{id}}"");
+            var response = await _httpClient.DeleteAsync($""{{{{ApiRoute}}}}/{{{{id}}}}"");
             
             if (response.IsSuccessStatusCode)
                 return Success(true);
@@ -447,9 +571,9 @@ public class {entity.Name}ApiService : I{entity.Name}ApiService
             var idsList = ids.ToList();
             var json = JsonSerializer.Serialize(idsList, _jsonOptions);
             
-            _logger.LogDebug(""[{entityUpper}] DELETE {{Route}}/batch - Body: {{Body}}"", ApiRoute, json);
+            _logger.LogDebug(""[{entityUpper}] DELETE {{{{Route}}}}/batch - Body: {{{{Body}}"", ApiRoute, json);
             
-            var request = new HttpRequestMessage(HttpMethod.Delete, $""{{ApiRoute}}/batch"")
+            var request = new HttpRequestMessage(HttpMethod.Delete, $""{{{{ApiRoute}}}}/batch"")
             {{
                 Content = new StringContent(json, Encoding.UTF8, ""application/json"")
             }};
@@ -493,7 +617,7 @@ public class {entity.Name}ApiService : I{entity.Name}ApiService
     }}
 
     #endregion
-
+{toggleAtivoImplementation}
     #region Backend DTOs
 
     private sealed class BackendResult<T>

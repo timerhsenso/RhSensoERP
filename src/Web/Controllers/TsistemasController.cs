@@ -1,4 +1,7 @@
-﻿// =============================================================================
+﻿/*
+ 
+
+// =============================================================================
 // ARQUIVO GERADO POR GeradorFullStack v3.1
 // Entity: Tsistema
 // Data: 2025-12-02 02:25:04
@@ -269,3 +272,4 @@ public class TsistemasController
         return await base.DeleteMultiple(ids);
     }
 }
+*/

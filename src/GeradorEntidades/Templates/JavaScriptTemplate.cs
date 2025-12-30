@@ -1,6 +1,7 @@
 // =============================================================================
-// GERADOR FULL-STACK v4.0 - JAVASCRIPT TEMPLATE (COM ORDENAÇÃO)
+// GERADOR FULL-STACK v4.1 - JAVASCRIPT TEMPLATE (COM CHECKBOX E TOGGLE ATIVO)
 // Baseado em RhSensoERP.CrudTool v2.5
+// v4.1 - ✅ NOVO: Checkbox "Selecionar Todos" + Toggle Switch para campo Ativo
 // v4.0 - ✅ ADICIONADO: Suporte a ordenação server-side do DataTables
 // v3.9 - ✅ CORRIGIDO: Gera código em PascalCase para model binding ASP.NET Core
 // v3.8 - ✅ CORRIGIDO: Remove automaticamente campos de auditoria no beforeSubmit
@@ -15,6 +16,7 @@ namespace GeradorEntidades.Templates;
 
 /// <summary>
 /// Gera JavaScript que estende a classe CrudBase existente.
+/// v4.1: Adiciona checkbox "Selecionar Todos" e Toggle Switch para campo Ativo.
 /// v4.0: Adiciona ordenação server-side funcional.
 /// v3.9: beforeSubmit retorna objeto em PascalCase para compatibilidade com ASP.NET Core.
 /// v3.8: Remove automaticamente campos de auditoria e TenantId no beforeSubmit.
@@ -38,20 +40,25 @@ public static class JavaScriptTemplate
         var isPkTexto = entity.PrimaryKey != null && !entity.PrimaryKey.IsIdentity && !entity.PrimaryKey.IsGuid;
         var pkFieldId = entity.PrimaryKey?.Name ?? "Id";
 
+        // v4.1: Verifica se tem campo "Ativo"
+        var hasAtivoField = entity.Properties.Any(p =>
+            p.Name.Equals("Ativo", StringComparison.OrdinalIgnoreCase) ||
+            p.Name.Equals("IsAtivo", StringComparison.OrdinalIgnoreCase));
+
         var content = $@"/**
  * ============================================================================
- * {entity.DisplayName.ToUpper()} - JavaScript com Ordenação Server-Side
+ * {entity.DisplayName.ToUpper()} - JavaScript com Checkbox e Toggle Ativo
  * ============================================================================
  * Arquivo: wwwroot/js/{modulePathLower}/{entity.NameLower}/{entity.NameLower}.js
  * Módulo: {entity.Module}
- * Versão: 4.0 (COM ORDENAÇÃO FUNCIONAL)
- * Gerado por: GeradorFullStack v4.0
+ * Versão: 4.1 (COM CHECKBOX E TOGGLE ATIVO)
+ * Gerado por: GeradorFullStack v4.1
  * Data: {DateTime.Now:yyyy-MM-dd HH:mm:ss}
  * 
- * Changelog v4.0:
- *   ✅ Ordenação server-side habilitada por padrão
- *   ✅ Colunas mapeadas com 'name' em PascalCase para backend
- *   ✅ Render functions para compatibilidade PascalCase/camelCase
+ * Changelog v4.1:
+ *   ✅ Checkbox ""Selecionar Todos"" no header da DataTable
+ *   ✅ Toggle Switch dinâmico para campo Ativo (rate limit 500ms)
+ *   ✅ Exclusão múltipla com contador
  * 
  * Implementação específica do CRUD de {entity.DisplayName}.
  * Estende a classe CrudBase com customizações necessárias.
@@ -67,6 +74,11 @@ class {entity.Name}Crud extends CrudBase {{
         // =====================================================================
         this.pkTextoField = {(isPkTexto ? $"'{pkFieldId}'" : "null")};
         this.isPkTexto = {(isPkTexto ? "true" : "false")};
+        
+        // =====================================================================
+        // v4.1: Debounce para Toggle Ativo
+        // =====================================================================
+        this.toggleDebounceTimer = null;
     }}
 
     /**
@@ -194,112 +206,114 @@ $(document).ready(function () {{
     }}
 
     // =========================================================================
-    // ✅ v4.0: CONFIGURAÇÃO DAS COLUNAS COM ORDENAÇÃO
+    // ✅ v4.1: CONFIGURAÇÃO DAS COLUNAS COM CHECKBOX E TOGGLE ATIVO
     // =========================================================================
 
     const columns = [
-        // Coluna de seleção (checkbox)
+        // =====================================================================
+        // v4.1: COLUNA DE SELEÇÃO (CHECKBOX)
+        // =====================================================================
         {{
             data: null,
-            name: null,                    // ✅ Não ordena
+            name: 'Select',
+            title: '<input type=""checkbox"" id=""selectAll"" class=""form-check-input"" />',
             orderable: false,
             searchable: false,
-            className: 'dt-checkboxes-cell',
-            width: '40px',
+            width: '30px',
+            className: 'text-center',
             render: function (data, type, row) {{
-                // Só mostra checkbox se pode excluir
-                if (window.crudPermissions.canDelete) {{
-                    const id = getCleanId(row, '{idFieldLower}');
-                    return `<input type=""checkbox"" class=""dt-checkboxes form-check-input"" data-id=""${{id}}"">`;
-                }}
-                return '';
+                const id = getCleanId(row, '{idField}');
+                return `<input type=""checkbox"" class=""form-check-input row-select"" value=""${{id}}"" data-id=""${{id}}"" />`;
             }}
         }},
 {columns}
-        // Coluna de ações
-        {{
-            data: null,
-            name: null,                    // ✅ Não ordena
-            orderable: false,
-            searchable: false,
-            className: 'text-end no-export',
-            title: 'Ações',
-            width: '130px',
-            render: function (data, type, row) {{
-                const id = getCleanId(row, '{idFieldLower}');
-
-                let actions = '<div class=""btn-group btn-group-sm"" role=""group"">';
-
-                // Botão Editar (somente se tiver permissão)
-                if (window.crudPermissions.canEdit) {{
-                    actions += `<button type=""button"" class=""btn btn-outline-primary btn-edit"" 
-                                data-id=""${{id}}"" title=""Editar"">
-                                <i class=""fas fa-edit""></i>
-                            </button>`;
-                }}
-
-                // Botão Excluir (somente se tiver permissão)
-                if (window.crudPermissions.canDelete) {{
-                    actions += `<button type=""button"" class=""btn btn-outline-danger btn-delete"" 
-                                data-id=""${{id}}"" title=""Excluir"">
-                                <i class=""fas fa-trash""></i>
-                            </button>`;
-                }}
-
-                actions += '</div>';
-                return actions;
-            }}
-        }}
     ];
 
     // =========================================================================
-    // ✅ v4.0: INICIALIZAÇÃO DO CRUD COM ORDENAÇÃO HABILITADA
+    // INSTANCIA O CRUD
     // =========================================================================
 
-    window.{entity.NameLower}Crud = new {entity.Name}Crud({{
-        controllerName: '{entity.Name}',
+    const crud = new {entity.Name}Crud({{
         entityName: '{entity.Name}',
-        idField: '{idFieldLower}',
-        columns: columns,
-        permissions: window.crudPermissions,
-        dataTableOptions: {{
-            // ✅ CRÍTICO: Habilita server-side processing e ordenação
-            serverSide: true,
-            processing: true,
-            ordering: true,
-            
-            // ✅ Ordenação inicial (primeira coluna de dados)
-            order: [[1, 'asc']],
-            
-            pageLength: 25,
-            
-            // Idioma PT-BR
-            language: {{
-                processing: ""Processando..."",
-                emptyTable: ""Nenhum registro encontrado"",
-                info: ""Mostrando _START_ até _END_ de _TOTAL_ registros"",
-                infoEmpty: ""Mostrando 0 até 0 de 0 registros"",
-                infoFiltered: ""(filtrado de _MAX_ registros)"",
-                lengthMenu: ""Mostrar _MENU_ registros"",
-                loadingRecords: ""Carregando..."",
-                search: ""Buscar:"",
-                zeroRecords: ""Nenhum registro encontrado"",
-                paginate: {{
-                    first: ""Primeiro"",
-                    previous: ""Anterior"",
-                    next: ""Próximo"",
-                    last: ""Último""
-                }}
-            }}
+        idField: '{idField}',
+        baseUrl: '/{entity.Name}',
+        dataTableColumns: columns,
+        exportOptions: {{
+            columns: ':not(:first-child):not(:last-child)' // Exclui checkbox e ações
         }}
     }});
 
+    crud.init();
+
     // =========================================================================
-    // INICIALIZAÇÃO
+    // v4.1: HANDLER - CHECKBOX ""SELECIONAR TODOS""
     // =========================================================================
 
-    // CrudBase inicializa automaticamente no construtor
-    console.log('✅ [{entity.Name}] CRUD inicializado com ordenação server-side (v4.0)');
+    $('#selectAll').on('click', function () {{
+        const isChecked = $(this).prop('checked');
+        $('.row-select').prop('checked', isChecked);
+        updateSelectedCount();
+        console.log(`${{isChecked ? '✅' : '❌'}} Selecionou todos os registros`);
+    }});
+
+    // =========================================================================
+    // v4.1: HANDLER - CHECKBOX INDIVIDUAL
+    // =========================================================================
+
+    $(document).on('change', '.row-select', function () {{
+        const totalCheckboxes = $('.row-select').length;
+        const checkedCheckboxes = $('.row-select:checked').length;
+        
+        // Atualiza estado do ""Selecionar Todos""
+        $('#selectAll').prop('checked', totalCheckboxes === checkedCheckboxes);
+        
+        updateSelectedCount();
+    }});
+
+    // =========================================================================
+    // v4.1: ATUALIZA CONTADOR DO BOTÃO ""EXCLUIR SELECIONADOS""
+    // =========================================================================
+
+    function updateSelectedCount() {{
+        const count = $('.row-select:checked').length;
+        const $badge = $('#deleteSelectedBtn .badge');
+        
+        if ($badge.length) {{
+            $badge.text(count);
+        }}
+        
+        $('#deleteSelectedBtn').prop('disabled', count === 0);
+    }}
+
+    // =========================================================================
+    // v4.1: HANDLER - EXCLUIR SELECIONADOS
+    // =========================================================================
+
+    $('#deleteSelectedBtn').on('click', function () {{
+        const selectedIds = [];
+        $('.row-select:checked').each(function () {{
+            const id = $(this).data('id');
+            if (id) {{
+                selectedIds.push(id);
+            }}
+        }});
+
+        if (selectedIds.length === 0) {{
+            toastr.warning('Nenhum registro selecionado.');
+            return;
+        }}
+
+        if (!confirm(`Deseja realmente excluir ${{selectedIds.length}} registro(s)?`)) {{
+            return;
+        }}
+
+        // Usa o método deleteMultiple do CrudBase
+        crud.deleteMultiple(selectedIds);
+    }});
+
+{(hasAtivoField ? GenerateToggleAtivoHandlers(entity, idField) : "")}
+
+    console.log('✅ [{entity.Name}] JavaScript inicializado com sucesso!');
 }});
 ";
 
@@ -315,121 +329,191 @@ $(document).ready(function () {{
     #region Helper Methods
 
     /// <summary>
-    /// ✅ v4.0: Gera as colunas do DataTables COM ORDENAÇÃO.
-    /// Auto-gera se não configuradas pelo usuário.
+    /// v4.1: Gera handlers para Toggle Switch do campo Ativo.
+    /// </summary>
+    private static string GenerateToggleAtivoHandlers(EntityConfig entity, string idField)
+    {
+        return $@"
+    // =========================================================================
+    // v4.1: HANDLER - TOGGLE SWITCH PARA CAMPO ATIVO (COM RATE LIMIT)
+    // =========================================================================
+
+    let toggleDebounceTimer = null;
+
+    $(document).on('change', '.toggle-ativo', function () {{
+        const $toggle = $(this);
+        const id = $toggle.data('id');
+        const currentValue = $toggle.data('current');
+        const newValue = $toggle.prop('checked');
+
+        console.log(`🔄 [{entity.Name}] Toggle Ativo - ID: ${{id}}, Novo valor: ${{newValue}}`);
+
+        // Previne múltiplos cliques (Rate Limit - Debounce 500ms)
+        clearTimeout(toggleDebounceTimer);
+
+        // Desabilita temporariamente
+        $toggle.prop('disabled', true);
+
+        toggleDebounceTimer = setTimeout(function () {{
+            $.ajax({{
+                url: `/{entity.Name}/ToggleAtivo`,
+                type: 'POST',
+                headers: {{
+                    'RequestVerificationToken': $('input[name=""__RequestVerificationToken""]').val()
+                }},
+                data: JSON.stringify({{
+                    Id: id,
+                    Ativo: newValue
+                }}),
+                contentType: 'application/json',
+                success: function (response) {{
+                    if (response.success) {{
+                        toastr.success(response.message || 'Status atualizado com sucesso!');
+                        $toggle.data('current', newValue);
+                        console.log(`✅ [{entity.Name}] Toggle Ativo atualizado - ID: ${{id}}`);
+                    }} else {{
+                        // Reverte toggle em caso de erro
+                        $toggle.prop('checked', currentValue);
+                        toastr.error(response.message || 'Erro ao atualizar status');
+                        console.error(`❌ [{entity.Name}] Erro ao atualizar Toggle Ativo:`, response);
+                    }}
+                }},
+                error: function (xhr) {{
+                    // Reverte toggle em caso de erro
+                    $toggle.prop('checked', currentValue);
+                    toastr.error('Erro ao comunicar com servidor');
+                    console.error(`❌ [{entity.Name}] Erro AJAX Toggle Ativo:`, xhr);
+                }},
+                complete: function () {{
+                    // Reabilita toggle
+                    $toggle.prop('disabled', false);
+                }}
+            }});
+        }}, 500); // Rate Limit de 500ms
+    }});
+";
+    }
+
+    /// <summary>
+    /// ⭐ v4.1 ATUALIZADO: Gera colunas da DataTable incluindo checkbox e toggle ativo.
     /// </summary>
     private static string GenerateColumns(EntityConfig entity)
     {
         var sb = new StringBuilder();
 
-        // Usa colunas configuradas pelo wizard OU auto-gera
-        var listProps = entity.Properties.Where(p => p.List?.Show == true).ToList();
+        // Pega colunas configuradas no Grid
+        var gridColumns = entity.Properties
+            .Where(p => p.List?.Show == true)
+            .OrderBy(p => p.List!.Order)
+            .ToList();
 
-        if (!listProps.Any())
+        // Se não tem colunas configuradas, gera automaticamente
+        if (!gridColumns.Any())
         {
-            // Auto-gera colunas para propriedades relevantes
-            listProps = entity.Properties
-                .Where(p => !IsAuditField(p)) // Exclui campos de auditoria
-                .Where(p => !p.IsPrimaryKey || p.IsString) // Exclui PKs auto-geradas
-                .OrderBy(p => p.Name)
-                .Take(10) // Limita a 10 colunas principais
+            gridColumns = entity.Properties
+                .Where(p => !IsAuditField(p))
+                .Take(5)
                 .ToList();
         }
 
-        foreach (var prop in listProps)
+        foreach (var prop in gridColumns)
         {
-            var align = prop.List?.Align ?? "left";
-            var sortable = prop.List?.Sortable ?? true ? "true" : "false";
-            var format = prop.List?.Format ?? GetDefaultFormat(prop);
-            var width = !string.IsNullOrEmpty(prop.List?.Width) ? $"\n            width: '{prop.List!.Width}'," : "";
+            var columnConfig = prop.List!;
+            var propNameCamel = char.ToLower(prop.Name[0]) + prop.Name.Substring(1);
 
-            // ✅ v4.0: Nome da propriedade em camelCase para 'data' e PascalCase para 'name'
-            var dataName = char.ToLower(prop.Name[0]) + prop.Name.Substring(1);
-            var pascalName = prop.Name; // Já está em PascalCase
+            sb.AppendLine($@"        // {prop.DisplayName}");
+            sb.AppendLine($@"        {{");
+            sb.AppendLine($@"            data: '{propNameCamel}',");
+            sb.AppendLine($@"            name: '{prop.Name}',");
+            sb.AppendLine($@"            title: '{prop.DisplayName}',");
+            sb.AppendLine($@"            orderable: {(columnConfig.Sortable ? "true" : "false")},");
 
-            // ✅ v4.0: Adiciona render function para compatibilidade PascalCase/camelCase
-            string render = format switch
+            // v4.1: Toggle Switch para campo Ativo
+            if (prop.Name.Equals("Ativo", StringComparison.OrdinalIgnoreCase) ||
+                prop.Name.Equals("IsAtivo", StringComparison.OrdinalIgnoreCase))
             {
-                "date" => $@",
-            render: function (data, type, row) {{
-                const valor = row.{dataName} || row.{pascalName};
-                if (!valor) return '-';
-                const date = new Date(valor);
-                return date.toLocaleDateString('pt-BR');
-            }}",
-                "datetime" => $@",
-            render: function (data, type, row) {{
-                const valor = row.{dataName} || row.{pascalName};
-                if (!valor) return '-';
-                const date = new Date(valor);
-                return date.toLocaleDateString('pt-BR') + ' ' + 
-                       date.toLocaleTimeString('pt-BR', {{ hour: '2-digit', minute: '2-digit' }});
-            }}",
-                "currency" => $@",
-            render: function (data, type, row) {{
-                const valor = row.{dataName} !== undefined ? row.{dataName} : row.{pascalName};
-                if (valor == null) return '-';
-                return 'R$ ' + parseFloat(valor).toLocaleString('pt-BR', {{ minimumFractionDigits: 2 }});
-            }}",
-                "percentage" => $@",
-            render: function (data, type, row) {{
-                const valor = row.{dataName} !== undefined ? row.{dataName} : row.{pascalName};
-                if (valor == null) return '-';
-                return parseFloat(valor).toFixed(2) + '%';
-            }}",
-                "boolean" => $@",
-            render: function (data, type, row) {{
-                const valor = row.{dataName} !== undefined ? row.{dataName} : row.{pascalName};
-                const isTrue = valor === true || valor === 1 || valor === '1';
-                return isTrue
-                    ? '<span class=""badge bg-success""><i class=""fas fa-check""></i></span>'
-                    : '<span class=""badge bg-secondary""><i class=""fas fa-times""></i></span>';
-            }}",
-                _ => $@",
-            render: function (data, type, row) {{
-                return row.{dataName} || row.{pascalName} || '';
-            }}"
-            };
+                var idField = entity.PrimaryKey?.Name ?? "Id";
+                var idFieldCamel = char.ToLower(idField[0]) + idField.Substring(1);
 
-            // ✅ v4.0: Adiciona 'name' em PascalCase para ordenação no backend
-            sb.AppendLine($@"        // ✅ {prop.DisplayName} - Ordenável
-        {{
-            data: '{dataName}',
-            name: '{pascalName}',          // ✅ PascalCase para backend
-            title: '{prop.DisplayName}',{width}
-            orderable: {sortable},         // ✅ CRÍTICO
-            searchable: true,
-            className: 'text-{align}'{render}
-        }},");
+                sb.AppendLine($@"            width: '80px',");
+                sb.AppendLine($@"            className: 'text-center',");
+                sb.AppendLine($@"            render: function (data, type, row) {{");
+                sb.AppendLine($@"                if (type === 'display') {{");
+                sb.AppendLine($@"                    const checked = data ? 'checked' : '';");
+                sb.AppendLine($@"                    const id = row.{idFieldCamel} || row.{idField} || row.id || row.Id;");
+                sb.AppendLine($@"                    return `");
+                sb.AppendLine($@"                        <div class=""form-check form-switch"">");
+                sb.AppendLine($@"                            <input class=""form-check-input toggle-ativo"" ");
+                sb.AppendLine($@"                                   type=""checkbox"" ");
+                sb.AppendLine($@"                                   ${{checked}}");
+                sb.AppendLine($@"                                   data-id=""${{id}}""");
+                sb.AppendLine($@"                                   data-current=""${{data}}""");
+                sb.AppendLine($@"                                   title=""Clique para ${{data ? 'desativar' : 'ativar'}}"">");
+                sb.AppendLine($@"                        </div>`;");
+                sb.AppendLine($@"                }}");
+                sb.AppendLine($@"                return data;");
+                sb.AppendLine($@"            }}");
+            }
+            else
+            {
+                // Renderização padrão para outros campos
+                sb.AppendLine($@"            render: function (data, type, row) {{");
+                sb.AppendLine($@"                return data !== undefined && data !== null ? data : '';");
+                sb.AppendLine($@"            }}");
+            }
+
+            sb.AppendLine($@"        }},");
         }
 
-        var result = sb.ToString().TrimEnd('\r', '\n');
-        return result;
+        // Coluna de Ações (sempre presente)
+        sb.AppendLine($@"        // Ações");
+        sb.AppendLine($@"        {{");
+        sb.AppendLine($@"            data: null,");
+        sb.AppendLine($@"            name: 'Actions',");
+        sb.AppendLine($@"            title: 'Ações',");
+        sb.AppendLine($@"            orderable: false,");
+        sb.AppendLine($@"            searchable: false,");
+        sb.AppendLine($@"            width: '100px',");
+        sb.AppendLine($@"            className: 'text-center',");
+        sb.AppendLine($@"            render: function (data, type, row) {{");
+        sb.AppendLine($@"                const id = getCleanId(row, '{entity.PrimaryKey?.Name ?? "Id"}');");
+        sb.AppendLine($@"                let actions = '';");
+        sb.AppendLine($@"                ");
+        sb.AppendLine($@"                if (window.crudPermissions.canEdit) {{");
+        sb.AppendLine($@"                    actions += `<button class=""btn btn-sm btn-primary edit-btn"" data-id=""${{id}}"" title=""Editar"">");
+        sb.AppendLine($@"                                    <i class=""fas fa-edit""></i>");
+        sb.AppendLine($@"                                </button> `;");
+        sb.AppendLine($@"                }}");
+        sb.AppendLine($@"                ");
+        sb.AppendLine($@"                if (window.crudPermissions.canDelete) {{");
+        sb.AppendLine($@"                    actions += `<button class=""btn btn-sm btn-danger delete-btn"" data-id=""${{id}}"" title=""Excluir"">");
+        sb.AppendLine($@"                                    <i class=""fas fa-trash""></i>");
+        sb.AppendLine($@"                                </button>`;");
+        sb.AppendLine($@"                }}");
+        sb.AppendLine($@"                ");
+        sb.AppendLine($@"                return actions || '<span class=""text-muted"">Sem ações</span>';");
+        sb.AppendLine($@"            }}");
+        sb.AppendLine($@"        }}");
+
+        return sb.ToString();
     }
 
     /// <summary>
-    /// ✅ v3.7: Determina formato default baseado no tipo da propriedade.
-    /// </summary>
-    private static string GetDefaultFormat(PropertyConfig prop)
-    {
-        if (prop.IsDateTime) return "date";
-        if (prop.IsDecimal) return "currency";
-        if (prop.IsBool) return "boolean";
-        return "text";
-    }
-
-    /// <summary>
-    /// ✅ v3.7: Verifica se é campo de auditoria (não deve aparecer na grid).
+    /// Verifica se o campo é de auditoria.
     /// </summary>
     private static bool IsAuditField(PropertyConfig prop)
     {
         var auditFields = new[]
         {
-            "DataCriacao", "DtCriacao", "CreatedAt", "CreatedDate", "CreatedAtUtc",
-            "UsuarioCriacao", "CreatedBy", "CreatedByUser", "CriadoPor", "CreatedByUserId",
-            "DataAtualizacao", "DtAtualizacao", "UpdatedAt", "ModifiedAt", "ModifiedDate", "UpdatedAtUtc",
-            "UsuarioAtualizacao", "UpdatedBy", "ModifiedBy", "ModifiedByUser", "AtualizadoPor", "UpdatedByUserId",
-            "TenantId", "IdSaaS", "IdSaas"
+            "CreatedAt", "CreatedDate", "CreatedAtUtc",
+            "CreatedBy", "CreatedByUser", "CreatedByUserId",
+            "UpdatedAt", "ModifiedAt", "ModifiedDate", "UpdatedAtUtc",
+            "UpdatedBy", "ModifiedBy", "ModifiedByUser", "UpdatedByUserId",
+            "TenantId", "IdSaaS", "IdSaas",
+            "RowVersion", "Version", "Timestamp",
+            "IsDeleted", "DeletedAt", "DeletedBy", "DeletedByUserId",
+            "DataCriacao", "DtCriacao", "UsuarioCriacao", "CriadoPor",
+            "DataAtualizacao", "DtAtualizacao", "UsuarioAtualizacao", "AtualizadoPor"
         };
 
         return auditFields.Any(f => prop.Name.Equals(f, StringComparison.OrdinalIgnoreCase));

@@ -1,6 +1,7 @@
 // =============================================================================
-// GERADOR FULL-STACK v3.6 - WEB CONTROLLER TEMPLATE (CORRIGIDO)
+// GERADOR FULL-STACK v3.7 - WEB CONTROLLER TEMPLATE (COM TOGGLE ATIVO)
 // Baseado em RhSensoERP.CrudTool v2.0
+// v3.7 - ✅ NOVO: Action ToggleAtivo para alternar status Ativo/Desativo
 // v3.6 - CORREÇÃO: Usa entity.Module diretamente ao invés de mapear CdSistema
 // v3.2 - Organiza Controllers por módulo
 // =============================================================================
@@ -11,6 +12,7 @@ namespace GeradorEntidades.Templates;
 
 /// <summary>
 /// Gera Controller Web que herda de BaseCrudController.
+/// v3.7: Adiciona action ToggleAtivo para alternar status de forma dinâmica.
 /// v3.6: Usa módulo correto do entity (que vem do manifesto/request).
 /// </summary>
 public static class WebControllerTemplate
@@ -30,8 +32,15 @@ public static class WebControllerTemplate
         // Caminho da View organizada por módulo
         var viewPath = $"Views/{modulePath}/{entity.Name}/Index.cshtml";
 
+        // v3.7: Verifica se tem campo "Ativo"
+        var hasAtivoField = entity.Properties.Any(p =>
+            p.Name.Equals("Ativo", StringComparison.OrdinalIgnoreCase) ||
+            p.Name.Equals("IsAtivo", StringComparison.OrdinalIgnoreCase));
+
+        var toggleAtivoAction = hasAtivoField ? GenerateToggleAtivoAction(entity, pkType) : "";
+
         var content = $@"// =============================================================================
-// ARQUIVO GERADO POR GeradorFullStack v3.6
+// ARQUIVO GERADO POR GeradorFullStack v3.7
 // Entity: {entity.Name}
 // Module: {entity.Module}
 // Data: {DateTime.Now:yyyy-MM-dd HH:mm:ss}
@@ -302,6 +311,7 @@ public class {entity.Name}Controller
 
         return await base.DeleteMultiple(ids);
     }}
+{toggleAtivoAction}
 }}
 ";
 
@@ -312,6 +322,89 @@ public class {entity.Name}Controller
             Content = content,
             FileType = "Controller"
         };
+    }
+
+    /// <summary>
+    /// v3.7: Gera action ToggleAtivo para alternar status Ativo/Desativo dinamicamente.
+    /// </summary>
+    private static string GenerateToggleAtivoAction(EntityConfig entity, string pkType)
+    {
+        return $@"
+
+    // =========================================================================
+    // v3.7: ACTION - TOGGLE ATIVO (Alternar Status Ativo/Desativo)
+    // =========================================================================
+
+    /// <summary>
+    /// Alterna o status Ativo/Desativo de um registro via AJAX.
+    /// Rate limit implementado no client-side (debounce 500ms).
+    /// </summary>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ToggleAtivo([FromBody] ToggleAtivoRequest request, CancellationToken ct = default)
+    {{
+        if (request == null)
+        {{
+            return JsonError(""Requisição inválida."");
+        }}
+
+        if (!await CanEditAsync(CdFuncao, ct))
+        {{
+            _logger.LogWarning(
+                ""Tentativa de alteração de status negada: Usuário {{User}} sem permissão 'A' em {{Funcao}}"",
+                User.Identity?.Name,
+                CdFuncao);
+
+            return JsonError(""Você não tem permissão para alterar registros nesta tela."");
+        }}
+
+        try
+        {{
+            _logger.LogInformation(
+                ""Usuário {{User}} alterando status Ativo do registro {{Id}} para {{Ativo}} em {{Funcao}}"",
+                User.Identity?.Name,
+                request.Id,
+                request.Ativo,
+                CdFuncao);
+
+            // Chama o serviço para alternar o status
+            await _{entity.NameLower}Service.ToggleAtivoAsync(request.Id, request.Ativo, ct);
+
+            var mensagem = request.Ativo
+                ? ""Registro ativado com sucesso!""
+                : ""Registro desativado com sucesso!"";
+
+            return JsonSuccess(mensagem);
+        }}
+        catch (KeyNotFoundException ex)
+        {{
+            _logger.LogWarning(
+                ex,
+                ""Registro {{Id}} não encontrado ao tentar alterar status Ativo"",
+                request.Id);
+
+            return JsonError(""Registro não encontrado."");
+        }}
+        catch (Exception ex)
+        {{
+            _logger.LogError(
+                ex,
+                ""Erro ao alternar status Ativo do registro {{Id}} em {{Funcao}}"",
+                request.Id,
+                CdFuncao);
+
+            return JsonError(""Erro ao atualizar status do registro."");
+        }}
+    }}
+
+    /// <summary>
+    /// Request para alternar status Ativo.
+    /// </summary>
+    public class ToggleAtivoRequest
+    {{
+        public {pkType} Id {{ get; set; }}
+        public bool Ativo {{ get; set; }}
+    }}";
     }
 
     /// <summary>

@@ -1,6 +1,7 @@
 // =============================================================================
-// GERADOR FULL-STACK v3.3 - VIEW TEMPLATE
+// GERADOR FULL-STACK v3.4 - VIEW TEMPLATE (ATUALIZADO)
 // Baseado em RhSensoERP.CrudTool v2.5
+// v3.4 - Suporte a Checkbox "Selecionar Todos" e Toggle Switch para ATIVO
 // v3.3 - Suporte a Bootstrap Tabs no formulário
 // =============================================================================
 
@@ -11,7 +12,7 @@ namespace GeradorEntidades.Templates;
 
 /// <summary>
 /// Gera View Razor compatível com CrudBase.js e BaseListViewModel.
-/// v3.3: Suporte a Bootstrap Tabs para formulários grandes.
+/// v3.4: Adiciona checkbox "Selecionar Todos" e renderização de Toggle Switch para campo ATIVO.
 /// </summary>
 public static class ViewTemplate
 {
@@ -42,6 +43,14 @@ public static class ViewTemplate
             formContent = GenerateFormFields(entity);
         }
 
+        // =====================================================================
+        // v3.4: Verifica se tem campo "Ativo" para configurar JavaScript
+        // =====================================================================
+        var hasAtivoField = entity.Properties.Any(p =>
+            p.Name.Equals("Ativo", StringComparison.OrdinalIgnoreCase) ||
+            p.Name.Equals("IsAtivo", StringComparison.OrdinalIgnoreCase) ||
+            p.Name.Equals("Ativo", StringComparison.OrdinalIgnoreCase));
+
         var content = $@"@model RhSensoERP.Web.Models.{modulePath}.{entity.Name}.{entity.Name}ListViewModel
 @{{
     ViewData[""Title""] = Model.PageTitle;
@@ -60,6 +69,13 @@ public static class ViewTemplate
         canDelete: @Model.CanDelete.ToString().ToLower(),
         canView: @Model.CanView.ToString().ToLower(),
         actions: ""@Model.UserPermissions""
+    }};
+    
+    @* v3.4: Configuração para Toggle Ativo *@
+    window.crudConfig = {{
+        hasAtivoField: {hasAtivoField.ToString().ToLower()},
+        entityName: ""{entity.Name}"",
+        pkField: ""{entity.PrimaryKey?.Name ?? "Id"}""
     }};
 </script>
 
