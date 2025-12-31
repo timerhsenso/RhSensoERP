@@ -1,3 +1,11 @@
+Ôªø// =============================================================================
+// RHSENSOERP - ENTITY CAPCONTATOSEMERGENCIA
+// =============================================================================
+// M√≥dulo: Gest√£o de Terceiros e Prestadores (CAP)
+// Tabela: cap_contatos_emergencia
+// Schema: dbo
+// Multi-tenant: ‚úÖ SIM (TenantId obrigat√≥rio)
+// =============================================================================
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -7,7 +15,7 @@ using RhSensoERP.Shared.Core.Attributes;
 namespace RhSensoERP.Modules.GestaoTerceirosPrestadores.Core.Entities;
 
 /// <summary>
-/// CapContatosEmergencia - Contatos de EmergÍncia de Funcion·rios e Colaboradores
+/// CapContatosEmergencia - Contatos de Emerg√™ncia de Funcion√°rios e Colaboradores
 /// Tabela: cap_contatos_emergencia (Multi-tenant)
 /// Fonte da verdade: SQL Server
 /// </summary>
@@ -20,8 +28,7 @@ namespace RhSensoERP.Modules.GestaoTerceirosPrestadores.Core.Entities;
     GenerateApiController = true
 )]
 [Table("cap_contatos_emergencia")]
-[HasDatabaseTriggers("Auditoria autom·tica de CreatedAt/UpdatedAt via triggers SQL Server")]
-
+[HasDatabaseTriggers("Auditoria autom√°tica de CreatedAt/UpdatedAt via triggers SQL Server")]
 public class CapContatosEmergencia
 {
     [Key]
@@ -36,7 +43,7 @@ public class CapContatosEmergencia
     public Guid TenantId { get; set; }
 
     [Column("IdFuncionarioLegado")]
-    [Display(Name = "ID Funcion·rio Legado")]
+    [Display(Name = "ID Funcion√°rio Legado")]
     public int? IdFuncionarioLegado { get; set; }
 
     [Column("IdColaboradorFornecedor")]
@@ -61,7 +68,7 @@ public class CapContatosEmergencia
 
     [Column("TelefoneSecundario", TypeName = "nvarchar(20)")]
     [StringLength(20)]
-    [Display(Name = "Telefone Secund·rio")]
+    [Display(Name = "Telefone Secund√°rio")]
     public string? TelefoneSecundario { get; set; }
 
     [Column("Email", TypeName = "nvarchar(100)")]
@@ -71,7 +78,7 @@ public class CapContatosEmergencia
 
     [Column("Endereco", TypeName = "nvarchar(500)")]
     [StringLength(500)]
-    [Display(Name = "EndereÁo")]
+    [Display(Name = "Endere√ßo")]
     public string? Endereco { get; set; }
 
     [Column("Cidade", TypeName = "nvarchar(100)")]
@@ -88,6 +95,7 @@ public class CapContatosEmergencia
     [Display(Name = "CEP")]
     public string? Cep { get; set; }
 
+    // Default controlado pelo banco: 1
     [Required]
     [Column("OrdemPrioridade")]
     [Display(Name = "Ordem Prioridade")]
@@ -95,7 +103,7 @@ public class CapContatosEmergencia
 
     [Column("Observacoes", TypeName = "nvarchar(500)")]
     [StringLength(500)]
-    [Display(Name = "ObservaÁıes")]
+    [Display(Name = "Observa√ß√µes")]
     public string? Observacoes { get; set; }
 
     [Required]
@@ -103,10 +111,12 @@ public class CapContatosEmergencia
     [Display(Name = "Ativo")]
     public bool Ativo { get; set; } = true;
 
-    // Auditoria (defaults controlados pelo banco: SYSUTCDATETIME())
+    // =========================================================================
+    // AUDITORIA (defaults controlados pelo banco: SYSUTCDATETIME())
+    // =========================================================================
     [Required]
     [Column("CreatedAtUtc", TypeName = "datetime2(3)")]
-    [Display(Name = "Data CriaÁ„o (UTC)")]
+    [Display(Name = "Data Cria√ß√£o (UTC)")]
     public DateTime CreatedAtUtc { get; set; }
 
     [Column("CreatedByUserId")]
@@ -115,14 +125,16 @@ public class CapContatosEmergencia
 
     [Required]
     [Column("UpdatedAtUtc", TypeName = "datetime2(3)")]
-    [Display(Name = "Data AtualizaÁ„o (UTC)")]
+    [Display(Name = "Data Atualiza√ß√£o (UTC)")]
     public DateTime UpdatedAtUtc { get; set; }
 
     [Column("UpdatedByUserId")]
     [Display(Name = "Atualizado Por")]
     public Guid? UpdatedByUserId { get; set; }
 
-    // Navigation Properties
+    // =========================================================================
+    // NAVIGATION PROPERTIES
+    // =========================================================================
     [ForeignKey(nameof(IdColaboradorFornecedor))]
     public virtual CapColaboradoresFornecedor? ColaboradorFornecedor { get; set; }
 
@@ -132,9 +144,10 @@ public class CapContatosEmergencia
     [ForeignKey(nameof(IdUf))]
     public virtual BasUfs? Uf { get; set; }
 
-  //  [ForeignKey(nameof(CreatedByUserId))]
-  //  public virtual Usuario? CreatedByUser { get; set; }
+    // Comentado: Aguardando implementa√ß√£o completa da entidade Usuario
+    // [ForeignKey(nameof(CreatedByUserId))]
+    // public virtual Usuario? CreatedByUser { get; set; }
 
-  //  [ForeignKey(nameof(UpdatedByUserId))]
-   // public virtual Usuario? UpdatedByUser { get; set; }
+    // [ForeignKey(nameof(UpdatedByUserId))]
+    // public virtual Usuario? UpdatedByUser { get; set; }
 }

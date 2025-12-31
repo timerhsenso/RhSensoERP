@@ -1,0 +1,196 @@
+@model RhSensoERP.Web.Models.ControleAcessoPortaria.CapColaboradoresFornecedor.CapColaboradoresFornecedorListViewModel
+@{
+    ViewData["Title"] = Model.PageTitle;
+    Layout = "_CrudLayout";
+    ViewData["EntityName"] = "CapColaboradoresFornecedor";
+    ViewData["IconClass"] = "fas fa-table";
+}
+
+@* ============================================================================
+   Permissões injetadas para JavaScript (ANTES do script específico)
+   ============================================================================ *@
+<script>
+    window.crudPermissions = {
+        canCreate: @Model.CanCreate.ToString().ToLower(),
+        canEdit: @Model.CanEdit.ToString().ToLower(),
+        canDelete: @Model.CanDelete.ToString().ToLower(),
+        canView: @Model.CanView.ToString().ToLower(),
+        actions: "@Model.UserPermissions"
+    };
+    
+    @* v3.4: Configuração para Toggle Ativo *@
+    window.crudConfig = {
+        hasAtivoField: true,
+        entityName: "CapColaboradoresFornecedor",
+        pkField: "Id"
+    };
+</script>
+
+@* ============================================================================
+   Tabela usando partial _CrudTable (toolbar + datatable)
+   ============================================================================ *@
+@await Html.PartialAsync("_CrudTable", Model)
+
+@* ============================================================================
+   Conteúdo do Modal (apenas campos do formulário)
+   O wrapper do modal está no _CrudLayout
+   ============================================================================ *@
+@section ModalContent {
+    <input type="hidden" id="Id" name="Id" />
+    <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="IdFornecedor" class="form-label">
+                        IdFornecedor <span class="text-danger">*</span>
+                    </label>
+                    <input type="number" class="form-control" id="IdFornecedor" name="IdFornecedor" 
+                           placeholder="" required  />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Nome" class="form-label">
+                        Nome <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" class="form-control" id="Nome" name="Nome" 
+                           placeholder="" required  maxlength="255" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Cpf" class="form-label">
+                        CPF <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" class="form-control" id="Cpf" name="Cpf" 
+                           placeholder="" required  maxlength="14" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Rg" class="form-label">
+                        RG
+                    </label>
+                    <input type="text" class="form-control" id="Rg" name="Rg" 
+                           placeholder=""   maxlength="20" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Email" class="form-label">
+                        Email
+                    </label>
+                    <input type="text" class="form-control" id="Email" name="Email" 
+                           placeholder=""   maxlength="100" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Telefone" class="form-label">
+                        Telefone
+                    </label>
+                    <input type="text" class="form-control" id="Telefone" name="Telefone" 
+                           placeholder=""   maxlength="20" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="DataNascimento" class="form-label">
+                        Data Nascimento
+                    </label>
+                    <input type="datetime-local" class="form-control" id="DataNascimento" name="DataNascimento" 
+                           placeholder=""   />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Genero" class="form-label">
+                        Gênero
+                    </label>
+                    <input type="text" class="form-control" id="Genero" name="Genero" 
+                           placeholder=""   maxlength="20" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="EstadoCivil" class="form-label">
+                        Estado Civil
+                    </label>
+                    <input type="text" class="form-control" id="EstadoCivil" name="EstadoCivil" 
+                           placeholder=""   maxlength="50" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="IdTipoSanguineo" class="form-label">
+                        ID Tipo Sanguíneo
+                    </label>
+                    <input type="text" class="form-control" id="IdTipoSanguineo" name="IdTipoSanguineo" 
+                           placeholder=""   />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Endereco" class="form-label">
+                        Endereço
+                    </label>
+                    <input type="text" class="form-control" id="Endereco" name="Endereco" 
+                           placeholder=""   maxlength="500" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Numero" class="form-label">
+                        Número
+                    </label>
+                    <input type="text" class="form-control" id="Numero" name="Numero" 
+                           placeholder=""   maxlength="20" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Complemento" class="form-label">
+                        Complemento
+                    </label>
+                    <input type="text" class="form-control" id="Complemento" name="Complemento" 
+                           placeholder=""   maxlength="200" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Bairro" class="form-label">
+                        Bairro
+                    </label>
+                    <input type="text" class="form-control" id="Bairro" name="Bairro" 
+                           placeholder=""   maxlength="100" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Cidade" class="form-label">
+                        Cidade
+                    </label>
+                    <input type="text" class="form-control" id="Cidade" name="Cidade" 
+                           placeholder=""   maxlength="100" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="IdUf" class="form-label">
+                        ID UF
+                    </label>
+                    <input type="text" class="form-control" id="IdUf" name="IdUf" 
+                           placeholder=""   />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Cep" class="form-label">
+                        CEP
+                    </label>
+                    <input type="text" class="form-control" id="Cep" name="Cep" 
+                           placeholder=""   maxlength="10" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="DataAdmissao" class="form-label">
+                        Data Admissão <span class="text-danger">*</span>
+                    </label>
+                    <input type="datetime-local" class="form-control" id="DataAdmissao" name="DataAdmissao" 
+                           placeholder="" required  />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="DataDemissao" class="form-label">
+                        Data Demissão
+                    </label>
+                    <input type="datetime-local" class="form-control" id="DataDemissao" name="DataDemissao" 
+                           placeholder=""   />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Cargo" class="form-label">
+                        Cargo
+                    </label>
+                    <input type="text" class="form-control" id="Cargo" name="Cargo" 
+                           placeholder=""   maxlength="100" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="Ativo" name="Ativo"  />
+                        <label class="form-check-label" for="Ativo">Ativo</label>
+                    </div>
+                </div>
+    </div>
+
+}
+
+@* ============================================================================
+   Script específico da entidade
+   ============================================================================ *@
+@section PageScripts {
+    <script src="~/js/controleacessoportaria/capcolaboradoresfornecedor/capcolaboradoresfornecedor.js" asp-append-version="true"></script>
+}

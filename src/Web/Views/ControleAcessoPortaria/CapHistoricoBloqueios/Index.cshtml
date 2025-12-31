@@ -1,0 +1,106 @@
+@model RhSensoERP.Web.Models.ControleAcessoPortaria.CapHistoricoBloqueios.CapHistoricoBloqueiosListViewModel
+@{
+    ViewData["Title"] = Model.PageTitle;
+    Layout = "_CrudLayout";
+    ViewData["EntityName"] = "CapHistoricoBloqueios";
+    ViewData["IconClass"] = "fas fa-table";
+}
+
+@* ============================================================================
+   Permissões injetadas para JavaScript (ANTES do script específico)
+   ============================================================================ *@
+<script>
+    window.crudPermissions = {
+        canCreate: @Model.CanCreate.ToString().ToLower(),
+        canEdit: @Model.CanEdit.ToString().ToLower(),
+        canDelete: @Model.CanDelete.ToString().ToLower(),
+        canView: @Model.CanView.ToString().ToLower(),
+        actions: "@Model.UserPermissions"
+    };
+    
+    @* v3.4: Configuração para Toggle Ativo *@
+    window.crudConfig = {
+        hasAtivoField: false,
+        entityName: "CapHistoricoBloqueios",
+        pkField: "Id"
+    };
+</script>
+
+@* ============================================================================
+   Tabela usando partial _CrudTable (toolbar + datatable)
+   ============================================================================ *@
+@await Html.PartialAsync("_CrudTable", Model)
+
+@* ============================================================================
+   Conteúdo do Modal (apenas campos do formulário)
+   O wrapper do modal está no _CrudLayout
+   ============================================================================ *@
+@section ModalContent {
+    <input type="hidden" id="Id" name="Id" />
+    <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="IdFuncionarioLegado" class="form-label">
+                        ID Funcionário Legado
+                    </label>
+                    <input type="text" class="form-control" id="IdFuncionarioLegado" name="IdFuncionarioLegado" 
+                           placeholder=""   />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="IdColaboradorFornecedor" class="form-label">
+                        ID Colaborador Fornecedor
+                    </label>
+                    <input type="text" class="form-control" id="IdColaboradorFornecedor" name="IdColaboradorFornecedor" 
+                           placeholder=""   />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="IdVisitante" class="form-label">
+                        IdVisitante
+                    </label>
+                    <input type="text" class="form-control" id="IdVisitante" name="IdVisitante" 
+                           placeholder=""   />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Motivo" class="form-label">
+                        Motivo
+                    </label>
+                    <input type="text" class="form-control" id="Motivo" name="Motivo" 
+                           placeholder=""   maxlength="500" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="DataBloqueio" class="form-label">
+                        DataBloqueio
+                    </label>
+                    <input type="datetime-local" class="form-control" id="DataBloqueio" name="DataBloqueio" 
+                           placeholder=""   />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="DataDesbloqueio" class="form-label">
+                        Data Desbloqueio (UTC)
+                    </label>
+                    <input type="datetime-local" class="form-control" id="DataDesbloqueio" name="DataDesbloqueio" 
+                           placeholder=""   />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="UsuarioBloqueio" class="form-label">
+                        Usuário Bloqueio
+                    </label>
+                    <input type="text" class="form-control" id="UsuarioBloqueio" name="UsuarioBloqueio" 
+                           placeholder=""   />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="UsuarioDesbloqueio" class="form-label">
+                        Usuário Desbloqueio
+                    </label>
+                    <input type="text" class="form-control" id="UsuarioDesbloqueio" name="UsuarioDesbloqueio" 
+                           placeholder=""   />
+                </div>
+    </div>
+
+}
+
+@* ============================================================================
+   Script específico da entidade
+   ============================================================================ *@
+@section PageScripts {
+    <script src="~/js/controleacessoportaria/caphistoricobloqueios/caphistoricobloqueios.js" asp-append-version="true"></script>
+}

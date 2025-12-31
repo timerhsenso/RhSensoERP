@@ -1,3 +1,11 @@
+Ôªø// =============================================================================
+// RHSENSOERP - ENTITY CAPRESPONSAVEISCONTRATO
+// =============================================================================
+// M√≥dulo: Gest√£o de Terceiros e Prestadores (CAP)
+// Tabela: cap_responsaveis_contrato
+// Schema: dbo
+// Multi-tenant: ‚úÖ SIM (TenantId obrigat√≥rio)
+// =============================================================================
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -6,7 +14,7 @@ using RhSensoERP.Shared.Core.Attributes;
 namespace RhSensoERP.Modules.GestaoTerceirosPrestadores.Core.Entities;
 
 /// <summary>
-/// CapResponsaveisContrato - Respons·veis por Contrato com Fornecedor
+/// CapResponsaveisContrato - Respons√°veis por Contrato com Fornecedor
 /// Tabela: cap_responsaveis_contrato (Multi-tenant)
 /// Fonte da verdade: SQL Server
 /// </summary>
@@ -19,8 +27,7 @@ namespace RhSensoERP.Modules.GestaoTerceirosPrestadores.Core.Entities;
     GenerateApiController = true
 )]
 [Table("cap_responsaveis_contrato")]
-[HasDatabaseTriggers("Auditoria autom·tica de CreatedAt/UpdatedAt via triggers SQL Server")]
-
+[HasDatabaseTriggers("Auditoria autom√°tica de CreatedAt/UpdatedAt via triggers SQL Server")]
 public class CapResponsaveisContrato
 {
     [Key]
@@ -40,7 +47,7 @@ public class CapResponsaveisContrato
     public int IdContrato { get; set; }
 
     [Column("IdFuncionarioLegado")]
-    [Display(Name = "ID Funcion·rio Legado")]
+    [Display(Name = "ID Funcion√°rio Legado")]
     public int? IdFuncionarioLegado { get; set; }
 
     [Column("TipoResponsabilidade", TypeName = "nvarchar(100)")]
@@ -49,7 +56,7 @@ public class CapResponsaveisContrato
     public string? TipoResponsabilidade { get; set; }
 
     [Column("DataInicio", TypeName = "date")]
-    [Display(Name = "Data InÌcio")]
+    [Display(Name = "Data In√≠cio")]
     public DateOnly? DataInicio { get; set; }
 
     [Column("DataFim", TypeName = "date")]
@@ -61,10 +68,12 @@ public class CapResponsaveisContrato
     [Display(Name = "Ativo")]
     public bool Ativo { get; set; } = true;
 
-    // Auditoria (defaults controlados pelo banco: SYSUTCDATETIME())
+    // =========================================================================
+    // AUDITORIA (defaults controlados pelo banco: SYSUTCDATETIME())
+    // =========================================================================
     [Required]
     [Column("CreatedAtUtc", TypeName = "datetime2(3)")]
-    [Display(Name = "Data CriaÁ„o (UTC)")]
+    [Display(Name = "Data Cria√ß√£o (UTC)")]
     public DateTime CreatedAtUtc { get; set; }
 
     [Column("CreatedByUserId")]
@@ -73,20 +82,23 @@ public class CapResponsaveisContrato
 
     [Required]
     [Column("UpdatedAtUtc", TypeName = "datetime2(3)")]
-    [Display(Name = "Data AtualizaÁ„o (UTC)")]
+    [Display(Name = "Data Atualiza√ß√£o (UTC)")]
     public DateTime UpdatedAtUtc { get; set; }
 
     [Column("UpdatedByUserId")]
     [Display(Name = "Atualizado Por")]
     public Guid? UpdatedByUserId { get; set; }
 
-    // Navigation Properties
+    // =========================================================================
+    // NAVIGATION PROPERTIES
+    // =========================================================================
     [ForeignKey(nameof(IdContrato))]
     public virtual CapContratosFornecedor? Contrato { get; set; }
 
- //   [ForeignKey(nameof(CreatedByUserId))]
-//    public virtual Usuario? CreatedByUser { get; set; }
+    // Comentado: Aguardando implementa√ß√£o completa da entidade Usuario
+    // [ForeignKey(nameof(CreatedByUserId))]
+    // public virtual Usuario? CreatedByUser { get; set; }
 
-//    [ForeignKey(nameof(UpdatedByUserId))]
-//    public virtual Usuario? UpdatedByUser { get; set; }
+    // [ForeignKey(nameof(UpdatedByUserId))]
+    // public virtual Usuario? UpdatedByUser { get; set; }
 }

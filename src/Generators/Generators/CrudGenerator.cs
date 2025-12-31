@@ -88,6 +88,19 @@ public class CrudGenerator : IIncrementalGenerator
                 var batchDeleteCode = CommandsTemplate.GenerateBatchDeleteCommand(info);
                 context.AddSource($"Delete{info.PluralName}Command.g.cs", batchDeleteCode);
             }
+
+            // ✅ v4.3: Toggle Ativo Command (Gera se tiver campo Ativo)
+            var hasAtivoField = info.Properties.Any(p =>
+                p.Name.Equals("Ativo", StringComparison.OrdinalIgnoreCase) ||
+                p.Name.Equals("IsAtivo", StringComparison.OrdinalIgnoreCase) ||
+                p.Name.Equals("Active", StringComparison.OrdinalIgnoreCase) ||
+                p.Name.Equals("IsActive", StringComparison.OrdinalIgnoreCase));
+
+            if (hasAtivoField)
+            {
+                var toggleCommandCode = ToggleAtivoCommandTemplate.GenerateCommand(info);
+                context.AddSource($"Toggle{info.EntityName}AtivoCommand.g.cs", toggleCommandCode);
+            }
         }
 
         // =====================================================================

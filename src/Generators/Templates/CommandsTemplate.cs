@@ -47,6 +47,8 @@ public static class CommandsTemplate
 {{info.FileHeader}}
 using System;
 using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Data.SqlClient;
 using AutoMapper;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -109,12 +111,92 @@ public sealed class Create{{info.EntityName}}Handler
 
             return Result<{{pkType}}>.Success(entity.{{info.PrimaryKeyProperty}});
         }
+        catch (DbUpdateException ex) when (IsUniqueConstraintViolation(ex))
+        {
+            // ✅ CAPTURA VIOLAÇÃO DE UNICIDADE (SQL 2601/2627)
+            var constraintName = ExtractConstraintNameFromException(ex);
+            
+            // Tenta identificar o campo amigável
+            var fieldName = IdentifyFieldFromConstraint(constraintName, "{{info.EntityName}}");
+            var friendlyMessage = !string.IsNullOrEmpty(fieldName)
+                ? $"Já existe um registro com este '{fieldName}'."
+                : "Já existe um registro com estas informações (duplicidade detectada).";
+
+            _logger.LogWarning("Tentativa de duplicidade em Create{{info.EntityName}}: {Constraint}", constraintName);
+
+            return Result<{{pkType}}>.Failure(
+                Error.Conflict("{{info.EntityName}}.Duplicate", friendlyMessage));
+        }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erro ao criar {{info.DisplayName}}");
+            _logger.LogError(ex, "Erro ao criar {{info.DisplayName}}. Ex: {ExType} | Inner: {InnerType} | Msg: {Msg}", 
+                ex.GetType().Name, ex.InnerException?.GetType().Name, ex.Message);
+            
             return Result<{{pkType}}>.Failure(
                 Error.Failure("{{info.EntityName}}.CreateError", $"Erro ao criar {{info.DisplayName}}: {ex.Message}"));
         }
+    }
+
+    /// <summary>
+    /// Verifica se a exceção é uma violação de Unicidade (Duplicate Key).
+    /// </summary>
+    private static bool IsUniqueConstraintViolation(DbUpdateException ex)
+    {
+        var sqlException = ex.GetBaseException() as SqlException;
+        
+        if (sqlException == null && ex.InnerException is SqlException innerSql)
+            sqlException = innerSql;
+
+        if (sqlException == null) return false;
+
+        return sqlException.Number == 2601 || sqlException.Number == 2627;
+    }
+
+    /// <summary>
+    /// Extrai o nome da constraint/index da mensagem de erro SQL.
+    /// </summary>
+    private static string ExtractConstraintNameFromException(DbUpdateException ex)
+    {
+        var sqlException = ex.GetBaseException() as SqlException;
+        
+        if (sqlException == null && ex.InnerException is SqlException innerSql)
+            sqlException = innerSql;
+
+        if (sqlException == null) return string.Empty;
+
+        var message = sqlException.Message;
+
+        var match = System.Text.RegularExpressions.Regex.Match(
+            message,
+            @"['""]([^'""]*?)(?:_Tenant_|_)([^'""]*?)['""]", 
+            System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+        if (!match.Success)
+        {
+             match = System.Text.RegularExpressions.Regex.Match(
+                message,
+                @"index\s+['""]([^'""]+)['""]",
+                System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+        }
+
+        return match.Success ? match.Groups[1].Value : string.Empty;
+    }
+
+    /// <summary>
+    /// Tenta adivinhar o nome do campo baseado no nome da constraint.
+    /// </summary>
+    private static string IdentifyFieldFromConstraint(string constraintName, string entityName)
+    {
+        if (string.IsNullOrEmpty(constraintName)) return "";
+        var parts = constraintName.Split('_');
+        if (parts.Length > 0)
+        {
+            var candidate = parts.Last();
+            if (candidate.Equals("TenantId", StringComparison.OrdinalIgnoreCase) && parts.Length > 1)
+                candidate = parts[parts.Length - 2];
+            return candidate;
+        }
+        return "";
     }
 }
 """;
@@ -147,6 +229,8 @@ public sealed class Create{{info.EntityName}}Handler
 {{info.FileHeader}}
 using System;
 using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Data.SqlClient;
 using AutoMapper;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -220,12 +304,100 @@ public sealed class Update{{info.EntityName}}Handler
 
             return Result<bool>.Success(true);
         }
+        catch (DbUpdateException ex) when (IsUniqueConstraintViolation(ex))
+        {
+            // ✅ CAPTURA VIOLAÇÃO DE UNICIDADE (SQL 2601/2627)
+            var constraintName = ExtractConstraintNameFromException(ex);
+            
+            // Tenta identificar o campo amigável
+            var fieldName = IdentifyFieldFromConstraint(constraintName, "{{info.EntityName}}");
+            var friendlyMessage = !string.IsNullOrEmpty(fieldName)
+                ? $"Já existe um registro com este '{fieldName}'."
+                : "Já existe um registro com estas informações (duplicidade detectada).";
+
+            _logger.LogWarning("Tentativa de duplicidade em Update{{info.EntityName}} {Id}: {Constraint}", command.Id, constraintName);
+
+            return Result<bool>.Failure(
+                Error.Conflict("{{info.EntityName}}.Duplicate", friendlyMessage));
+        }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erro ao atualizar {{info.DisplayName}} {Id}", command.Id);
+            _logger.LogError(ex, "Erro ao atualizar {{info.DisplayName}} {Id}. Ex: {ExType} | Inner: {InnerType} | Msg: {Msg}", 
+                command.Id, ex.GetType().Name, ex.InnerException?.GetType().Name, ex.Message);
+                
             return Result<bool>.Failure(
                 Error.Failure("{{info.EntityName}}.UpdateError", $"Erro ao atualizar {{info.DisplayName}}: {ex.Message}"));
         }
+    }
+
+    /// <summary>
+    /// Verifica se a exceção é uma violação de Unicidade (Duplicate Key).
+    /// </summary>
+    private static bool IsUniqueConstraintViolation(DbUpdateException ex)
+    {
+        var sqlException = ex.GetBaseException() as SqlException;
+        
+        if (sqlException == null && ex.InnerException is SqlException innerSql)
+            sqlException = innerSql;
+
+        if (sqlException != null)
+        {
+            if (sqlException.Number == 2601 || sqlException.Number == 2627) return true;
+        }
+
+        var msg = ex.GetBaseException()?.Message ?? ex.Message;
+        if (string.IsNullOrEmpty(msg)) return false;
+
+        return msg.Contains("duplicate key", StringComparison.OrdinalIgnoreCase) ||
+               msg.Contains("unique constraint", StringComparison.OrdinalIgnoreCase) ||
+               msg.Contains("Violation of UNIQUE KEY", StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// Extrai o nome da constraint/index da mensagem de erro SQL.
+    /// </summary>
+    private static string ExtractConstraintNameFromException(DbUpdateException ex)
+    {
+        var sqlException = ex.GetBaseException() as SqlException;
+        
+        if (sqlException == null && ex.InnerException is SqlException innerSql)
+            sqlException = innerSql;
+
+        if (sqlException == null) return string.Empty;
+
+        var message = sqlException.Message;
+
+        var match = System.Text.RegularExpressions.Regex.Match(
+            message,
+            @"['""]([^'""]*?)(?:_Tenant_|_)([^'""]*?)['""]", 
+            System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+        if (!match.Success)
+        {
+             match = System.Text.RegularExpressions.Regex.Match(
+                message,
+                @"index\s+['""]([^'""]+)['""]",
+                System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+        }
+
+        return match.Success ? match.Groups[1].Value : string.Empty;
+    }
+
+    /// <summary>
+    /// Tenta adivinhar o nome do campo baseado no nome da constraint.
+    /// </summary>
+    private static string IdentifyFieldFromConstraint(string constraintName, string entityName)
+    {
+        if (string.IsNullOrEmpty(constraintName)) return "";
+        var parts = constraintName.Split('_');
+        if (parts.Length > 0)
+        {
+            var candidate = parts.Last();
+            if (candidate.Equals("TenantId", StringComparison.OrdinalIgnoreCase) && parts.Length > 1)
+                candidate = parts[parts.Length - 2];
+            return candidate;
+        }
+        return "";
     }
 }
 """;

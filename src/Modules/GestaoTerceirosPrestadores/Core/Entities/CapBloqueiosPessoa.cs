@@ -1,3 +1,11 @@
+Ôªø// =============================================================================
+// RHSENSOERP - ENTITY CAPBLOQUEIOSPESSOA
+// =============================================================================
+// M√≥dulo: Gest√£o de Terceiros e Prestadores (CAP)
+// Tabela: cap_bloqueios_pessoa
+// Schema: dbo
+// Multi-tenant: ‚úÖ SIM (TenantId obrigat√≥rio)
+// =============================================================================
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -7,7 +15,7 @@ using RhSensoERP.Shared.Core.Attributes;
 namespace RhSensoERP.Modules.GestaoTerceirosPrestadores.Core.Entities;
 
 /// <summary>
-/// CapBloqueiosPessoa - Bloqueios de Pessoas (Funcion·rios, Colaboradores e Visitantes)
+/// CapBloqueiosPessoa - Bloqueios de Pessoas (Funcion√°rios, Colaboradores e Visitantes)
 /// Tabela: cap_bloqueios_pessoa (Multi-tenant)
 /// Fonte da verdade: SQL Server
 /// </summary>
@@ -20,8 +28,7 @@ namespace RhSensoERP.Modules.GestaoTerceirosPrestadores.Core.Entities;
     GenerateApiController = true
 )]
 [Table("cap_bloqueios_pessoa")]
-[HasDatabaseTriggers("Auditoria autom·tica de CreatedAt/UpdatedAt via triggers SQL Server")]
-
+[HasDatabaseTriggers("Auditoria autom√°tica de CreatedAt/UpdatedAt via triggers SQL Server")]
 public class CapBloqueiosPessoa
 {
     [Key]
@@ -36,7 +43,7 @@ public class CapBloqueiosPessoa
     public Guid TenantId { get; set; }
 
     [Column("IdFuncionarioLegado")]
-    [Display(Name = "ID Funcion·rio Legado")]
+    [Display(Name = "ID Funcion√°rio Legado")]
     public int? IdFuncionarioLegado { get; set; }
 
     [Column("IdColaboradorFornecedor")]
@@ -53,6 +60,7 @@ public class CapBloqueiosPessoa
     [Display(Name = "Motivo")]
     public string Motivo { get; set; } = string.Empty;
 
+    // Default controlado pelo banco: SYSUTCDATETIME()
     [Required]
     [Column("DataBloqueio", TypeName = "datetime2(3)")]
     [Display(Name = "Data Bloqueio (UTC)")]
@@ -63,11 +71,11 @@ public class CapBloqueiosPessoa
     public DateTime? DataDesbloqueio { get; set; }
 
     [Column("UsuarioBloqueio")]
-    [Display(Name = "Usu·rio Bloqueio")]
+    [Display(Name = "Usu√°rio Bloqueio")]
     public Guid? UsuarioBloqueio { get; set; }
 
     [Column("UsuarioDesbloqueio")]
-    [Display(Name = "Usu·rio Desbloqueio")]
+    [Display(Name = "Usu√°rio Desbloqueio")]
     public Guid? UsuarioDesbloqueio { get; set; }
 
     [Required]
@@ -75,10 +83,12 @@ public class CapBloqueiosPessoa
     [Display(Name = "Ativo")]
     public bool Ativo { get; set; } = true;
 
-    // Auditoria (defaults controlados pelo banco: SYSUTCDATETIME())
+    // =========================================================================
+    // AUDITORIA (defaults controlados pelo banco: SYSUTCDATETIME())
+    // =========================================================================
     [Required]
     [Column("CreatedAtUtc", TypeName = "datetime2(3)")]
-    [Display(Name = "Data CriaÁ„o (UTC)")]
+    [Display(Name = "Data Cria√ß√£o (UTC)")]
     public DateTime CreatedAtUtc { get; set; }
 
     [Column("CreatedByUserId")]
@@ -87,33 +97,38 @@ public class CapBloqueiosPessoa
 
     [Required]
     [Column("UpdatedAtUtc", TypeName = "datetime2(3)")]
-    [Display(Name = "Data AtualizaÁ„o (UTC)")]
+    [Display(Name = "Data Atualiza√ß√£o (UTC)")]
     public DateTime UpdatedAtUtc { get; set; }
 
     [Column("UpdatedByUserId")]
     [Display(Name = "Atualizado Por")]
     public Guid? UpdatedByUserId { get; set; }
 
-    // Navigation Properties
+    // =========================================================================
+    // NAVIGATION PROPERTIES
+    // =========================================================================
     [ForeignKey(nameof(IdColaboradorFornecedor))]
     public virtual CapColaboradoresFornecedor? ColaboradorFornecedor { get; set; }
 
     [ForeignKey(nameof(IdVisitante))]
     public virtual CapVisitantes? Visitante { get; set; }
 
-  //  [ForeignKey(nameof(UsuarioBloqueio))]
-  //  public virtual Usuario? UsuarioBloqueador { get; set; }
+    // Comentado: Aguardando implementa√ß√£o completa da entidade Usuario
+    // [ForeignKey(nameof(UsuarioBloqueio))]
+    // public virtual Usuario? UsuarioBloqueador { get; set; }
 
-  //  [ForeignKey(nameof(UsuarioDesbloqueio))]
-  //  public virtual Usuario? UsuarioDesbloqueador { get; set; }
+    // [ForeignKey(nameof(UsuarioDesbloqueio))]
+    // public virtual Usuario? UsuarioDesbloqueador { get; set; }
 
-  //  [ForeignKey(nameof(CreatedByUserId))]
-  //  public virtual Usuario? CreatedByUser { get; set; }
+    // [ForeignKey(nameof(CreatedByUserId))]
+    // public virtual Usuario? CreatedByUser { get; set; }
 
-  //  [ForeignKey(nameof(UpdatedByUserId))]
-  //  public virtual Usuario? UpdatedByUser { get; set; }
+    // [ForeignKey(nameof(UpdatedByUserId))]
+    // public virtual Usuario? UpdatedByUser { get; set; }
 
-    // Inverse Navigation
+    // =========================================================================
+    // INVERSE NAVIGATION
+    // =========================================================================
     [InverseProperty(nameof(CapHistoricoBloqueios.Bloqueio))]
     public virtual ICollection<CapHistoricoBloqueios> Historico { get; set; } = new List<CapHistoricoBloqueios>();
 }

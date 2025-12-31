@@ -1,3 +1,12 @@
+﻿// =============================================================================
+// RHSENSOERP - ENTITY CAPANEXOSOCORRENCIA
+// =============================================================================
+// Módulo: Gestão de Terceiros e Prestadores (CAP)
+// Tabela: cap_anexos_ocorrencia
+// Schema: dbo
+// Multi-tenant: ✅ SIM (TenantId obrigatório)
+// Tipo: Append-Only (sem updates/deletes)
+// =============================================================================
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -6,7 +15,7 @@ using RhSensoERP.Shared.Core.Attributes;
 namespace RhSensoERP.Modules.GestaoTerceirosPrestadores.Core.Entities;
 
 /// <summary>
-/// CapAnexosOcorrencia - Anexos de Ocorr�ncias
+/// CapAnexosOcorrencia - Anexos de Ocorrências
 /// Tabela: cap_anexos_ocorrencia (Multi-tenant, Append-Only)
 /// Fonte da verdade: SQL Server
 /// </summary>
@@ -19,8 +28,6 @@ namespace RhSensoERP.Modules.GestaoTerceirosPrestadores.Core.Entities;
     GenerateApiController = true
 )]
 [Table("cap_anexos_ocorrencia")]
-[HasDatabaseTriggers("Auditoria autom�tica de CreatedAt/UpdatedAt via triggers SQL Server")]
-
 public class CapAnexosOcorrencia
 {
     [Key]
@@ -36,7 +43,7 @@ public class CapAnexosOcorrencia
 
     [Required]
     [Column("IdOcorrencia")]
-    [Display(Name = "ID Ocorr�ncia")]
+    [Display(Name = "ID Ocorrência")]
     public int IdOcorrencia { get; set; }
 
     [Required]
@@ -67,13 +74,16 @@ public class CapAnexosOcorrencia
     public DateTime DataUpload { get; set; }
 
     [Column("UsuarioUpload")]
-    [Display(Name = "Usu�rio Upload")]
+    [Display(Name = "Usuário Upload")]
     public Guid? UsuarioUpload { get; set; }
 
-    // Navigation Properties
+    // =========================================================================
+    // NAVIGATION PROPERTIES
+    // =========================================================================
     [ForeignKey(nameof(IdOcorrencia))]
     public virtual CapOcorrencias? Ocorrencia { get; set; }
 
-   // [ForeignKey(nameof(UsuarioUpload))]
-   // public virtual Usuario? Usuario { get; set; }
+    // Comentado: Aguardando implementação completa da entidade Usuario
+    // [ForeignKey(nameof(UsuarioUpload))]
+    // public virtual Usuario? Usuario { get; set; }
 }

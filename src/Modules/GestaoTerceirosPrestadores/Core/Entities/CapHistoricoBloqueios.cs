@@ -1,3 +1,12 @@
+﻿// =============================================================================
+// RHSENSOERP - ENTITY CAPHISTORICOBLOQUEIOS
+// =============================================================================
+// Módulo: Gestão de Terceiros e Prestadores (CAP)
+// Tabela: cap_historico_bloqueios
+// Schema: dbo
+// Multi-tenant: ✅ SIM (TenantId obrigatório)
+// Tipo: Append-Only (sem updates/deletes)
+// =============================================================================
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -6,7 +15,7 @@ using RhSensoERP.Shared.Core.Attributes;
 namespace RhSensoERP.Modules.GestaoTerceirosPrestadores.Core.Entities;
 
 /// <summary>
-/// CapHistoricoBloqueios - Hist�rico de Bloqueios de Pessoas
+/// CapHistoricoBloqueios - Histórico de Bloqueios de Pessoas
 /// Tabela: cap_historico_bloqueios (Multi-tenant, Append-Only)
 /// Fonte da verdade: SQL Server
 /// </summary>
@@ -19,8 +28,6 @@ namespace RhSensoERP.Modules.GestaoTerceirosPrestadores.Core.Entities;
     GenerateApiController = true
 )]
 [Table("cap_historico_bloqueios")]
-[HasDatabaseTriggers("Auditoria autom�tica de CreatedAt/UpdatedAt via triggers SQL Server")]
-
 public class CapHistoricoBloqueios
 {
     [Key]
@@ -40,7 +47,7 @@ public class CapHistoricoBloqueios
     public int IdBloqueio { get; set; }
 
     [Column("IdFuncionarioLegado")]
-    [Display(Name = "ID Funcion�rio Legado")]
+    [Display(Name = "ID Funcionário Legado")]
     public int? IdFuncionarioLegado { get; set; }
 
     [Column("IdColaboradorFornecedor")]
@@ -65,11 +72,11 @@ public class CapHistoricoBloqueios
     public DateTime? DataDesbloqueio { get; set; }
 
     [Column("UsuarioBloqueio")]
-    [Display(Name = "Usu�rio Bloqueio")]
+    [Display(Name = "Usuário Bloqueio")]
     public Guid? UsuarioBloqueio { get; set; }
 
     [Column("UsuarioDesbloqueio")]
-    [Display(Name = "Usu�rio Desbloqueio")]
+    [Display(Name = "Usuário Desbloqueio")]
     public Guid? UsuarioDesbloqueio { get; set; }
 
     // Default controlado pelo banco: SYSUTCDATETIME()
@@ -78,7 +85,9 @@ public class CapHistoricoBloqueios
     [Display(Name = "Data Registro (UTC)")]
     public DateTime DataRegistro { get; set; }
 
-    // Navigation Properties
+    // =========================================================================
+    // NAVIGATION PROPERTIES
+    // =========================================================================
     [ForeignKey(nameof(IdBloqueio))]
     public virtual CapBloqueiosPessoa? Bloqueio { get; set; }
 
@@ -88,9 +97,10 @@ public class CapHistoricoBloqueios
     [ForeignKey(nameof(IdVisitante))]
     public virtual CapVisitantes? Visitante { get; set; }
 
-  //  [ForeignKey(nameof(UsuarioBloqueio))]
-  //  public virtual Usuario? UsuarioBloqueador { get; set; }
+    // Comentado: Aguardando implementação completa da entidade Usuario
+    // [ForeignKey(nameof(UsuarioBloqueio))]
+    // public virtual Usuario? UsuarioBloqueador { get; set; }
 
- //   [ForeignKey(nameof(UsuarioDesbloqueio))]
-  //  public virtual Usuario? UsuarioDesbloqueador { get; set; }
+    // [ForeignKey(nameof(UsuarioDesbloqueio))]
+    // public virtual Usuario? UsuarioDesbloqueador { get; set; }
 }

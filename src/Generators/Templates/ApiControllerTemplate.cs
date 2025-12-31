@@ -1,8 +1,13 @@
 // =============================================================================
-// RHSENSOERP GENERATOR v4.2 - API CONTROLLER TEMPLATE
+// RHSENSOERP GENERATOR v4.3 - API CONTROLLER TEMPLATE
 // =============================================================================
 // Arquivo: src/Generators/Templates/ApiControllerTemplate.cs
-// Versão: 4.2 - DELETE com FK handling + BatchDeleteResult
+// Versão: 4.3 - DELETE com FK handling + BatchDeleteResult + ToggleAtivo
+// 
+// ✅ NOVO v4.3:
+// - Endpoint PATCH /{id}/toggle-ativo gerado automaticamente quando entidade tem campo Ativo
+// - Detecta campos: Ativo, IsAtivo, Active, IsActive
+// - Gera endpoint completo no Controller
 // 
 // ✅ CORREÇÕES v4.2:
 // - DELETE retorna HTTP 409 Conflict para Foreign Key violations
@@ -17,6 +22,7 @@ namespace RhSensoERP.Generators.Templates;
 
 /// <summary>
 /// Template para geração de API Controller.
+/// v4.3: Adiciona suporte automático para Toggle Ativo.
 /// </summary>
 public static class ApiControllerTemplate
 {
@@ -29,6 +35,14 @@ public static class ApiControllerTemplate
         var authAttribute = info.ApiRequiresAuth ? "\n[Authorize]" : "";
         var authUsing = info.ApiRequiresAuth ? "\nusing Microsoft.AspNetCore.Authorization;" : "";
         var batchEndpoint = info.SupportsBatchDelete ? GenerateBatchDeleteEndpoint(info) : "";
+
+        // ✅ NOVO v4.3: Detecta campo Ativo para gerar endpoint ToggleAtivo
+        var hasAtivoField = info.Properties.Any(p =>
+            p.Name.Equals("Ativo", StringComparison.OrdinalIgnoreCase) ||
+            p.Name.Equals("IsAtivo", StringComparison.OrdinalIgnoreCase) ||
+            p.Name.Equals("Active", StringComparison.OrdinalIgnoreCase) ||
+            p.Name.Equals("IsActive", StringComparison.OrdinalIgnoreCase));
+        var toggleAtivoEndpoint = hasAtivoField ? GenerateToggleAtivoEndpoint(info) : "";
 
         // ✅ NOVO v4.0: CurrentUser para multi-tenancy e unique validation
         var hasUniqueProps = info.Properties.Any(p => p.IsUnique);
@@ -196,7 +210,7 @@ public sealed class {{info.PluralName}}Controller : ControllerBase
 
         return Ok(result);
     }
-{{batchEndpoint}}
+{{batchEndpoint}}{{toggleAtivoEndpoint}}
 }
 """;
     }
@@ -239,6 +253,68 @@ public sealed class {{info.PluralName}}Controller : ControllerBase
         // ✅ Se NENHUM foi deletado, retorna 400 Bad Request
         return BadRequest(result);
     }
+""";
+    }
+
+    /// <summary>
+    /// ✅ v4.3: Gera endpoint PATCH /{id}/toggle-ativo.
+    /// Permite alternar o status Ativo/Desativo de forma rápida.
+    /// </summary>
+    private static string GenerateToggleAtivoEndpoint(EntityInfo info)
+    {
+        var pkType = info.PrimaryKeyType;
+
+        // Encontra o nome exato do campo Ativo
+        var ativoField = info.Properties.FirstOrDefault(p =>
+            p.Name.Equals("Ativo", StringComparison.OrdinalIgnoreCase) ||
+            p.Name.Equals("IsAtivo", StringComparison.OrdinalIgnoreCase) ||
+            p.Name.Equals("Active", StringComparison.OrdinalIgnoreCase) ||
+            p.Name.Equals("IsActive", StringComparison.OrdinalIgnoreCase));
+
+        var fieldName = ativoField?.Name ?? "Ativo";
+
+        return $$"""
+
+
+    /// <summary>
+    /// Alterna o status Ativo/Desativo de um {{info.DisplayName}}.
+    /// </summary>
+    [HttpPatch("{id}/toggle-ativo")]
+    [ProducesResponseType(typeof(Result<bool>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(Result<bool>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(Result<bool>), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<Result<bool>>> ToggleAtivo(
+        [FromRoute] {{pkType}} id,
+        [FromBody] ToggleAtivoRequest request,
+        CancellationToken ct)
+    {
+        var result = await _mediator.Send(new Toggle{{info.EntityName}}AtivoCommand(id, request.{{fieldName}}), ct);
+
+        if (!result.IsSuccess)
+        {
+            // ✅ NOT FOUND (404) para registro não encontrado
+            if (result.Error.Code.Contains("NotFound"))
+            {
+                return NotFound(result);
+            }
+
+            // ✅ FORBIDDEN (403) para acesso negado (cross-tenant)
+            if (result.Error.Code.Contains("Forbidden"))
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, result);
+            }
+
+            // ✅ BAD REQUEST (400) para outros erros
+            return BadRequest(result);
+        }
+
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Request para alternar status Ativo.
+    /// </summary>
+    public record ToggleAtivoRequest(bool {{fieldName}});
 """;
     }
 

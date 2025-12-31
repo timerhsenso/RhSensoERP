@@ -1,3 +1,11 @@
+ï»¿// =============================================================================
+// RHSENSOERP - ENTITY CAPOCORRENCIAS
+// =============================================================================
+// MÃ³dulo: GestÃ£o de Terceiros e Prestadores (CAP)
+// Tabela: cap_ocorrencias
+// Schema: dbo
+// Multi-tenant: âœ… SIM (TenantId obrigatÃ³rio)
+// =============================================================================
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -7,7 +15,7 @@ using RhSensoERP.Shared.Core.Attributes;
 namespace RhSensoERP.Modules.GestaoTerceirosPrestadores.Core.Entities;
 
 /// <summary>
-/// CapOcorrencias - Ocorrências do Sistema
+/// CapOcorrencias - OcorrÃªncias do Sistema
 /// Tabela: cap_ocorrencias (Multi-tenant)
 /// Fonte da verdade: SQL Server
 /// </summary>
@@ -20,8 +28,7 @@ namespace RhSensoERP.Modules.GestaoTerceirosPrestadores.Core.Entities;
     GenerateApiController = true
 )]
 [Table("cap_ocorrencias")]
-[HasDatabaseTriggers("Auditoria automática de CreatedAt/UpdatedAt via triggers SQL Server")]
-
+[HasDatabaseTriggers("Auditoria automÃ¡tica de CreatedAt/UpdatedAt via triggers SQL Server")]
 public class CapOcorrencias
 {
     [Key]
@@ -37,7 +44,7 @@ public class CapOcorrencias
 
     [Required]
     [Column("IdTipoOcorrencia")]
-    [Display(Name = "ID Tipo Ocorrência")]
+    [Display(Name = "ID Tipo OcorrÃªncia")]
     public int IdTipoOcorrencia { get; set; }
 
     [Column("IdAcessoPortaria")]
@@ -45,22 +52,22 @@ public class CapOcorrencias
     public int? IdAcessoPortaria { get; set; }
 
     [Column("IdFuncionarioResponsavel")]
-    [Display(Name = "ID Funcionário Responsável")]
+    [Display(Name = "ID FuncionÃ¡rio ResponsÃ¡vel")]
     public int? IdFuncionarioResponsavel { get; set; }
 
     [Column("IdColaboradorResponsavel")]
-    [Display(Name = "ID Colaborador Responsável")]
+    [Display(Name = "ID Colaborador ResponsÃ¡vel")]
     public int? IdColaboradorResponsavel { get; set; }
 
     [Required]
     [Column("Descricao", TypeName = "nvarchar(500)")]
     [StringLength(500)]
-    [Display(Name = "Descrição")]
+    [Display(Name = "DescriÃ§Ã£o")]
     public string Descricao { get; set; } = string.Empty;
 
     [Required]
     [Column("DataOcorrencia", TypeName = "datetime2(3)")]
-    [Display(Name = "Data Ocorrência")]
+    [Display(Name = "Data OcorrÃªncia")]
     public DateTime DataOcorrencia { get; set; }
 
     [Column("Local", TypeName = "nvarchar(500)")]
@@ -70,7 +77,7 @@ public class CapOcorrencias
 
     [Column("Observacoes", TypeName = "nvarchar(500)")]
     [StringLength(500)]
-    [Display(Name = "Observações")]
+    [Display(Name = "ObservaÃ§Ãµes")]
     public string? Observacoes { get; set; }
 
     [Column("Status", TypeName = "nvarchar(50)")]
@@ -83,10 +90,12 @@ public class CapOcorrencias
     [Display(Name = "Ativo")]
     public bool Ativo { get; set; } = true;
 
-    // Auditoria (defaults controlados pelo banco: SYSUTCDATETIME())
+    // =========================================================================
+    // AUDITORIA (defaults controlados pelo banco: SYSUTCDATETIME())
+    // =========================================================================
     [Required]
     [Column("CreatedAtUtc", TypeName = "datetime2(3)")]
-    [Display(Name = "Data Criação (UTC)")]
+    [Display(Name = "Data CriaÃ§Ã£o (UTC)")]
     public DateTime CreatedAtUtc { get; set; }
 
     [Column("CreatedByUserId")]
@@ -95,31 +104,36 @@ public class CapOcorrencias
 
     [Required]
     [Column("UpdatedAtUtc", TypeName = "datetime2(3)")]
-    [Display(Name = "Data Atualização (UTC)")]
+    [Display(Name = "Data AtualizaÃ§Ã£o (UTC)")]
     public DateTime UpdatedAtUtc { get; set; }
 
     [Column("UpdatedByUserId")]
     [Display(Name = "Atualizado Por")]
     public Guid? UpdatedByUserId { get; set; }
 
-    // Navigation Properties
+    // =========================================================================
+    // NAVIGATION PROPERTIES
+    // =========================================================================
     [ForeignKey(nameof(IdTipoOcorrencia))]
     public virtual CapTiposOcorrencia? TipoOcorrencia { get; set; }
 
     [ForeignKey(nameof(IdColaboradorResponsavel))]
     public virtual CapColaboradoresFornecedor? ColaboradorResponsavel { get; set; }
 
-    // NOTA: Navigation para gtc_acessos_portaria comentada - módulo GTC não existe ainda
+    // NOTA: Navigation para gtc_acessos_portaria comentada - mÃ³dulo GTC nÃ£o existe ainda
     // [ForeignKey(nameof(IdAcessoPortaria))]
     // public virtual GtcAcessosPortaria? AcessoPortaria { get; set; }
 
-   // [ForeignKey(nameof(CreatedByUserId))]
-   // public virtual Usuario? CreatedByUser { get; set; }
+    // Comentado: Aguardando implementaÃ§Ã£o completa da entidade Usuario
+    // [ForeignKey(nameof(CreatedByUserId))]
+    // public virtual Usuario? CreatedByUser { get; set; }
 
-  //  [ForeignKey(nameof(UpdatedByUserId))]
-  //  public virtual Usuario? UpdatedByUser { get; set; }
+    // [ForeignKey(nameof(UpdatedByUserId))]
+    // public virtual Usuario? UpdatedByUser { get; set; }
 
-    // Inverse Navigation
+    // =========================================================================
+    // INVERSE NAVIGATION
+    // =========================================================================
     [InverseProperty(nameof(CapAnexosOcorrencia.Ocorrencia))]
     public virtual ICollection<CapAnexosOcorrencia> Anexos { get; set; } = new List<CapAnexosOcorrencia>();
 }

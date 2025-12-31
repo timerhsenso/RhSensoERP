@@ -1,3 +1,14 @@
+﻿// =============================================================================
+// RHSENSOERP - ENTITY CAPFORNECEDORES
+// =============================================================================
+// Módulo: Gestão de Terceiros e Prestadores (CAP)
+// Tabela: cap_fornecedores
+// Schema: dbo
+// Multi-tenant: ✅ SIM (TenantId obrigatório)
+// 
+// ✅ VALIDAÇÃO AUTOMÁTICA DE UNICIDADE:
+// - CNPJ: Único por tenant
+// =============================================================================
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -21,8 +32,7 @@ namespace RhSensoERP.Modules.GestaoTerceirosPrestadores.Core.Entities;
     GenerateApiController = true
 )]
 [Table("cap_fornecedores")]
-[HasDatabaseTriggers("Auditoria autom�tica de CreatedAt/UpdatedAt via triggers SQL Server")]
-
+[HasDatabaseTriggers("Auditoria automática de CreatedAt/UpdatedAt via triggers SQL Server")]
 public class CapFornecedores
 {
     [Key]
@@ -39,7 +49,7 @@ public class CapFornecedores
     [Required]
     [Column("RazaoSocial", TypeName = "nvarchar(255)")]
     [StringLength(255)]
-    [Display(Name = "Raz�o Social")]
+    [Display(Name = "Razão Social")]
     public string RazaoSocial { get; set; } = string.Empty;
 
     [Column("NomeFantasia", TypeName = "nvarchar(255)")]
@@ -47,6 +57,16 @@ public class CapFornecedores
     [Display(Name = "Nome Fantasia")]
     public string? NomeFantasia { get; set; }
 
+    // =========================================================================
+    // ✅ CNPJ - VALIDAÇÃO AUTOMÁTICA DE UNICIDADE POR TENANT
+    // =========================================================================
+    // [Unique] faz com que o Source Generator crie:
+    // 1. Índice único: CREATE UNIQUE INDEX UX_CapFornecedores_Tenant_Cnpj 
+    //    ON cap_fornecedores (TenantId, Cnpj) WHERE Cnpj IS NOT NULL
+    // 2. Validação no UniqueValidationBehavior ANTES de SaveChanges
+    // 3. Exception DuplicateEntityException → HTTP 409 Conflict
+    // =========================================================================
+    [Unique(UniqueScope.Tenant, "CNPJ")]
     [Column("Cnpj", TypeName = "nvarchar(18)")]
     [StringLength(18)]
     [Display(Name = "CNPJ")]
@@ -69,12 +89,12 @@ public class CapFornecedores
 
     [Column("Endereco", TypeName = "nvarchar(500)")]
     [StringLength(500)]
-    [Display(Name = "Endere�o")]
+    [Display(Name = "Endereço")]
     public string? Endereco { get; set; }
 
     [Column("Numero", TypeName = "nvarchar(20)")]
     [StringLength(20)]
-    [Display(Name = "N�mero")]
+    [Display(Name = "Número")]
     public string? Numero { get; set; }
 
     [Column("Complemento", TypeName = "nvarchar(200)")]
@@ -121,10 +141,12 @@ public class CapFornecedores
     [Display(Name = "Ativo")]
     public bool Ativo { get; set; } = true;
 
-    // Auditoria (defaults controlados pelo banco: SYSUTCDATETIME())
+    // =========================================================================
+    // AUDITORIA (defaults controlados pelo banco: SYSUTCDATETIME())
+    // =========================================================================
     [Required]
     [Column("CreatedAtUtc", TypeName = "datetime2(3)")]
-    [Display(Name = "Data Cria��o (UTC)")]
+    [Display(Name = "Data Criação (UTC)")]
     public DateTime CreatedAtUtc { get; set; }
 
     [Column("CreatedByUserId")]
@@ -133,24 +155,29 @@ public class CapFornecedores
 
     [Required]
     [Column("UpdatedAtUtc", TypeName = "datetime2(3)")]
-    [Display(Name = "Data Atualiza��o (UTC)")]
+    [Display(Name = "Data Atualização (UTC)")]
     public DateTime UpdatedAtUtc { get; set; }
 
     [Column("UpdatedByUserId")]
     [Display(Name = "Atualizado Por")]
     public Guid? UpdatedByUserId { get; set; }
 
-    // Navigation Properties
+    // =========================================================================
+    // NAVIGATION PROPERTIES
+    // =========================================================================
     [ForeignKey(nameof(IdUf))]
     public virtual BasUfs? Uf { get; set; }
 
- //   [ForeignKey(nameof(CreatedByUserId))]
- //   public virtual Usuario? CreatedByUser { get; set; }
+    // Comentado: Aguardando implementação completa da entidade Usuario
+    // [ForeignKey(nameof(CreatedByUserId))]
+    // public virtual Usuario? CreatedByUser { get; set; }
 
- //   [ForeignKey(nameof(UpdatedByUserId))]
- //   public virtual Usuario? UpdatedByUser { get; set; }
+    // [ForeignKey(nameof(UpdatedByUserId))]
+    // public virtual Usuario? UpdatedByUser { get; set; }
 
-    // Inverse Navigation
+    // =========================================================================
+    // INVERSE NAVIGATION
+    // =========================================================================
     [InverseProperty(nameof(CapColaboradoresFornecedor.Fornecedor))]
     public virtual ICollection<CapColaboradoresFornecedor> Colaboradores { get; set; } = new List<CapColaboradoresFornecedor>();
 

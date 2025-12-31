@@ -120,6 +120,12 @@ public abstract class GenericApiController<TEntity, TKey, TDto> : ControllerBase
 
         if (!result.IsSuccess)
         {
+            if (result.Error.Type == ErrorType.Conflict)
+            {
+                Logger.LogWarning("Conflito ao criar {Entity}: {Error}", typeof(TEntity).Name, result.Error.Message);
+                return Conflict(new { message = result.Error.Message, code = result.Error.Code });
+            }
+
             Logger.LogWarning("Erro ao criar {Entity}: {Error}",
                 typeof(TEntity).Name, result.Error.Message);
             return BadRequest(new { message = result.Error.Message, code = result.Error.Code });
@@ -166,9 +172,15 @@ public abstract class GenericApiController<TEntity, TKey, TDto> : ControllerBase
 
         if (!result.IsSuccess)
         {
-            if (result.Error.Code == "NotFound")
+            if (result.Error.Code == "NotFound" || result.Error.Type == ErrorType.NotFound)
             {
                 return NotFound(new { message = result.Error.Message });
+            }
+
+            if (result.Error.Type == ErrorType.Conflict)
+            {
+                 Logger.LogWarning("Conflito ao atualizar {Entity}/{Id}: {Error}", typeof(TEntity).Name, id, result.Error.Message);
+                 return Conflict(new { message = result.Error.Message, code = result.Error.Code });
             }
 
             Logger.LogWarning("Erro ao atualizar {Entity}/{Id}: {Error}",
@@ -197,9 +209,15 @@ public abstract class GenericApiController<TEntity, TKey, TDto> : ControllerBase
 
         if (!result.IsSuccess)
         {
-            if (result.Error.Code == "NotFound")
+            if (result.Error.Code == "NotFound" || result.Error.Type == ErrorType.NotFound)
             {
                 return NotFound(new { message = result.Error.Message });
+            }
+
+            if (result.Error.Type == ErrorType.Conflict)
+            {
+                 Logger.LogWarning("Conflito ao excluir {Entity}/{Id}: {Error}", typeof(TEntity).Name, id, result.Error.Message);
+                 return Conflict(new { message = result.Error.Message, code = result.Error.Code });
             }
 
             Logger.LogWarning("Erro ao excluir {Entity}/{Id}: {Error}",
@@ -337,6 +355,11 @@ public abstract class GenericApiController<TEntity, TKey, TDto, TCreateDto, TUpd
 
         if (!result.IsSuccess)
         {
+            if (result.Error.Type == ErrorType.Conflict)
+            {
+                return Conflict(new { message = result.Error.Message, code = result.Error.Code });
+            }
+
             return BadRequest(new { message = result.Error.Message, code = result.Error.Code });
         }
 
@@ -363,9 +386,14 @@ public abstract class GenericApiController<TEntity, TKey, TDto, TCreateDto, TUpd
 
         if (!result.IsSuccess)
         {
-            if (result.Error.Code == "NotFound")
+            if (result.Error.Code == "NotFound" || result.Error.Type == ErrorType.NotFound)
             {
                 return NotFound(new { message = result.Error.Message });
+            }
+
+            if (result.Error.Type == ErrorType.Conflict)
+            {
+                return Conflict(new { message = result.Error.Message, code = result.Error.Code });
             }
 
             return BadRequest(new { message = result.Error.Message, code = result.Error.Code });
@@ -389,9 +417,14 @@ public abstract class GenericApiController<TEntity, TKey, TDto, TCreateDto, TUpd
 
         if (!result.IsSuccess)
         {
-            if (result.Error.Code == "NotFound")
+            if (result.Error.Code == "NotFound" || result.Error.Type == ErrorType.NotFound)
             {
                 return NotFound(new { message = result.Error.Message });
+            }
+
+            if (result.Error.Type == ErrorType.Conflict)
+            {
+                return Conflict(new { message = result.Error.Message, code = result.Error.Code });
             }
 
             return BadRequest(new { message = result.Error.Message, code = result.Error.Code });

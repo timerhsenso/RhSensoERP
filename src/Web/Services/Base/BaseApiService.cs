@@ -265,11 +265,21 @@ public abstract class BaseApiService<TDto, TCreateDto, TUpdateDto, TKey>
 
             if (response.IsSuccessStatusCode)
             {
-                var result = JsonSerializer.Deserialize<ApiResponse<TDto>>(content, _jsonOptions);
-                return result ?? new ApiResponse<TDto>
+                // ✅ v4.4: Backend retorna Result<TKey> (ID criado), não o DTO completo
+                var resultKey = JsonSerializer.Deserialize<ApiResponse<TKey>>(content, _jsonOptions);
+                
+                if (resultKey != null && resultKey.Success && resultKey.Data != null)
+                {
+                    // Busca o objeto completo pelo ID recém-criado
+                    return await GetByIdAsync(resultKey.Data);
+                }
+
+                // Se falhou ou não tem dados, retorna erro
+                return new ApiResponse<TDto>
                 {
                     Success = false,
-                    Error = new ApiError { Message = "Erro ao deserializar resposta" }
+                    Error = resultKey?.Error ?? new ApiError { Message = "Erro ao criar registro (ID não retornado)" },
+                    Errors = resultKey?.Errors
                 };
             }
 
@@ -316,11 +326,20 @@ public abstract class BaseApiService<TDto, TCreateDto, TUpdateDto, TKey>
 
             if (response.IsSuccessStatusCode)
             {
-                var result = JsonSerializer.Deserialize<ApiResponse<TDto>>(content, _jsonOptions);
-                return result ?? new ApiResponse<TDto>
+                // ✅ v4.4: Backend retorna Result<bool>, não o DTO completo
+                var resultBool = JsonSerializer.Deserialize<ApiResponse<bool>>(content, _jsonOptions);
+
+                if (resultBool != null && resultBool.Success)
+                {
+                    // Busca o objeto completo atualizado
+                    return await GetByIdAsync(id);
+                }
+
+                return new ApiResponse<TDto>
                 {
                     Success = false,
-                    Error = new ApiError { Message = "Erro ao deserializar resposta" }
+                    Error = resultBool?.Error ?? new ApiError { Message = "Erro ao atualizar registro" },
+                    Errors = resultBool?.Errors
                 };
             }
 

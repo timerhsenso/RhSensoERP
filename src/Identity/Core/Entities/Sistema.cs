@@ -11,7 +11,8 @@ namespace RhSensoERP.Identity.Core.Entities;
     CdFuncao = "SEG_FM_TSISTEMA",
     IsLegacyTable = true,
     GenerateApiController = true,
-    UsePluralRoute = true
+    UsePluralRoute = false,
+    ApiRoute = "identity/tsistema"
 )]
 public class Tsistema
 {
