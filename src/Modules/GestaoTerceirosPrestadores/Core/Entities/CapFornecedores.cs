@@ -26,10 +26,11 @@ namespace RhSensoERP.Modules.GestaoTerceirosPrestadores.Core.Entities;
 [GenerateCrud(
     TableName = "cap_fornecedores",
     DisplayName = "CapFornecedores",
-    CdSistema = "CAP",
-    CdFuncao = "CAP_FM_FORNECEDORES",
+    CdSistema = "SEG",
+    CdFuncao = "SEG_FM_TSISTEMA",
     IsLegacyTable = false,
-    GenerateApiController = true
+    GenerateApiController = true,
+    GenerateLookup = true
 )]
 [Table("cap_fornecedores")]
 [HasDatabaseTriggers("Auditoria automática de CreatedAt/UpdatedAt via triggers SQL Server")]

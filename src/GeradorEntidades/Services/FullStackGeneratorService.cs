@@ -1,7 +1,10 @@
 // =============================================================================
-// GERADOR FULL-STACK v3.2 - FULL STACK GENERATOR SERVICE
+// GERADOR FULL-STACK v4.0 - FULL STACK GENERATOR SERVICE
 // Orquestra todos os templates para gerar código completo
+// ⭐ v4.0 - SELECT2 LOOKUP AUTOMÁTICO
 // v3.2 - Suporte a ApiRoute do manifesto e organização por módulo
+// =============================================================================
+// ⭐ COPIE E COLE ESTE ARQUIVO COMPLETO SUBSTITUINDO O ORIGINAL
 // =============================================================================
 
 using GeradorEntidades.Models;
@@ -11,6 +14,7 @@ namespace GeradorEntidades.Services;
 
 /// <summary>
 /// Serviço que orquestra a geração de todos os arquivos do Full-Stack.
+/// v4.0: Geração automática de DTOs de Lookup para Select2.
 /// v3.2: Suporte a ApiRoute do manifesto e organização por módulo.
 /// </summary>
 public class FullStackGeneratorService
@@ -35,7 +39,7 @@ public class FullStackGeneratorService
 
         try
         {
-            _logger.LogInformation("Iniciando geração Full-Stack v3.2 para {Tabela}", tabela.NomeTabela);
+            _logger.LogInformation("Iniciando geração Full-Stack v4.0 para {Tabela}", tabela.NomeTabela);
             _logger.LogInformation("ApiRoute: {ApiRoute}", request.ApiRoute ?? "(não definida)");
             _logger.LogInformation("Módulo: {Modulo}", request.Modulo);
 
@@ -103,6 +107,20 @@ public class FullStackGeneratorService
                 result.CreateRequest = WebModelsTemplate.GenerateCreateRequest(entityConfig);
                 result.UpdateRequest = WebModelsTemplate.GenerateUpdateRequest(entityConfig);
                 result.ListViewModel = WebModelsTemplate.GenerateListViewModel(entityConfig);
+
+                // ⭐ v4.0: GERA DTOS DE LOOKUP PARA SELECT2
+                if (entityConfig.Select2Lookups.Any())
+                {
+                    _logger.LogDebug("Gerando {Count} DTOs de Lookup para Select2...", entityConfig.Select2Lookups.Count);
+                    var lookupDtos = WebModelsTemplate.GenerateSelect2LookupDtos(entityConfig);
+                    result.Select2LookupDtos = lookupDtos;
+
+                    _logger.LogInformation(
+                        "Gerados {Count} DTOs de Lookup: {Names}",
+                        lookupDtos.Count,
+                        string.Join(", ", entityConfig.Select2Lookups.Select(l => l.DtoName)));
+                }
+
                 _logger.LogDebug("WebModels gerados em: {Path}", result.Dto.RelativePath.Replace(result.Dto.FileName, ""));
             }
 
@@ -143,7 +161,7 @@ public class FullStackGeneratorService
             result.Success = true;
 
             _logger.LogInformation(
-                "Geração Full-Stack v3.2 concluída para {Tabela}: {FileCount} arquivos gerados",
+                "Geração Full-Stack v4.0 concluída para {Tabela}: {FileCount} arquivos gerados",
                 tabela.NomeTabela,
                 result.AllFiles.Count());
 

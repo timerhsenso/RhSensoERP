@@ -101,6 +101,9 @@ public sealed class GenerateCrudAttribute : Attribute
     // FLAGS DE GERAÇÃO - API/WEB
     // =========================================================================
 
+    // No arquivo GenerateCrudAttribute.cs, adicione:
+    public bool GenerateLookup { get; set; } = false;
+
     public bool GenerateApiController { get; set; } = true;
     public bool GenerateWebController { get; set; } = false;
     public bool GenerateWebModels { get; set; } = false;

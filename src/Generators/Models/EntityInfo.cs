@@ -73,6 +73,8 @@ public class EntityInfo
     public bool GenerateWebController { get; set; } = false;
     public bool GenerateWebModels { get; set; } = false;
     public bool GenerateWebServices { get; set; } = false;
+    // No arquivo EntityInfo.cs, adicione:
+    public bool GenerateLookup { get; set; } = false;
 
     // =========================================================================
     // COMPORTAMENTOS

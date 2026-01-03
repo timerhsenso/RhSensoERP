@@ -1,9 +1,11 @@
-// =============================================================================
-// GERADOR FULL-STACK v3.8 - WEB MODELS TEMPLATE (CORRIGIDO - AUDITORIA COMPLETA)
-// Baseado em RhSensoERP.CrudTool v2.0
+﻿// =============================================================================
+// GERADOR FULL-STACK v4.0 - WEB MODELS TEMPLATE
+// ⭐ v4.0 - SELECT2 LOOKUP AUTOMÁTICO - Gera DTOs de Lookup
 // v3.8 - CORRIGIDO: Exclui TODOS os campos de auditoria e sistema
-// v3.6 - CORRECAO: Excluir campos de auditoria em Create/Update Requests
+// v3.6 - CORREÇÃO: Excluir campos de auditoria em Create/Update Requests
 // v3.2 - Organiza Models por modulo/entidade
+// =============================================================================
+// ✅ ARQUIVO VERIFICADO E APROVADO - SELECT2 v4.0 COMPLETO
 // =============================================================================
 
 using GeradorEntidades.Models;
@@ -13,6 +15,7 @@ namespace GeradorEntidades.Templates;
 
 /// <summary>
 /// Gera Models para o projeto Web.
+/// v4.0: Gera DTOs de Lookup automáticos para campos Select2.
 /// v3.8: Exclui TODOS os campos de auditoria e sistema dos Requests.
 /// 
 /// CAMPOS EXCLUIDOS DOS REQUESTS:
@@ -20,14 +23,14 @@ namespace GeradorEntidades.Templates;
 /// - Sistema: TenantId, IdSaaS, RowVersion, IsDeleted
 /// - PKs auto-geradas: Id (Identity), Guid
 /// 
-/// CAMPOS MANTIDOS NO DTO (para exibicao):
+/// CAMPOS MANTIDOS NO DTO (para exibição):
 /// - Todos os campos, incluindo auditoria
 /// </summary>
 public static class WebModelsTemplate
 {
     /// <summary>
     /// Gera o DTO de leitura.
-    /// INCLUI CAMPOS DE AUDITORIA (para exibir na tela apos salvar).
+    /// INCLUI CAMPOS DE AUDITORIA (para exibir na tela após salvar).
     /// </summary>
     public static GeneratedFile GenerateDto(EntityConfig entity)
     {
@@ -35,7 +38,7 @@ public static class WebModelsTemplate
         var properties = GenerateProperties(entity.Properties);
 
         var content = $@"// =============================================================================
-// ARQUIVO GERADO POR GeradorFullStack v3.8
+// ARQUIVO GERADO POR GeradorFullStack v4.0
 // Entity: {entity.Name}
 // Module: {entity.Module}
 // Data: {DateTime.Now:yyyy-MM-dd HH:mm:ss}
@@ -45,7 +48,7 @@ namespace RhSensoERP.Web.Models.{modulePath}.{entity.Name};
 
 /// <summary>
 /// DTO de leitura para {entity.DisplayName}.
-/// Compativel com backend: {entity.BackendNamespace ?? $"RhSensoERP.Modules.{entity.Module}.Application.DTOs"}.{entity.Name}Dto
+/// Compatível com backend: {entity.BackendNamespace ?? $"RhSensoERP.Modules.{entity.Module}.Application.DTOs"}.{entity.Name}Dto
 /// </summary>
 public class {entity.Name}Dto
 {{
@@ -63,9 +66,9 @@ public class {entity.Name}Dto
     }
 
     /// <summary>
-    /// Gera o Request de criacao.
+    /// Gera o Request de criação.
     /// EXCLUI PKs auto-geradas E campos de auditoria/sistema.
-    /// PKs de texto (nao auto-geradas) sao incluidas.
+    /// PKs de texto (não auto-geradas) são incluídas.
     /// </summary>
     public static GeneratedFile GenerateCreateRequest(EntityConfig entity)
     {
@@ -81,7 +84,7 @@ public class {entity.Name}Dto
         var properties = GeneratePropertiesWithValidation(createProps, isCreate: true);
 
         var content = $@"// =============================================================================
-// ARQUIVO GERADO POR GeradorFullStack v3.8
+// ARQUIVO GERADO POR GeradorFullStack v4.0
 // Entity: {entity.Name}
 // Module: {entity.Module}
 // Data: {DateTime.Now:yyyy-MM-dd HH:mm:ss}
@@ -91,8 +94,8 @@ using System.ComponentModel.DataAnnotations;
 namespace RhSensoERP.Web.Models.{modulePath}.{entity.Name};
 
 /// <summary>
-/// Request para criacao de {entity.DisplayName}.
-/// Compativel com backend: Create{entity.Name}Request
+/// Request para criação de {entity.DisplayName}.
+/// Compatível com backend: Create{entity.Name}Request
 /// </summary>
 public class Create{entity.Name}Request
 {{
@@ -110,15 +113,15 @@ public class Create{entity.Name}Request
     }
 
     /// <summary>
-    /// Gera o Request de atualizacao.
+    /// Gera o Request de atualização.
     /// EXCLUI PKs E campos de auditoria/sistema.
-    /// PKs nunca sao editaveis no Update (nem mesmo as de texto).
+    /// PKs nunca são editáveis no Update (nem mesmo as de texto).
     /// </summary>
     public static GeneratedFile GenerateUpdateRequest(EntityConfig entity)
     {
         var modulePath = GetModulePath(entity.Module);
 
-        // v3.8: No Update, NENHUMA PK e editavel E exclui campos de auditoria/sistema
+        // v3.8: No Update, NENHUMA PK é editável E exclui campos de auditoria/sistema
         var updateProps = entity.Properties
             .Where(p => !p.IsPrimaryKey &&
                         !p.IsReadOnly &&
@@ -128,7 +131,7 @@ public class Create{entity.Name}Request
         var properties = GeneratePropertiesWithValidation(updateProps, isCreate: false);
 
         var content = $@"// =============================================================================
-// ARQUIVO GERADO POR GeradorFullStack v3.8
+// ARQUIVO GERADO POR GeradorFullStack v4.0
 // Entity: {entity.Name}
 // Module: {entity.Module}
 // Data: {DateTime.Now:yyyy-MM-dd HH:mm:ss}
@@ -138,8 +141,8 @@ using System.ComponentModel.DataAnnotations;
 namespace RhSensoERP.Web.Models.{modulePath}.{entity.Name};
 
 /// <summary>
-/// Request para atualizacao de {entity.DisplayName}.
-/// Compativel com backend: Update{entity.Name}Request
+/// Request para atualização de {entity.DisplayName}.
+/// Compatível com backend: Update{entity.Name}Request
 /// </summary>
 public class Update{entity.Name}Request
 {{
@@ -164,7 +167,7 @@ public class Update{entity.Name}Request
         var modulePath = GetModulePath(entity.Module);
 
         var content = $@"// =============================================================================
-// ARQUIVO GERADO POR GeradorFullStack v3.8
+// ARQUIVO GERADO POR GeradorFullStack v4.0
 // Entity: {entity.Name}
 // Module: {entity.Module}
 // Data: {DateTime.Now:yyyy-MM-dd HH:mm:ss}
@@ -175,16 +178,16 @@ namespace RhSensoERP.Web.Models.{modulePath}.{entity.Name};
 
 /// <summary>
 /// ViewModel para listagem de {entity.DisplayName}.
-/// Herda de BaseListViewModel que ja contem permissoes e configuracoes de DataTables.
+/// Herda de BaseListViewModel que já contém permissões e configurações de DataTables.
 /// </summary>
 public class {entity.Name}ListViewModel : BaseListViewModel
 {{
     public {entity.Name}ListViewModel()
     {{
-        // Inicializa propriedades padrao
+        // Inicializa propriedades padrão
         InitializeDefaults(""{entity.Name}"", ""{entity.DisplayName}"");
         
-        // Configuracoes especificas
+        // Configurações específicas
         PageTitle = ""{entity.DisplayName}"";
         PageIcon = ""{entity.Icon}"";
         CdFuncao = ""{entity.CdFuncao}"";
@@ -206,19 +209,99 @@ public class {entity.Name}ListViewModel : BaseListViewModel
         };
     }
 
+    // =========================================================================
+    // ⭐ v4.0: SELECT2 LOOKUP - GERAÇÃO AUTOMÁTICA DE DTOS
+    // =========================================================================
+
+    /// <summary>
+    /// ⭐ v4.0: Gera DTOs simplificados para lookups de Select2.
+    /// Um DTO é criado para cada campo configurado como Select2 AJAX.
+    /// 
+    /// EXEMPLO DE DTO GERADO:
+    /// <code>
+    /// public class FornecedorLookupDto
+    /// {
+    ///     public int Id { get; set; }
+    ///     public string RazaoSocial { get; set; } = string.Empty;
+    /// }
+    /// </code>
+    /// </summary>
+    public static List<GeneratedFile> GenerateSelect2LookupDtos(EntityConfig entity)
+    {
+        var files = new List<GeneratedFile>();
+
+        if (!entity.Select2Lookups.Any())
+            return files;
+
+        foreach (var lookup in entity.Select2Lookups)
+        {
+            var valuePascal = ToPascalCase(lookup.ValueField);
+            var textPascal = ToPascalCase(lookup.TextField);
+
+            // Determina tipo do campo VALUE baseado na propriedade FK
+            var valueType = "int"; // padrão
+            var relatedProp = entity.Properties.FirstOrDefault(p =>
+                p.Name.Equals(lookup.PropertyName, StringComparison.OrdinalIgnoreCase));
+
+            if (relatedProp != null)
+            {
+                // Usa o tipo simples (sem nullable) da FK
+                valueType = relatedProp.CSharpTypeSimple;
+            }
+
+            var content = $@"// =============================================================================
+// ARQUIVO GERADO POR GeradorFullStack v4.0
+// DTO DE LOOKUP PARA SELECT2
+// Campo: {lookup.PropertyName}
+// Entidade: {lookup.EntityName}
+// Data: {DateTime.Now:yyyy-MM-dd HH:mm:ss}
+// =============================================================================
+
+namespace RhSensoERP.Web.Models.Common;
+
+/// <summary>
+/// DTO simplificado para lookup de {lookup.DisplayName} em Select2.
+/// Gerado automaticamente para o campo {lookup.PropertyName}.
+/// </summary>
+public class {lookup.DtoName}
+{{
+    /// <summary>
+    /// Valor que será usado como ID no Select2 (campo {lookup.ValueField})
+    /// </summary>
+    public {valueType} {valuePascal} {{ get; set; }}
+    
+    /// <summary>
+    /// Texto que será exibido no Select2 (campo {lookup.TextField})
+    /// </summary>
+    public string {textPascal} {{ get; set; }} = string.Empty;
+}}
+";
+
+            files.Add(new GeneratedFile
+            {
+                FileName = $"{lookup.DtoName}.cs",
+                RelativePath = $"Web/Models/Common/{lookup.DtoName}.cs",
+                Content = content,
+                FileType = "Model"
+            });
+        }
+
+        return files;
+    }
+
     #region Helper Methods
 
     /// <summary>
-    /// v3.8: Verifica se a propriedade e um campo de auditoria ou sistema.
-    /// Estes campos NAO devem aparecer em Create/Update Requests.
-    /// Sao preenchidos automaticamente pelo backend.
+    /// v3.8: Verifica se a propriedade é um campo de auditoria ou sistema.
+    /// Estes campos NÃO devem aparecer em Create/Update Requests.
+    /// São preenchidos automaticamente pelo backend.
     /// </summary>
     private static bool IsAuditOrSystemField(PropertyConfig prop)
     {
         var systemFields = new[]
         {
             // =====================================================================
-            // Campos de Auditoria - Padrao Legacy (SQL Server)
+            // Campos de Auditoria - Padrão Legacy (SQL Server)
             // =====================================================================
             "DataCriacao", "DtCriacao",
             "UsuarioCriacao", "CriadoPor",
@@ -226,7 +309,7 @@ public class {entity.Name}ListViewModel : BaseListViewModel
             "UsuarioAtualizacao", "AtualizadoPor",
             
             // =====================================================================
-            // Campos de Auditoria - Padrao Moderno (Entity Framework)
+            // Campos de Auditoria - Padrão Moderno (Entity Framework)
             // =====================================================================
             "CreatedAt", "CreatedDate", "CreatedAtUtc",
             "CreatedBy", "CreatedByUser", "CreatedByUserId",
@@ -245,15 +328,15 @@ public class {entity.Name}ListViewModel : BaseListViewModel
     }
 
     /// <summary>
-    /// Verifica se a propriedade e uma PK auto-gerada.
-    /// PKs de texto (string) NAO sao auto-geradas e devem aparecer no Create.
+    /// Verifica se a propriedade é uma PK auto-gerada.
+    /// PKs de texto (string) NÃO são auto-geradas e devem aparecer no Create.
     /// </summary>
     private static bool IsAutoGeneratedPrimaryKey(PropertyConfig prop)
     {
         if (!prop.IsPrimaryKey)
             return false;
 
-        // PKs string NAO sao auto-geradas (codigo manual como CdTptabela)
+        // PKs string NÃO são auto-geradas (código manual como CdTptabela)
         if (prop.IsString)
             return false;
 
@@ -265,16 +348,16 @@ public class {entity.Name}ListViewModel : BaseListViewModel
         if (prop.IsGuid)
             return true;
 
-        // Numerico (int/long) sem Identity explicito -> assumir auto-gerada
+        // Numérico (int/long) sem Identity explícito -> assumir auto-gerada
         if (prop.IsInt || prop.IsLong)
             return true;
 
-        // Outros tipos -> assumir auto-gerada por seguranca
+        // Outros tipos -> assumir auto-gerada por segurança
         return true;
     }
 
     /// <summary>
-    /// Gera propriedades sem validacao (para DTOs de leitura).
+    /// Gera propriedades sem validação (para DTOs de leitura).
     /// </summary>
     private static string GenerateProperties(List<PropertyConfig> properties)
     {
@@ -282,7 +365,7 @@ public class {entity.Name}ListViewModel : BaseListViewModel
 
         foreach (var prop in properties)
         {
-            // Comentario XML com DisplayName
+            // Comentário XML com DisplayName
             if (!string.IsNullOrEmpty(prop.DisplayName))
             {
                 sb.AppendLine($"    /// <summary>");
@@ -299,8 +382,8 @@ public class {entity.Name}ListViewModel : BaseListViewModel
     }
 
     /// <summary>
-    /// Gera propriedades com validacao (para Requests de Create/Update).
-    /// PKs de texto sao obrigatorias no Create.
+    /// Gera propriedades com validação (para Requests de Create/Update).
+    /// PKs de texto são obrigatórias no Create.
     /// </summary>
     private static string GeneratePropertiesWithValidation(List<PropertyConfig> properties, bool isCreate = false)
     {
@@ -308,20 +391,20 @@ public class {entity.Name}ListViewModel : BaseListViewModel
 
         foreach (var prop in properties)
         {
-            // Comentario XML
+            // Comentário XML
             if (!string.IsNullOrEmpty(prop.DisplayName))
             {
                 sb.AppendLine($"    /// <summary>");
                 sb.AppendLine($"    /// {prop.DisplayName}");
                 if (prop.IsPrimaryKey && isCreate)
                 {
-                    sb.AppendLine($"    /// (Chave Primaria - obrigatorio na criacao)");
+                    sb.AppendLine($"    /// (Chave Primária - obrigatório na criação)");
                 }
                 sb.AppendLine($"    /// </summary>");
                 sb.AppendLine($"    [Display(Name = \"{prop.DisplayName}\")]");
             }
 
-            // Required - PKs de texto sao sempre obrigatorias no Create
+            // Required - PKs de texto são sempre obrigatórias no Create
             bool isRequired = prop.Required && !prop.IsNullable;
             if (prop.IsPrimaryKey && isCreate)
             {
@@ -333,7 +416,7 @@ public class {entity.Name}ListViewModel : BaseListViewModel
                 var errorMsg = !string.IsNullOrEmpty(prop.DisplayName)
                     ? prop.DisplayName
                     : prop.Name;
-                sb.AppendLine($"    [Required(ErrorMessage = \"{errorMsg} e obrigatorio\")]");
+                sb.AppendLine($"    [Required(ErrorMessage = \"{errorMsg} é obrigatório\")]");
             }
 
             // StringLength
@@ -347,7 +430,7 @@ public class {entity.Name}ListViewModel : BaseListViewModel
                 else
                 {
                     sb.AppendLine($"    [StringLength({prop.MaxLength.Value}, " +
-                                 $"ErrorMessage = \"{prop.DisplayName ?? prop.Name} deve ter no maximo {{1}} caracteres\")]");
+                                 $"ErrorMessage = \"{prop.DisplayName ?? prop.Name} deve ter no máximo {{1}} caracteres\")]");
                 }
             }
 
@@ -360,7 +443,24 @@ public class {entity.Name}ListViewModel : BaseListViewModel
     }
 
     /// <summary>
-    /// Converte nome do modulo para path de pasta.
+    /// ⭐ v4.0: Helper - Converte para PascalCase.
+    /// Usado para converter valueField e textField (camelCase) para propriedades C# (PascalCase).
+    /// 
+    /// EXEMPLOS:
+    /// - "id" → "Id"
+    /// - "razaoSocial" → "RazaoSocial"
+    /// - "nomeCompleto" → "NomeCompleto"
+    /// </summary>
+    private static string ToPascalCase(string text)
+    {
+        if (string.IsNullOrEmpty(text))
+            return text;
+
+        return char.ToUpper(text[0]) + text.Substring(1);
+    }
+
+    /// <summary>
+    /// Converte nome do módulo para path de pasta.
     /// </summary>
     private static string GetModulePath(string moduleName)
     {

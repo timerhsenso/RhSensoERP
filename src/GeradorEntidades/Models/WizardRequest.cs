@@ -1,12 +1,5 @@
 // =============================================================================
-// WIZARD REQUEST v3.5 - Recebe configuração do Wizard Frontend
-// =============================================================================
-// Arquivo: GeradorEntidades/Models/WizardRequest.cs
-// =============================================================================
-// CHANGELOG:
-// v3.5 - Suporte completo a Tabs no formulário
-// v3.4 - Adicionado ApiRoute para receber rota do manifesto
-// v3.3 - Versão inicial com suporte a Grid e Form
+// WIZARD REQUEST v4.0 - SELECT2 AJAX SUPPORT
 // =============================================================================
 
 using System.Text.Json;
@@ -34,11 +27,6 @@ public class WizardRequest
     // ⭐ v3.4: ROTA DA API DO MANIFESTO
     // =========================================================================
 
-    /// <summary>
-    /// Rota da API vinda do manifesto (ex: "api/treinamentos/tipotreinamento").
-    /// CRÍTICO: Esta propriedade recebe a rota correta do backend manifest.
-    /// Se não fornecida, será construída automaticamente (o que pode gerar rotas erradas).
-    /// </summary>
     [JsonPropertyName("apiRoute")]
     public string? ApiRoute { get; set; }
 
@@ -46,10 +34,6 @@ public class WizardRequest
     // ⭐ v3.5: MÓDULO EXPLÍCITO
     // =========================================================================
 
-    /// <summary>
-    /// Nome do módulo (ex: "GestaoDeTerceiros", "Treinamento").
-    /// Define o diretório onde os arquivos serão gerados.
-    /// </summary>
     [JsonPropertyName("modulo")]
     public string? Modulo { get; set; }
 
@@ -69,48 +53,30 @@ public class WizardRequest
     // =========================================================================
 
     public List<WizardColumnConfig> GridColumns { get; set; } = new();
-
-    /// <summary>
-    /// ⭐ v3.5: Layout do formulário com suporte a Tabs
-    /// </summary>
     public WizardFormLayout FormLayout { get; set; } = new();
-
     public List<WizardFieldConfig> FormFields { get; set; } = new();
 
     // =========================================================================
     // CONVERSÃO PARA FULLSTACKREQUEST
     // =========================================================================
 
-    /// <summary>
-    /// Converte para FullStackRequest.
-    /// v3.5: Agora passa FormLayout com Tabs corretamente.
-    /// </summary>
     public FullStackRequest ToFullStackRequest()
     {
         var request = new FullStackRequest
         {
-            // Identificação
             CdFuncao = CdFuncao,
             CdSistema = CdSistema,
             DisplayName = DisplayName,
             Icone = Icon,
             MenuOrder = MenuOrder,
-
-            // ⭐ v3.4: PASSA A ROTA DA API DO MANIFESTO
             ApiRoute = ApiRoute,
-
-            // ⭐ v3.5: PASSA O MÓDULO EXPLÍCITO
             Modulo = Modulo,
-
-            // ⭐ v3.5: PASSA O LAYOUT COM TABS (usa FormLayoutConfig de Models.cs)
             FormLayout = new FormLayoutConfig
             {
                 Columns = FormLayout.Columns,
                 UseTabs = FormLayout.UseTabs,
                 Tabs = FormLayout.Tabs ?? new List<string>()
             },
-
-            // Opções de geração
             GerarEntidade = GerarEntidade,
             GerarWebController = GerarWebController,
             GerarWebModels = GerarWebModels,
@@ -135,7 +101,7 @@ public class WizardRequest
             });
         }
 
-        // Form fields - ⭐ v3.5: Agora inclui Tab e Group
+        // Form fields - ⭐ v4.0: AGORA PASSA SELECT2 CONFIG!
         var orderForm = 0;
         foreach (var field in FormFields.OrderBy(f => f.Order))
         {
@@ -150,9 +116,15 @@ public class WizardRequest
                 Required = field.Required,
                 Placeholder = field.Placeholder,
                 HelpText = field.HelpText,
-                // ⭐ v3.5: PASSA TAB E GROUP
                 Tab = field.Tab,
-                Group = field.Group
+                Group = field.Group,
+
+                // ⭐ v4.0: PASSA CONFIGURAÇÃO SELECT2
+                IsSelect2Ajax = field.IsSelect2Ajax,
+                SelectEndpoint = field.SelectEndpoint,
+                SelectApiRoute = field.SelectApiRoute,
+                SelectValueField = field.SelectValueField,
+                SelectTextField = field.SelectTextField
             });
         }
 
@@ -180,9 +152,7 @@ public class WizardColumnConfig
 }
 
 // =============================================================================
-// WIZARD FORM LAYOUT - ⭐ v3.5: Suporte completo a Tabs
-// Nota: Esta é a versão do Wizard (recebe do frontend)
-//       FormLayoutConfig (em Models.cs) é a versão do FullStackRequest
+// WIZARD FORM LAYOUT
 // =============================================================================
 
 public class WizardFormLayout
@@ -190,19 +160,12 @@ public class WizardFormLayout
     [JsonConverter(typeof(FlexibleIntConverter))]
     public int Columns { get; set; } = 2;
 
-    /// <summary>
-    /// Se true, gera formulário com Bootstrap Tabs
-    /// </summary>
     public bool UseTabs { get; set; }
-
-    /// <summary>
-    /// Lista de nomes das abas (ex: ["Dados Gerais", "Contato", "Documentos"])
-    /// </summary>
     public List<string> Tabs { get; set; } = new();
 }
 
 // =============================================================================
-// WIZARD FIELD CONFIG - ⭐ v3.5: Tab e Group
+// WIZARD FIELD CONFIG - ⭐ v4.0: SELECT2 SUPPORT
 // =============================================================================
 
 public class WizardFieldConfig
@@ -218,14 +181,7 @@ public class WizardFieldConfig
     [JsonConverter(typeof(FlexibleIntConverter))]
     public int Order { get; set; }
 
-    /// <summary>
-    /// ⭐ v3.5: Nome da aba onde este campo deve aparecer
-    /// </summary>
     public string? Tab { get; set; }
-
-    /// <summary>
-    /// ⭐ v3.5: Nome do grupo dentro da aba
-    /// </summary>
     public string? Group { get; set; }
 
     public bool Required { get; set; }
@@ -235,6 +191,40 @@ public class WizardFieldConfig
 
     [JsonConverter(typeof(FlexibleNullableIntConverter))]
     public int? MaxLength { get; set; }
+
+    // =========================================================================
+    // ⭐ v4.0 - SELECT2 AJAX CONFIGURATION
+    // =========================================================================
+
+    /// <summary>
+    /// ⭐ v4.0: Se true, gera automaticamente DTO, Action e Service para Select2.
+    /// </summary>
+    [JsonPropertyName("isSelect2Ajax")]
+    public bool IsSelect2Ajax { get; set; }
+
+    /// <summary>
+    /// Endpoint da API para Select2 AJAX (ex: "/api/fornecedores")
+    /// </summary>
+    [JsonPropertyName("selectEndpoint")]
+    public string? SelectEndpoint { get; set; }
+
+    /// <summary>
+    /// Rota da API para Select2 AJAX (alternativa a SelectEndpoint)
+    /// </summary>
+    [JsonPropertyName("selectApiRoute")]
+    public string? SelectApiRoute { get; set; }
+
+    /// <summary>
+    /// Campo de valor (ID) para Select2 (ex: "id")
+    /// </summary>
+    [JsonPropertyName("selectValueField")]
+    public string? SelectValueField { get; set; }
+
+    /// <summary>
+    /// Campo de texto para Select2 (ex: "nome", "razaoSocial")
+    /// </summary>
+    [JsonPropertyName("selectTextField")]
+    public string? SelectTextField { get; set; }
 }
 
 // =============================================================================
@@ -258,7 +248,7 @@ public class WizardGeneratedFile
 }
 
 // =============================================================================
-// JSON CONVERTERS - Aceita string ou int do JavaScript
+// JSON CONVERTERS
 // =============================================================================
 
 public class FlexibleIntConverter : JsonConverter<int>

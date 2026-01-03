@@ -100,6 +100,8 @@ public sealed class GenerateCrudAttribute : Attribute
     // FLAGS DE GERAÇÃO - API/WEB (FALSE por padrão)
     // =========================================================================
 
+    public bool GenerateLookup { get; set; } = false;
+
     public bool GenerateApiController { get; set; } = false;
     public bool GenerateWebController { get; set; } = false;
     public bool GenerateWebModels { get; set; } = false;

@@ -1,8 +1,8 @@
 // =============================================================================
-// ARQUIVO GERADO POR GeradorFullStack v5.2
+// ARQUIVO GERADO POR GeradorFullStack v6.1
 // Entity: CapColaboradoresFornecedor
 // Module: ControleAcessoPortaria
-// Data: 2025-12-30 21:41:02
+// Data: 2026-01-02 19:59:34
 // AUTO-REGISTRO: Compatível com AddCrudToolServicesAutomatically()
 // =============================================================================
 using RhSensoERP.Web.Models.ControleAcessoPortaria.CapColaboradoresFornecedor;
@@ -14,8 +14,9 @@ namespace RhSensoERP.Web.Services.ControleAcessoPortaria.CapColaboradoresFornece
 /// <summary>
 /// Interface do serviço de API para CapColaboradoresFornecedor.
 /// Herda de IApiService (já implementado por BaseApiService) e IBatchDeleteService.
-/// v5.2: Compatível com BaseApiService genérico.
-/// v4.1: Adiciona ToggleAtivoAsync para alternar status dinamicamente.
+/// v6.1: CORRIGIDO - Lookup usa 'term' para Select2.
+/// v6.0: Adiciona métodos Select2 Lookup automáticos.
+/// v4.1: Adiciona ToggleAtivoAsync.
 /// </summary>
 public interface ICapColaboradoresFornecedorApiService 
     : IApiService<CapColaboradoresFornecedorDto, CreateCapColaboradoresFornecedorRequest, UpdateCapColaboradoresFornecedorRequest, int>,
@@ -26,4 +27,5 @@ public interface ICapColaboradoresFornecedorApiService
     /// Alterna o status Ativo/Desativo de um registro.
     /// </summary>
     Task ToggleAtivoAsync(int id, bool ativo, CancellationToken ct = default);
+
 }

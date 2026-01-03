@@ -1,19 +1,18 @@
 // =============================================================================
-// RHSENSOERP GENERATOR v4.3 - API CONTROLLER TEMPLATE
+// RHSENSOERP GENERATOR v4.4 - API CONTROLLER TEMPLATE
 // =============================================================================
 // Arquivo: src/Generators/Templates/ApiControllerTemplate.cs
-// Versão: 4.3 - DELETE com FK handling + BatchDeleteResult + ToggleAtivo
+// Versão: 4.4 - CORRIGIDO - Lookup retorna formato Select2 nativo
 // 
-// ✅ NOVO v4.3:
+// ✅ CORREÇÃO v4.4:
+// - Endpoint GET /lookup retorna formato Select2 sem encapsular em Result<>
+// - Formato: { results: [{id, text}], pagination: {more} }
+// - Parâmetro 'term' em vez de 'search' para compatibilidade Select2
+// 
+// ✅ RECURSOS v4.3:
+// - DELETE com FK handling + BatchDeleteResult + ToggleAtivo
 // - Endpoint PATCH /{id}/toggle-ativo gerado automaticamente quando entidade tem campo Ativo
 // - Detecta campos: Ativo, IsAtivo, Active, IsActive
-// - Gera endpoint completo no Controller
-// 
-// ✅ CORREÇÕES v4.2:
-// - DELETE retorna HTTP 409 Conflict para Foreign Key violations
-// - DELETE BATCH retorna HTTP 200 OK com BatchDeleteResult detalhado
-// - HTTP 404 para registro não encontrado
-// - HTTP 403 para acesso cross-tenant
 // =============================================================================
 using RhSensoERP.Generators.Models;
 using System.Linq;
@@ -22,7 +21,7 @@ namespace RhSensoERP.Generators.Templates;
 
 /// <summary>
 /// Template para geração de API Controller.
-/// v4.3: Adiciona suporte automático para Toggle Ativo.
+/// v4.4: Corrige endpoint de lookup para retornar formato Select2 nativo.
 /// </summary>
 public static class ApiControllerTemplate
 {
@@ -36,7 +35,10 @@ public static class ApiControllerTemplate
         var authUsing = info.ApiRequiresAuth ? "\nusing Microsoft.AspNetCore.Authorization;" : "";
         var batchEndpoint = info.SupportsBatchDelete ? GenerateBatchDeleteEndpoint(info) : "";
 
-        // ✅ NOVO v4.3: Detecta campo Ativo para gerar endpoint ToggleAtivo
+        // ✅ v4.4: Endpoint de Lookup com formato Select2 correto
+        var lookupEndpoint = info.GenerateLookup ? GenerateLookupEndpoint(info) : "";
+
+        // ✅ v4.3: Detecta campo Ativo para gerar endpoint ToggleAtivo
         var hasAtivoField = info.Properties.Any(p =>
             p.Name.Equals("Ativo", StringComparison.OrdinalIgnoreCase) ||
             p.Name.Equals("IsAtivo", StringComparison.OrdinalIgnoreCase) ||
@@ -44,7 +46,7 @@ public static class ApiControllerTemplate
             p.Name.Equals("IsActive", StringComparison.OrdinalIgnoreCase));
         var toggleAtivoEndpoint = hasAtivoField ? GenerateToggleAtivoEndpoint(info) : "";
 
-        // ✅ NOVO v4.0: CurrentUser para multi-tenancy e unique validation
+        // ✅ v4.0: CurrentUser para multi-tenancy e unique validation
         var hasUniqueProps = info.Properties.Any(p => p.IsUnique);
         var needsCurrentUser = !info.IsLegacyTable || hasUniqueProps;
 
@@ -128,6 +130,7 @@ public sealed class {{info.PluralName}}Controller : ControllerBase
 
         return Ok(result);
     }
+{{lookupEndpoint}}
 
     /// <summary>
     /// Cria um novo {{info.DisplayName}}.
@@ -150,7 +153,7 @@ public sealed class {{info.PluralName}}Controller : ControllerBase
     }
 
     /// <summary>
-    /// Atualiza um {{info.DisplayName}} existente.
+    /// Atualiza um {{info.EntityName}} existente.
     /// </summary>
     [HttpPut("{id}")]
     [ProducesResponseType(typeof(Result<bool>), StatusCodes.Status200OK)]
@@ -257,6 +260,74 @@ public sealed class {{info.PluralName}}Controller : ControllerBase
     }
 
     /// <summary>
+    /// ✅ v4.4 CORRIGIDO: Gera endpoint de Lookup para Select2.
+    /// Retorna formato nativo do Select2 SEM encapsular em Result<>
+    /// Formato: { results: [{id, text}], pagination: {more} }
+    /// </summary>
+    private static string GenerateLookupEndpoint(EntityInfo info)
+    {
+        // Detecta qual campo usar para o "text" do Select2
+        var displayField = info.Properties.FirstOrDefault(p =>
+            p.Name.Equals("Nome", StringComparison.OrdinalIgnoreCase) ||
+            p.Name.Equals("Descricao", StringComparison.OrdinalIgnoreCase) ||
+            p.Name.Equals("RazaoSocial", StringComparison.OrdinalIgnoreCase) ||
+            p.Name.Equals("NomeFantasia", StringComparison.OrdinalIgnoreCase) ||
+            p.Name.Equals("Titulo", StringComparison.OrdinalIgnoreCase) ||
+            p.Name.Equals("Description", StringComparison.OrdinalIgnoreCase) ||
+            p.Name.Equals("Title", StringComparison.OrdinalIgnoreCase));
+
+        var textFieldName = displayField?.Name ?? "Nome";
+
+        return $$"""
+
+
+    /// <summary>
+    /// Busca {{info.DisplayName}} para componentes de seleção (Lookup/Select2).
+    /// Retorna formato Select2: { results: [{id, text}], pagination: {more} }
+    /// </summary>
+    [HttpGet("lookup")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetLookup(
+        [FromQuery] string? term,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        CancellationToken ct = default)
+    {
+        var request = new PagedRequest 
+        { 
+            Search = term, 
+            Page = page, 
+            PageSize = pageSize 
+        };
+
+        var result = await _mediator.Send(new Get{{info.PluralName}}PagedQuery(request), ct);
+
+        if (!result.IsSuccess)
+        {
+            return BadRequest(new { error = result.Error.Message });
+        }
+
+        // ✅ RETORNA FORMATO SELECT2 SEM ENCAPSULAR EM Result<>
+        var response = new
+        {
+            results = result.Value.Items.Select(x => new 
+            { 
+                id = x.Id, 
+                text = x.{{textFieldName}} ?? x.Id.ToString()
+            }),
+            pagination = new
+            {
+                more = result.Value.HasNextPage
+            }
+        };
+
+        return Ok(response);
+    }
+""";
+    }
+
+    /// <summary>
     /// ✅ v4.3: Gera endpoint PATCH /{id}/toggle-ativo.
     /// Permite alternar o status Ativo/Desativo de forma rápida.
     /// </summary>
@@ -319,8 +390,7 @@ public sealed class {{info.PluralName}}Controller : ControllerBase
     }
 
     // =========================================================================
-    // ✅ CORRIGIDO v4.0: Métodos para instanciar Commands com TenantId
-    // Usa concatenação de strings ao invés de raw literals para evitar problemas com chaves
+    // ✅ v4.0: Métodos para instanciar Commands com TenantId
     // =========================================================================
 
     private static string GenerateCreateCommandInstantiation(EntityInfo info)

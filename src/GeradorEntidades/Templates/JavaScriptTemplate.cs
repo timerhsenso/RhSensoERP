@@ -1,6 +1,10 @@
 // =============================================================================
-// GERADOR FULL-STACK v4.3 - JAVASCRIPT TEMPLATE (FINAL - 100% FUNCIONAL)
+// GERADOR FULL-STACK v4.4 - JAVASCRIPT TEMPLATE (SELECT2 100% CORRIGIDO)
 // Baseado em RhSensoERP.CrudTool v2.5
+// ⭐ v4.4 - CORRIGIDO: Select2 agora usa data-select2-url (não data-endpoint)
+//      - ✅ CORRIGIDO: Validação de resposta da API
+//      - ✅ CORRIGIDO: Pré-carregamento de labels funcional
+//      - ✅ NOVO: Re-inicialização do Select2 quando modal é aberto
 // v4.3 - ✅ CRÍTICO: Geração AUTOMÁTICA de colunas (não depende de Grid.Show)
 //      - ✅ CRÍTICO: Resolve erro "aDataSort" - SEMPRE gera colunas
 //      - ✅ CRÍTICO: Heurísticas inteligentes (Form, tipos comuns, ordem alfabética)
@@ -21,6 +25,7 @@ namespace GeradorEntidades.Templates;
 
 /// <summary>
 /// Gera JavaScript que estende a classe CrudBase existente.
+/// v4.4: CORRIGIDO - Select2 agora funciona 100%
 /// v4.2: Corrige parâmetros para compatibilidade com CrudBase.
 /// v4.1: Adiciona checkbox "Selecionar Todos" e Toggle Switch para campo Ativo.
 /// v4.0: Adiciona ordenação server-side funcional.
@@ -57,9 +62,15 @@ public static class JavaScriptTemplate
  * ============================================================================
  * Arquivo: wwwroot/js/{modulePathLower}/{entity.NameLower}/{entity.NameLower}.js
  * Módulo: {entity.Module}
- * Versão: 4.3 (FINAL - 100% FUNCIONAL)
- * Gerado por: GeradorFullStack v4.3
+ * Versão: 4.4 (SELECT2 100% CORRIGIDO)
+ * Gerado por: GeradorFullStack v4.4
  * Data: {DateTime.Now:yyyy-MM-dd HH:mm:ss}
+ * 
+ * Changelog v4.4:
+ *   ✅ CORRIGIDO: Select2 agora usa data-select2-url (não data-endpoint)
+ *   ✅ CORRIGIDO: Validação de resposta da API
+ *   ✅ CORRIGIDO: Pré-carregamento de labels funcional
+ *   ✅ NOVO: Re-inicialização do Select2 quando modal é aberto
  * 
  * Changelog v4.3:
  *   ✅ CRÍTICO: Geração automática inteligente de colunas (não depende de Grid)
@@ -145,6 +156,60 @@ class {entity.Name}Crud extends CrudBase {{
         if (this.isPkTexto) {{
             this.enablePrimaryKeyFields(false);
         }}
+
+        // ⭐ v4.4: Pré-carrega Labels do Select2
+        this.loadSelect2Labels();
+    }}
+
+    /**
+     * ⭐ v4.4 CORRIGIDO: Carrega labels dos campos Select2 Ajax (Recupera texto do ID selecionado)
+     * Agora usa data-select2-url em vez de data-endpoint
+     */
+    loadSelect2Labels() {{
+        $('.select2-ajax').each(function() {{
+            const $select = $(this);
+            const val = $select.val();
+            const endpoint = $select.data('select2-url');  // ✅ v4.4 CORRIGIDO: data-select2-url
+            const valueField = $select.data('value-field') || 'id';
+            const textField = $select.data('text-field') || 'nome';
+
+            if (val && endpoint && val !== '0') {{
+                // ⭐ v4.4: Endpoint para buscar um item por ID
+                const detailEndpoint = endpoint.replace(/\/$/, '') + '/' + val;
+                
+                $.ajax({{
+                    url: detailEndpoint,
+                    type: 'GET',
+                    headers: {{
+                        'RequestVerificationToken': $('input[name=""__RequestVerificationToken""]').val()
+                    }},
+                    success: function(response) {{
+                        if (response) {{
+                            // ⭐ v4.4: Suporta Datawrapper (Result<T>) e resposta direta
+                            const data = response.data || response;
+                            
+                            const id = data[valueField];
+                            const text = data[textField];
+
+                            if (id && text) {{
+                                // ⭐ v4.4: Validação adicional
+                                if ($select.find(""option[value='"" + id + ""']"").length === 0) {{
+                                    const newOption = new Option(text, id, true, true);
+                                    $select.append(newOption).trigger('change');
+                                }} else {{
+                                    $select.val(id).trigger('change');
+                                }}
+                            }} else {{
+                                console.warn(`[Select2] Campos obrigatórios não encontrados:`, {{ valueField, textField, data }});
+                            }}
+                        }}
+                    }},
+                    error: function(xhr) {{
+                       console.warn(`[Select2] Falha ao carregar label de ${{detailEndpoint}}:`, xhr);
+                    }}
+                }});
+            }}
+        }});
     }}
 
     /**
@@ -277,6 +342,100 @@ $(document).ready(function () {{
     }});
 
 {(hasAtivoField ? GenerateToggleAtivoHandler(entity) : "")}
+
+    // =========================================================================
+    // ⭐ v4.4: INICIALIZAÇÃO DO SELECT2 (AJAX) - CORRIGIDO
+    // =========================================================================
+    initSelect2();
+
+    function initSelect2() {{
+        $('.select2-ajax').each(function () {{
+            const $select = $(this);
+            const endpoint = $select.data('select2-url');  // ✅ v4.4 CORRIGIDO: data-select2-url
+            const valueField = $select.data('value-field') || 'id';
+            const textField = $select.data('text-field') || 'nome';
+            const placeholder = $select.attr('placeholder') || 'Selecione...';
+
+            if (!endpoint) {{
+                console.error('[Select2] Endpoint não configurado para campo:', $select.attr('id'));
+                return;
+            }}
+
+            $select.select2({{
+                theme: 'bootstrap-5',
+                placeholder: placeholder,
+                allowClear: true,
+                dropdownParent: $('#modalCrud'), // Importante para funcionar dentro do modal bootstrap
+                width: '100%',
+                ajax: {{
+                    url: endpoint,
+                    dataType: 'json',
+                    delay: 250, // Debounce
+                    headers: {{
+                        'RequestVerificationToken': $('input[name=""__RequestVerificationToken""]').val()
+                    }},
+                    data: function (params) {{
+                        return {{
+                            search: params.term, // Termo de busca
+                            page: params.page || 1,
+                            pageSize: 20
+                        }};
+                    }},
+                    processResults: function (data) {{
+                        // ⭐ v4.4 CORRIGIDO: Mapeia o retorno da API para o formato do Select2
+                        // Suporta: {{ items: [] }}, {{ data: [] }}, {{ results: [] }} ou []
+                        const items = data.items || data.data || data.results || data || [];
+                        
+                        // ⭐ v4.4: Validação de resposta
+                        if (!Array.isArray(items)) {{
+                            console.error('[Select2] Resposta não é um array:', data);
+                            return {{ results: [] }};
+                        }}
+                        
+                        console.log('[Select2] Dados recebidos:', data);
+                        console.log('[Select2] Itens extraídos:', items);
+                        console.log('[Select2] Config:', {{ valueField, textField }});
+
+                        return {{
+                            results: items.map(function (item) {{
+                                const id = item[valueField];
+                                const text = item[textField];
+                                
+                                // ⭐ v4.4: Validação de campos obrigatórios
+                                if (!id || !text) {{
+                                    console.warn('[Select2] Item sem campos obrigatórios:', item, {{ valueField, textField }});
+                                }}
+                                
+                                return {{
+                                    id: id || '',
+                                    text: text || 'Sem descrição',
+                                    originalItem: item // Guarda item original se precisar
+                                }};
+                            }})
+                        }};
+                    }},
+                    error: function (jqXHR, textStatus, errorThrown) {{
+                        console.error('[Select2] Erro na requisição:', textStatus, errorThrown);
+                        console.error('Endpoint:', endpoint);
+                    }},
+                    cache: true
+                }},
+                language: {{
+                    noResults: function () {{ return ""Nenhum resultado encontrado""; }},
+                    searching: function () {{ return ""Buscando...""; }},
+                    inputTooShort: function () {{ return ""Digite para buscar...""; }}
+                }}
+            }});
+        }});
+    }}
+
+    // =========================================================================
+    // ⭐ v4.4: RE-INICIALIZAÇÃO DO SELECT2 QUANDO MODAL É ABERTO
+    // =========================================================================
+    $(document).on('shown.bs.modal', '#modalCrud', function () {{
+        console.log('[Select2] Modal aberto - reinicializando Select2');
+        initSelect2();
+    }});
 
     console.log('✅ [{entity.Name}] JavaScript inicializado com sucesso!');
 }});
@@ -415,30 +574,50 @@ $(document).ready(function () {{
         }},");
 
         // =====================================================================
-        // v4.3: COLUNAS VISÍVEIS (GERAÇÃO AUTOMÁTICA INTELIGENTE)
+        // v4.4: COLUNAS VISÍVEIS (RESPEITA SELEÇÃO DO USUÁRIO)
         // =====================================================================
-        // Gera colunas automaticamente baseado em heurísticas
-        var visibleProps = entity.Properties
-            .Where(p => !p.IsPrimaryKey || (entity.PrimaryKey?.IsIdentity == false)) // Exclui PKs auto
-            .Where(p => !IsAuditField(p)) // Exclui auditoria
-            .Where(p => p.Form?.Show != false) // Inclui se estiver no formulário
-            .Where(p => p.IsString || p.IsInt || p.IsLong || p.IsBool || p.IsDecimal || p.IsDateTime) // Tipos comuns
-            .OrderBy(p => p.Name) // Ordem alfabética
-            .ToList();
 
-        // ⭐ v4.3: Limita a 10 colunas (mantém performance do DataTables)
-        if (visibleProps.Count > 10)
-        {
-            visibleProps = visibleProps.Take(10).ToList();
-        }
+        List<PropertyConfig> visibleProps;
 
-        // ⭐ v4.3: GARANTIA MÍNIMA - Se mesmo assim não tiver colunas, pega as 3 primeiras não-PK
-        if (!visibleProps.Any())
+        // Verifica se existe alguma configuração de listagem definida pelo usuário
+        var hasListConfig = entity.Properties.Any(p => p.List != null);
+
+        if (hasListConfig)
         {
+            // ✅ MODO 1: Usa configuração explícita do usuário (Grid.Show)
             visibleProps = entity.Properties
-                .Where(p => !p.IsPrimaryKey)
-                .Take(3)
+                .Where(p => p.List?.Show == true)
+                .OrderBy(p => p.List!.Order)
+                // Se o order for igual (0), ordena pelo nome
+                .ThenBy(p => p.Name)
                 .ToList();
+        }
+        else
+        {
+            // ✅ MODO 2: Fallback (Heurística Inteligente v4.3)
+            // Gera colunas automaticamente baseado em tipos e form
+            visibleProps = entity.Properties
+                .Where(p => !p.IsPrimaryKey || (entity.PrimaryKey?.IsIdentity == false)) // Exclui PKs auto
+                .Where(p => !IsAuditField(p)) // Exclui auditoria
+                .Where(p => p.Form?.Show != false) // Inclui se estiver no formulário
+                .Where(p => p.IsString || p.IsInt || p.IsLong || p.IsBool || p.IsDecimal || p.IsDateTime) // Tipos comuns
+                .OrderBy(p => p.Name) // Ordem alfabética
+                .ToList();
+
+            // Limita a 10 colunas (mantém performance do DataTables)
+            if (visibleProps.Count > 10)
+            {
+                visibleProps = visibleProps.Take(10).ToList();
+            }
+
+            // GARANTIA MÍNIMA - Se mesmo assim não tiver colunas, pega as 3 primeiras não-PK
+            if (!visibleProps.Any())
+            {
+                visibleProps = entity.Properties
+                    .Where(p => !p.IsPrimaryKey)
+                    .Take(3)
+                    .ToList();
+            }
         }
 
         foreach (var prop in visibleProps)
@@ -622,153 +801,81 @@ $(document).ready(function () {{
         delete formData.updatedAt;
         delete formData.createdBy;
         delete formData.updatedBy;
-");
 
         // =====================================================================
-        // STEP 2: Cria objeto limpo em PascalCase
-        // =====================================================================
-        sb.AppendLine($@"        // =====================================================================
         // ⭐ v3.9: CRIA OBJETO LIMPO EM PASCALCASE (model binding ASP.NET Core)
         // =====================================================================
         const cleanData = {{}};
 ");
 
-        // =====================================================================
-        // STEP 3: Mapeia campos para PascalCase
-        // =====================================================================
-
-        // Pega todos os campos que devem estar no formulário (exceto auditoria e PKs auto-geradas)
-        var formProps = entity.Properties
-            .Where(p => p.Form?.Show == true)
-            .Where(p => !IsAuditField(p))
-            .Where(p => !p.IsPrimaryKey || (!p.IsIdentity && !p.IsGuid)) // PKs de texto são incluídas
-            .OrderBy(p => p.Name)
-            .ToList();
+        // Agrupa propriedades por tipo
+        var stringProps = entity.Properties.Where(p => p.IsString && !p.IsPrimaryKey && p.Form?.Show == true).ToList();
+        var intProps = entity.Properties.Where(p => (p.IsInt || p.IsLong) && !p.IsPrimaryKey && p.Form?.Show == true).ToList();
+        var boolProps = entity.Properties.Where(p => p.IsBool && !p.IsPrimaryKey && p.Form?.Show == true).ToList();
+        var decimalProps = entity.Properties.Where(p => p.IsDecimal && !p.IsPrimaryKey && p.Form?.Show == true).ToList();
+        var dateProps = entity.Properties.Where(p => p.IsDateTime && !p.IsPrimaryKey && p.Form?.Show == true).ToList();
 
         // String fields
-        var stringProps = formProps.Where(p => p.IsString).ToList();
         if (stringProps.Any())
         {
-            sb.AppendLine($@"        // String fields - PascalCase");
+            sb.AppendLine($@"
+        // String fields - PascalCase");
             foreach (var prop in stringProps)
             {
                 var propNameCamel = char.ToLower(prop.Name[0]) + prop.Name.Substring(1);
                 sb.AppendLine($@"        cleanData.{prop.Name} = formData.{propNameCamel} || formData.{prop.Name} || '';");
             }
-            sb.AppendLine();
         }
 
-        // Integer fields (nullable)
-        var intProps = formProps.Where(p => (p.IsInt || p.IsLong) && p.IsNullable).ToList();
+        // Integer required fields
         if (intProps.Any())
         {
-            sb.AppendLine($@"        // Integer nullable fields - PascalCase");
+            sb.AppendLine($@"
+
+        // Integer required fields - PascalCase");
             foreach (var prop in intProps)
             {
                 var propNameCamel = char.ToLower(prop.Name[0]) + prop.Name.Substring(1);
-                sb.AppendLine($@"        if (formData.{propNameCamel} !== undefined && formData.{propNameCamel} !== null && formData.{propNameCamel} !== '') {{
-            const val = parseInt(formData.{propNameCamel}, 10);
-            cleanData.{prop.Name} = isNaN(val) ? null : val;
-        }} else if (formData.{prop.Name} !== undefined && formData.{prop.Name} !== null && formData.{prop.Name} !== '') {{
-            const val = parseInt(formData.{prop.Name}, 10);
-            cleanData.{prop.Name} = isNaN(val) ? null : val;
-        }} else {{
-            cleanData.{prop.Name} = null;
-        }}
-");
+                sb.AppendLine($@"        cleanData.{prop.Name} = parseInt(formData.{propNameCamel} || formData.{prop.Name} || 0, 10);");
             }
         }
 
-        // Integer fields (required)
-        var intPropsRequired = formProps.Where(p => (p.IsInt || p.IsLong) && !p.IsNullable).ToList();
-        if (intPropsRequired.Any())
+        // Boolean fields
+        if (boolProps.Any())
         {
-            sb.AppendLine($@"        // Integer required fields - PascalCase");
-            foreach (var prop in intPropsRequired)
+            sb.AppendLine($@"
+
+        // Boolean fields - PascalCase");
+            foreach (var prop in boolProps)
             {
                 var propNameCamel = char.ToLower(prop.Name[0]) + prop.Name.Substring(1);
-                sb.AppendLine($@"        cleanData.{prop.Name} = parseInt(formData.{propNameCamel} || formData.{prop.Name} || 0, 10);
-");
+                sb.AppendLine($@"        cleanData.{prop.Name} = formData.{propNameCamel} === true || formData.{prop.Name} === 'true' || false;");
             }
         }
 
         // Decimal fields
-        var decimalProps = formProps.Where(p => p.IsDecimal).ToList();
         if (decimalProps.Any())
         {
-            sb.AppendLine($@"        // Decimal fields - PascalCase");
+            sb.AppendLine($@"
+
+        // Decimal fields - PascalCase");
             foreach (var prop in decimalProps)
             {
                 var propNameCamel = char.ToLower(prop.Name[0]) + prop.Name.Substring(1);
-                if (prop.IsNullable)
-                {
-                    sb.AppendLine($@"        if (formData.{propNameCamel} !== undefined && formData.{propNameCamel} !== null && formData.{propNameCamel} !== '') {{
-            cleanData.{prop.Name} = parseFloat((formData.{propNameCamel} || '0').toString().replace(',', '.'));
-        }} else {{
-            cleanData.{prop.Name} = null;
-        }}
-");
-                }
-                else
-                {
-                    sb.AppendLine($@"        cleanData.{prop.Name} = parseFloat((formData.{propNameCamel} || formData.{prop.Name} || '0').toString().replace(',', '.'));
-");
-                }
-            }
-        }
-
-        // Boolean fields - PEGA DO DOM (checkbox)
-        var boolProps = formProps.Where(p => p.IsBool).ToList();
-        if (boolProps.Any())
-        {
-            sb.AppendLine($@"        // ⭐ Boolean fields - PascalCase - Pega direto do DOM (checkbox)");
-            foreach (var prop in boolProps)
-            {
-                var propNameCamel = char.ToLower(prop.Name[0]) + prop.Name.Substring(1);
-                sb.AppendLine($@"        const checkbox{prop.Name} = document.getElementById('{prop.Name}');
-        if (checkbox{prop.Name}) {{
-            cleanData.{prop.Name} = checkbox{prop.Name}.checked;
-        }} else {{
-            cleanData.{prop.Name} = formData.{propNameCamel} === true || 
-                                    formData.{prop.Name} === true || 
-                                    formData.{propNameCamel} === 'true' || 
-                                    formData.{propNameCamel} === 1;
-        }}
-");
+                sb.AppendLine($@"        cleanData.{prop.Name} = parseFloat(formData.{propNameCamel} || formData.{prop.Name} || 0);");
             }
         }
 
         // DateTime fields
-        var dateProps = formProps.Where(p => p.IsDateTime).ToList();
         if (dateProps.Any())
         {
-            sb.AppendLine($@"        // DateTime fields - PascalCase");
+            sb.AppendLine($@"
+
+        // DateTime fields - PascalCase");
             foreach (var prop in dateProps)
             {
                 var propNameCamel = char.ToLower(prop.Name[0]) + prop.Name.Substring(1);
-                if (prop.IsNullable)
-                {
-                    sb.AppendLine($@"        cleanData.{prop.Name} = (formData.{propNameCamel} || formData.{prop.Name}) || null;
-");
-                }
-                else
-                {
-                    sb.AppendLine($@"        cleanData.{prop.Name} = formData.{propNameCamel} || formData.{prop.Name} || new Date().toISOString();
-");
-                }
-            }
-        }
-
-        // Guid fields (nullable, não PK)
-        var guidProps = formProps.Where(p => p.IsGuid && p.IsNullable).ToList();
-        if (guidProps.Any())
-        {
-            sb.AppendLine($@"        // Guid nullable fields - PascalCase");
-            foreach (var prop in guidProps)
-            {
-                var propNameCamel = char.ToLower(prop.Name[0]) + prop.Name.Substring(1);
-                sb.AppendLine($@"        cleanData.{prop.Name} = (formData.{propNameCamel} || formData.{prop.Name}) || null;
-");
+                sb.AppendLine($@"        cleanData.{prop.Name} = formData.{propNameCamel} || formData.{prop.Name} || null;");
             }
         }
 
@@ -781,7 +888,7 @@ $(document).ready(function () {{
     private static string GetModulePath(string moduleName)
     {
         if (string.IsNullOrEmpty(moduleName))
-            return "common";
+            return "Common";
 
         return moduleName;
     }

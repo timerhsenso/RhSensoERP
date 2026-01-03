@@ -142,6 +142,38 @@ public sealed class AccountController : Controller
         return RedirectToAction("Index", "Home");
     }
 
+    /// <summary>
+    /// Endpoint para fornecer o token JWT ao JavaScript.
+    /// Usado para requisições AJAX autenticadas à API.
+    /// </summary>
+    [HttpGet]
+    [Authorize]
+    public async Task<IActionResult> GetToken()
+    {
+        try
+        {
+            // ✅ Lê o token armazenado nas propriedades de autenticação
+            var accessToken = await HttpContext.GetTokenAsync("access_token");
+
+            if (string.IsNullOrEmpty(accessToken))
+            {
+                _logger.LogWarning("Token não encontrado para usuário {User}", User.Identity?.Name);
+                return Unauthorized(new { message = "Token não encontrado. Faça login novamente." });
+            }
+
+            return Ok(new
+            {
+                token = accessToken,
+                expiresAt = await HttpContext.GetTokenAsync("expires_at")
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao recuperar token para {User}", User.Identity?.Name);
+            return StatusCode(500, new { message = "Erro ao recuperar token." });
+        }
+    }
+
     [HttpGet]
     [Authorize]
     public async Task<IActionResult> Dashboard(CancellationToken ct)

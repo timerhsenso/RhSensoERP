@@ -605,6 +605,23 @@ public class ColumnFormConfig
     /// Nome do grupo dentro da aba.
     /// </summary>
     public string? Group { get; set; }
+
+    // =========================================================================
+    // ⭐ v4.4 - CONFIGURAÇÃO DE SELECT/COMBOBOX (AJAX)
+    // =========================================================================
+
+    /// <summary>
+    /// Se true, gera automaticamente DTO, Action e Service para Select2.
+    /// </summary>
+    public bool IsSelect2Ajax { get; set; }
+
+    /// <summary>
+    /// Rota da API backend para buscar dados.
+    /// </summary>
+    public string? SelectApiRoute { get; set; }
+    public string? SelectEndpoint { get; set; }
+    public string? SelectValueField { get; set; }
+    public string? SelectTextField { get; set; }
 }
 
 /// <summary>
@@ -641,6 +658,9 @@ public class FullStackResult
     public GeneratedFile? View { get; set; }
     public GeneratedFile? JavaScript { get; set; }
 
+    public List<GeneratedFile> Select2LookupDtos { get; set; } = [];
+
+
     // Metadados
     public List<string> NavigationsGeradas { get; set; } = [];
     public List<string> Warnings { get; set; } = [];
@@ -649,9 +669,10 @@ public class FullStackResult
     /// Todos os arquivos gerados.
     /// </summary>
     public IEnumerable<GeneratedFile> AllFiles =>
-        new[] { Entidade, WebController, Dto, CreateRequest, UpdateRequest,
+       new[] { Entidade, WebController, Dto, CreateRequest, UpdateRequest,
                 ListViewModel, ServiceInterface, ServiceImplementation, View, JavaScript }
-            .Where(f => f != null)!;
+           .Where(f => f != null)!
+           .Concat(Select2LookupDtos ?? []);
 }
 
 /// <summary>
@@ -720,6 +741,11 @@ public class EntityConfig
 
     // Propriedades
     public List<PropertyConfig> Properties { get; set; } = [];
+
+    /// <summary>
+    /// Lista de lookups Select2 detectados automaticamente.
+    /// </summary>
+    public List<SelectLookupConfig> Select2Lookups { get; set; } = [];
 
     // =========================================================================
     // ⭐ v3.3 - LAYOUT DO FORMULÁRIO COM TABS
@@ -877,7 +903,14 @@ public class EntityConfig
                     // ⭐ v3.3 - Tab e Group do campo
                     // =========================================================================
                     Tab = formConfig.Tab,
-                    Group = formConfig.Group
+                    Group = formConfig.Group,
+
+                    // ⭐ v4.4 - Select Ajax Config
+                    SelectEndpoint = formConfig.SelectEndpoint,
+                    SelectValueField = formConfig.SelectValueField,
+                    SelectTextField = formConfig.SelectTextField,
+                    IsSelect2Ajax = formConfig.IsSelect2Ajax || !string.IsNullOrEmpty(formConfig.SelectEndpoint),
+                    SelectApiRoute = formConfig.SelectApiRoute
                 };
             }
             // PKs string/char que não são Identity precisam aparecer no form (usuário digita)
@@ -913,6 +946,54 @@ public class EntityConfig
             {
                 config.PrimaryKey = prop;
             }
+            if (isPrimaryKey && config.PrimaryKey == null)
+            {
+                config.PrimaryKey = prop;
+            }
+        }
+
+        // =========================================================================
+        // ⭐ v6.0: Popula Select2Lookups baseado nas propriedades configuradas
+        // =========================================================================
+        foreach (var prop in config.Properties.Where(p => p.Form != null && !string.IsNullOrEmpty(p.Form.SelectEndpoint)))
+        {
+            var endpoint = prop.Form.SelectEndpoint; 
+            // Ex: /api/gestaoterceirosprestadores/capfornecedores
+            
+            // Tenta extrair o nome da entidade do endpoint ou da FK
+            var entityName = prop.ForeignKeyTable ?? "Unknown";
+            if (!string.IsNullOrEmpty(prop.ForeignKeyTable))
+            {
+                entityName = TabelaInfo.ToPascalCase(prop.ForeignKeyTable);
+            }
+            else 
+            {
+                // Fallback: extrai do endpoint (último segmento)
+                var segments = endpoint.Split('/', StringSplitOptions.RemoveEmptyEntries);
+                if (segments.Length > 0)
+                {
+                    entityName = TabelaInfo.ToPascalCase(segments.Last());
+                    // Remove plural "es" ou "s" básico se possível (bem simplista)
+                    if (entityName.EndsWith("s")) entityName = entityName.TrimEnd('s'); 
+                    if (entityName.EndsWith("e")) entityName = entityName.TrimEnd('e'); // remove 'es' -> 'e' (errado), melhor deixar plural se não tiver FK info
+                }
+            }
+
+            var dtoName = $"{entityName}LookupDto";
+            var methodName = $"Get{prop.Name}Select2";
+
+            config.Select2Lookups.Add(new SelectLookupConfig
+            {
+                PropertyName = prop.Name,
+                EntityName = entityName,
+                DtoName = dtoName,
+                ApiRoute = endpoint,
+                ValueField = prop.Form.SelectValueField ?? "id",
+                TextField = prop.Form.SelectTextField ?? "nome",
+                MethodName = methodName,
+                DisplayName = prop.DisplayName,
+                Label = prop.DisplayName
+            });
         }
 
         return config;
@@ -991,6 +1072,63 @@ public class EntityConfig
 /// <summary>
 /// Configuração de propriedade.
 /// </summary>
+/// <summary>
+/// ⭐ v4.0: Configuração de Lookup para Select2.
+/// Gerado automaticamente quando um campo tem IsSelect2Ajax = true.
+/// </summary>
+public class SelectLookupConfig
+{
+    /// <summary>
+    /// Nome da propriedade que usa este lookup (ex: "IdFornecedor")
+    /// </summary>
+    public string PropertyName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Nome da entidade de destino (ex: "Fornecedor")
+    /// </summary>
+    public string EntityName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Nome do DTO que será gerado (ex: "FornecedorLookupDto")
+    /// </summary>
+    public string DtoName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Rota da API backend (ex: "api/gestaoterceirosprestadores/capfornecedores")
+    /// </summary>
+    public string ApiRoute { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Campo que será usado como VALUE no Select2 (ex: "id")
+    /// </summary>
+    public string ValueField { get; set; } = "id";
+
+    /// <summary>
+    /// Campo que será exibido como TEXT no Select2 (ex: "razaoSocial")
+    /// </summary>
+    public string TextField { get; set; } = "nome";
+
+    /// <summary>
+    /// Nome do método que será gerado (ex: "GetFornecedorForSelect")
+    /// </summary>
+    public string MethodName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// DisplayName para mensagens (ex: "Fornecedor")
+    /// </summary>
+    public string DisplayName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Label do campo no formulário
+    /// </summary>
+    public string Label { get; set; } = string.Empty;
+}
+
+
+// =============================================================================
+// ⭐ COPIE ESTE BLOCO E COLE NO FINAL DO SEU Models.cs (ANTES DO #endregion FINAL)
+
+
 public class PropertyConfig
 {
     public string Name { get; set; } = string.Empty;
@@ -1083,6 +1221,25 @@ public class FormConfig
     /// Nome do grupo dentro da aba.
     /// </summary>
     public string? Group { get; set; }
+
+
+    // =========================================================================
+    // ⭐ v4.4 - CONFIGURAÇÃO DE SELECT/COMBOBOX (AJAX)
+    // =========================================================================
+
+    /// <summary>
+    /// ⭐ v4.0: Se true, gera automaticamente DTO, Action e Service para Select2.
+    /// </summary>
+    public bool IsSelect2Ajax { get; set; }
+
+    /// <summary>
+    /// Rota da API backend para buscar dados (ex: "api/fornecedores").
+    /// </summary>
+    public string? SelectApiRoute { get; set; }
+
+    public string? SelectEndpoint { get; set; }
+    public string? SelectValueField { get; set; }
+    public string? SelectTextField { get; set; }
 }
 
 #endregion
@@ -1214,5 +1371,6 @@ public class GeracaoResult
     public string NomeArquivoJson => $"crud-config-{NomeEntidade}.json";
     public List<string> NavigationsGeradas { get; set; } = [];
 }
+
 
 #endregion

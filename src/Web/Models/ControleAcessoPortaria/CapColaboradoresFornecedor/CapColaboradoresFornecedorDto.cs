@@ -1,15 +1,15 @@
 // =============================================================================
-// ARQUIVO GERADO POR GeradorFullStack v3.8
+// ARQUIVO GERADO POR GeradorFullStack v4.0
 // Entity: CapColaboradoresFornecedor
 // Module: ControleAcessoPortaria
-// Data: 2025-12-30 21:41:02
+// Data: 2026-01-02 19:59:34
 // =============================================================================
 
 namespace RhSensoERP.Web.Models.ControleAcessoPortaria.CapColaboradoresFornecedor;
 
 /// <summary>
 /// DTO de leitura para CapColaboradoresFornecedor.
-/// Compativel com backend: RhSensoERP.Modules.ControleAcessoPortaria.Application.DTOs.CapColaboradoresFornecedorDto
+/// Compatível com backend: RhSensoERP.Modules.ControleAcessoPortaria.Application.DTOs.CapColaboradoresFornecedorDto
 /// </summary>
 public class CapColaboradoresFornecedorDto
 {
@@ -24,7 +24,7 @@ public class CapColaboradoresFornecedorDto
     public Guid TenantId { get; set; }
 
     /// <summary>
-    /// IdFornecedor
+    /// ID Fornecedor
     /// </summary>
     public int IdFornecedor { get; set; }
 
@@ -34,12 +34,12 @@ public class CapColaboradoresFornecedorDto
     public string Nome { get; set; } = string.Empty;
 
     /// <summary>
-    /// CPF
+    /// Cpf
     /// </summary>
     public string Cpf { get; set; } = string.Empty;
 
     /// <summary>
-    /// RG
+    /// Rg
     /// </summary>
     public string Rg { get; set; } = string.Empty;
 
@@ -59,7 +59,7 @@ public class CapColaboradoresFornecedorDto
     public DateOnly? DataNascimento { get; set; }
 
     /// <summary>
-    /// Gênero
+    /// Genero
     /// </summary>
     public string Genero { get; set; } = string.Empty;
 
@@ -69,17 +69,17 @@ public class CapColaboradoresFornecedorDto
     public string EstadoCivil { get; set; } = string.Empty;
 
     /// <summary>
-    /// ID Tipo Sanguíneo
+    /// Tipo Sanguineo
     /// </summary>
     public int? IdTipoSanguineo { get; set; }
 
     /// <summary>
-    /// Endereço
+    /// Endereco
     /// </summary>
     public string Endereco { get; set; } = string.Empty;
 
     /// <summary>
-    /// Número
+    /// Numero
     /// </summary>
     public string Numero { get; set; } = string.Empty;
 
@@ -99,22 +99,22 @@ public class CapColaboradoresFornecedorDto
     public string Cidade { get; set; } = string.Empty;
 
     /// <summary>
-    /// ID UF
+    /// Uf
     /// </summary>
     public int? IdUf { get; set; }
 
     /// <summary>
-    /// CEP
+    /// Cep
     /// </summary>
     public string Cep { get; set; } = string.Empty;
 
     /// <summary>
-    /// Data Admissão
+    /// Data Admissao
     /// </summary>
     public DateOnly DataAdmissao { get; set; }
 
     /// <summary>
-    /// Data Demissão
+    /// Data Demissao
     /// </summary>
     public DateOnly? DataDemissao { get; set; }
 

@@ -1,8 +1,16 @@
 /**
  * =============================================================================
- * FORM DESIGNER MODULE v2.1
- * Designer visual de formulários com drag & drop, tabs e layout
+ * FORM DESIGNER MODULE v4.0 - SELECT2 AJAX SUPPORT
+ * Designer visual de formulários com drag & drop, tabs, layout e Select2
  * =============================================================================
+ * CHANGELOG v4.0:
+ * - ✨ SUPORTE COMPLETO A SELECT2 AJAX
+ * - ✅ Checkbox "Usar Select2 AJAX" para campos select
+ * - ✅ Campos: Endpoint (API), Campo de Valor, Campo de Texto
+ * - ✅ Propriedades renomeadas: selectEndpoint, selectValueField, selectTextField
+ * - ✅ Validação e preview visual de Select2
+ * - ✅ Compatibilidade total com backend WizardRequest.cs
+ * 
  * CHANGELOG v2.1:
  * - Adicionado botão "Adicionar Todos" para campos editáveis
  * - Exclusão automática de campos de auditoria (IdSaas, DtCriacao, etc.)
@@ -49,7 +57,7 @@ const FormDesigner = {
     // INICIALIZAÇÃO
     // =========================================================================
     init() {
-        console.log('🎨 Form Designer v2.1 initialized');
+        console.log('🎨 Form Designer v4.0 initialized (SELECT2 AJAX SUPPORT)');
 
         const savedLayout = localStorage.getItem('formLayoutConfig');
         if (savedLayout) {
@@ -330,9 +338,15 @@ const FormDesigner = {
                 validations: [],
                 mask: '',
                 helpText: '',
-                endpoint: '',
-                valueField: 'id',
-                textField: 'nome',
+
+                // ⭐ v4.0: Select2 AJAX properties
+                isSelect2Ajax: false,
+                selectEndpoint: '',
+                selectApiRoute: '',
+                selectValueField: 'id',
+                selectTextField: 'nome',
+
+                // Cascade (legacy)
                 cascadeTo: '',
                 dependsOn: '',
                 filterParam: ''
@@ -660,9 +674,15 @@ const FormDesigner = {
             validations: [],
             mask: '',
             helpText: '',
-            endpoint: '',
-            valueField: 'id',
-            textField: 'nome',
+
+            // ⭐ v4.0: Select2 AJAX properties
+            isSelect2Ajax: false,
+            selectEndpoint: '',
+            selectApiRoute: '',
+            selectValueField: 'id',
+            selectTextField: 'nome',
+
+            // Cascade (legacy)
             cascadeTo: '',
             dependsOn: '',
             filterParam: ''
@@ -704,6 +724,7 @@ const FormDesigner = {
                 </div>
                 <div class="field-meta">
                     <span class="badge badge-primary">${field.inputType}</span>
+                    ${field.isSelect2Ajax ? '<span class="badge badge-success">Select2 AJAX</span>' : ''}
                     <span class="badge badge-secondary">${colClass}</span>
                     ${field.mask ? `<span class="badge badge-warning">${field.mask}</span>` : ''}
                 </div>
@@ -719,11 +740,15 @@ const FormDesigner = {
                 return `<div class="preview-textarea">${Utils.escapeHtml(placeholder)}</div>`;
 
             case 'select':
+                // ⭐ v4.0: Preview diferente para Select2 AJAX
+                const selectIcon = field.isSelect2Ajax ? '🔍' : '▼';
+                const selectClass = field.isSelect2Ajax ? 'preview-select-ajax' : 'preview-select';
                 return `
-                    <div class="preview-select">
+                    <div class="${selectClass}">
                         <span>Selecione...</span>
-                        <span class="preview-select-arrow">▼</span>
+                        <span class="preview-select-arrow">${selectIcon}</span>
                     </div>
+                    ${field.isSelect2Ajax ? `<small style="color: #28a745; font-size: 10px;">AJAX: ${field.selectEndpoint || field.selectApiRoute || 'configurar endpoint'}</small>` : ''}
                 `;
 
             case 'checkbox':
@@ -889,51 +914,100 @@ const FormDesigner = {
                 </div>
             </div>
 
-            <!-- Configuração de Select -->
+            <!-- ⭐ v4.0: Configuração de Select2 AJAX -->
             <div id="selectConfig" class="config-section" style="display: ${field.inputType === 'select' ? 'block' : 'none'}">
                 <h4>🔗 Configuração do Select</h4>
-                <div class="config-row">
-                    <label>Endpoint (API):</label>
-                    <input type="text" value="${Utils.escapeAttr(field.endpoint || '')}" 
-                           placeholder="/api/opcoes"
-                           onchange="FormDesigner.updateField('endpoint', this.value)">
-                </div>
-                <div class="config-row">
-                    <label>Campo de Valor (ID):</label>
-                    <input type="text" value="${Utils.escapeAttr(field.valueField || 'id')}" 
-                           onchange="FormDesigner.updateField('valueField', this.value)">
-                </div>
-                <div class="config-row">
-                    <label>Campo de Texto:</label>
-                    <input type="text" value="${Utils.escapeAttr(field.textField || 'nome')}" 
-                           onchange="FormDesigner.updateField('textField', this.value)">
-                </div>
                 
-                <!-- Cascade (opcional) -->
-                <div class="config-row checkbox-row">
+                <!-- Checkbox Select2 AJAX -->
+                <div class="config-row checkbox-row" style="background: #e7f3ff; padding: 10px; border-radius: 6px; margin-bottom: 15px;">
                     <label>
-                        <input type="checkbox" ${field.cascadeTo ? 'checked' : ''} 
-                               onchange="FormDesigner.toggleCascade(this.checked)">
-                        Cascata para outro campo
+                        <input type="checkbox" id="isSelect2Ajax" ${field.isSelect2Ajax ? 'checked' : ''} 
+                               onchange="FormDesigner.toggleSelect2Ajax(this.checked)">
+                        <strong>✨ Usar Select2 AJAX</strong> <small>(busca via API)</small>
                     </label>
                 </div>
-                <div id="cascadeOptions" style="display: ${field.cascadeTo ? 'block' : 'none'}">
+                
+                <!-- Campos Select2 AJAX -->
+                <div id="select2AjaxFields" style="display: ${field.isSelect2Ajax ? 'block' : 'none'}">
                     <div class="config-row">
-                        <label>Campo dependente:</label>
-                        <select onchange="FormDesigner.updateField('cascadeTo', this.value)">
-                            <option value="">Selecione...</option>
-                            ${selectFields.map(f => `
-                                <option value="${f.name}" ${field.cascadeTo === f.name ? 'selected' : ''}>
-                                    ${f.label || f.name}
-                                </option>
-                            `).join('')}
-                        </select>
+                        <label>
+                            Endpoint (API): <span class="required">*</span>
+                        </label>
+                        <input type="text" 
+                               id="selectEndpoint"
+                               value="${Utils.escapeAttr(field.selectEndpoint || '')}" 
+                               placeholder="/api/modulo/entidade"
+                               onchange="FormDesigner.updateField('selectEndpoint', this.value)">
+                        <small style="color: #666; font-size: 11px;">
+                            Exemplo: /api/gestaoterceirosprestadores/capfornecedores
+                        </small>
                     </div>
+                    
                     <div class="config-row">
-                        <label>Parâmetro de filtro:</label>
-                        <input type="text" value="${Utils.escapeAttr(field.filterParam || '')}" 
-                               placeholder="idPai"
-                               onchange="FormDesigner.updateField('filterParam', this.value)">
+                        <label>Campo de Valor (ID):</label>
+                        <input type="text" 
+                               id="selectValueField"
+                               value="${Utils.escapeAttr(field.selectValueField || 'id')}" 
+                               placeholder="id"
+                               onchange="FormDesigner.updateField('selectValueField', this.value)">
+                        <small style="color: #666; font-size: 11px;">
+                            Nome do campo que será usado como valor (geralmente "id")
+                        </small>
+                    </div>
+                    
+                    <div class="config-row">
+                        <label>Campo de Texto:</label>
+                        <input type="text" 
+                               id="selectTextField"
+                               value="${Utils.escapeAttr(field.selectTextField || 'nome')}" 
+                               placeholder="nome"
+                               onchange="FormDesigner.updateField('selectTextField', this.value)">
+                        <small style="color: #666; font-size: 11px;">
+                            Nome do campo que será exibido (ex: "nome", "razaoSocial", "descricao")
+                        </small>
+                    </div>
+                    
+                    <div class="config-row">
+                        <label>Rota Alternativa (SelectApiRoute):</label>
+                        <input type="text" 
+                               id="selectApiRoute"
+                               value="${Utils.escapeAttr(field.selectApiRoute || '')}" 
+                               placeholder="/api/..."
+                               onchange="FormDesigner.updateField('selectApiRoute', this.value)">
+                        <small style="color: #666; font-size: 11px;">
+                            Opcional: rota alternativa (se diferente do Endpoint)
+                        </small>
+                    </div>
+                </div>
+                
+                <!-- Cascade (opcional - apenas se NÃO for Select2 AJAX) -->
+                <div id="cascadeSection" style="display: ${field.isSelect2Ajax ? 'none' : 'block'}">
+                    <hr style="margin: 15px 0; border-color: #e0e0e0;">
+                    <div class="config-row checkbox-row">
+                        <label>
+                            <input type="checkbox" ${field.cascadeTo ? 'checked' : ''} 
+                                   onchange="FormDesigner.toggleCascade(this.checked)">
+                            Cascata para outro campo
+                        </label>
+                    </div>
+                    <div id="cascadeOptions" style="display: ${field.cascadeTo ? 'block' : 'none'}">
+                        <div class="config-row">
+                            <label>Campo dependente:</label>
+                            <select onchange="FormDesigner.updateField('cascadeTo', this.value)">
+                                <option value="">Selecione...</option>
+                                ${selectFields.map(f => `
+                                    <option value="${f.name}" ${field.cascadeTo === f.name ? 'selected' : ''}>
+                                        ${f.label || f.name}
+                                    </option>
+                                `).join('')}
+                            </select>
+                        </div>
+                        <div class="config-row">
+                            <label>Parâmetro de filtro:</label>
+                            <input type="text" value="${Utils.escapeAttr(field.filterParam || '')}" 
+                                   placeholder="idPai"
+                                   onchange="FormDesigner.updateField('filterParam', this.value)">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1032,6 +1106,38 @@ const FormDesigner = {
                 </div>
             </div>
         `).join('');
+    },
+
+    // =========================================================================
+    // ⭐ v4.0: TOGGLE SELECT2 AJAX
+    // =========================================================================
+    toggleSelect2Ajax(enabled) {
+        const selectedField = Store.get('selectedField');
+        if (!selectedField) return;
+
+        selectedField.isSelect2Ajax = enabled;
+
+        const formFields = Store.get('formFields') || [];
+        const idx = formFields.findIndex(f => f.id === selectedField.id);
+        if (idx !== -1) {
+            formFields[idx] = selectedField;
+            Store.set('formFields', formFields);
+        }
+
+        // Mostra/esconde campos
+        const select2Fields = document.getElementById('select2AjaxFields');
+        const cascadeSection = document.getElementById('cascadeSection');
+
+        if (select2Fields) {
+            select2Fields.style.display = enabled ? 'block' : 'none';
+        }
+
+        if (cascadeSection) {
+            cascadeSection.style.display = enabled ? 'none' : 'block';
+        }
+
+        // Atualiza preview no canvas
+        this.renderCanvas();
     },
 
     updateField(property, value) {
@@ -1133,4 +1239,4 @@ const FormDesigner = {
 App.registerModule('FormDesigner', FormDesigner);
 window.FormDesigner = FormDesigner;
 
-console.log('✅ FormDesigner v2.1 carregado');
+console.log('✅ FormDesigner v4.0 carregado com suporte SELECT2 AJAX');

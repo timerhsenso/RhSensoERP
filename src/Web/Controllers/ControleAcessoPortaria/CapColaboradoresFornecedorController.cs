@@ -1,8 +1,8 @@
 // =============================================================================
-// ARQUIVO GERADO POR GeradorFullStack v3.7
+// ARQUIVO GERADO POR GeradorFullStack v4.0
 // Entity: CapColaboradoresFornecedor
 // Module: ControleAcessoPortaria
-// Data: 2025-12-30 21:41:02
+// Data: 2026-01-02 19:59:34
 // =============================================================================
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -73,7 +73,6 @@ public class CapColaboradoresFornecedorController
     [HttpGet]
     public async Task<IActionResult> Index(CancellationToken ct = default)
     {
-        // Verifica permissão de consulta
         if (!await CanViewAsync(CdFuncao, ct))
         {
             _logger.LogWarning(
@@ -84,7 +83,6 @@ public class CapColaboradoresFornecedorController
             return RedirectToAction("AccessDenied", "Account");
         }
 
-        // Busca permissões do usuário para esta função
         var permissions = await GetUserPermissionsAsync(CdFuncao, ct);
 
         var viewModel = new CapColaboradoresFornecedorListViewModel
@@ -98,7 +96,6 @@ public class CapColaboradoresFornecedorController
             CdFuncao,
             permissions);
 
-        // View organizada por módulo: Views/Module/Entity/Index.cshtml
         return View("~/Views/ControleAcessoPortaria/CapColaboradoresFornecedor/Index.cshtml", viewModel);
     }
 
@@ -106,9 +103,6 @@ public class CapColaboradoresFornecedorController
     // ACTION: GET BY ID (Sobrescrito para verificar permissão)
     // =========================================================================
 
-    /// <summary>
-    /// Busca registro por ID via AJAX.
-    /// </summary>
     [HttpGet]
     public override async Task<IActionResult> GetById(int id)
     {
@@ -121,12 +115,9 @@ public class CapColaboradoresFornecedorController
     }
 
     // =========================================================================
-    // ACTION: CREATE (Sobrescrito para verificar permissão)
+    // ACTION: CREATE
     // =========================================================================
 
-    /// <summary>
-    /// Cria um novo registro.
-    /// </summary>
     [HttpPost]
     [ValidateAntiForgeryToken]
     public override async Task<IActionResult> Create([FromBody] CreateCapColaboradoresFornecedorRequest dto)
@@ -150,13 +141,9 @@ public class CapColaboradoresFornecedorController
     }
 
     // =========================================================================
-    // ACTION: EDIT (POST para compatibilidade com CrudBase.js)
+    // ACTION: EDIT
     // =========================================================================
 
-    /// <summary>
-    /// Atualiza um registro existente via POST.
-    /// CrudBase.js envia para /Edit?id=xxx via POST.
-    /// </summary>
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit([FromQuery] int id, [FromBody] UpdateCapColaboradoresFornecedorRequest dto)
@@ -186,12 +173,9 @@ public class CapColaboradoresFornecedorController
     }
 
     // =========================================================================
-    // ACTION: UPDATE (PUT padrão REST)
+    // ACTION: UPDATE
     // =========================================================================
 
-    /// <summary>
-    /// Atualiza um registro existente via PUT.
-    /// </summary>
     [HttpPut]
     [ValidateAntiForgeryToken]
     public override async Task<IActionResult> Update(int id, [FromBody] UpdateCapColaboradoresFornecedorRequest dto)
@@ -205,13 +189,9 @@ public class CapColaboradoresFornecedorController
     }
 
     // =========================================================================
-    // ACTION: DELETE (Sobrescrito para verificar permissão)
+    // ACTION: DELETE
     // =========================================================================
 
-    /// <summary>
-    /// Exclui um registro.
-    /// CrudBase.js envia DELETE para /Delete?id=xxx
-    /// </summary>
     [HttpPost]
     [HttpDelete]
     [ValidateAntiForgeryToken]
@@ -237,12 +217,9 @@ public class CapColaboradoresFornecedorController
     }
 
     // =========================================================================
-    // ACTION: DELETE MULTIPLE (Sobrescrito para verificar permissão)
+    // ACTION: DELETE MULTIPLE
     // =========================================================================
 
-    /// <summary>
-    /// Exclui múltiplos registros.
-    /// </summary>
     [HttpPost]
     [ValidateAntiForgeryToken]
     public override async Task<IActionResult> DeleteMultiple([FromBody] List<int> ids)
@@ -276,10 +253,6 @@ public class CapColaboradoresFornecedorController
     // v3.7: ACTION - TOGGLE ATIVO (Alternar Status Ativo/Desativo)
     // =========================================================================
 
-    /// <summary>
-    /// Alterna o status Ativo/Desativo de um registro via AJAX.
-    /// Rate limit implementado no client-side (debounce 500ms).
-    /// </summary>
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ToggleAtivo([FromBody] ToggleAtivoRequest request, CancellationToken ct = default)
@@ -308,7 +281,6 @@ public class CapColaboradoresFornecedorController
                 request.Ativo,
                 CdFuncao);
 
-            // Chama o serviço para alternar o status
             await _capcolaboradoresfornecedorService.ToggleAtivoAsync(request.Id, request.Ativo, ct);
 
             var mensagem = request.Ativo
@@ -338,12 +310,10 @@ public class CapColaboradoresFornecedorController
         }
     }
 
-    /// <summary>
-    /// Request para alternar status Ativo.
-    /// </summary>
     public class ToggleAtivoRequest
     {
         public int Id { get; set; }
         public bool Ativo { get; set; }
     }
+
 }

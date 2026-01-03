@@ -2,7 +2,7 @@
 // ARQUIVO GERADO POR GeradorFullStack v3.7
 // Entity: CapVisitantes
 // Module: ControleAcessoPortaria
-// Data: 2025-12-30 20:13:45
+// Data: 2025-12-30 22:47:46
 // =============================================================================
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

@@ -1,7 +1,8 @@
 // =============================================================================
-// GERADOR FULL-STACK v3.4 - VIEW TEMPLATE (ATUALIZADO)
+// GERADOR FULL-STACK v4.2 - VIEW TEMPLATE (SELECT2 AUTO-DETECÇÃO COMPLETA)
 // Baseado em RhSensoERP.CrudTool v2.5
-// v3.4 - Suporte a Checkbox "Selecionar Todos" e Toggle Switch para ATIVO
+// ⭐ v4.2 - AUTO-DETECÇÃO: Detecta automaticamente campos de FK e aplica Select2
+// ⭐ v4.1 - SELECT2 LOOKUP: Gera campos select com data-select2-url automático
 // v3.3 - Suporte a Bootstrap Tabs no formulário
 // =============================================================================
 
@@ -12,6 +13,8 @@ namespace GeradorEntidades.Templates;
 
 /// <summary>
 /// Gera View Razor compatível com CrudBase.js e BaseListViewModel.
+/// v4.2: AUTO-DETECÇÃO de campos de FK - aplica Select2 automaticamente
+/// v4.1: CORRIGIDO - Atributos Select2 agora são gerados corretamente
 /// v3.4: Adiciona checkbox "Selecionar Todos" e renderização de Toggle Switch para campo ATIVO.
 /// </summary>
 public static class ViewTemplate
@@ -222,6 +225,8 @@ public static class ViewTemplate
 
     /// <summary>
     /// Gera o HTML de um campo individual.
+    /// v4.2: AUTO-DETECÇÃO de campos de FK - aplica Select2 automaticamente
+    /// v4.1: CORRIGIDO - Atributos Select2 agora são gerados corretamente
     /// </summary>
     private static string GenerateFieldHtml(PropertyConfig prop, EntityConfig entity)
     {
@@ -263,8 +268,10 @@ public static class ViewTemplate
         {
             return $@"                <div class=""col-md-{colSize} mb-3"">
                     <div class=""form-check"">
-                        <input type=""checkbox"" class=""form-check-input"" id=""{prop.Name}"" name=""{prop.Name}"" {disabled}{pkTextAttr} />
-                        <label class=""form-check-label"" for=""{prop.Name}"">{EscapeHtml(prop.DisplayName)}{pkBadge}</label>
+                        <input type=""checkbox"" class=""form-check-input"" id=""{prop.Name}"" name=""{prop.Name}"" {disabled} />
+                        <label class=""form-check-label"" for=""{prop.Name}"">
+                            {EscapeHtml(prop.DisplayName)}{requiredStar}{pkBadge}
+                        </label>
                     </div>{helpText}
                 </div>";
         }
@@ -274,26 +281,54 @@ public static class ViewTemplate
         // =====================================================================
         if (inputType == "textarea")
         {
+            var rows = config.Rows > 0 ? config.Rows : 3;
             return $@"                <div class=""col-md-{colSize} mb-3"">
                     <label for=""{prop.Name}"" class=""form-label"">
                         {EscapeHtml(prop.DisplayName)}{requiredStar}{pkBadge}
                     </label>
                     <textarea class=""form-control"" id=""{prop.Name}"" name=""{prop.Name}"" 
-                              rows=""{config.Rows}"" placeholder=""{EscapeHtml(placeholder)}"" 
-                              {required} {disabled}{maxLength}{pkTextAttr}></textarea>{helpText}
+                              rows=""{rows}"" placeholder=""{EscapeHtml(placeholder)}"" {required} {disabled}{maxLength}></textarea>{helpText}
                 </div>";
         }
 
         // =====================================================================
-        // SELECT
+        // SELECT (Combobox) - v4.2 COM AUTO-DETECÇÃO DE FK
         // =====================================================================
         if (inputType == "select")
         {
+            // ⭐ v4.2: AUTO-DETECÇÃO de Select2 AJAX
+            // Detecta automaticamente se deve usar Select2 AJAX quando:
+            // 1. SelectEndpoint está preenchido OU
+            // 2. SelectApiRoute está preenchido OU
+            // 3. IsSelect2Ajax = true OU
+            // 4. ⭐ v4.2 NOVO: Nome do campo indica FK (Id*, Fk*, Cd* + sufixo)
+            var isFkField = IsForeignKeyField(prop.Name);
+            var isSelect2Ajax = !string.IsNullOrEmpty(config.SelectEndpoint) ||
+                                !string.IsNullOrEmpty(config.SelectApiRoute) ||
+                                config.IsSelect2Ajax ||
+                                isFkField;  // ⭐ v4.2 NOVO
+
+            // ⭐ v4.2 CORRIGIDO: Classe CSS agora é adicionada corretamente
+            var select2Class = isSelect2Ajax ? "select2-ajax" : "form-select";
+
+            // ⭐ v4.2: URL do Select2
+            // Prioridade: 1) SelectApiRoute, 2) SelectEndpoint, 3) Gerar automaticamente
+            var select2Url = !string.IsNullOrEmpty(config.SelectApiRoute)
+                ? config.SelectApiRoute
+                : !string.IsNullOrEmpty(config.SelectEndpoint)
+                    ? config.SelectEndpoint
+                    : GenerateSelect2Url(prop, entity);  // ⭐ v4.2 NOVO
+
+            // ⭐ v4.2 CORRIGIDO: Atributos Select2 agora são adicionados corretamente
+            var select2Attrs = isSelect2Ajax
+                ? $@" data-select2-url=""{select2Url}"" data-value-field=""{config.SelectValueField ?? "id"}"" data-text-field=""{config.SelectTextField ?? "nome"}"" style=""width: 100%"""
+                : "";
+
             return $@"                <div class=""col-md-{colSize} mb-3"">
                     <label for=""{prop.Name}"" class=""form-label"">
                         {EscapeHtml(prop.DisplayName)}{requiredStar}{pkBadge}
                     </label>
-                    <select class=""form-select"" id=""{prop.Name}"" name=""{prop.Name}"" {required} {disabled}{pkTextAttr}>
+                    <select class=""form-control {select2Class}"" id=""{prop.Name}"" name=""{prop.Name}"" {required} {disabled}{pkTextAttr}{select2Attrs}>
                         <option value="""">Selecione...</option>
                         <!-- Preencher via JavaScript -->
                     </select>{helpText}
@@ -301,73 +336,107 @@ public static class ViewTemplate
         }
 
         // =====================================================================
-        // INPUT PADRÃO (text, number, date, email, etc.)
+        // INPUT padrão (text, email, number, date, etc)
         // =====================================================================
+        var inputTypeAttr = inputType switch
+        {
+            "email" => "email",
+            "number" => "number",
+            "date" => "date",
+            "time" => "time",
+            "datetime" => "datetime-local",
+            "decimal" => "number",
+            _ => "text"
+        };
+
         return $@"                <div class=""col-md-{colSize} mb-3"">
                     <label for=""{prop.Name}"" class=""form-label"">
                         {EscapeHtml(prop.DisplayName)}{requiredStar}{pkBadge}
                     </label>
-                    <input type=""{inputType}"" class=""form-control"" id=""{prop.Name}"" name=""{prop.Name}"" 
-                           placeholder=""{EscapeHtml(placeholder)}"" {required} {disabled}{maxLength}{step}{pkTextAttr} />{helpText}
+                    <input type=""{inputTypeAttr}"" class=""form-control"" id=""{prop.Name}"" name=""{prop.Name}"" 
+                           placeholder=""{EscapeHtml(placeholder)}"" {required} {disabled}{maxLength}{step} />
+                    {helpText}
                 </div>";
     }
 
     /// <summary>
-    /// Verifica se a propriedade é uma PK auto-gerada.
+    /// ⭐ v4.2 NOVO: Detecta se um campo é uma chave estrangeira (FK).
+    /// Padrões: IdXxx, FkXxx, CdXxx (onde Xxx é o nome da entidade)
     /// </summary>
-    private static bool IsAutoGeneratedPrimaryKey(PropertyConfig prop)
+    private static bool IsForeignKeyField(string fieldName)
     {
-        if (!prop.IsPrimaryKey)
-            return false;
+        // Padrões de FK
+        var fkPatterns = new[] { "Id", "Fk", "Cd" };
 
-        if (prop.IsString)
-            return false;
+        foreach (var pattern in fkPatterns)
+        {
+            if (fieldName.StartsWith(pattern, StringComparison.OrdinalIgnoreCase))
+            {
+                // Se tem sufixo após o padrão, é provavelmente FK
+                var suffix = fieldName.Substring(pattern.Length);
+                if (!string.IsNullOrEmpty(suffix) && char.IsUpper(suffix[0]))
+                {
+                    return true;
+                }
+            }
+        }
 
-        if (prop.IsIdentity || prop.IsGuid)
-            return true;
-
-        if (prop.IsInt || prop.IsLong)
-            return true;
-
-        return true;
+        return false;
     }
 
     /// <summary>
-    /// Converte nome da aba para ID válido (sem espaços, acentos, etc.)
+    /// ⭐ v4.2 NOVO: Gera URL do Select2 automaticamente baseado no nome do campo.
+    /// Ex: IdFornecedor → /ControleAcessoPortaria/capcolaboradoresfornecedor/GetFornecedorForSelect
+    /// </summary>
+    private static string GenerateSelect2Url(PropertyConfig prop, EntityConfig entity)
+    {
+        var entityName = GetEntityNameFromProperty(prop.Name, entity);
+        var moduleRoute = entity.ModuleRoute ?? entity.Module?.ToLowerInvariant() ?? "common";
+        var entityNameLower = entity.NameLower;
+
+        // URL padrão: /{ModuleRoute}/{EntityNameLower}/Get{RelatedEntityName}ForSelect
+        return $"/{moduleRoute}/{entityNameLower}/Get{entityName}ForSelect";
+    }
+
+    /// <summary>
+    /// Extrai o nome da entidade relacionada a partir do nome do campo.
+    /// Ex: IdFornecedor → Fornecedor, CdFilial → Filial, FkCliente → Cliente
+    /// </summary>
+    private static string GetEntityNameFromProperty(string propertyName, EntityConfig entity)
+    {
+        // Remove prefixo (Id, Fk, Cd)
+        var name = propertyName;
+
+        if (name.StartsWith("Id", StringComparison.OrdinalIgnoreCase))
+            name = name.Substring(2);
+        else if (name.StartsWith("Fk", StringComparison.OrdinalIgnoreCase))
+            name = name.Substring(2);
+        else if (name.StartsWith("Cd", StringComparison.OrdinalIgnoreCase))
+            name = name.Substring(2);
+
+        // Se ficou vazio, usa o nome da entidade
+        if (string.IsNullOrEmpty(name))
+            return entity.Name;
+
+        return name;
+    }
+
+
+
+    /// <summary>
+    /// Sanitiza ID de tab para uso em HTML.
     /// </summary>
     private static string SanitizeTabId(string tabName)
     {
-        if (string.IsNullOrEmpty(tabName))
-            return "tab-default";
-
-        // Remove acentos
-        var normalized = tabName
-            .ToLowerInvariant()
-            .Replace("á", "a").Replace("à", "a").Replace("ã", "a").Replace("â", "a")
-            .Replace("é", "e").Replace("ê", "e")
-            .Replace("í", "i")
-            .Replace("ó", "o").Replace("ô", "o").Replace("õ", "o")
-            .Replace("ú", "u").Replace("ü", "u")
-            .Replace("ç", "c");
-
-        // Remove caracteres especiais, mantém apenas letras, números e hífen
-        var sb = new StringBuilder();
-        foreach (var c in normalized)
-        {
-            if (char.IsLetterOrDigit(c))
-                sb.Append(c);
-            else if (c == ' ' || c == '-' || c == '_')
-                sb.Append('-');
-        }
-
-        var result = sb.ToString().Trim('-');
-
-        // Garante que não está vazio
-        return string.IsNullOrEmpty(result) ? "tab-default" : $"tab-{result}";
+        return System.Text.RegularExpressions.Regex.Replace(
+            tabName.ToLowerInvariant(),
+            @"[^a-z0-9]+",
+            "-"
+        ).Trim('-');
     }
 
     /// <summary>
-    /// Escape de HTML para evitar XSS.
+    /// Escapa HTML para segurança.
     /// </summary>
     private static string EscapeHtml(string text)
     {
@@ -380,6 +449,14 @@ public static class ViewTemplate
             .Replace(">", "&gt;")
             .Replace("\"", "&quot;")
             .Replace("'", "&#39;");
+    }
+
+    /// <summary>
+    /// Verifica se é uma PK auto-gerada.
+    /// </summary>
+    private static bool IsAutoGeneratedPrimaryKey(PropertyConfig prop)
+    {
+        return prop.IsPrimaryKey && (prop.IsIdentity || prop.IsGuid);
     }
 
     /// <summary>

@@ -530,6 +530,8 @@ public static class EntityInfoExtractor
                     info.GenerateEfConfig = value is bool v9 && v9; break;
                 case "GenerateMetadata":
                     info.GenerateMetadata = value is bool v10 && v10; break;
+                case "GenerateLookup":
+                    info.GenerateLookup = value is bool v101 && v101; break;
                 case "GenerateApiController":
                     info.GenerateApiController = value is bool v11 && v11; break;
                 case "GenerateWebController":

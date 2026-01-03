@@ -124,7 +124,10 @@ public sealed class JwtService : IJwtService
         // ========================================================================
 
         var key = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(_jwtSettings.SecretKey));
+            Encoding.UTF8.GetBytes(_jwtSettings.SecretKey))
+        {
+            KeyId = "rhsenso-jwt-key"
+        };
 
         var creds = new SigningCredentials(
             key,

@@ -1,19 +1,21 @@
 // =============================================================================
-// GERADOR FULL-STACK v3.7 - WEB CONTROLLER TEMPLATE (COM TOGGLE ATIVO)
-// Baseado em RhSensoERP.CrudTool v2.0
-// v3.7 - ✅ NOVO: Action ToggleAtivo para alternar status Ativo/Desativo
-// v3.6 - CORREÇÃO: Usa entity.Module diretamente ao invés de mapear CdSistema
-// v3.2 - Organiza Controllers por módulo
+// GERADOR FULL-STACK v4.0 - WEB CONTROLLER TEMPLATE
+// ⭐ v4.0 - SELECT2 LOOKUP AUTOMÁTICO
+// v3.7 - Action ToggleAtivo para alternar status Ativo/Desativo
+// v3.6 - Usa entity.Module diretamente
+// =============================================================================
+// ⭐ COPIE E COLE ESTE ARQUIVO COMPLETO SUBSTITUINDO O ORIGINAL
 // =============================================================================
 
 using GeradorEntidades.Models;
+using System.Text;
 
 namespace GeradorEntidades.Templates;
 
 /// <summary>
 /// Gera Controller Web que herda de BaseCrudController.
-/// v3.7: Adiciona action ToggleAtivo para alternar status de forma dinâmica.
-/// v3.6: Usa módulo correto do entity (que vem do manifesto/request).
+/// v4.0: Geração automática de actions para Select2 Lookup.
+/// v3.7: Adiciona action ToggleAtivo.
 /// </summary>
 public static class WebControllerTemplate
 {
@@ -24,12 +26,7 @@ public static class WebControllerTemplate
     {
         var pkType = entity.PkTypeSimple;
         var modulePath = GetModulePath(entity.Module);
-
-        // ✅ v3.6: USA O MÓDULO CORRETO DO ENTITY (que vem do manifesto/request)
-        // Não usa GetMenuModule(CdSistema) que pode estar errado
         var menuModule = entity.Module;
-
-        // Caminho da View organizada por módulo
         var viewPath = $"Views/{modulePath}/{entity.Name}/Index.cshtml";
 
         // v3.7: Verifica se tem campo "Ativo"
@@ -39,8 +36,11 @@ public static class WebControllerTemplate
 
         var toggleAtivoAction = hasAtivoField ? GenerateToggleAtivoAction(entity, pkType) : "";
 
+        // ⭐ v4.0: Gera actions de Select2 Lookup
+        var select2Actions = GenerateSelect2LookupActions(entity);
+
         var content = $@"// =============================================================================
-// ARQUIVO GERADO POR GeradorFullStack v3.7
+// ARQUIVO GERADO POR GeradorFullStack v4.0
 // Entity: {entity.Name}
 // Module: {entity.Module}
 // Data: {DateTime.Now:yyyy-MM-dd HH:mm:ss}
@@ -114,7 +114,6 @@ public class {entity.Name}Controller
     [HttpGet]
     public async Task<IActionResult> Index(CancellationToken ct = default)
     {{
-        // Verifica permissão de consulta
         if (!await CanViewAsync(CdFuncao, ct))
         {{
             _logger.LogWarning(
@@ -125,7 +124,6 @@ public class {entity.Name}Controller
             return RedirectToAction(""AccessDenied"", ""Account"");
         }}
 
-        // Busca permissões do usuário para esta função
         var permissions = await GetUserPermissionsAsync(CdFuncao, ct);
 
         var viewModel = new {entity.Name}ListViewModel
@@ -139,7 +137,6 @@ public class {entity.Name}Controller
             CdFuncao,
             permissions);
 
-        // View organizada por módulo: Views/Module/Entity/Index.cshtml
         return View(""~/{viewPath}"", viewModel);
     }}
 
@@ -147,9 +144,6 @@ public class {entity.Name}Controller
     // ACTION: GET BY ID (Sobrescrito para verificar permissão)
     // =========================================================================
 
-    /// <summary>
-    /// Busca registro por ID via AJAX.
-    /// </summary>
     [HttpGet]
     public override async Task<IActionResult> GetById({pkType} id)
     {{
@@ -162,12 +156,9 @@ public class {entity.Name}Controller
     }}
 
     // =========================================================================
-    // ACTION: CREATE (Sobrescrito para verificar permissão)
+    // ACTION: CREATE
     // =========================================================================
 
-    /// <summary>
-    /// Cria um novo registro.
-    /// </summary>
     [HttpPost]
     [ValidateAntiForgeryToken]
     public override async Task<IActionResult> Create([FromBody] Create{entity.Name}Request dto)
@@ -191,13 +182,9 @@ public class {entity.Name}Controller
     }}
 
     // =========================================================================
-    // ACTION: EDIT (POST para compatibilidade com CrudBase.js)
+    // ACTION: EDIT
     // =========================================================================
 
-    /// <summary>
-    /// Atualiza um registro existente via POST.
-    /// CrudBase.js envia para /Edit?id=xxx via POST.
-    /// </summary>
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit([FromQuery] {pkType} id, [FromBody] Update{entity.Name}Request dto)
@@ -227,12 +214,9 @@ public class {entity.Name}Controller
     }}
 
     // =========================================================================
-    // ACTION: UPDATE (PUT padrão REST)
+    // ACTION: UPDATE
     // =========================================================================
 
-    /// <summary>
-    /// Atualiza um registro existente via PUT.
-    /// </summary>
     [HttpPut]
     [ValidateAntiForgeryToken]
     public override async Task<IActionResult> Update({pkType} id, [FromBody] Update{entity.Name}Request dto)
@@ -246,13 +230,9 @@ public class {entity.Name}Controller
     }}
 
     // =========================================================================
-    // ACTION: DELETE (Sobrescrito para verificar permissão)
+    // ACTION: DELETE
     // =========================================================================
 
-    /// <summary>
-    /// Exclui um registro.
-    /// CrudBase.js envia DELETE para /Delete?id=xxx
-    /// </summary>
     [HttpPost]
     [HttpDelete]
     [ValidateAntiForgeryToken]
@@ -278,12 +258,9 @@ public class {entity.Name}Controller
     }}
 
     // =========================================================================
-    // ACTION: DELETE MULTIPLE (Sobrescrito para verificar permissão)
+    // ACTION: DELETE MULTIPLE
     // =========================================================================
 
-    /// <summary>
-    /// Exclui múltiplos registros.
-    /// </summary>
     [HttpPost]
     [ValidateAntiForgeryToken]
     public override async Task<IActionResult> DeleteMultiple([FromBody] List<{pkType}> ids)
@@ -312,6 +289,7 @@ public class {entity.Name}Controller
         return await base.DeleteMultiple(ids);
     }}
 {toggleAtivoAction}
+{select2Actions}
 }}
 ";
 
@@ -325,7 +303,7 @@ public class {entity.Name}Controller
     }
 
     /// <summary>
-    /// v3.7: Gera action ToggleAtivo para alternar status Ativo/Desativo dinamicamente.
+    /// v3.7: Gera action ToggleAtivo.
     /// </summary>
     private static string GenerateToggleAtivoAction(EntityConfig entity, string pkType)
     {
@@ -335,10 +313,6 @@ public class {entity.Name}Controller
     // v3.7: ACTION - TOGGLE ATIVO (Alternar Status Ativo/Desativo)
     // =========================================================================
 
-    /// <summary>
-    /// Alterna o status Ativo/Desativo de um registro via AJAX.
-    /// Rate limit implementado no client-side (debounce 500ms).
-    /// </summary>
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ToggleAtivo([FromBody] ToggleAtivoRequest request, CancellationToken ct = default)
@@ -367,7 +341,6 @@ public class {entity.Name}Controller
                 request.Ativo,
                 CdFuncao);
 
-            // Chama o serviço para alternar o status
             await _{entity.NameLower}Service.ToggleAtivoAsync(request.Id, request.Ativo, ct);
 
             var mensagem = request.Ativo
@@ -397,14 +370,100 @@ public class {entity.Name}Controller
         }}
     }}
 
-    /// <summary>
-    /// Request para alternar status Ativo.
-    /// </summary>
     public class ToggleAtivoRequest
     {{
         public {pkType} Id {{ get; set; }}
         public bool Ativo {{ get; set; }}
     }}";
+    }
+
+    // =========================================================================
+    // ⭐ v4.0: SELECT2 LOOKUP - GERAÇÃO AUTOMÁTICA DE ACTIONS
+    // =========================================================================
+
+    /// <summary>
+    /// ⭐ v4.0: Gera actions de lookup para Select2.
+    /// </summary>
+    private static string GenerateSelect2LookupActions(EntityConfig entity)
+    {
+        if (!entity.Select2Lookups.Any())
+            return string.Empty;
+
+        var sb = new StringBuilder();
+        sb.AppendLine();
+        sb.AppendLine("    // =========================================================================");
+        sb.AppendLine("    // ⭐ v4.0: ACTIONS - LOOKUPS PARA SELECT2 (GERADO AUTOMATICAMENTE)");
+        sb.AppendLine("    // =========================================================================");
+
+        foreach (var lookup in entity.Select2Lookups)
+        {
+            var valuePascal = ToPascalCase(lookup.ValueField);
+            var textPascal = ToPascalCase(lookup.TextField);
+
+            sb.AppendLine($@"
+    /// <summary>
+    /// Retorna lista de {lookup.DisplayName} para preencher Select2 via AJAX.
+    /// Gerado automaticamente para o campo {lookup.PropertyName}.
+    /// </summary>
+    [HttpGet]
+    public async Task<IActionResult> {lookup.MethodName}(
+        [FromQuery] string search = """", 
+        [FromQuery] int page = 1, 
+        [FromQuery] int pageSize = 20,
+        CancellationToken ct = default)
+    {{
+        try
+        {{
+            if (!await CanViewAsync(CdFuncao, ct))
+            {{
+                return Json(new
+                {{
+                    success = false,
+                    message = ""Você não tem permissão para visualizar {lookup.DisplayName}."",
+                    items = new List<object>()
+                }});
+            }}
+
+            var items = await _{entity.NameLower}Service.{lookup.MethodName}Async(search, page, pageSize, ct);
+
+            return Json(new
+            {{
+                success = true,
+                items = items.Select(x => new
+                {{
+                    id = x.{valuePascal},
+                    text = x.{textPascal}
+                }}).ToList(),
+                pagination = new
+                {{
+                    more = items.Count >= pageSize
+                }}
+            }});
+        }}
+        catch (Exception ex)
+        {{
+            _logger.LogError(ex, ""Erro ao buscar {lookup.DisplayName} para Select2"");
+            return Json(new
+            {{
+                success = false,
+                message = ""Erro ao carregar {lookup.DisplayName}."",
+                items = new List<object>()
+            }});
+        }}
+    }}");
+        }
+
+        return sb.ToString();
+    }
+
+    /// <summary>
+    /// Helper: Converte para PascalCase.
+    /// </summary>
+    private static string ToPascalCase(string text)
+    {
+        if (string.IsNullOrEmpty(text))
+            return text;
+        return char.ToUpper(text[0]) + text.Substring(1);
     }
 
     /// <summary>

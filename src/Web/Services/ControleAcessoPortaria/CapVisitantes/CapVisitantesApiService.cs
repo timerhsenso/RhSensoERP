@@ -3,7 +3,7 @@
 // Entity: CapVisitantes
 // Module: ControleAcessoPortaria
 // ApiRoute: api/gestaoterceirosprestadores/capvisitantes
-// Data: 2025-12-30 20:13:45
+// Data: 2025-12-30 22:47:46
 // AUTO-REGISTRO: Compatível com AddCrudToolServicesAutomatically()
 // =============================================================================
 // v5.2: Logs corrigidos - gera {Route} não {{Route}}

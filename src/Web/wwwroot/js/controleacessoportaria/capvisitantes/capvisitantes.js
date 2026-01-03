@@ -6,7 +6,7 @@
  * Módulo: ControleAcessoPortaria
  * Versão: 4.3 (FINAL - 100% FUNCIONAL)
  * Gerado por: GeradorFullStack v4.3
- * Data: 2025-12-30 20:13:45
+ * Data: 2025-12-30 22:47:46
  * 
  * Changelog v4.3:
  *   ✅ CRÍTICO: Geração automática inteligente de colunas (não depende de Grid)
@@ -259,6 +259,46 @@ $(document).ready(function () {
                 return `<input type="checkbox" class="form-check-input row-select dt-checkboxes" value="${id}" data-id="${id}" />`;
             }
         },
+        // Nome
+        {
+            data: 'nome',
+            name: 'Nome',
+            title: 'Nome',
+            orderable: true,
+            render: function (data, type, row) {
+                return data !== undefined && data !== null ? data : '';
+            }
+        },
+        // Email
+        {
+            data: 'email',
+            name: 'Email',
+            title: 'Email',
+            orderable: true,
+            render: function (data, type, row) {
+                return data !== undefined && data !== null ? data : '';
+            }
+        },
+        // Telefone
+        {
+            data: 'telefone',
+            name: 'Telefone',
+            title: 'Telefone',
+            orderable: true,
+            render: function (data, type, row) {
+                return data !== undefined && data !== null ? data : '';
+            }
+        },
+        // Empresa
+        {
+            data: 'empresa',
+            name: 'Empresa',
+            title: 'Empresa',
+            orderable: true,
+            render: function (data, type, row) {
+                return data !== undefined && data !== null ? data : '';
+            }
+        },
         // Ativo
         {
             data: 'ativo',
@@ -282,92 +322,6 @@ $(document).ready(function () {
                         </div>`;
                 }
                 return data;
-            }
-        },
-        // CPF
-        {
-            data: 'cpf',
-            name: 'Cpf',
-            title: 'CPF',
-            orderable: true,
-            render: function (data, type, row) {
-                return data !== undefined && data !== null ? data : '';
-            }
-        },
-        // Email
-        {
-            data: 'email',
-            name: 'Email',
-            title: 'Email',
-            orderable: true,
-            render: function (data, type, row) {
-                return data !== undefined && data !== null ? data : '';
-            }
-        },
-        // Empresa
-        {
-            data: 'empresa',
-            name: 'Empresa',
-            title: 'Empresa',
-            orderable: true,
-            render: function (data, type, row) {
-                return data !== undefined && data !== null ? data : '';
-            }
-        },
-        // ID Funcionário Responsável
-        {
-            data: 'idFuncionarioResponsavel',
-            name: 'IdFuncionarioResponsavel',
-            title: 'ID Funcionário Responsável',
-            orderable: true,
-            render: function (data, type, row) {
-                return data !== undefined && data !== null ? data : '';
-            }
-        },
-        // Nome
-        {
-            data: 'nome',
-            name: 'Nome',
-            title: 'Nome',
-            orderable: true,
-            render: function (data, type, row) {
-                return data !== undefined && data !== null ? data : '';
-            }
-        },
-        // Requer Responsável
-        {
-            data: 'requerResponsavel',
-            name: 'RequerResponsavel',
-            title: 'Requer Responsável',
-            orderable: true,
-            className: 'text-center',
-            render: function (data, type, row) {
-                if (type === 'display') {
-                    return data 
-                        ? '<span class="badge bg-success">Sim</span>' 
-                        : '<span class="badge bg-secondary">Não</span>';
-                }
-                return data;
-            }
-        },
-        // RG
-        {
-            data: 'rg',
-            name: 'Rg',
-            title: 'RG',
-            orderable: true,
-            render: function (data, type, row) {
-                return data !== undefined && data !== null ? data : '';
-            }
-        },
-        // Telefone
-        {
-            data: 'telefone',
-            name: 'Telefone',
-            title: 'Telefone',
-            orderable: true,
-            render: function (data, type, row) {
-                return data !== undefined && data !== null ? data : '';
             }
         },
         // Ações

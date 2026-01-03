@@ -448,6 +448,9 @@ if (builder.Environment.IsProduction())
 Log.Information("✅ JwtSettings validado");
 
 var key = Encoding.UTF8.GetBytes(jwtSettings.SecretKey);
+Log.Warning("🔐 [DEBUG] Loaded SecretKey Length: {Length} bytes | Issuer: {Issuer} | Audience: {Audience}", 
+    key.Length, jwtSettings.Issuer, jwtSettings.Audience);
+if (key.Length < 32) Log.Error("❌ [CRITICAL] SecretKey is too short! HMAC-SHA256 requires 32 bytes.");
 
 builder.Services
     .AddAuthentication(options =>
@@ -469,14 +472,31 @@ builder.Services
             ValidateIssuerSigningKey = true,
             ValidIssuer = jwtSettings.Issuer,
             ValidAudience = jwtSettings.Audience,
-            IssuerSigningKey = new SymmetricSecurityKey(key),
-            ClockSkew = TimeSpan.FromMinutes(jwtSettings.ClockSkewMinutes)
+            IssuerSigningKey = new SymmetricSecurityKey(key) { KeyId = "rhsenso-jwt-key" },
+            ClockSkew = TimeSpan.FromMinutes(jwtSettings.ClockSkewMinutes),
+            
+            // ✅ FIX: Garante que a chave seja tentada mesmo sem kid
+            TryAllIssuerSigningKeys = true
         };
 
         options.Events = new JwtBearerEvents
         {
+            OnMessageReceived = context =>
+            {
+                var token = context.Request.Headers["Authorization"].FirstOrDefault();
+                if (string.IsNullOrEmpty(token))
+                {
+                    Log.Warning("⚠️ [OnMessageReceived] No Authorization header found!");
+                }
+                else
+                {
+                    Log.Information("✅ [OnMessageReceived] Token received (starts with): {TokenSnippet}...", token.Substring(0, Math.Min(token.Length, 20)));
+                }
+                return Task.CompletedTask;
+            },
             OnAuthenticationFailed = context =>
             {
+                Log.Warning("⚠️ Auth Failed: {Message}", context.Exception.Message);
                 if (context.Exception.GetType() == typeof(SecurityTokenExpiredException))
                 {
                     context.Response.Headers.Append("Token-Expired", "true");
@@ -492,8 +512,11 @@ builder.Services
                 var result = System.Text.Json.JsonSerializer.Serialize(new
                 {
                     error = "UNAUTHORIZED",
-                    message = context.ErrorDescription ?? "Não autorizado. Token inválido ou expirado."
+                    message = context.ErrorDescription ?? "Não autorizado.",
+                    detail = context.AuthenticateFailure?.Message // Expor erro técnico para debug
                 });
+                
+                Log.Error("❌ OnChallenge: {Error} - {Failure}", context.ErrorDescription, context.AuthenticateFailure?.Message);
 
                 return context.Response.WriteAsync(result);
             }

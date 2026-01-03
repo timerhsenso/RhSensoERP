@@ -1,14 +1,10 @@
 // =============================================================================
-// ARQUIVO GERADO POR GeradorFullStack v5.2
+// ARQUIVO GERADO POR GeradorFullStack v6.1
 // Entity: CapColaboradoresFornecedor
 // Module: ControleAcessoPortaria
 // ApiRoute: api/gestaoterceirosprestadores/capcolaboradoresfornecedor
-// Data: 2025-12-30 21:41:02
+// Data: 2026-01-02 19:59:34
 // AUTO-REGISTRO: Compatível com AddCrudToolServicesAutomatically()
-// =============================================================================
-// v5.2: Logs corrigidos - gera {Route} não {{Route}}
-// v5.0: Herança genérica correta de BaseApiService + IHttpContextAccessor
-// v4.1: Adiciona ToggleAtivoAsync para alternar status Ativo/Desativo
 // =============================================================================
 using System.Text;
 using System.Text.Json;
@@ -20,11 +16,9 @@ namespace RhSensoERP.Web.Services.ControleAcessoPortaria.CapColaboradoresFornece
 
 /// <summary>
 /// Serviço de API para CapColaboradoresFornecedor.
-/// Herda implementação base de BaseApiService (GetPaged, GetAll, GetById, Create, Update, Delete).
-/// v5.2: Logs corrigidos.
-/// v5.0: Herança genérica correta + construtor compatível com BaseApiService.
-/// v4.1: Adiciona ToggleAtivoAsync para alternar status dinamicamente.
-/// AUTO-REGISTRADO: Compatível com AddCrudToolServicesAutomatically().
+/// Herda implementação base de BaseApiService.
+/// v6.1: CORRIGIDO - Lookup usa 'term' para Select2.
+/// v6.0: Adiciona implementações Select2 Lookup automáticas.
 /// </summary>
 public class CapColaboradoresFornecedorApiService 
     : BaseApiService<CapColaboradoresFornecedorDto, CreateCapColaboradoresFornecedorRequest, UpdateCapColaboradoresFornecedorRequest, int>,
@@ -37,7 +31,7 @@ public class CapColaboradoresFornecedorApiService
     };
 
     // =========================================================================
-    // ✅ v5.0: CONSTRUTOR CORRIGIDO - USA IHttpContextAccessor
+    // CONSTRUTOR
     // =========================================================================
     public CapColaboradoresFornecedorApiService(
         HttpClient httpClient,
@@ -45,30 +39,12 @@ public class CapColaboradoresFornecedorApiService
         IHttpContextAccessor httpContextAccessor) 
         : base(httpClient, logger, httpContextAccessor, ApiRoute)
     {
-        // ✅ Construtor base recebe: httpClient, logger, httpContextAccessor, baseEndpoint
-        // ✅ BaseApiService já implementa: GetPagedAsync, GetAllAsync, GetByIdAsync, 
-        //    CreateAsync, UpdateAsync, DeleteAsync, DeleteMultipleAsync
-        // ✅ Autenticação (JWT via Cookie) já é tratada por AddAuthorizationHeaderAsync() do base
     }
-
-    // =========================================================================
-    // ✅ MÉTODOS CRUD JÁ IMPLEMENTADOS NO BaseApiService
-    // =========================================================================
-    // - GetPagedAsync(page, pageSize, search, sortBy, desc)
-    // - GetAllAsync()
-    // - GetByIdAsync(id)
-    // - CreateAsync(createDto)
-    // - UpdateAsync(id, updateDto)
-    // - DeleteAsync(id)
-    // - DeleteMultipleAsync(ids)
 
     // =========================================================================
     // IBatchDeleteService Implementation
     // =========================================================================
 
-    /// <summary>
-    /// Exclusão em lote via endpoint /batch.
-    /// </summary>
     public async Task<ApiResponse<BatchDeleteResultDto>> DeleteBatchAsync(IEnumerable<int> ids)
     {
         try
@@ -141,17 +117,12 @@ public class CapColaboradoresFornecedorApiService
 
     #region v4.1 - Toggle Ativo
 
-    /// <summary>
-    /// Alterna o status Ativo/Desativo de um registro.
-    /// Chamada via PATCH para /api/{route}/{id}/toggle-ativo
-    /// </summary>
     public async Task ToggleAtivoAsync(int id, bool ativo, CancellationToken ct = default)
     {
         try
         {
             await AddAuthorizationHeaderAsync();
             
-            // Payload simples com o novo valor de Ativo
             var payload = new { Ativo = ativo };
             var json = JsonSerializer.Serialize(payload, _jsonOptions);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -162,7 +133,6 @@ public class CapColaboradoresFornecedorApiService
                 id,
                 json);
             
-            // Tenta PATCH primeiro (mais semântico)
             var request = new HttpRequestMessage(HttpMethod.Patch, $"{_baseEndpoint}/{id}/toggle-ativo")
             {
                 Content = content
@@ -200,8 +170,10 @@ public class CapColaboradoresFornecedorApiService
     }
 
     #endregion
+
+
     // =========================================================================
-    // Backend DTOs (para DeleteBatchAsync)
+    // Backend DTOs
     // =========================================================================
     private sealed class BackendResult<T>
     {

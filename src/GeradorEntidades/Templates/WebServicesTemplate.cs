@@ -1,26 +1,21 @@
 // =============================================================================
-// GERADOR FULL-STACK v5.2 - WEB SERVICES TEMPLATE (LOGS CORRIGIDOS - FINAL)
-// =============================================================================
-// Arquivo: GeradorEntidades/Templates/WebServicesTemplate.cs
-// Baseado em RhSensoERP.CrudTool v3.0
-// =============================================================================
-// CHANGELOG:
-// v5.2       - ✅ CRÍTICO: Logs corrigidos usando concatenação (não interpolação)
-//            - ✅ Resolve FormatException "Input string was not in a correct format"
-//            - ✅ Gera {Route} corretamente (não {{Route}})
-// v5.1       - ❌ DESCARTADO: Tentativa com {{Route}} quebrou o template
-// v5.0       - ✅ CORRIGIDO: Herança genérica correta de BaseApiService
-//            - ✅ CORRIGIDO: Construtor usa IHttpContextAccessor
-// v4.1       - ✅ NOVO: Método ToggleAtivoAsync para alternar status Ativo/Desativo
+// GERADOR FULL-STACK v6.1 - WEB SERVICES TEMPLATE
+// ⭐ v6.1 - CORRIGIDO: Lookup usa 'term' para compatibilidade Select2
+// ⭐ v6.0 - SELECT2 LOOKUP AUTOMÁTICO
+// v5.2 - Logs corrigidos
+// v5.0 - Herança genérica correta de BaseApiService
+// v4.1 - Método ToggleAtivoAsync
 // =============================================================================
 
 using GeradorEntidades.Models;
+using System.Text;
 
 namespace GeradorEntidades.Templates;
 
 /// <summary>
 /// Gera Services que herdam de BaseApiService e implementam IBatchDeleteService.
-/// v5.2: Logs corrigidos - gera {Route} não {{Route}}.
+/// v6.1: CORRIGIDO - Lookup usa parâmetro 'term' em vez de 'search'.
+/// v6.0: Geração automática de métodos Select2 Lookup.
 /// </summary>
 public static class WebServicesTemplate
 {
@@ -46,8 +41,11 @@ public static class WebServicesTemplate
     Task ToggleAtivoAsync({pkType} id, bool ativo, CancellationToken ct = default);"
             : "";
 
+        // ⭐ v6.0: Gera métodos Select2
+        var select2Methods = GenerateSelect2Methods(entity);
+
         var content = $@"// =============================================================================
-// ARQUIVO GERADO POR GeradorFullStack v5.2
+// ARQUIVO GERADO POR GeradorFullStack v6.1
 // Entity: {entity.Name}
 // Module: {entity.Module}
 // Data: {DateTime.Now:yyyy-MM-dd HH:mm:ss}
@@ -62,13 +60,15 @@ namespace RhSensoERP.Web.Services.{entity.Module}.{entity.Name};
 /// <summary>
 /// Interface do serviço de API para {entity.DisplayName}.
 /// Herda de IApiService (já implementado por BaseApiService) e IBatchDeleteService.
-/// v5.2: Compatível com BaseApiService genérico.
-/// v4.1: Adiciona ToggleAtivoAsync para alternar status dinamicamente.
+/// v6.1: CORRIGIDO - Lookup usa 'term' para Select2.
+/// v6.0: Adiciona métodos Select2 Lookup automáticos.
+/// v4.1: Adiciona ToggleAtivoAsync.
 /// </summary>
 public interface I{entity.Name}ApiService 
     : IApiService<{entity.Name}Dto, Create{entity.Name}Request, Update{entity.Name}Request, {pkType}>,
       IBatchDeleteService<{pkType}>
 {{{toggleAtivoMethod}
+{select2Methods}
 }}
 ";
 
@@ -83,7 +83,6 @@ public interface I{entity.Name}ApiService
 
     /// <summary>
     /// Gera a implementação do ApiService.
-    /// v5.2: Logs corrigidos usando concatenação.
     /// </summary>
     public static GeneratedFile GenerateImplementation(EntityConfig entity)
     {
@@ -97,22 +96,20 @@ public interface I{entity.Name}ApiService
             p.Name.Equals("Ativo", StringComparison.OrdinalIgnoreCase) ||
             p.Name.Equals("IsAtivo", StringComparison.OrdinalIgnoreCase));
 
-        // v5.2: Gera método ToggleAtivo com logs corretos
         var toggleAtivoImplementation = hasAtivoField
             ? GenerateToggleAtivoMethod(entity, entityUpper, pkType)
             : "";
 
+        // ⭐ v6.0: Gera implementações Select2
+        var select2Implementations = GenerateSelect2Implementations(entity);
+
         var content = $@"// =============================================================================
-// ARQUIVO GERADO POR GeradorFullStack v5.2
+// ARQUIVO GERADO POR GeradorFullStack v6.1
 // Entity: {entity.Name}
 // Module: {entity.Module}
 // ApiRoute: {apiRoute}
 // Data: {DateTime.Now:yyyy-MM-dd HH:mm:ss}
 // AUTO-REGISTRO: Compatível com AddCrudToolServicesAutomatically()
-// =============================================================================
-// v5.2: Logs corrigidos - gera {{Route}} não {{{{Route}}}}
-// v5.0: Herança genérica correta de BaseApiService + IHttpContextAccessor
-// v4.1: Adiciona ToggleAtivoAsync para alternar status Ativo/Desativo
 // =============================================================================
 using System.Text;
 using System.Text.Json;
@@ -124,11 +121,9 @@ namespace RhSensoERP.Web.Services.{entity.Module}.{entity.Name};
 
 /// <summary>
 /// Serviço de API para {entity.DisplayName}.
-/// Herda implementação base de BaseApiService (GetPaged, GetAll, GetById, Create, Update, Delete).
-/// v5.2: Logs corrigidos.
-/// v5.0: Herança genérica correta + construtor compatível com BaseApiService.
-/// v4.1: Adiciona ToggleAtivoAsync para alternar status dinamicamente.
-/// AUTO-REGISTRADO: Compatível com AddCrudToolServicesAutomatically().
+/// Herda implementação base de BaseApiService.
+/// v6.1: CORRIGIDO - Lookup usa 'term' para Select2.
+/// v6.0: Adiciona implementações Select2 Lookup automáticas.
 /// </summary>
 public class {entity.Name}ApiService 
     : BaseApiService<{entity.Name}Dto, Create{entity.Name}Request, Update{entity.Name}Request, {pkType}>,
@@ -141,7 +136,7 @@ public class {entity.Name}ApiService
     }};
 
     // =========================================================================
-    // ✅ v5.0: CONSTRUTOR CORRIGIDO - USA IHttpContextAccessor
+    // CONSTRUTOR
     // =========================================================================
     public {entity.Name}ApiService(
         HttpClient httpClient,
@@ -149,30 +144,12 @@ public class {entity.Name}ApiService
         IHttpContextAccessor httpContextAccessor) 
         : base(httpClient, logger, httpContextAccessor, ApiRoute)
     {{
-        // ✅ Construtor base recebe: httpClient, logger, httpContextAccessor, baseEndpoint
-        // ✅ BaseApiService já implementa: GetPagedAsync, GetAllAsync, GetByIdAsync, 
-        //    CreateAsync, UpdateAsync, DeleteAsync, DeleteMultipleAsync
-        // ✅ Autenticação (JWT via Cookie) já é tratada por AddAuthorizationHeaderAsync() do base
     }}
-
-    // =========================================================================
-    // ✅ MÉTODOS CRUD JÁ IMPLEMENTADOS NO BaseApiService
-    // =========================================================================
-    // - GetPagedAsync(page, pageSize, search, sortBy, desc)
-    // - GetAllAsync()
-    // - GetByIdAsync(id)
-    // - CreateAsync(createDto)
-    // - UpdateAsync(id, updateDto)
-    // - DeleteAsync(id)
-    // - DeleteMultipleAsync(ids)
 
     // =========================================================================
     // IBatchDeleteService Implementation
     // =========================================================================
 
-    /// <summary>
-    /// Exclusão em lote via endpoint /batch.
-    /// </summary>
     public async Task<ApiResponse<BatchDeleteResultDto>> DeleteBatchAsync(IEnumerable<{pkType}> ids)
     {{
         try
@@ -243,8 +220,10 @@ public class {entity.Name}ApiService
     }}
 
 {toggleAtivoImplementation}
+{select2Implementations}
+
     // =========================================================================
-    // Backend DTOs (para DeleteBatchAsync)
+    // Backend DTOs
     // =========================================================================
     private sealed class BackendResult<T>
     {{
@@ -286,11 +265,10 @@ public class {entity.Name}ApiService
     }
 
     /// <summary>
-    /// v5.2: Gera método ToggleAtivo com logs CORRETOS usando concatenação.
+    /// v5.2: Gera método ToggleAtivo.
     /// </summary>
     private static string GenerateToggleAtivoMethod(EntityConfig entity, string entityUpper, string pkType)
     {
-        // ✅ v5.2: Usa concatenação para evitar conflito de interpolação
         var logDebugLine = @"_logger.LogDebug(
                 ""[" + entityUpper + @"] PATCH {Route}/{Id}/toggle-ativo - Body: {Body}"",
                 _baseEndpoint,
@@ -310,24 +288,18 @@ public class {entity.Name}ApiService
         return $@"
     #region v4.1 - Toggle Ativo
 
-    /// <summary>
-    /// Alterna o status Ativo/Desativo de um registro.
-    /// Chamada via PATCH para /api/{{route}}/{{id}}/toggle-ativo
-    /// </summary>
     public async Task ToggleAtivoAsync({pkType} id, bool ativo, CancellationToken ct = default)
     {{
         try
         {{
             await AddAuthorizationHeaderAsync();
             
-            // Payload simples com o novo valor de Ativo
             var payload = new {{ Ativo = ativo }};
             var json = JsonSerializer.Serialize(payload, _jsonOptions);
             var content = new StringContent(json, Encoding.UTF8, ""application/json"");
             
             {logDebugLine}
             
-            // Tenta PATCH primeiro (mais semântico)
             var request = new HttpRequestMessage(HttpMethod.Patch, $""{{_baseEndpoint}}/{{id}}/toggle-ativo"")
             {{
                 Content = content
@@ -359,6 +331,99 @@ public class {entity.Name}ApiService
     }}
 
     #endregion";
+    }
+
+    // =========================================================================
+    // ⭐ v6.0: SELECT2 LOOKUP - GERAÇÃO AUTOMÁTICA
+    // =========================================================================
+
+    /// <summary>
+    /// ⭐ v6.0: Gera declarações de métodos Select2 para a Interface.
+    /// </summary>
+    private static string GenerateSelect2Methods(EntityConfig entity)
+    {
+        if (!entity.Select2Lookups.Any())
+            return string.Empty;
+
+        var sb = new StringBuilder();
+        sb.AppendLine();
+        sb.AppendLine("    // =========================================================================");
+        sb.AppendLine("    // ⭐ v6.0: MÉTODOS DE LOOKUP PARA SELECT2 (GERADO AUTOMATICAMENTE)");
+        sb.AppendLine("    // =========================================================================");
+
+        foreach (var lookup in entity.Select2Lookups)
+        {
+            sb.AppendLine($@"
+    /// <summary>
+    /// Busca {lookup.DisplayName} para Select2.
+    /// Gerado automaticamente para o campo {lookup.PropertyName}.
+    /// </summary>
+    Task<object> {lookup.MethodName}Async(
+        string term, 
+        int page, 
+        int pageSize, 
+        CancellationToken ct = default);");
+        }
+
+        return sb.ToString();
+    }
+
+    /// <summary>
+    /// ⭐ v6.1: CORRIGIDO - Gera implementações dos métodos Select2 usando 'term'.
+    /// </summary>
+    private static string GenerateSelect2Implementations(EntityConfig entity)
+    {
+        if (!entity.Select2Lookups.Any())
+            return string.Empty;
+
+        var sb = new StringBuilder();
+        sb.AppendLine();
+        sb.AppendLine("    // =========================================================================");
+        sb.AppendLine("    // ⭐ v6.1: IMPLEMENTAÇÕES DE LOOKUP PARA SELECT2 (CORRIGIDO - USA 'term')");
+        sb.AppendLine("    // =========================================================================");
+
+        foreach (var lookup in entity.Select2Lookups)
+        {
+            var entityUpper = lookup.EntityName.ToUpperInvariant();
+
+            sb.AppendLine($@"
+    /// <summary>
+    /// Busca {lookup.DisplayName} para componentes de seleção (Lookup).
+    /// </summary>
+    public async Task<object> {lookup.MethodName}Async(
+        string term, 
+        int page, 
+        int pageSize, 
+        CancellationToken ct = default)
+    {{
+        try
+        {{
+            await AddAuthorizationHeaderAsync();
+            
+            // ✅ v6.1: CORRIGIDO - USA 'term' em vez de 'search'
+            var url = $""{lookup.ApiRoute}/lookup?term={{Uri.EscapeDataString(term ?? """")}}& page={{page}}&pageSize={{pageSize}}"";
+            
+            var response = await _httpClient.GetAsync(url, ct);
+            
+            if (!response.IsSuccessStatusCode)
+            {{
+                _logger.LogError(""[{entityUpper}] Erro ao buscar para Select2: {{Status}}"", response.StatusCode);
+                return new {{ results = new List<object>(), pagination = new {{ more = false }} }};
+            }}
+            
+            var content = await response.Content.ReadAsStringAsync(ct);
+            return JsonSerializer.Deserialize<object>(content, _jsonOptions) 
+                ?? new {{ results = new List<object>(), pagination = new {{ more = false }} }};
+        }}
+        catch (Exception ex)
+        {{
+            _logger.LogError(ex, ""[{entityUpper}] Erro em {lookup.MethodName}Async"");
+            return new {{ results = new List<object>(), pagination = new {{ more = false }} }};
+        }}
+    }}");
+        }
+
+        return sb.ToString();
     }
 
     /// <summary>

@@ -30,6 +30,7 @@ namespace RhSensoERP.Modules.GestaoTerceirosPrestadores.Core.Entities;
     CdFuncao = "CAP_FM_COLABORADORES",
     IsLegacyTable = false,
     GenerateApiController = true
+    
 )]
 [Table("cap_colaboradores_fornecedor")]
 [HasDatabaseTriggers("Auditoria automática de CreatedAt/UpdatedAt via triggers SQL Server")]
