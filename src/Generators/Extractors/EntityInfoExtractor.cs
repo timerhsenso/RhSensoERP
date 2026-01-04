@@ -361,16 +361,17 @@ public static class EntityInfoExtractor
                     ForeignKeyProperty = string.Empty,
                     RelationshipType = NavigationRelationshipType.OneToMany,
                     IsNullable = true,
-                    OnDelete = NavigationDeleteBehavior.Restrict
+                    OnDelete = NavigationDeleteBehavior.Restrict,
+                    HasNavigationDisplay = false
                 };
             }
 
-            // Navegação ManyToOne (ex: Banco, Agencia)
+            // Navegação ManyToOne (ex: Banco, Agencia, Fornecedor)
             if (!namedType.IsGenericType)
             {
                 var fkPropertyName = FindForeignKeyProperty(member.Name, properties);
 
-                return new NavigationInfo
+                var navInfo = new NavigationInfo
                 {
                     Name = member.Name,
                     TargetEntity = namedType.Name,
@@ -380,6 +381,50 @@ public static class EntityInfoExtractor
                     IsNullable = type.NullableAnnotation == NullableAnnotation.Annotated,
                     OnDelete = NavigationDeleteBehavior.Restrict
                 };
+
+                // =========================================================================
+                // ✅ v4.6 NOVO: DETECTA [NavigationDisplay]
+                // =========================================================================
+                var navDisplayAttr = member.GetAttributes()
+                    .FirstOrDefault(a => a.AttributeClass?.Name == "NavigationDisplayAttribute");
+
+                if (navDisplayAttr != null)
+                {
+                    navInfo.HasNavigationDisplay = true;
+
+                    // Lê propriedades do atributo
+                    foreach (var namedArg in navDisplayAttr.NamedArguments)
+                    {
+                        switch (namedArg.Key)
+                        {
+                            case "Property":
+                                navInfo.DisplayProperty = namedArg.Value.Value?.ToString() ?? "";
+                                break;
+                            case "Module":
+                                navInfo.DisplayModule = namedArg.Value.Value?.ToString();
+                                break;
+                            case "EntityRoute":
+                                navInfo.DisplayEntityRoute = namedArg.Value.Value?.ToString();
+                                break;
+                            case "GridColumn":
+                                if (namedArg.Value.Value != null)
+                                    navInfo.GridColumn = (bool)namedArg.Value.Value;
+                                break;
+                            case "GridHeader":
+                                navInfo.GridHeader = namedArg.Value.Value?.ToString();
+                                break;
+                            case "DtoPropertyName":
+                                navInfo.DtoPropertyName = namedArg.Value.Value?.ToString();
+                                break;
+                            case "GridOrder":
+                                if (namedArg.Value.Value != null)
+                                    navInfo.GridOrder = (int)namedArg.Value.Value;
+                                break;
+                        }
+                    }
+                }
+
+                return navInfo;
             }
         }
 

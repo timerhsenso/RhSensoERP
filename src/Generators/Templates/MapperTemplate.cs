@@ -1,8 +1,7 @@
 // =============================================================================
-// RHSENSOERP GENERATOR v3.7 - MAPPER TEMPLATE
+// RHSENSOERP GENERATOR v4.6 - MAPPER TEMPLATE
 // =============================================================================
-// Arquivo: src/Generators/Templates/MapperTemplate.cs
-// Versão: 3.7 - Ignora campos protegidos (PK, TenantId, Auditoria)
+// v4.6: ADICIONADO - Mapeamento automático de navegações
 // =============================================================================
 using RhSensoERP.Generators.Models;
 using System.Collections.Generic;
@@ -26,6 +25,9 @@ public static class MapperTemplate
         var createIgnores = GenerateCreateIgnores(info);
         var updateIgnores = GenerateUpdateIgnores(info);
 
+        // ✅ v4.6 NOVO: Gera mapeamento de navegações
+        var navigationMappings = GenerateNavigationMappings(info);
+
         return $$"""
 {{info.FileHeader}}
 using System;
@@ -44,7 +46,7 @@ public sealed class {{info.EntityName}}Profile : Profile
     public {{info.EntityName}}Profile()
     {
         // Entity → DTO
-        CreateMap<{{info.EntityName}}, {{info.EntityName}}Dto>();
+        CreateMap<{{info.EntityName}}, {{info.EntityName}}Dto>(){{navigationMappings}};
 
         // CreateRequest → Entity
         CreateMap<Create{{info.EntityName}}Request, {{info.EntityName}}>()
@@ -58,6 +60,39 @@ public sealed class {{info.EntityName}}Profile : Profile
     }
 }
 """;
+    }
+
+    // =========================================================================
+    // ✅ v4.6 NOVO: MAPEAMENTO DE NAVEGAÇÕES
+    // =========================================================================
+
+    /// <summary>
+    /// Gera mapeamentos de navegações.
+    /// Ex: .ForMember(dest => dest.FornecedorRazaoSocial, opt => opt.MapFrom(src => src.Fornecedor!.RazaoSocial))
+    /// </summary>
+    private static string GenerateNavigationMappings(EntityInfo info)
+    {
+        var navProps = info.Navigations
+            .Where(n => n.HasNavigationDisplay &&
+                       n.RelationshipType == NavigationRelationshipType.ManyToOne)
+            .ToList();
+
+        if (!navProps.Any())
+            return "";
+
+        var lines = new List<string>();
+
+        foreach (var nav in navProps)
+        {
+            var dtoProp = nav.DtoPropertyNameComputed;
+            var navName = nav.Name;
+            var displayProp = nav.DisplayProperty;
+
+            // Usa ! (null-forgiving) porque sabemos que será populado pelo Include
+            lines.Add($"            .ForMember(dest => dest.{dtoProp}, opt => opt.MapFrom(src => src.{navName}!.{displayProp}))");
+        }
+
+        return "\n" + string.Join("\n", lines);
     }
 
     /// <summary>
@@ -95,6 +130,10 @@ public sealed class {{info.EntityName}}Profile : Profile
 
         if (!string.IsNullOrEmpty(info.UpdatedByField))
             ignores.Add($"            .ForMember(dest => dest.{info.UpdatedByField}, opt => opt.Ignore())");
+
+        // ✅ v4.6: Ignora propriedades de navegação
+        var navIgnores = GenerateNavigationIgnores(info);
+        ignores.AddRange(navIgnores);
 
         return string.Join("\n", ignores);
     }
@@ -135,6 +174,31 @@ public sealed class {{info.EntityName}}Profile : Profile
         if (!string.IsNullOrEmpty(info.UpdatedByField))
             ignores.Add($"            .ForMember(dest => dest.{info.UpdatedByField}, opt => opt.Ignore())");
 
+        // ✅ v4.6: Ignora propriedades de navegação
+        var navIgnores = GenerateNavigationIgnores(info);
+        ignores.AddRange(navIgnores);
+
         return string.Join("\n", ignores);
+    }
+
+    /// <summary>
+    /// Gera ignores para propriedades de navegação (elas não existem na entidade).
+    /// </summary>
+    private static List<string> GenerateNavigationIgnores(EntityInfo info)
+    {
+        var ignores = new List<string>();
+
+        var navWithDisplay = info.Navigations
+            .Where(n => n.HasNavigationDisplay &&
+                       n.RelationshipType == NavigationRelationshipType.ManyToOne)
+            .ToList();
+
+        foreach (var nav in navWithDisplay)
+        {
+            // Ignora a navegação em si (ex: Fornecedor)
+            ignores.Add($"            .ForMember(dest => dest.{nav.Name}, opt => opt.Ignore())");
+        }
+
+        return ignores;
     }
 }

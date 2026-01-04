@@ -1,5 +1,7 @@
 // =============================================================================
-// RHSENSOERP GENERATOR v3.9 - DTO TEMPLATE
+// RHSENSOERP GENERATOR v4.6 - DTO TEMPLATE
+// =============================================================================
+// v4.6: ADICIONADO - Propriedades de navegação (ex: FornecedorRazaoSocial)
 // =============================================================================
 using RhSensoERP.Generators.Models;
 using System.Collections.Generic;
@@ -12,9 +14,22 @@ public static class DtoTemplate
     public static string GenerateDto(EntityInfo info)
     {
         var props = new List<string>();
+
+        // ✅ Propriedades escalares normais
         foreach (var p in info.DtoProperties)
         {
             props.Add($"    public {p.Type} {p.Name} {{ get; set; }}{GetDefaultValue(p)}");
+        }
+
+        // ✅ v4.6 NOVO: Propriedades de navegação
+        var navigationProps = GenerateNavigationProperties(info);
+        if (!string.IsNullOrEmpty(navigationProps))
+        {
+            props.Add("");
+            props.Add("    // =========================================================================");
+            props.Add("    // PROPRIEDADES DE NAVEGAÇÃO (campos de entidades relacionadas)");
+            props.Add("    // =========================================================================");
+            props.Add(navigationProps);
         }
 
         return $$"""
@@ -93,6 +108,40 @@ public sealed class Update{{info.EntityName}}Request
 {{string.Join("\n", props)}}
 }
 """;
+    }
+
+    // =========================================================================
+    // ✅ v4.6 NOVO: GERAÇÃO DE PROPRIEDADES DE NAVEGAÇÃO
+    // =========================================================================
+
+    /// <summary>
+    /// Gera propriedades de navegação baseadas no atributo [NavigationDisplay].
+    /// Ex: public string? FornecedorRazaoSocial { get; set; }
+    /// </summary>
+    private static string GenerateNavigationProperties(EntityInfo info)
+    {
+        var navProps = info.Navigations
+            .Where(n => n.HasNavigationDisplay &&
+                       n.RelationshipType == NavigationRelationshipType.ManyToOne)
+            .ToList();
+
+        if (!navProps.Any())
+            return "";
+
+        var lines = new List<string>();
+
+        foreach (var nav in navProps)
+        {
+            var propName = nav.DtoPropertyNameComputed;
+            var displayProp = nav.DisplayProperty;
+
+            lines.Add($"    /// <summary>");
+            lines.Add($"    /// Campo '{displayProp}' da navegação {nav.Name}.");
+            lines.Add($"    /// </summary>");
+            lines.Add($"    public string? {propName} {{ get; set; }}");
+        }
+
+        return string.Join("\n", lines);
     }
 
     private static string GetDefaultValue(RhSensoERP.Generators.Models.PropertyInfo prop)

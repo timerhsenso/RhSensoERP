@@ -1,18 +1,17 @@
 // =============================================================================
-// RHSENSOERP GENERATOR v4.4 - API CONTROLLER TEMPLATE
+// RHSENSOERP GENERATOR v4.6 - API CONTROLLER TEMPLATE
 // =============================================================================
 // Arquivo: src/Generators/Templates/ApiControllerTemplate.cs
-// Versão: 4.4 - CORRIGIDO - Lookup retorna formato Select2 nativo
+// Versão: 4.6 - Endpoint /metadata SEGURO (só em Development)
 // 
-// ✅ CORREÇÃO v4.4:
+// ✅ NOVO v4.6:
+// - Endpoint GET /metadata retorna EntityMetadata para UI dinâmica
+// - SEGURANÇA: Endpoint só funciona em ambiente Development
+// - Retorna 404 Not Found em Production/Staging
+// 
+// ✅ RECURSOS v4.4:
 // - Endpoint GET /lookup retorna formato Select2 sem encapsular em Result<>
 // - Formato: { results: [{id, text}], pagination: {more} }
-// - Parâmetro 'term' em vez de 'search' para compatibilidade Select2
-// 
-// ✅ RECURSOS v4.3:
-// - DELETE com FK handling + BatchDeleteResult + ToggleAtivo
-// - Endpoint PATCH /{id}/toggle-ativo gerado automaticamente quando entidade tem campo Ativo
-// - Detecta campos: Ativo, IsAtivo, Active, IsActive
 // =============================================================================
 using RhSensoERP.Generators.Models;
 using System.Linq;
@@ -21,7 +20,7 @@ namespace RhSensoERP.Generators.Templates;
 
 /// <summary>
 /// Template para geração de API Controller.
-/// v4.4: Corrige endpoint de lookup para retornar formato Select2 nativo.
+/// v4.6: Adiciona endpoint /metadata SEGURO (só em Development).
 /// </summary>
 public static class ApiControllerTemplate
 {
@@ -65,12 +64,16 @@ using System;
 using System.Collections.Generic;
 using MediatR;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;{{authUsing}}{{currentUserUsing}}
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Hosting;{{authUsing}}{{currentUserUsing}}
 using {{info.DtoNamespace}};
 using {{info.CommandsNamespace}};
 using {{info.QueriesNamespace}};
+using RhSensoERP.Modules.{{info.ModuleName}}.Application.Metadata;
 using RhSensoERP.Shared.Core.Common;
 using RhSensoERP.Shared.Contracts.Common;
+using RhSensoERP.Shared.Application.Metadata;
 
 namespace {{info.ApiControllerNamespace}};
 
@@ -82,11 +85,35 @@ namespace {{info.ApiControllerNamespace}};
 [ApiExplorerSettings(GroupName = "{{info.ApiGroup}}")]
 public sealed class {{info.PluralName}}Controller : ControllerBase
 {
-    private readonly IMediator _mediator;{{currentUserField}}
+    private readonly IMediator _mediator;
+    private readonly IWebHostEnvironment _env;{{currentUserField}}
 
-    public {{info.PluralName}}Controller(IMediator mediator{{currentUserParam}})
+    public {{info.PluralName}}Controller(
+        IMediator mediator,
+        IWebHostEnvironment env{{currentUserParam}})
     {
-        _mediator = mediator;{{currentUserAssign}}
+        _mediator = mediator;
+        _env = env;{{currentUserAssign}}
+    }
+
+    /// <summary>
+    /// 🔒 Retorna os metadados da entidade para UI dinâmica.
+    /// SEGURANÇA: Endpoint disponível APENAS em ambiente Development.
+    /// </summary>
+    [HttpGet("metadata")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(EntityMetadata), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public IActionResult GetMetadata()
+    {
+        // 🔒 SEGURANÇA: Bloqueia em produção
+        if (!_env.IsDevelopment())
+        {
+            return NotFound();
+        }
+
+        var metadata = {{info.EntityName}}MetadataProvider.GetMetadata();
+        return Ok(metadata);
     }
 
     /// <summary>

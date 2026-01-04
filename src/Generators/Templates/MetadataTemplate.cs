@@ -1,8 +1,8 @@
 ﻿// =============================================================================
-// RHSENSOERP GENERATOR v3.2 - METADATA TEMPLATE
+// RHSENSOERP GENERATOR v4.6 - METADATA TEMPLATE
 // =============================================================================
-// Arquivo: src/Generators/Templates/MetadataTemplate.cs
-// Versão: 3.2 - CORRIGIDO: IsIdentity e TimeSpan
+// v4.6: ADICIONADO - Metadados de navegação (FK escondida, navegação visível)
+// v3.2: CORRIGIDO - IsIdentity e TimeSpan
 // =============================================================================
 using RhSensoERP.Generators.Models;
 using System.Collections.Generic;
@@ -23,7 +23,6 @@ public static class MetadataTemplate
     {
         var propertiesCode = GeneratePropertiesMetadata(info);
 
-        // ✅ CORRIGIDO: Busca a propriedade PK e verifica IsIdentity
         var pkProp = info.Properties.FirstOrDefault(p => p.Name == info.PrimaryKeyProperty);
         var isIdentity = pkProp?.IsIdentity ?? false;
 
@@ -139,17 +138,35 @@ public static class {{info.EntityName}}MetadataProvider
 
     /// <summary>
     /// Gera o código das propriedades.
+    /// v4.6: Adiciona propriedades de navegação e esconde FKs com navegação.
     /// </summary>
     private static string GeneratePropertiesMetadata(EntityInfo info)
     {
         var lines = new List<string>();
         var order = 0;
 
+        // ✅ FKs com navegação (para lookup no form)
+        var fksWithNavigation = GetForeignKeysWithNavigation(info);
+
         foreach (var prop in info.Properties)
         {
-            var inputType = GetInputType(prop);
+            var isFkWithNav = fksWithNavigation.Contains(prop.Name);
+
+            // Se é FK com navegação, configura como Select2
+            var inputType = isFkWithNav
+                ? "select"
+                : GetInputType(prop);
+
             var format = GetFormat(prop);
             var filterType = GetFilterType(prop);
+
+            // ✅ FK com navegação: NÃO aparece no grid, SÓ no form
+            var showInList = isFkWithNav ? false : ShouldShowInList(prop);
+
+            // ✅ FK com navegação: Gera config de Lookup
+            var lookupConfig = isFkWithNav
+                ? GenerateLookupConfig(prop.Name, info)
+                : "null";
 
             lines.Add($$"""
             new PropertyMetadata
@@ -174,7 +191,7 @@ public static class {{info.EntityName}}MetadataProvider
                 // Configuração de Lista
                 List = new ListPropertyConfig
                 {
-                    Show = {{FormatBool(ShouldShowInList(prop))}},
+                    Show = {{FormatBool(showInList)}},
                     Order = {{order}},
                     Width = null,
                     Sortable = {{FormatBool(!prop.IsNullable || prop.IsString)}},
@@ -215,31 +232,182 @@ public static class {{info.EntityName}}MetadataProvider
                 },
 
                 // Lookup
-                Lookup = null
+                Lookup = {{lookupConfig}}
             }
 """);
             order++;
         }
 
+        // ✅ v4.6 NOVO: Adiciona propriedades de navegação
+        var navProperties = GenerateNavigationPropertiesMetadata(info, ref order);
+        if (!string.IsNullOrEmpty(navProperties))
+        {
+            lines.Add(navProperties);
+        }
+
         return string.Join(",\n", lines);
     }
 
+    // =========================================================================
+    // ✅ v4.6 NOVO: METADADOS DE NAVEGAÇÃO
+    // =========================================================================
+
     /// <summary>
-    /// ✅ CORRIGIDO: Determina o tipo de input HTML baseado no tipo da propriedade.
+    /// Gera metadados para propriedades de navegação.
+    /// Estas propriedades aparecem NO GRID mas NÃO NO FORM.
     /// </summary>
+    private static string GenerateNavigationPropertiesMetadata(EntityInfo info, ref int order)
+    {
+        var navWithDisplay = info.Navigations
+            .Where(n => n.HasNavigationDisplay &&
+                       n.GridColumn &&
+                       n.RelationshipType == NavigationRelationshipType.ManyToOne)
+            .OrderBy(n => n.GridOrder)
+            .ToList();
+
+        if (!navWithDisplay.Any())
+            return "";
+
+        var lines = new List<string>();
+        var isFirst = true;  // ✅ CONTROLA SE É A PRIMEIRA
+
+        foreach (var nav in navWithDisplay)
+        {
+            var dtoPropName = nav.DtoPropertyNameComputed;
+            var displayName = nav.GridHeaderComputed;
+
+            // ✅ PRIMEIRA navegação: SEM vírgula
+            // ✅ DEMAIS navegações: COM vírgula
+            var comma = isFirst ? "" : ",";
+            isFirst = false;
+
+            lines.Add($@"{comma}
+            new PropertyMetadata
+            {{
+                // Identificação
+                Name = ""{dtoPropName}"",
+                DisplayName = ""{displayName}"",
+                Type = ""string"",
+                ColumnName = ""{dtoPropName}"",
+
+                // Validação
+                IsRequired = false,
+                IsNullable = true,
+                MaxLength = null,
+                MinLength = null,
+
+                // Flags
+                IsPrimaryKey = false,
+                IsReadOnly = true,
+                ExcludeFromDto = false,
+
+                // Configuração de Lista
+                List = new ListPropertyConfig
+                {{
+                    Show = true,
+                    Order = {order},
+                    Width = null,
+                    Sortable = false,
+                    Filterable = false,
+                    Format = ""text"",
+                    CssClass = null,
+                    Align = ""left""
+                }},
+
+                // Configuração de Formulário
+                Form = new FormPropertyConfig
+                {{
+                    Show = false,
+                    ShowOnCreate = false,
+                    ShowOnEdit = false,
+                    Order = {order},
+                    Group = null,
+                    InputType = ""text"",
+                    Placeholder = """",
+                    HelpText = null,
+                    Mask = null,
+                    Rows = 3,
+                    ColSize = 6,
+                    Icon = null,
+                    Disabled = true,
+                    DefaultValue = null,
+                    CssClass = null
+                }},
+
+                // Configuração de Filtro
+                Filter = new FilterPropertyConfig
+                {{
+                    Show = false,
+                    FilterType = ""text"",
+                    DefaultOperator = ""contains"",
+                    Order = {order},
+                    Placeholder = """"
+                }},
+
+                // Lookup
+                Lookup = null
+            }}");
+
+            order++;
+        }
+
+        return string.Join("", lines);  // ✅ Junta SEM separador (vírgulas já estão nas strings)
+    }
+
+    /// <summary>
+    /// Gera configuração de Lookup para FK.
+    /// </summary>
+    private static string GenerateLookupConfig(string fkPropertyName, EntityInfo info)
+    {
+        var nav = info.Navigations.FirstOrDefault(n => n.ForeignKeyProperty == fkPropertyName);
+
+        if (nav == null || !nav.HasNavigationDisplay)
+            return "null";
+
+        var module = nav.DisplayModule ?? info.ModuleName;
+        var moduleRoute = module.ToLowerInvariant();
+        var entityRoute = nav.EntityRouteComputed;
+        var displayProp = nav.DisplayProperty;
+
+        // Converte para camelCase (RazaoSocial → razaoSocial)
+        var displayPropCamel = char.ToLowerInvariant(displayProp[0]) + displayProp.Substring(1);
+
+        return $@"new LookupConfig
+                {{
+                    Module = ""{module}"",
+                    Route = ""{entityRoute}"",
+                    Endpoint = ""/api/{moduleRoute}/{entityRoute}/lookup"",
+                    ValueField = ""id"",
+                    TextField = ""{displayPropCamel}""
+                }}";
+    }
+
+    /// <summary>
+    /// Retorna lista de FKs que têm navegação configurada.
+    /// </summary>
+    private static List<string> GetForeignKeysWithNavigation(EntityInfo info)
+    {
+        return info.Navigations
+            .Where(n => n.HasNavigationDisplay &&
+                       n.RelationshipType == NavigationRelationshipType.ManyToOne &&
+                       !string.IsNullOrEmpty(n.ForeignKeyProperty))
+            .Select(n => n.ForeignKeyProperty)
+            .ToList();
+    }
+
+    // =========================================================================
+    // MÉTODOS AUXILIARES (MANTIDOS)
+    // =========================================================================
+
     private static string GetInputType(PropertyInfo prop)
     {
         if (prop.IsBool) return "checkbox";
-
-        // ✅ CORRIGIDO: Detecta TimeSpan e TimeOnly especificamente
         if (prop.Type.Contains("TimeSpan") || prop.Type.Contains("TimeOnly")) return "time";
-
         if (prop.IsDateTime) return prop.Type.Contains("Time") ? "datetime-local" : "date";
         if (prop.IsNumeric) return "number";
         if (prop.IsGuid) return "text";
         if (prop.MaxLength > 255) return "textarea";
 
-        // Inferir por nome
         var nameLower = prop.Name.ToLower();
         if (nameLower.Contains("email")) return "email";
         if (nameLower.Contains("telefone") || nameLower.Contains("phone") || nameLower.Contains("celular")) return "tel";
@@ -249,16 +417,10 @@ public static class {{info.EntityName}}MetadataProvider
         return "text";
     }
 
-    /// <summary>
-    /// Determina o formato de exibição na lista.
-    /// </summary>
     private static string GetFormat(PropertyInfo prop)
     {
         if (prop.IsBool) return "boolean";
-
-        // ✅ CORRIGIDO: TimeSpan e TimeOnly formatado como time
         if (prop.Type.Contains("TimeSpan") || prop.Type.Contains("TimeOnly")) return "time";
-
         if (prop.IsDateTime) return prop.Type.Contains("Time") ? "datetime" : "date";
 
         var nameLower = prop.Name.ToLower();
@@ -268,9 +430,6 @@ public static class {{info.EntityName}}MetadataProvider
         return "text";
     }
 
-    /// <summary>
-    /// Determina o tipo de filtro.
-    /// </summary>
     private static string GetFilterType(PropertyInfo prop)
     {
         if (prop.IsBool) return "boolean";
@@ -279,9 +438,6 @@ public static class {{info.EntityName}}MetadataProvider
         return "text";
     }
 
-    /// <summary>
-    /// Determina o operador padrão do filtro.
-    /// </summary>
     private static string GetDefaultOperator(PropertyInfo prop)
     {
         if (prop.IsString) return "contains";
@@ -290,9 +446,6 @@ public static class {{info.EntityName}}MetadataProvider
         return "equals";
     }
 
-    /// <summary>
-    /// Determina o alinhamento da coluna.
-    /// </summary>
     private static string GetAlign(PropertyInfo prop)
     {
         if (prop.IsNumeric) return "right";
@@ -301,67 +454,40 @@ public static class {{info.EntityName}}MetadataProvider
         return "left";
     }
 
-    /// <summary>
-    /// Gera placeholder baseado na propriedade.
-    /// </summary>
     private static string GetPlaceholder(PropertyInfo prop)
     {
-        // ✅ CORRIGIDO: Placeholder específico para TimeSpan e TimeOnly
         if (prop.Type.Contains("TimeSpan") || prop.Type.Contains("TimeOnly"))
             return "00:00";
 
         return $"Digite {prop.DisplayName.ToLower()}...";
     }
 
-    /// <summary>
-    /// Determina o tamanho da coluna Bootstrap.
-    /// </summary>
     private static int GetColSize(PropertyInfo prop)
     {
-        if (prop.MaxLength > 255) return 12; // textarea
+        if (prop.MaxLength > 255) return 12;
         if (prop.MaxLength > 100) return 8;
         if (prop.IsBool) return 3;
         if (prop.IsDateTime) return 4;
-        if (prop.Type.Contains("TimeSpan")) return 3; // ✅ TimeSpan é pequeno
+        if (prop.Type.Contains("TimeSpan")) return 3;
         return 6;
     }
 
-    /// <summary>
-    /// Verifica se é campo de auditoria.
-    /// </summary>
     private static bool IsAuditField(string name)
     {
         return name is "CreatedAt" or "CreatedBy" or "UpdatedAt" or "UpdatedBy"
-            or "Aud_CreatedAt" or "Aud_IdUsuarioCadastro" or "Aud_UpdatedAt" or "Aud_IdUsuarioAtualizacao";
+            or "Aud_CreatedAt" or "Aud_IdUsuarioCadastro" or "Aud_UpdatedAt" or "Aud_IdUsuarioAtualizacao"
+            or "CreatedAtUtc" or "UpdatedAtUtc" or "CreatedByUserId" or "UpdatedByUserId";
     }
 
-    /// <summary>
-    /// Determina se a propriedade deve aparecer na listagem.
-    /// PKs do tipo Guid não aparecem, mas PKs string/int aparecem (tabelas legadas).
-    /// </summary>
     private static bool ShouldShowInList(PropertyInfo prop)
     {
-        // Campos de auditoria nunca aparecem
         if (IsAuditField(prop.Name)) return false;
-
-        // Campos excluídos do DTO nunca aparecem
         if (prop.ExcludeFromDto) return false;
-
-        // PK do tipo Guid não aparece (é só ID interno)
         if (prop.IsPrimaryKey && prop.IsGuid) return false;
-
-        // PK de outros tipos (string, int) aparece (códigos legados)
-        // Demais campos aparecem
         return true;
     }
 
-    /// <summary>
-    /// Formata booleano para código C#.
-    /// </summary>
     private static string FormatBool(bool value) => value ? "true" : "false";
 
-    /// <summary>
-    /// Formata int nullable para código C#.
-    /// </summary>
     private static string FormatNullableInt(int? value) => value.HasValue ? value.ToString()! : "null";
 }

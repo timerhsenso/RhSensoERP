@@ -396,4 +396,15 @@ public class LookupConfig
     /// Campos adicionais a retornar.
     /// </summary>
     public List<string>? AdditionalFields { get; init; }
+
+    // <summary>
+    /// Módulo da API (ex: "AdministracaoPessoal").
+    /// Usado para lookups cross-module.
+    /// </summary>
+    public string? Module { get; init; }
+
+    /// <summary>
+    /// Route da entidade na API (ex: "tiposanguineo").
+    /// </summary>
+    public string? Route { get; init; }
 }

@@ -30,7 +30,7 @@ namespace RhSensoERP.Modules.GestaoTerceirosPrestadores.Core.Entities;
     CdFuncao = "CAP_FM_COLABORADORES",
     IsLegacyTable = false,
     GenerateApiController = true
-    
+
 )]
 [Table("cap_colaboradores_fornecedor")]
 [HasDatabaseTriggers("Auditoria automática de CreatedAt/UpdatedAt via triggers SQL Server")]
@@ -185,12 +185,31 @@ public class CapColaboradoresFornecedor
     // NAVIGATION PROPERTIES
     // =========================================================================
     [ForeignKey(nameof(IdFornecedor))]
+    [NavigationDisplay(
+        Property = "RazaoSocial",
+        GridColumn = true,
+        GridHeader = "Fornecedor"
+    )]
     public virtual CapFornecedores? Fornecedor { get; set; }
 
     [ForeignKey(nameof(IdTipoSanguineo))]
+    [NavigationDisplay(
+        Property = "Descricao",
+        Module = "AdministracaoPessoal",
+        EntityRoute = "tiposanguineo",
+        GridColumn = true,
+        GridHeader = "Tipo Sanguíneo"
+    )]
     public virtual BasTiposSanguineo? TipoSanguineo { get; set; }
 
     [ForeignKey(nameof(IdUf))]
+    [NavigationDisplay(
+        Property = "Sigla",
+        Module = "AdministracaoPessoal",
+        EntityRoute = "ufs",
+        GridColumn = true,
+        GridHeader = "UF"
+    )]
     public virtual BasUfs? Uf { get; set; }
 
     // Comentado: Aguardando implementação completa da entidade Usuario

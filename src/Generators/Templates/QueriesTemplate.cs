@@ -1,23 +1,19 @@
 // =============================================================================
-// RHSENSOERP GENERATOR v4.0 - QUERIES TEMPLATE (FINAL WORKING)
+// RHSENSOERP GENERATOR v4.6 - QUERIES TEMPLATE
 // =============================================================================
-// Arquivo: src/Generators/Templates/QueriesTemplate.cs
-// Versão: 4.0 - FINAL - Usa SortBy/Desc da classe PagedRequest
-// Changelog:
-//   v4.0 - ✅ CORRIGIDO: Usa SortBy (não OrderBy) e Desc (não Ascending)
-//   v4.0 - ✅ Ordenação dinâmica ASC/DESC completa
-//   v4.0 - ✅ Zero dependências externas
-//   v3.7 - Multi-tenancy com filtro automático de tenant
+// v4.6: ADICIONADO - Includes automáticos para navegações
+// v4.0: Ordenação dinâmica ASC/DESC com SortBy/Desc
 // =============================================================================
 using RhSensoERP.Generators.Models;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace RhSensoERP.Generators.Templates;
 
 public static class QueriesTemplate
 {
     /// <summary>
-    /// Gera a Query GetById com validação de tenant.
+    /// Gera a Query GetById com validação de tenant e Includes.
     /// </summary>
     public static string GenerateGetByIdQuery(EntityInfo info)
     {
@@ -28,13 +24,17 @@ public static class QueriesTemplate
         var currentUserParam = info.IsLegacyTable ? "" : ",\n        ICurrentUser currentUser";
         var currentUserAssign = info.IsLegacyTable ? "" : "\n        _currentUser = currentUser;";
 
+        // ✅ v4.6 NOVO: Includes para navegações
+        var includesCode = GenerateIncludesForGetById(info);
+        var includesUsing = includesCode.Contains("Include") ? "\nusing Microsoft.EntityFrameworkCore;" : "";
+
         return $$"""
 {{info.FileHeader}}
 using System;
 using System.Collections.Generic;
 using AutoMapper;
 using MediatR;
-using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;{{includesUsing}}
 using {{info.DtoNamespace}};
 using {{info.RepositoryInterfaceNamespace}};
 using RhSensoERP.Shared.Core.Common;{{currentUserUsing}}
@@ -75,7 +75,7 @@ public sealed class GetBy{{info.EntityName}}IdHandler
         {
             _logger.LogDebug("Buscando {{info.DisplayName}} {Id}...", query.Id);
 
-            var entity = await _repository.GetByIdAsync(query.Id, cancellationToken);
+{{includesCode}}
 
             if (entity == null)
             {
@@ -102,8 +102,7 @@ public sealed class GetBy{{info.EntityName}}IdHandler
     }
 
     /// <summary>
-    /// Gera a Query GetPaged com filtro de tenant e ordenação dinâmica.
-    /// v4.0: Ordenação dinâmica ASC/DESC usando SortBy e Desc.
+    /// Gera a Query GetPaged com filtro de tenant, ordenação dinâmica e Includes.
     /// </summary>
     public static string GenerateGetPagedQuery(EntityInfo info)
     {
@@ -119,18 +118,17 @@ public sealed class GetBy{{info.EntityName}}IdHandler
                     EF.Functions.Like(e.{searchField}.ToLower(), $""%{{search}}%""));"
             : "                // Sem campo de texto para busca";
 
-        // ✅ Filtro de tenant (se não for legada)
         var tenantFilter = GenerateTenantFilterForPaged(info);
         var currentUserUsing = info.IsLegacyTable ? "" : "\nusing RhSensoERP.Shared.Core.Abstractions;";
         var currentUserField = info.IsLegacyTable ? "" : "\n    private readonly ICurrentUser _currentUser;";
         var currentUserParam = info.IsLegacyTable ? "" : ",\n        ICurrentUser currentUser";
         var currentUserAssign = info.IsLegacyTable ? "" : "\n        _currentUser = currentUser;";
 
-        // ✅ v4.0: Gera casos do switch para ordenação ASC
         var orderByAscCases = GenerateOrderByCases(info, ascending: true);
-
-        // ✅ v4.0: Gera casos do switch para ordenação DESC
         var orderByDescCases = GenerateOrderByCases(info, ascending: false);
+
+        // ✅ v4.6 NOVO: Includes para navegações
+        var includesForPaged = GenerateIncludesForPaged(info);
 
         return $$"""
 {{info.FileHeader}}
@@ -156,7 +154,7 @@ public sealed record Get{{info.PluralName}}PagedQuery(PagedRequest Request)
 
 /// <summary>
 /// Handler da query de listagem paginada.
-/// v4.0: Suporte a ordenação dinâmica via SortBy/Desc.
+/// v4.6: Inclui navegações automaticamente.
 /// </summary>
 public sealed class Get{{info.PluralName}}PagedHandler
     : IRequestHandler<Get{{info.PluralName}}PagedQuery, Result<PagedResult<{{info.EntityName}}Dto>>>
@@ -190,7 +188,7 @@ public sealed class Get{{info.PluralName}}PagedHandler
                 request.SortBy ?? "null",
                 request.Desc);
 
-{{tenantFilter}}
+{{tenantFilter}}{{includesForPaged}}
 
             // Aplica filtro de busca
             if (!string.IsNullOrWhiteSpace(request.Search))
@@ -202,14 +200,11 @@ public sealed class Get{{info.PluralName}}PagedHandler
             // Conta total
             var totalCount = await queryable.CountAsync(cancellationToken);
 
-            // =========================================================================
-            // ✅ v4.0: ORDENAÇÃO DINÂMICA ASC/DESC
-            // =========================================================================
+            // Ordenação dinâmica
             if (!string.IsNullOrWhiteSpace(request.SortBy))
             {
                 if (request.Desc)
                 {
-                    // Ordenação DESCENDENTE
                     switch (request.SortBy)
                     {
 {{orderByDescCases}}
@@ -217,12 +212,9 @@ public sealed class Get{{info.PluralName}}PagedHandler
                             queryable = queryable.OrderByDescending(e => e.{{info.PrimaryKeyProperty}});
                             break;
                     }
-                    
-                    _logger.LogDebug("✅ Ordenando por: {SortBy} DESC", request.SortBy);
                 }
                 else
                 {
-                    // Ordenação ASCENDENTE
                     switch (request.SortBy)
                     {
 {{orderByAscCases}}
@@ -230,23 +222,19 @@ public sealed class Get{{info.PluralName}}PagedHandler
                             queryable = queryable.OrderBy(e => e.{{info.PrimaryKeyProperty}});
                             break;
                     }
-                    
-                    _logger.LogDebug("✅ Ordenando por: {SortBy} ASC", request.SortBy);
                 }
             }
             else
             {
-                // Ordenação padrão (ASC por PK)
                 queryable = queryable.OrderBy(e => e.{{info.PrimaryKeyProperty}});
             }
 
-            // Aplica paginação
+            // Paginação
             var items = await queryable
                 .Skip((request.Page - 1) * request.PageSize)
                 .Take(request.PageSize)
                 .ToListAsync(cancellationToken);
 
-            // Mapeia para DTO
             var dtos = _mapper.Map<List<{{info.EntityName}}Dto>>(items);
 
             var result = new PagedResult<{{info.EntityName}}Dto>(
@@ -269,18 +257,67 @@ public sealed class Get{{info.PluralName}}PagedHandler
     }
 
     // =========================================================================
-    // MÉTODOS AUXILIARES
+    // ✅ v4.6 NOVO: INCLUDES AUTOMÁTICOS
     // =========================================================================
 
     /// <summary>
-    /// v4.0: Gera casos do switch para ordenação ASC ou DESC.
+    /// Gera código para buscar entidade por ID com Includes.
     /// </summary>
+    private static string GenerateIncludesForGetById(EntityInfo info)
+    {
+        var navWithDisplay = info.Navigations
+            .Where(n => n.HasNavigationDisplay &&
+                       n.RelationshipType == NavigationRelationshipType.ManyToOne)
+            .ToList();
+
+        if (!navWithDisplay.Any())
+        {
+            // Sem navegações - usa método direto
+            return $"            var entity = await _repository.GetByIdAsync(query.Id, cancellationToken);";
+        }
+
+        // Com navegações - usa Query() + Includes
+        var includes = navWithDisplay
+            .Select(n => $"                .Include(x => x.{n.Name})")
+            .ToList();
+
+        var includesCode = string.Join("\n", includes);
+
+        return $@"            var entity = await _repository.Query()
+{includesCode}
+                .FirstOrDefaultAsync(x => x.{info.PrimaryKeyProperty} == query.Id, cancellationToken);";
+    }
+
+    /// <summary>
+    /// Gera Includes para query paginada.
+    /// </summary>
+    private static string GenerateIncludesForPaged(EntityInfo info)
+    {
+        var navWithDisplay = info.Navigations
+            .Where(n => n.HasNavigationDisplay &&
+                       n.RelationshipType == NavigationRelationshipType.ManyToOne)
+            .ToList();
+
+        if (!navWithDisplay.Any())
+            return "";
+
+        var includes = navWithDisplay
+            .Select(n => $"            queryable = queryable.Include(x => x.{n.Name});")
+            .ToList();
+
+        var includesCode = string.Join("\n", includes);
+
+        return $@"
+            // ✅ Carrega navegações
+{includesCode}
+";
+    }
+
     private static string GenerateOrderByCases(EntityInfo info, bool ascending)
     {
         var cases = new List<string>();
         var orderMethod = ascending ? "OrderBy" : "OrderByDescending";
 
-        // Propriedades (exceto PK que é o default)
         foreach (var prop in info.Properties.Where(p => !p.IsNavigation && p.Name != info.PrimaryKeyProperty))
         {
             cases.Add($@"                        case ""{prop.Name}"":
@@ -296,19 +333,17 @@ public sealed class Get{{info.PluralName}}PagedHandler
         if (info.IsLegacyTable)
             return "            // Tabela legada: sem validação de tenant";
 
-        return $@"            // ✅ OBRIGATÓRIO: Valida se pertence ao tenant do usuário
+        return $@"            // ✅ Valida tenant
             var tenantId = _currentUser.TenantId;
             if (entity.TenantId != tenantId)
             {{
                 _logger.LogWarning(
-                    ""Tentativa de acesso cross-tenant: Usuário {{UserId}} (Tenant {{UserTenant}}) tentou acessar registro {{Id}} (Tenant {{RecordTenant}})"",
+                    ""Acesso cross-tenant negado: Usuário {{UserId}} tentou acessar {{Id}}"",
                     _currentUser.UserId,
-                    tenantId,
-                    query.Id,
-                    entity.TenantId);
+                    query.Id);
                 
                 return Result<{info.EntityName}Dto>.Failure(
-                    Error.Forbidden(""{info.EntityName}.Forbidden"", ""Acesso negado ao recurso""));
+                    Error.Forbidden(""{info.EntityName}.Forbidden"", ""Acesso negado""));
             }}";
     }
 
@@ -316,19 +351,16 @@ public sealed class Get{{info.PluralName}}PagedHandler
     {
         if (info.IsLegacyTable)
         {
-            return @"            // Query base
-            var queryable = _repository.Query();";
+            return @"            var queryable = _repository.Query();";
         }
 
-        return $@"            // ✅ OBRIGATÓRIO: Filtra por TenantId
-            var tenantId = _currentUser.TenantId;
+        return $@"            var tenantId = _currentUser.TenantId;
             if (tenantId == Guid.Empty)
             {{
                 return Result<PagedResult<{info.EntityName}Dto>>.Failure(
-                    Error.Unauthorized(""User.TenantNotFound"", ""TenantId não encontrado no contexto do usuário""));
+                    Error.Unauthorized(""User.TenantNotFound"", ""TenantId não encontrado""));
             }}
             
-            // Query base com filtro de tenant
             var queryable = _repository.Query()
                 .Where(e => e.TenantId == tenantId);";
     }
