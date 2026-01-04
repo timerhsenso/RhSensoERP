@@ -40,6 +40,7 @@ public class CapFornecedores
     [Column("Id")]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     [Display(Name = "ID")]
+    [LookupKey]
     public int Id { get; set; }
 
     [Required]
@@ -51,11 +52,13 @@ public class CapFornecedores
     [Column("RazaoSocial", TypeName = "nvarchar(255)")]
     [StringLength(255)]
     [Display(Name = "Razão Social")]
+    [LookupText]
     public string RazaoSocial { get; set; } = string.Empty;
 
     [Column("NomeFantasia", TypeName = "nvarchar(255)")]
     [StringLength(255)]
     [Display(Name = "Nome Fantasia")]
+    [LookupText]
     public string? NomeFantasia { get; set; }
 
     // =========================================================================

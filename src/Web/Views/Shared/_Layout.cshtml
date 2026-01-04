@@ -145,20 +145,44 @@
         </div>
     </footer>
 
+    <!-- ================================================================== -->
+    <!-- CONFIGURAÇÃO GLOBAL - SEMPRE PRIMEIRO! -->
+    <!-- ================================================================== -->
+    <script src="~/js/app-config.js" asp-append-version="true"></script>
+
+    <!-- ================================================================== -->
+    <!-- BIBLIOTECAS PRINCIPAIS -->
+    <!-- ================================================================== -->
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 
+    <!-- ================================================================== -->
+    <!-- DATATABLES -->
+    <!-- ================================================================== -->
     <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
     <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
     <script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
-    
-    <!-- Select2 JS -->
+
+    <!-- ================================================================== -->
+    <!-- SELECT2 -->
+    <!-- ================================================================== -->
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
+    <!-- ================================================================== -->
+    <!-- UTILITÁRIOS -->
+    <!-- ================================================================== -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 
+    <!-- ================================================================== -->
+    <!-- CRUD BASE - APÓS TODAS AS DEPENDÊNCIAS -->
+    <!-- ================================================================== -->
+    <script src="~/js/crud-base.js" asp-append-version="true"></script>
+
+    <!-- ================================================================== -->
+    <!-- SCRIPTS DO SITE -->
+    <!-- ================================================================== -->
     <script src="~/js/site.js" asp-append-version="true"></script>
 
     <script>
@@ -175,9 +199,9 @@
 
         // Configuração global para requests AJAX com CSRF token
         $(document).ready(function() {
-            var token = $('input[name="__RequestVerificationToken"]').val() 
+            var token = $('input[name="__RequestVerificationToken"]').val()
                      || $('meta[name="csrf-token"]').attr('content');
-            
+
             $.ajaxSetup({
                 headers: {
                     'RequestVerificationToken': token
@@ -187,5 +211,7 @@
     </script>
 
     @await RenderSectionAsync("Scripts", required: false)
+
+
 </body>
 </html>

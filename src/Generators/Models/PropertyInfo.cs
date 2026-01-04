@@ -62,4 +62,44 @@ public class PropertyInfo
     /// Se permite null na validação de unicidade.
     /// </summary>
     public bool UniqueAllowNull { get; set; } = true;
+
+    // =========================================================================
+    // LOOKUP (SELECT2)
+    // =========================================================================
+
+    /// <summary>
+    /// Indica se a propriedade tem [LookupKey].
+    /// </summary>
+    public bool IsLookupKey { get; set; }
+
+    /// <summary>
+    /// Indica se a propriedade tem [LookupText].
+    /// </summary>
+    public bool IsLookupText { get; set; }
+
+    /// <summary>
+    /// Ordem de exibição quando concatenados em "text".
+    /// </summary>
+    public int LookupTextOrder { get; set; } = 0;
+
+    /// <summary>
+    /// Separador entre campos quando concatenados.
+    /// </summary>
+    public string LookupTextSeparator { get; set; } = " - ";
+
+    /// <summary>
+    /// Formato do campo (ex: {0:dd/MM/yyyy}, {0:C}).
+    /// </summary>
+    public string? LookupTextFormat { get; set; }
+
+    /// <summary>
+    /// Se true, retorna como coluna separada no JSON.
+    /// </summary>
+    public bool LookupAsColumn { get; set; } = false;
+
+    /// <summary>
+    /// Nome da propriedade no JSON quando AsColumn = true.
+    /// </summary>
+    public string? LookupColumnName { get; set; }
+
 }

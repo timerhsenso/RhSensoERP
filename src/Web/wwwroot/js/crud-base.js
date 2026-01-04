@@ -3,21 +3,23 @@
  * CRUD BASE - JavaScript Reutilizável para Operações CRUD
  * ============================================================================
  * Arquivo: wwwroot/js/crud-base.js
- * Versão: 3.1 (Corrigido - Trim automático nos IDs + Debug aprimorado)
+ * Versão: 4.0 (JWT + AppConfig + Trim automático nos IDs)
  * 
- * Classe base para implementação de CRUDs com DataTables.
- * Fornece funcionalidades reutilizáveis como:
+ * MUDANÇAS v4.0:
+ * ✅ NOVO: Método getAuthToken() para buscar JWT do backend
+ * ✅ NOVO: Método buildApiUrl() para URLs dinâmicas usando AppConfig
+ * ✅ NOVO: Cache de token JWT (jwtToken, tokenPromise)
+ * ✅ MANTIDO: Todo o código v3.1 funcionando 100%
+ * 
+ * Funcionalidades:
  * - Inicialização e configuração do DataTables
  * - Operações CRUD (Create, Read, Update, Delete)
  * - Exportação (Excel, PDF, CSV, Print)
  * - Seleção múltipla e exclusão em lote
  * - Validação de formulários
  * - Feedback visual com SweetAlert2
- * 
- * CORREÇÕES v3.1:
- * - Trim automático nos IDs capturados dos botões de ação
- * - Validação de ID vazio antes de chamar endpoints
- * - Debug melhorado para identificar problemas
+ * - JWT Authentication para requisições à API
+ * - URLs dinâmicas via AppConfig
  * 
  * ============================================================================
  */
@@ -60,8 +62,93 @@ class CrudBase {
         this.currentId = null;
         this.selectedIds = [];
 
+        // ✅ NOVO v4.0: Cache de token JWT
+        this.jwtToken = null;
+        this.tokenPromise = null;
+
         // Inicialização
         this.init();
+    }
+
+    // =========================================================================
+    // ✅ CORRIGIDO v4.0.1: Busca token JWT do backend (sem .finally())
+    // =========================================================================
+    /**
+     * Busca token JWT do backend para requisições autenticadas à API.
+     * Implementa cache para evitar múltiplas requisições simultâneas.
+     * @returns {Promise<string|null>} Token JWT ou null se falhar
+     */
+    async getAuthToken() {
+        // Se já temos token em cache, retorna imediatamente
+        if (this.jwtToken) {
+            console.log('✅ [AUTH] Token obtido do cache');
+            return this.jwtToken;
+        }
+
+        // Se já está buscando, aguarda a promise existente (evita múltiplas requisições)
+        if (this.tokenPromise) {
+            console.log('⏳ [AUTH] Aguardando requisição de token em andamento...');
+            return this.tokenPromise;
+        }
+
+        // Cria nova promise para buscar token
+        console.log('🔐 [AUTH] Buscando token JWT do backend...');
+
+        this.tokenPromise = $.ajax({
+            url: '/Account/GetToken',
+            type: 'GET',
+            headers: {
+                'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+            }
+        }).then(response => {
+            if (response && response.token) {
+                this.jwtToken = response.token;
+                console.log('✅ [AUTH] Token JWT obtido com sucesso');
+                // ✅ CORRIGIDO: Limpa a promise após sucesso
+                this.tokenPromise = null;
+                return this.jwtToken;
+            }
+            console.error('❌ [AUTH] Resposta inválida do endpoint GetToken:', response);
+            // ✅ CORRIGIDO: Limpa a promise após erro
+            this.tokenPromise = null;
+            return null;
+        }).catch(error => {
+            console.error('❌ [AUTH] Erro ao buscar token JWT:', error);
+
+            // Se for 401, significa que o usuário não está autenticado
+            if (error.status === 401) {
+                console.error('❌ [AUTH] Usuário não autenticado - redirecionando para login');
+                // Não redireciona automaticamente - deixa a aplicação decidir
+            }
+
+            // ✅ CORRIGIDO: Limpa a promise após erro
+            this.tokenPromise = null;
+            return null;
+        });
+
+        return this.tokenPromise;
+    }
+
+    // =========================================================================
+    // ✅ NOVO v4.0: Constrói URL da API usando AppConfig
+    // =========================================================================
+    /**
+     * Constrói URL completa da API usando AppConfig global.
+     * Se AppConfig não estiver disponível, retorna a URL relativa.
+     * @param {string} endpoint - Endpoint relativo (ex: /api/module/entity/lookup)
+     * @returns {string} URL completa ou relativa
+     */
+    buildApiUrl(endpoint) {
+        // Verifica se AppConfig está disponível e carregado
+        if (window.AppConfig && typeof window.AppConfig.buildApiUrl === 'function') {
+            const fullUrl = window.AppConfig.buildApiUrl(endpoint);
+            console.log('🔗 [API-URL] URL construída:', fullUrl);
+            return fullUrl;
+        }
+
+        // Fallback: retorna URL relativa se AppConfig não estiver disponível
+        console.warn('⚠️ [API-URL] AppConfig não disponível - usando URL relativa:', endpoint);
+        return endpoint;
     }
 
     /**
@@ -71,7 +158,305 @@ class CrudBase {
         this.initDataTable();
         this.bindEvents();
         this.initValidation();
+        this.initSelect2();
     }
+
+
+    /**
+    * ✅ v4.0 NOVO: Inicializa Select2 com suporte a AJAX e JWT
+    * Detecta automaticamente campos .select2-ajax e configura AJAX request
+    */
+    async initSelect2() {
+        const self = this;
+
+        console.log('🔍 [SELECT2] Inicializando campos Select2...');
+
+        // Busca token JWT UMA VEZ (todas as instâncias compartilham)
+        const token = await this.getAuthToken();
+
+        if (!token) {
+            console.warn('⚠️ [SELECT2] Token JWT não disponível - Select2 pode falhar');
+        }
+
+        // Procura todos os selects com classe .select2-ajax
+        $('.select2-ajax').each(function () {
+            const $select = $(this);
+            const relativeUrl = $select.data('select2-url');
+            const valueField = $select.data('value-field') || 'id';
+            const textField = $select.data('text-field') || 'nome';
+
+            console.log('⚙️ [SELECT2] Configurando campo:', {
+                id: $select.attr('id'),
+                relativeUrl: relativeUrl,
+                valueField: valueField,
+                textField: textField
+            });
+
+            // ⭐ CONSTRÓI URL COMPLETA usando AppConfig
+            const fullUrl = window.AppConfig && window.AppConfig.buildApiUrl
+                ? window.AppConfig.buildApiUrl(relativeUrl)
+                : relativeUrl; // fallback se AppConfig não existir
+
+            console.log('🔗 [SELECT2] URL construída:', fullUrl);
+
+            // Configuração do Select2
+            $select.select2({
+                theme: 'bootstrap-5',
+                width: '100%',
+                placeholder: 'Selecione...',
+                allowClear: true,
+                language: 'pt-BR',
+                dropdownParent: $(self.modalSelector).length > 0 ? $(self.modalSelector) : $(document.body), // ✅ CRÍTICO: Funcionar dentro de modais
+                ajax: {
+                    url: fullUrl,
+                    type: 'GET',
+                    dataType: 'json',
+                    delay: 300,
+
+                    // ⭐ ADICIONA TOKEN JWT NO HEADER
+                    beforeSend: function (xhr) {
+                        if (token) {
+                            xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+                            console.log('🔐 [SELECT2] Token JWT adicionado ao request');
+                        }
+                    },
+
+                    data: function (params) {
+                        return {
+                            term: params.term || '',
+                            page: params.page || 1,
+                            pageSize: 20
+                        };
+                    },
+
+                    processResults: function (data, params) {
+                        params.page = params.page || 1;
+
+                        console.log('📦 [SELECT2] Dados recebidos:', data);
+
+                        // ⭐ CORRIGIDO: Adapta diferentes formatos de resposta
+                        let items = [];
+                        let hasMore = false;
+
+                        if (Array.isArray(data)) {
+                            // Resposta direta: [ { id, nome }, ... ]
+                            items = data;
+                        } else if (data.results && Array.isArray(data.results)) {
+                            // ✅ NOVO: Formato Select2 padrão: { results: [...], pagination: {...} }
+                            items = data.results;
+                            hasMore = data.pagination?.more || false;
+                        } else if (data.data && Array.isArray(data.data)) {
+                            // Resposta paginada: { data: [...], hasMore: true }
+                            items = data.data;
+                            hasMore = data.hasMore || false;
+                        } else if (data.items && Array.isArray(data.items)) {
+                            // Resposta alternativa: { items: [...], hasMore: true }
+                            items = data.items;
+                            hasMore = data.hasMore || false;
+                        }
+
+                        const results = items.map(function (item) {
+                            return {
+                                id: item[valueField],
+                                text: item[textField]
+                            };
+                        });
+
+                        console.log('✅ [SELECT2] Resultados processados:', results.length + ' itens');
+
+                        return {
+                            results: results,
+                            pagination: {
+                                more: hasMore
+                            }
+                        };
+                    },
+
+                    cache: true
+                },
+
+                minimumInputLength: 0,
+
+                // Mensagens em português
+                language: {
+                    errorLoading: function () {
+                        return 'Erro ao carregar resultados.';
+                    },
+                    inputTooShort: function () {
+                        return 'Digite para buscar...';
+                    },
+                    loadingMore: function () {
+                        return 'Carregando mais resultados...';
+                    },
+                    noResults: function () {
+                        return 'Nenhum resultado encontrado';
+                    },
+                    searching: function () {
+                        return 'Buscando...';
+                    }
+                }
+            });
+
+            // ⭐ IMPORTANTE: Carrega valor inicial se houver (modo edição)
+            const initialValue = $select.val();
+            if (initialValue) {
+                console.log('🔄 [SELECT2] Carregando valor inicial:', initialValue);
+                // Trigger change para forçar Select2 a renderizar
+                $select.trigger('change.select2');
+            }
+        });
+
+        console.log('✅ [SELECT2] Inicialização concluída');
+    }
+
+    /**
+     * ✅ v4.3 CORRIGIDO: Carrega valores iniciais do Select2 em modo edição
+     * Usa valores armazenados ANTES do Select2 limpá-los
+     */
+    async loadSelect2InitialValues() {
+        const self = this;
+
+        console.log('🔄 [SELECT2-DEBUG] ========== INICIANDO CARREGAMENTO ==========');
+        console.log('🔄 [SELECT2-DEBUG] Valores armazenados:', this.select2InitialValues);
+
+        if (!this.select2InitialValues || Object.keys(this.select2InitialValues).length === 0) {
+            console.log('⏭️ [SELECT2-DEBUG] Nenhum valor armazenado, finalizando...');
+            return;
+        }
+
+        const $allSelects = $('.select2-ajax');
+        console.log('🔄 [SELECT2-DEBUG] Total de campos encontrados:', $allSelects.length);
+
+        const promises = [];
+
+        $('.select2-ajax').each(function () {
+            const $select = $(this);
+            const fieldName = $select.attr('name') || $select.attr('id');
+
+            // ⭐ CORRIGIDO: Pega valor do objeto armazenado
+            const selectedValue = self.select2InitialValues[fieldName];
+
+            console.log('🔍 [SELECT2-DEBUG] Analisando campo:', {
+                id: $select.attr('id'),
+                name: fieldName,
+                valorArmazenado: selectedValue,
+                tipo: typeof selectedValue
+            });
+
+            // Se não tem valor armazenado, pula
+            if (!selectedValue || selectedValue === '' || selectedValue === '0' || selectedValue === 0) {
+                console.log('⏭️ [SELECT2-DEBUG] Campo sem valor armazenado, pulando:', fieldName);
+                return;
+            }
+
+            // Pega as configurações do campo
+            const relativeUrl = $select.data('select2-url');
+            const valueField = $select.data('value-field') || 'id';
+            const textField = $select.data('text-field') || 'nome';
+
+            if (!relativeUrl) {
+                console.warn('⚠️ [SELECT2-DEBUG] Campo sem data-select2-url:', fieldName);
+                return;
+            }
+
+            console.log('✅ [SELECT2-DEBUG] Campo válido, preparando busca:', {
+                campo: fieldName,
+                valor: selectedValue,
+                urlRelativa: relativeUrl,
+                valueField: valueField,
+                textField: textField
+            });
+
+            const promise = (async () => {
+                try {
+                    const baseUrl = relativeUrl.replace(/\/lookup$/i, '');
+                    const detailUrl = self.buildApiUrl(`${baseUrl}/${selectedValue}`);
+
+                    console.log('🌐 [SELECT2-DEBUG] URL final:', detailUrl);
+
+                    const token = await self.getAuthToken();
+                    console.log('🔐 [SELECT2-DEBUG] Token obtido:', token ? 'SIM' : 'NÃO');
+
+                    console.log('📡 [SELECT2-DEBUG] Fazendo requisição GET...');
+
+                    const response = await $.ajax({
+                        url: detailUrl,
+                        type: 'GET',
+                        headers: {
+                            'Authorization': token ? `Bearer ${token}` : undefined,
+                            'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                        }
+                    });
+
+                    console.log('📦 [SELECT2-DEBUG] Resposta recebida:', response);
+
+                    // ⭐ CORRIGIDO: Extrai dados (suporta múltiplos formatos)
+                    let item = null;
+                    if (response.value) {
+                        // Formato: {value: {...}, isSuccess: true, error: {...}}
+                        item = response.value;
+                    } else if (response.data) {
+                        // Formato: {data: {...}}
+                        item = response.data;
+                    } else {
+                        // Formato direto: {id: ..., nome: ...}
+                        item = response;
+                    }
+
+                    console.log('📦 [SELECT2-DEBUG] Item extraído:', item);
+
+                    if (!item) {
+                        console.warn('⚠️ [SELECT2-DEBUG] Item vazio ou null');
+                        return;
+                    }
+
+                    const id = item[valueField];
+                    const text = item[textField];
+
+                    console.log('📝 [SELECT2-DEBUG] Valores extraídos:', {
+                        valueField: valueField,
+                        textField: textField,
+                        id: id,
+                        text: text
+                    });
+
+                    if (!id || !text) {
+                        console.warn('⚠️ [SELECT2-DEBUG] ID ou texto vazio:', {
+                            id: id,
+                            text: text,
+                            todosOsCampos: Object.keys(item)
+                        });
+                        return;
+                    }
+
+                    console.log('🔨 [SELECT2-DEBUG] Criando option:', { id: id, text: text });
+                    const $option = new Option(text, id, true, true);
+                    $select.html('').append($option).trigger('change');
+                    console.log('✅ [SELECT2-DEBUG] Option criada e adicionada!');
+
+                    console.log('✅ [SELECT2-DEBUG] ===== SUCESSO =====', {
+                        campo: fieldName,
+                        id: id,
+                        texto: text
+                    });
+
+                } catch (error) {
+                    console.error('❌ [SELECT2-DEBUG] ===== ERRO =====');
+                    console.error('❌ [SELECT2-DEBUG] Campo:', fieldName);
+                    console.error('❌ [SELECT2-DEBUG] Erro:', error);
+                    console.error('❌ [SELECT2-DEBUG] Status:', error.status);
+                    console.error('❌ [SELECT2-DEBUG] Response:', error.responseText);
+                }
+            })();
+
+            promises.push(promise);
+        });
+
+        console.log('⏳ [SELECT2-DEBUG] Total de promises criadas:', promises.length);
+        await Promise.all(promises);
+        console.log('✅ [SELECT2-DEBUG] ========== FINALIZADO ==========');
+    }
+
 
     /**
      * Inicializa o DataTables.
@@ -327,6 +712,10 @@ class CrudBase {
         this.currentId = null;
         this.clearForm();
         this.enablePrimaryKeyFields(true);
+
+        // ✅ ADICIONAR ESTA LINHA AQUI:
+        $('.select2-ajax').val(null).trigger('change');
+
         $('#modalTitle').text(`Novo ${this.entityName}`);
         $(this.modalSelector).modal('show');
     }
@@ -360,9 +749,42 @@ class CrudBase {
 
             if (response.success && response.data) {
                 this.clearForm();
+
+                // ⭐ CRÍTICO: Armazena valores dos Select2 ANTES de popular
+                // (Select2 limpa valores sem <option> correspondente)
+                this.select2InitialValues = {};
+                $('.select2-ajax').each(function () {
+                    const fieldName = $(this).attr('name') || $(this).attr('id');
+                    if (fieldName && response.data[fieldName]) {
+                        self.select2InitialValues[fieldName] = response.data[fieldName];
+                        console.log('💾 [SELECT2] Valor armazenado:', {
+                            campo: fieldName,
+                            valor: response.data[fieldName]
+                        });
+                    }
+                    // Também tenta com lowercase
+                    const lowerFieldName = fieldName ? fieldName.toLowerCase() : '';
+                    for (const key in response.data) {
+                        if (key.toLowerCase() === lowerFieldName && response.data[key]) {
+                            self.select2InitialValues[fieldName] = response.data[key];
+                            console.log('💾 [SELECT2] Valor armazenado (lowercase):', {
+                                campo: fieldName,
+                                valor: response.data[key]
+                            });
+                            break;
+                        }
+                    }
+                });
+
                 this.populateForm(response.data);
                 this.enablePrimaryKeyFields(false);
                 $('#modalTitle').text(`Editar ${this.entityName}`);
+
+                // ⭐ CORRIGIDO: Aguarda Select2 estar pronto antes de carregar valores
+                setTimeout(async () => {
+                    await this.loadSelect2InitialValues();
+                }, 300);
+
                 $(this.modalSelector).modal('show');
             } else {
                 this.showError(response.message || 'Erro ao carregar registro.');

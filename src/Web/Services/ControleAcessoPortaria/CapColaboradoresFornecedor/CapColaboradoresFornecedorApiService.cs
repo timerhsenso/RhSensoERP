@@ -3,7 +3,7 @@
 // Entity: CapColaboradoresFornecedor
 // Module: ControleAcessoPortaria
 // ApiRoute: api/gestaoterceirosprestadores/capcolaboradoresfornecedor
-// Data: 2026-01-02 19:59:34
+// Data: 2026-01-03 09:51:23
 // AUTO-REGISTRO: Compatível com AddCrudToolServicesAutomatically()
 // =============================================================================
 using System.Text;

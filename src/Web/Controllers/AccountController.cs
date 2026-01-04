@@ -1,8 +1,9 @@
 // =============================================================================
 // RHSENSOERP WEB - ACCOUNT CONTROLLER
 // =============================================================================
-// CORREÇÃO v2.1: Claims ajustadas para multi-tenancy
+// CORREÇÃO v2.2: Claims ajustadas + GetConfig para JavaScript
 // - ✅ Adicionados claims: tenantId e IdSaas
+// - ✅ Método GetConfig para configurações da aplicação
 // =============================================================================
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
@@ -21,15 +22,21 @@ public sealed class AccountController : Controller
     private readonly IAuthApiService _authApiService;
     private readonly IUserPermissionsCacheService _permissionsCache;
     private readonly ILogger<AccountController> _logger;
+    private readonly IConfiguration _configuration;        // ✅ NOVO
+    private readonly IWebHostEnvironment _environment;    // ✅ NOVO
 
     public AccountController(
         IAuthApiService authApiService,
         IUserPermissionsCacheService permissionsCache,
-        ILogger<AccountController> logger)
+        ILogger<AccountController> logger,
+        IConfiguration configuration,                      // ✅ NOVO
+        IWebHostEnvironment environment)                  // ✅ NOVO
     {
         _authApiService = authApiService;
         _permissionsCache = permissionsCache;
         _logger = logger;
+        _configuration = configuration;                    // ✅ NOVO
+        _environment = environment;                        // ✅ NOVO
     }
 
     [HttpGet]
@@ -89,7 +96,7 @@ public sealed class AccountController : Controller
                 new("dcusuario", authResponse.User.DcUsuario),
                 new("cdusuario", authResponse.User.CdUsuario),
                 
-                // ✅ NOVO: TenantId para multi-tenancy
+                // ✅ TenantId para multi-tenancy
                 new("tenantId", authResponse.User.TenantId?.ToString() ?? Guid.Empty.ToString()),
                 new("IdSaas", authResponse.User.TenantId?.ToString() ?? Guid.Empty.ToString()),
             };
@@ -152,7 +159,6 @@ public sealed class AccountController : Controller
     {
         try
         {
-            // ✅ Lê o token armazenado nas propriedades de autenticação
             var accessToken = await HttpContext.GetTokenAsync("access_token");
 
             if (string.IsNullOrEmpty(accessToken))
@@ -171,6 +177,36 @@ public sealed class AccountController : Controller
         {
             _logger.LogError(ex, "Erro ao recuperar token para {User}", User.Identity?.Name);
             return StatusCode(500, new { message = "Erro ao recuperar token." });
+        }
+    }
+
+    /// <summary>
+    /// Endpoint para fornecer configurações da aplicação ao JavaScript.
+    /// Retorna URL base da API, versão, ambiente, etc.
+    /// </summary>
+    [HttpGet]
+    [AllowAnonymous]
+    public IActionResult GetConfig()
+    {
+        try
+        {
+            var apiBaseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7193";
+            var appVersion = _configuration["AppVersion"] ?? "1.0.0";
+            var environment = _environment.EnvironmentName;
+
+            return Ok(new
+            {
+                apiBaseUrl = apiBaseUrl,
+                version = appVersion,
+                environment = environment,
+                isDevelopment = _environment.IsDevelopment(),
+                defaultTimeout = _configuration.GetValue("ApiSettings:TimeoutSeconds", 30) * 1000 // ms
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao obter configurações");
+            return StatusCode(500, new { message = "Erro ao obter configurações." });
         }
     }
 

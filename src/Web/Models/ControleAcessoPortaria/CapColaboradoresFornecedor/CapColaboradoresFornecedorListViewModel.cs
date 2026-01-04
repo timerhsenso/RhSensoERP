@@ -2,7 +2,7 @@
 // ARQUIVO GERADO POR GeradorFullStack v4.0
 // Entity: CapColaboradoresFornecedor
 // Module: ControleAcessoPortaria
-// Data: 2026-01-02 19:59:34
+// Data: 2026-01-03 09:51:23
 // =============================================================================
 using RhSensoERP.Web.Models.Base;
 

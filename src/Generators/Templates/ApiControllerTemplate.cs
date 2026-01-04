@@ -260,30 +260,51 @@ public sealed class {{info.PluralName}}Controller : ControllerBase
     }
 
     /// <summary>
-    /// ✅ v4.4 CORRIGIDO: Gera endpoint de Lookup para Select2.
-    /// Retorna formato nativo do Select2 SEM encapsular em Result<>
-    /// Formato: { results: [{id, text}], pagination: {more} }
+    /// ✅ v4.6 NOVO: Gera endpoint de Lookup com NOMES REAIS dos campos.
+    /// NÃO gera campo "text" - retorna campos com seus nomes originais em camelCase.
+    /// Formato: { results: [{id, razaoSocial, nomeFantasia, ...}], pagination: {more} }
     /// </summary>
     private static string GenerateLookupEndpoint(EntityInfo info)
     {
-        // Detecta qual campo usar para o "text" do Select2
-        var displayField = info.Properties.FirstOrDefault(p =>
-            p.Name.Equals("Nome", StringComparison.OrdinalIgnoreCase) ||
-            p.Name.Equals("Descricao", StringComparison.OrdinalIgnoreCase) ||
-            p.Name.Equals("RazaoSocial", StringComparison.OrdinalIgnoreCase) ||
-            p.Name.Equals("NomeFantasia", StringComparison.OrdinalIgnoreCase) ||
-            p.Name.Equals("Titulo", StringComparison.OrdinalIgnoreCase) ||
-            p.Name.Equals("Description", StringComparison.OrdinalIgnoreCase) ||
-            p.Name.Equals("Title", StringComparison.OrdinalIgnoreCase));
+        // ✅ Procura propriedade com [LookupKey]
+        var lookupKeyProp = info.Properties.FirstOrDefault(p => p.IsLookupKey);
 
-        var textFieldName = displayField?.Name ?? "Nome";
+        // ✅ TODOS os campos com [LookupText] viram colunas (não concatena em "text")
+        var allLookupProps = info.Properties
+            .Where(p => p.IsLookupText)
+            .ToList();
+
+        // ✅ Fallback: se não tem [LookupKey], usa [Key]
+        if (lookupKeyProp == null)
+        {
+            lookupKeyProp = info.Properties.FirstOrDefault(p => p.IsPrimaryKey);
+        }
+
+        // ✅ Fallback: se não tem [LookupText], auto-detecta campo principal
+        if (!allLookupProps.Any())
+        {
+            var displayField = info.Properties.FirstOrDefault(p =>
+                p.Name.Equals("RazaoSocial", StringComparison.OrdinalIgnoreCase) ||
+                p.Name.Equals("Nome", StringComparison.OrdinalIgnoreCase) ||
+                p.Name.Equals("Descricao", StringComparison.OrdinalIgnoreCase) ||
+                p.Name.Equals("NomeFantasia", StringComparison.OrdinalIgnoreCase) ||
+                p.Name.Equals("Titulo", StringComparison.OrdinalIgnoreCase));
+
+            if (displayField != null)
+            {
+                allLookupProps.Add(displayField);
+            }
+        }
+
+        // ✅ Gera propriedades dinâmicas com nomes REAIS
+        var dynamicProps = GenerateDynamicProperties(allLookupProps);
 
         return $$"""
 
 
     /// <summary>
     /// Busca {{info.DisplayName}} para componentes de seleção (Lookup/Select2).
-    /// Retorna formato Select2: { results: [{id, text}], pagination: {more} }
+    /// Retorna campos com nomes reais: { results: [{id, campo1, campo2, ...}], pagination: {more} }
     /// </summary>
     [HttpGet("lookup")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -308,13 +329,12 @@ public sealed class {{info.PluralName}}Controller : ControllerBase
             return BadRequest(new { error = result.Error.Message });
         }
 
-        // ✅ RETORNA FORMATO SELECT2 SEM ENCAPSULAR EM Result<>
+        // ✅ RETORNA CAMPOS COM NOMES REAIS (SEM "text")
         var response = new
         {
             results = result.Value.Items.Select(x => new 
             { 
-                id = x.Id, 
-                text = x.{{textFieldName}} ?? x.Id.ToString()
+                id = x.{{lookupKeyProp.Name}}{{dynamicProps}}
             }),
             pagination = new
             {
@@ -325,6 +345,82 @@ public sealed class {{info.PluralName}}Controller : ControllerBase
         return Ok(response);
     }
 """;
+    }
+
+    /// <summary>
+    /// ✅ v4.5 NOVO: Gera expressão para o campo "text" do Select2.
+    /// Concatena múltiplos campos com separadores customizados.
+    /// </summary>
+    private static string GenerateTextExpression(List<PropertyInfo> textProps, string fallbackIdField)
+    {
+        if (!textProps.Any())
+        {
+            return $"x.{fallbackIdField}.ToString()";
+        }
+
+        if (textProps.Count == 1)
+        {
+            var prop = textProps[0];
+            var format = string.IsNullOrEmpty(prop.LookupTextFormat)
+                ? $"x.{prop.Name}"
+                : $"string.Format(\"{prop.LookupTextFormat}\", x.{prop.Name})";
+
+            return $"{format} ?? x.{fallbackIdField}.ToString()";
+        }
+
+        // ✅ Múltiplos campos: concatena com proteção contra nulls
+        var parts = new List<string>();
+
+        for (int i = 0; i < textProps.Count; i++)
+        {
+            var prop = textProps[i];
+            var isFirst = i == 0;
+
+            var value = string.IsNullOrEmpty(prop.LookupTextFormat)
+                ? $"x.{prop.Name}"
+                : $"string.Format(\"{prop.LookupTextFormat}\", x.{prop.Name})";
+
+            if (isFirst)
+            {
+                // Primeiro campo: usa direto com fallback para ""
+                parts.Add($"({value} ?? \"\")");
+            }
+            else
+            {
+                // Campos seguintes: só adiciona se não for null/empty
+                var separator = prop.LookupTextSeparator;
+                parts.Add($" + (!string.IsNullOrWhiteSpace({value}) ? \"{separator}\" + {value} : \"\")");
+            }
+        }
+
+        return string.Join("", parts);
+    }
+
+    /// <summary>
+    /// ✅ v4.5 NOVO: Gera propriedades adicionais (colunas separadas no JSON).
+    /// </summary>
+    private static string GenerateAdditionalColumns(List<PropertyInfo> columnProps)
+    {
+        if (!columnProps.Any())
+        {
+            return "";
+        }
+
+        var lines = new List<string>();
+
+        foreach (var prop in columnProps)
+        {
+            var columnName = prop.LookupColumnName ??
+                (char.ToLowerInvariant(prop.Name[0]) + prop.Name.Substring(1));
+
+            var value = string.IsNullOrEmpty(prop.LookupTextFormat)
+                ? $"x.{prop.Name}"
+                : $"string.Format(\"{prop.LookupTextFormat}\", x.{prop.Name})";
+
+            lines.Add($",\n                {columnName} = {value}");
+        }
+
+        return string.Join("", lines);
     }
 
     /// <summary>
@@ -435,5 +531,34 @@ public sealed class {{info.PluralName}}Controller : ControllerBase
         {
             return $"        var result = await _mediator.Send(new Update{info.EntityName}Command(id, body), ct);";
         }
+    }
+
+    /// <summary>
+    /// ✅ v4.6 NOVO: Gera propriedades dinâmicas com nomes REAIS dos campos.
+    /// Cada campo marcado com [LookupText] vira uma propriedade no JSON.
+    /// </summary>
+    private static string GenerateDynamicProperties(List<PropertyInfo> lookupProps)
+    {
+        if (!lookupProps.Any())
+        {
+            return "";
+        }
+
+        var lines = new List<string>();
+
+        foreach (var prop in lookupProps)
+        {
+            // ✅ Converte para camelCase (RazaoSocial → razaoSocial)
+            var propertyName = char.ToLowerInvariant(prop.Name[0]) + prop.Name.Substring(1);
+
+            // ✅ Aplica formatação se tiver
+            var value = string.IsNullOrEmpty(prop.LookupTextFormat)
+                ? $"x.{prop.Name}"
+                : $"string.Format(\"{prop.LookupTextFormat}\", x.{prop.Name})";
+
+            lines.Add($",\n                {propertyName} = {value}");
+        }
+
+        return string.Join("", lines);
     }
 }

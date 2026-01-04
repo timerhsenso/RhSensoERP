@@ -2,7 +2,7 @@
 // ARQUIVO GERADO POR GeradorFullStack v4.0
 // Entity: CapColaboradoresFornecedor
 // Module: ControleAcessoPortaria
-// Data: 2026-01-02 19:59:34
+// Data: 2026-01-03 09:51:23
 // =============================================================================
 
 namespace RhSensoERP.Web.Models.ControleAcessoPortaria.CapColaboradoresFornecedor;
@@ -24,7 +24,7 @@ public class CapColaboradoresFornecedorDto
     public Guid TenantId { get; set; }
 
     /// <summary>
-    /// ID Fornecedor
+    /// IdFornecedor
     /// </summary>
     public int IdFornecedor { get; set; }
 
@@ -34,12 +34,12 @@ public class CapColaboradoresFornecedorDto
     public string Nome { get; set; } = string.Empty;
 
     /// <summary>
-    /// Cpf
+    /// CPF
     /// </summary>
     public string Cpf { get; set; } = string.Empty;
 
     /// <summary>
-    /// Rg
+    /// RG
     /// </summary>
     public string Rg { get; set; } = string.Empty;
 
@@ -59,7 +59,7 @@ public class CapColaboradoresFornecedorDto
     public DateOnly? DataNascimento { get; set; }
 
     /// <summary>
-    /// Genero
+    /// Gênero
     /// </summary>
     public string Genero { get; set; } = string.Empty;
 
@@ -69,17 +69,17 @@ public class CapColaboradoresFornecedorDto
     public string EstadoCivil { get; set; } = string.Empty;
 
     /// <summary>
-    /// Tipo Sanguineo
+    /// ID Tipo Sanguíneo
     /// </summary>
     public int? IdTipoSanguineo { get; set; }
 
     /// <summary>
-    /// Endereco
+    /// Endereço
     /// </summary>
     public string Endereco { get; set; } = string.Empty;
 
     /// <summary>
-    /// Numero
+    /// Número
     /// </summary>
     public string Numero { get; set; } = string.Empty;
 
@@ -99,22 +99,22 @@ public class CapColaboradoresFornecedorDto
     public string Cidade { get; set; } = string.Empty;
 
     /// <summary>
-    /// Uf
+    /// ID UF
     /// </summary>
     public int? IdUf { get; set; }
 
     /// <summary>
-    /// Cep
+    /// CEP
     /// </summary>
     public string Cep { get; set; } = string.Empty;
 
     /// <summary>
-    /// Data Admissao
+    /// Data Admissão
     /// </summary>
     public DateOnly DataAdmissao { get; set; }
 
     /// <summary>
-    /// Data Demissao
+    /// Data Demissão
     /// </summary>
     public DateOnly? DataDemissao { get; set; }
 

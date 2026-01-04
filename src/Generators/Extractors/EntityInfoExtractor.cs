@@ -235,6 +235,7 @@ public static class EntityInfoExtractor
                 }
             }
 
+
             // Extrai DisplayName customizado
             var displayNameArg = uniqueAttr.NamedArguments
                 .FirstOrDefault(a => a.Key == "DisplayName");
@@ -279,6 +280,58 @@ public static class EntityInfoExtractor
             {
                 propInfo.UniqueAllowNull = true; // Padrão
             }
+        }
+
+        //inicio
+        // =========================================================================
+        // ✅ v4.5 NOVO: DETECTA [LookupKey] e [LookupText]
+        // =========================================================================
+
+        // Detecta [LookupKey]
+        propInfo.IsLookupKey = member.GetAttributes()
+            .Any(a => a.AttributeClass?.Name == "LookupKeyAttribute");
+
+        // Detecta [LookupText]
+        var lookupTextAttr = member.GetAttributes()
+            .FirstOrDefault(a => a.AttributeClass?.Name == "LookupTextAttribute");
+
+        if (lookupTextAttr != null)
+        {
+            propInfo.IsLookupText = true;
+
+            // Lê propriedades do atributo
+            foreach (var namedArg in lookupTextAttr.NamedArguments)
+            {
+                switch (namedArg.Key)
+                {
+                    case "Order":
+                        if (namedArg.Value.Value != null)
+                            propInfo.LookupTextOrder = (int)namedArg.Value.Value;
+                        break;
+                    case "Separator":
+                        if (namedArg.Value.Value != null)
+                            propInfo.LookupTextSeparator = (string)namedArg.Value.Value;
+                        break;
+                    case "Format":
+                        propInfo.LookupTextFormat = namedArg.Value.Value as string;
+                        break;
+                    case "AsColumn":
+                        if (namedArg.Value.Value != null)
+                            propInfo.LookupAsColumn = (bool)namedArg.Value.Value;
+                        break;
+                    case "ColumnName":
+                        propInfo.LookupColumnName = namedArg.Value.Value as string;
+                        break;
+                }
+            }
+
+            // ✅ Se AsColumn e não tem ColumnName, usa nome da prop em camelCase
+            if (propInfo.LookupAsColumn && string.IsNullOrEmpty(propInfo.LookupColumnName))
+            {
+                propInfo.LookupColumnName = char.ToLowerInvariant(member.Name[0]) + member.Name.Substring(1);
+            }
+
+            //fim 
         }
 
         return propInfo;
