@@ -12,10 +12,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="TabSheet\Templates\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Include="wwwroot\js\tabsheet\tabsheet-config.js" />
   </ItemGroup>
 

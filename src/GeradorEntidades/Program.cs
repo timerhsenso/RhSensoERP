@@ -4,7 +4,6 @@
 // =============================================================================
 
 using GeradorEntidades.Services;
-using GeradorEntidades.TabSheet.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,8 +24,6 @@ builder.Services.AddSingleton<DatabaseService>();
 builder.Services.AddSingleton<CodeGeneratorService>();
 builder.Services.AddSingleton<FullStackGeneratorService>();
 
-// TabSheet Generator (NOVO)
-builder.Services.AddScoped<TabSheetGeneratorService>();
 
 // =========================================================================
 // NOVO: ManifestService - Consome entidades do backend RhSensoERP

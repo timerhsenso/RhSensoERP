@@ -113,7 +113,8 @@ public sealed class {{info.EntityName}}Repository : I{{info.EntityName}}Reposito
     /// <inheritdoc/>
     public IQueryable<{{info.EntityName}}> Query()
     {
-        return _context.Set<{{info.EntityName}}>().AsNoTracking();
+        
+        return _context.Set<{{info.EntityName}}>();
     }
 
     /// <inheritdoc/>

@@ -1,6 +1,7 @@
 // =============================================================================
-// RHSENSOERP GENERATOR v4.6 - MAPPER TEMPLATE
+// RHSENSOERP GENERATOR v4.6.1 - MAPPER TEMPLATE
 // =============================================================================
+// v4.6.1: CORRIGIDO - Null-check explícito em navegações
 // v4.6: ADICIONADO - Mapeamento automático de navegações
 // =============================================================================
 using RhSensoERP.Generators.Models;
@@ -63,12 +64,12 @@ public sealed class {{info.EntityName}}Profile : Profile
     }
 
     // =========================================================================
-    // ✅ v4.6 NOVO: MAPEAMENTO DE NAVEGAÇÕES
+    // ✅ v4.6.1 CORRIGIDO: MAPEAMENTO DE NAVEGAÇÕES
     // =========================================================================
 
     /// <summary>
     /// Gera mapeamentos de navegações.
-    /// Ex: .ForMember(dest => dest.FornecedorRazaoSocial, opt => opt.MapFrom(src => src.Fornecedor!.RazaoSocial))
+    /// v4.6.1: Usa null-check explícito em vez de null-forgiving operator
     /// </summary>
     private static string GenerateNavigationMappings(EntityInfo info)
     {
@@ -88,8 +89,8 @@ public sealed class {{info.EntityName}}Profile : Profile
             var navName = nav.Name;
             var displayProp = nav.DisplayProperty;
 
-            // Usa ! (null-forgiving) porque sabemos que será populado pelo Include
-            lines.Add($"            .ForMember(dest => dest.{dtoProp}, opt => opt.MapFrom(src => src.{navName}!.{displayProp}))");
+            // ✅ v4.6.1: Usa null-check explícito em vez de null-forgiving operator
+            lines.Add($"            .ForMember(dest => dest.{dtoProp}, opt => opt.MapFrom(src => src.{navName} != null ? src.{navName}.{displayProp} : null))");
         }
 
         return "\n" + string.Join("\n", lines);

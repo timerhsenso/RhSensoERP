@@ -290,6 +290,7 @@ public sealed class Get{{info.PluralName}}PagedHandler
 
     /// <summary>
     /// Gera Includes para query paginada.
+    /// v3.6.3: ADICIONA .AsNoTracking() DEPOIS dos includes
     /// </summary>
     private static string GenerateIncludesForPaged(EntityInfo info)
     {
@@ -307,9 +308,11 @@ public sealed class Get{{info.PluralName}}PagedHandler
 
         var includesCode = string.Join("\n", includes);
 
+        // ✅ v3.6.3: ADICIONA AsNoTracking DEPOIS dos includes
         return $@"
             // ✅ Carrega navegações
 {includesCode}
+            queryable = queryable.AsNoTracking();
 ";
     }
 
