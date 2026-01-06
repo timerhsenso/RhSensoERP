@@ -228,9 +228,22 @@ public class ManifestController : Controller
                 return NotFound(new { error = $"Entidade '{name}' não encontrada" });
             }
 
-            _logger.LogInformation("✅ Entidade {Entity} carregada com {Props} propriedades",
-                name, entity.Properties.Count);
+            _logger.LogInformation("✅ Item do manifesto encontrado: {Entity}", entity.EntityName);
 
+            // -----------------------------------------------------------------
+            // NOVO: Tenta buscar o JSON completo no endpoint de metadata da API
+            // -----------------------------------------------------------------
+            if (!string.IsNullOrEmpty(entity.Route))
+            {
+                var metadataJson = await _manifestService.GetMetadataAsync(entity.Route);
+                if (!string.IsNullOrEmpty(metadataJson))
+                {
+                    _logger.LogInformation("✅ Metadata carregado com sucesso da API: {Route}/metadata", entity.Route);
+                    return Content(metadataJson, "application/json");
+                }
+            }
+
+            _logger.LogWarning("⚠️ Metadata não disponível, retornando dados básicos do manifesto");
             return Json(entity);
         }
         catch (Exception ex)
@@ -251,7 +264,7 @@ public class ManifestController : Controller
                 return BadRequest(new { error = "OutputPath não configurado no appsettings.json" });
 
             // 2. Refresh Entity
-            var entity = await _manifestService.GetEntityAsync(request.EntityName);
+            var entity = await _manifestService.GetEntityWithMetadataAsync(request.EntityName);
             if (entity == null) return NotFound($"Entidade '{request.EntityName}' não encontrada");
 
             // 3. Convert & Generate
@@ -271,6 +284,28 @@ public class ManifestController : Controller
             fullRequest.GerarWebServices = request.GerarWebServices;
             fullRequest.GerarView = request.GerarView;
             fullRequest.GerarJavaScript = request.GerarJavaScript;
+
+            // =========================================================================
+            // v4.5 - MAPEAMENTO DE CONFIGURAÇÕES AVANÇADAS (Wizard Steps 3 & 4)
+            // =========================================================================
+
+            // 1. Configuração do Grid (Listagem)
+            if (request.GridColumns != null && request.GridColumns.Any())
+            {
+                fullRequest.ColunasListagem = request.GridColumns;
+            }
+
+            // 2. Configuração do Formulário
+            if (request.FormFields != null && request.FormFields.Any())
+            {
+                fullRequest.ColunasFormulario = request.FormFields;
+            }
+
+            // 3. Layout do Formulário (Abas, Colunas)
+            if (request.FormLayout != null)
+            {
+                fullRequest.FormLayout = request.FormLayout;
+            }
 
             var result = _fullStackGenerator.Generate(tabela, fullRequest);
             if (!result.Success) return BadRequest(new { error = result.Error });
@@ -390,25 +425,4 @@ public class ManifestController : Controller
 
         return sb.ToString();
     }
-}
-
-/// <summary>
-/// Request para geração de frontend a partir do manifesto.
-/// </summary>
-public class ManifestGenerateRequest
-{
-    public string EntityName { get; set; } = string.Empty;
-
-    // Overrides opcionais
-    public string? CdFuncao { get; set; }
-    public string? DisplayName { get; set; }
-    public string? Icone { get; set; }
-    public int MenuOrder { get; set; } = 10;
-
-    // Flags de geração (default: todos true para frontend)
-    public bool GerarWebController { get; set; } = true;
-    public bool GerarWebModels { get; set; } = true;
-    public bool GerarWebServices { get; set; } = true;
-    public bool GerarView { get; set; } = true;
-    public bool GerarJavaScript { get; set; } = true;
 }

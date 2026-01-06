@@ -661,10 +661,16 @@ const FormDesigner = {
             tabName = targetTab || this.layoutConfig.tabs[this.activeTabIndex] || this.layoutConfig.tabs[0];
         }
 
+        const hasLookup = !!propData.lookup;
+        let inputType = propData.inputType || Utils.getDefaultInputType(propData.type);
+
+        // Se tiver lookup, força ser select
+        if (hasLookup) inputType = 'select';
+
         const fieldConfig = {
             id: `field_${Date.now()}_${fieldCounter++}`,
             ...propData,
-            inputType: Utils.getDefaultInputType(propData.type),
+            inputType: inputType,
             label: propData.displayName || propData.name,
             placeholder: '',
             group: 'Dados Gerais',
@@ -676,11 +682,11 @@ const FormDesigner = {
             helpText: '',
 
             // ⭐ v4.0: Select2 AJAX properties
-            isSelect2Ajax: false,
-            selectEndpoint: '',
-            selectApiRoute: '',
-            selectValueField: 'id',
-            selectTextField: 'nome',
+            isSelect2Ajax: hasLookup,
+            selectEndpoint: hasLookup ? (propData.lookup.endpoint || '') : '',
+            selectApiRoute: hasLookup ? (propData.lookup.endpoint || '') : '',
+            selectValueField: hasLookup ? (propData.lookup.valueField || 'id') : 'id',
+            selectTextField: hasLookup ? (propData.lookup.textField || 'nome') : 'nome',
 
             // Cascade (legacy)
             cascadeTo: '',

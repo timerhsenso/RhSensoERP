@@ -127,6 +127,83 @@ public class ManifestService
             .FirstOrDefault(e => e.EntityName.Equals(entityName, StringComparison.OrdinalIgnoreCase));
     }
 
+    /// <summary>
+    /// Obtém o JSON de metadados diretamente do endpoint da entidade.
+    /// Ex: /api/modulo/entidade/metadata
+    /// </summary>
+    public async Task<string?> GetMetadataAsync(string route)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(route)) return null;
+
+            // Remove barra inicial se houver, pois BaseAddress já pode ter ou o setup do HttpClient cuida disso
+            var cleanRoute = route.TrimStart('/');
+            var url = $"{cleanRoute}/metadata";
+
+            _logger.LogInformation("📡 Buscando metadados reais em: {Url}", url);
+
+            var response = await _httpClient.GetAsync(url);
+            
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning("⚠️ Falha ao buscar metadata em {Url}. Status: {Status}", url, response.StatusCode);
+                return null;
+            }
+
+            return await response.Content.ReadAsStringAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "❌ Erro ao buscar metadata da rota {Route}", route);
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Obtém a entidade completa, tentando buscar metadados detalhados da API
+    /// caso a propriedade Route esteja disponível.
+    /// </summary>
+    public async Task<EntityManifestItem?> GetEntityWithMetadataAsync(string entityName)
+    {
+        // 1. Busca do manifesto (cache)
+        var entity = await GetEntityAsync(entityName);
+        if (entity == null) return null;
+
+        // 2. Se tiver rota, tenta buscar metadados completos
+        if (!string.IsNullOrEmpty(entity.Route))
+        {
+            var json = await GetMetadataAsync(entity.Route);
+            if (!string.IsNullOrEmpty(json))
+            {
+                try
+                {
+                    // Deserializa e combina
+                    var detailedEntity = JsonSerializer.Deserialize<EntityManifestItem>(json, new JsonSerializerOptions
+                    {
+                        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                        PropertyNameCaseInsensitive = true
+                    });
+
+                    if (detailedEntity != null)
+                    {
+                        // Preserva campos que podem não vir no metadata ou garantir integridade
+                        detailedEntity.ModuleName = !string.IsNullOrEmpty(detailedEntity.ModuleName) ? detailedEntity.ModuleName : entity.ModuleName;
+                        detailedEntity.ModuleDisplayName = !string.IsNullOrEmpty(detailedEntity.ModuleDisplayName) ? detailedEntity.ModuleDisplayName : entity.ModuleDisplayName;
+                        
+                        return detailedEntity;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Erro ao deserializar metadata detalhado para {Entity}", entityName);
+                }
+            }
+        }
+
+        return entity;
+    }
+
     // =========================================================================
     // CONVERSÕES - v3.2 Com suporte a ApiRoute do manifesto
     // =========================================================================
@@ -286,12 +363,47 @@ public class ManifestService
         // =========================================================================
         foreach (var nav in entity.Navigations.Where(n => n.RelationType == "ManyToOne"))
         {
+            if (request.ConfiguracoesFk.Any(x => x.ColunaOrigem == (nav.ForeignKeyProperty ?? "")))
+                continue;
+
             request.ConfiguracoesFk.Add(new FkNavigationConfig
             {
                 ColunaOrigem = nav.ForeignKeyProperty ?? "",
                 TabelaDestino = nav.TargetEntity,
                 NavigationName = nav.Name,
                 DisplayColumn = "Nome", // Assume padrão
+                Ignorar = false
+            });
+        }
+
+        // =========================================================================
+        // v4.3 - Inferir FKs a partir de Lookups (se não houver Navigation explícita)
+        // =========================================================================
+        foreach (var prop in entity.Properties.Where(p => p.Lookup != null))
+        {
+            if (request.ConfiguracoesFk.Any(x => x.ColunaOrigem == prop.Name))
+                continue;
+
+            // Tenta inferir o nome da entidade a partir da rota ou módulo
+            // Ex: "capfornecedores" -> "CapFornecedores"
+            var targetEntity = "Unknown";
+            if (!string.IsNullOrEmpty(prop.Lookup.Route))
+            {
+                targetEntity = prop.Lookup.Route.Replace("api/", "").Split('/').LastOrDefault() ?? "Unknown";
+                targetEntity = char.ToUpper(targetEntity[0]) + targetEntity[1..]; // PascalCase-ish
+            }
+
+            // Remove sufixo Id para NavigationName
+            var navName = prop.Name;
+            if (navName.StartsWith("Id") && navName.Length > 2) navName = navName[2..];
+            else if (navName.EndsWith("Id") && navName.Length > 2) navName = navName[..^2];
+
+            request.ConfiguracoesFk.Add(new FkNavigationConfig
+            {
+                ColunaOrigem = prop.Name,
+                TabelaDestino = targetEntity, // Nome aproximado, pode não ser exato
+                NavigationName = navName,
+                DisplayColumn = prop.Lookup.TextField,
                 Ignorar = false
             });
         }

@@ -489,7 +489,8 @@ const ManifestManager = {
                 isIdentity: prop.isIdentity || prop.IsIdentity || false,
                 isForeignKey: prop.isForeignKey || prop.IsForeignKey || false,
                 foreignKeyEntity: prop.foreignKeyEntity || prop.ForeignKeyEntity || null,
-                maxLength: prop.maxLength || prop.MaxLength || null
+                maxLength: prop.maxLength || prop.MaxLength || null,
+                lookup: prop.lookup || prop.Lookup || null
             })),
 
             // Navegações (se existir)

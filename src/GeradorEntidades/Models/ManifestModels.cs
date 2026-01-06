@@ -42,6 +42,16 @@ public class PropertyManifestItem
     public bool IsRequired { get; set; }
     public bool IsIdentity { get; set; }
     public int? MaxLength { get; set; }
+    public PropertyLookupItem? Lookup { get; set; }
+}
+
+public class PropertyLookupItem
+{
+    public string Endpoint { get; set; } = "";
+    public string ValueField { get; set; } = "";
+    public string TextField { get; set; } = "";
+    public string Module { get; set; } = "";
+    public string Route { get; set; } = "";
 }
 
 public class NavigationManifestItem
@@ -59,4 +69,32 @@ public class ModuleInfo
     public string DisplayName { get; set; } = "";
     public int EntityCount { get; set; }
     public List<string> Entities { get; set; } = new();
+}
+
+/// <summary>
+/// Request para geração de frontend a partir do manifesto.
+/// </summary>
+public class ManifestGenerateRequest
+{
+    public string EntityName { get; set; } = string.Empty;
+
+    // Overrides opcionais
+    public string? CdFuncao { get; set; }
+    public string? DisplayName { get; set; }
+    public string? Icone { get; set; }
+    public int MenuOrder { get; set; } = 10;
+
+    // Flags de geração (default: todos true para frontend)
+    public bool GerarWebController { get; set; } = true;
+    public bool GerarWebModels { get; set; } = true;
+    public bool GerarWebServices { get; set; } = true;
+    public bool GerarView { get; set; } = true;
+    public bool GerarJavaScript { get; set; } = true;
+
+    // =========================================================================
+    // v4.5 - CONFIFURAÇÕES AVANÇADAS (Grid & Form)
+    // =========================================================================
+    public List<ColumnListConfig> GridColumns { get; set; } = new();
+    public List<ColumnFormConfig> FormFields { get; set; } = new();
+    public FormLayoutConfig? FormLayout { get; set; }
 }
