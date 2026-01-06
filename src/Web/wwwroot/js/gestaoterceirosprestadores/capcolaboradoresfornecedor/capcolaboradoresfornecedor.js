@@ -1,16 +1,12 @@
-/**
+﻿/**
  * ============================================================================
  * CAPCOLABORADORESFORNECEDOR - JavaScript com Checkbox e Toggle Ativo
  * ============================================================================
- * Arquivo: wwwroot/js/controleacessoportaria/capcolaboradoresfornecedor/capcolaboradoresfornecedor.js
- * Módulo: ControleAcessoPortaria
- * Versão: 4.5 (COLUNAS DE NAVEGAÇÃO CORRIGIDAS)
- * Gerado por: GeradorFullStack v4.5
- * Data: 2026-01-04 21:50:00
- * 
- * Changelog v4.5:
- *   ✅ CORRIGIDO: Adicionadas colunas tipoSanguineoDescricao e ufSigla
- *   ✅ CORRIGIDO: Todas as propriedades de navegação agora aparecem na grid
+ * Arquivo: wwwroot/js/gestaoterceirosprestadores/capcolaboradoresfornecedor/capcolaboradoresfornecedor.js
+ * Módulo: GestaoTerceirosPrestadores
+ * Versão: 4.4 (SELECT2 100% CORRIGIDO)
+ * Gerado por: GeradorFullStack v4.4
+ * Data: 2026-01-06 12:37:23
  * 
  * Changelog v4.4:
  *   ✅ CORRIGIDO: Select2 agora usa data-select2-url (não data-endpoint)
@@ -41,13 +37,13 @@
 class CapColaboradoresFornecedorCrud extends CrudBase {
     constructor(config) {
         super(config);
-
+        
         // =====================================================================
         // Identifica campos de PK de texto
         // =====================================================================
         this.pkTextoField = null;
         this.isPkTexto = false;
-
+        
         // =====================================================================
         // v4.1: Debounce para Toggle Ativo
         // =====================================================================
@@ -60,20 +56,20 @@ class CapColaboradoresFornecedorCrud extends CrudBase {
      */
     enablePrimaryKeyFields(enable) {
         if (!this.isPkTexto) return;
-
+        
         const $pkField = $('#' + this.pkTextoField);
         if ($pkField.length === 0) return;
-
+        
         if (enable) {
             // Criação: campo editável
             $pkField.prop('readonly', false)
-                .prop('disabled', false)
-                .removeClass('bg-light');
+                    .prop('disabled', false)
+                    .removeClass('bg-light');
             console.log('✏️ [CapColaboradoresFornecedor] Campo PK habilitado para edição (criação)');
         } else {
             // Edição: campo readonly
             $pkField.prop('readonly', true)
-                .addClass('bg-light');
+                    .addClass('bg-light');
             console.log('🔒 [CapColaboradoresFornecedor] Campo PK desabilitado (edição)');
         }
     }
@@ -84,7 +80,7 @@ class CapColaboradoresFornecedorCrud extends CrudBase {
      */
     openCreateModal() {
         super.openCreateModal();
-
+        
         // Habilita PK de texto para digitação
         if (this.isPkTexto) {
             this.enablePrimaryKeyFields(true);
@@ -97,7 +93,7 @@ class CapColaboradoresFornecedorCrud extends CrudBase {
      */
     async openEditModal(id) {
         await super.openEditModal(id);
-
+        
         // Desabilita PK de texto (não pode alterar chave)
         if (this.isPkTexto) {
             this.enablePrimaryKeyFields(false);
@@ -112,7 +108,7 @@ class CapColaboradoresFornecedorCrud extends CrudBase {
      * Agora usa data-select2-url em vez de data-endpoint
      */
     loadSelect2Labels() {
-        $('.select2-ajax').each(function () {
+        $('.select2-ajax').each(function() {
             const $select = $(this);
             const val = $select.val();
             const endpoint = $select.data('select2-url');  // ✅ v4.4 CORRIGIDO: data-select2-url
@@ -122,18 +118,18 @@ class CapColaboradoresFornecedorCrud extends CrudBase {
             if (val && endpoint && val !== '0') {
                 // ⭐ v4.4: Endpoint para buscar um item por ID
                 const detailEndpoint = endpoint.replace(/\/$/, '') + '/' + val;
-
+                
                 $.ajax({
                     url: detailEndpoint,
                     type: 'GET',
                     headers: {
                         'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
                     },
-                    success: function (response) {
+                    success: function(response) {
                         if (response) {
                             // ⭐ v4.4: Suporta Datawrapper (Result<T>) e resposta direta
                             const data = response.data || response;
-
+                            
                             const id = data[valueField];
                             const text = data[textField];
 
@@ -150,8 +146,8 @@ class CapColaboradoresFornecedorCrud extends CrudBase {
                             }
                         }
                     },
-                    error: function (xhr) {
-                        console.warn(`[Select2] Falha ao carregar label de ${detailEndpoint}:`, xhr);
+                    error: function(xhr) {
+                       console.warn(`[Select2] Falha ao carregar label de ${detailEndpoint}:`, xhr);
                     }
                 });
             }
@@ -221,6 +217,11 @@ class CapColaboradoresFornecedorCrud extends CrudBase {
         // Boolean fields - PascalCase
         cleanData.Ativo = formData.ativo === true || formData.Ativo === 'true' || false;
 
+
+        // DateTime fields - PascalCase
+        cleanData.CreatedAtUtc = formData.createdAtUtc || formData.CreatedAtUtc || null;
+        cleanData.UpdatedAtUtc = formData.updatedAtUtc || formData.UpdatedAtUtc || null;
+
         console.log('📤 [CapColaboradoresFornecedor] Dados DEPOIS (PascalCase):', JSON.parse(JSON.stringify(cleanData)));
         return cleanData;
     }
@@ -230,7 +231,7 @@ class CapColaboradoresFornecedorCrud extends CrudBase {
      */
     afterSubmit(data, isEdit) {
         console.log('✅ [CapColaboradoresFornecedor] Registro salvo:', data);
-
+        
         // Atualiza a grid automaticamente
         if (this.dataTable) {
             this.dataTable.ajax.reload(null, false); // Mantém paginação
@@ -274,8 +275,8 @@ $(document).ready(function () {
         if (!row) return '';
 
         // Tenta várias variações do nome do campo
-        let id = row[fieldName] || row[fieldName.toLowerCase()] || row[fieldName.toUpperCase()] ||
-            row['id'] || row['Id'] || '';
+        let id = row[fieldName] || row[fieldName.toLowerCase()] || row[fieldName.toUpperCase()] || 
+                 row['id'] || row['Id'] || '';
 
         // Converte para string e faz trim
         id = String(id).trim();
@@ -289,12 +290,12 @@ $(document).ready(function () {
     }
 
     // =========================================================================
-    // ✅ v4.5: CONFIGURAÇÃO DAS COLUNAS (CORRIGIDO COM TODAS AS NAVEGAÇÕES)
+    // ✅ v4.2: CONFIGURAÇÃO DAS COLUNAS (CORRIGIDO)
     // =========================================================================
 
     const columns = [
         // =====================================================================
-        // COLUNA DE SELEÇÃO (CHECKBOX)
+        // v4.1: COLUNA DE SELEÇÃO (CHECKBOX)
         // =====================================================================
         {
             data: null,
@@ -309,7 +310,16 @@ $(document).ready(function () {
                 return `<input type="checkbox" class="form-check-input row-select dt-checkboxes" value="${id}" data-id="${id}" />`;
             }
         },
-
+        // ID  Fornecedor
+        {
+            data: 'idFornecedor',
+            name: 'IdFornecedor',
+            title: 'ID  Fornecedor',
+            orderable: true,
+            render: function (data, type, row) {
+                return data !== undefined && data !== null ? data : '';
+            }
+        },
         // Nome
         {
             data: 'nome',
@@ -320,45 +330,36 @@ $(document).ready(function () {
                 return data !== undefined && data !== null ? data : '';
             }
         },
-
-        // ✅ v4.5: Fornecedor (Navegação)
+        // CPF
         {
-            data: 'fornecedorRazaoSocial',
-            name: 'fornecedorRazaoSocial',
-            title: 'Fornecedor',
-            orderable: false,
-            searchable: false,
+            data: 'cpf',
+            name: 'Cpf',
+            title: 'CPF',
+            orderable: true,
             render: function (data, type, row) {
                 return data !== undefined && data !== null ? data : '';
             }
         },
-
-        // ✅ v4.5: Tipo Sanguíneo (Navegação)
+        // RG
         {
-            data: 'tipoSanguineoDescricao',
-            name: 'tipoSanguineoDescricao',
-            title: 'Tipo Sanguíneo',
-            orderable: false,
-            searchable: false,
+            data: 'rg',
+            name: 'Rg',
+            title: 'RG',
+            orderable: true,
             render: function (data, type, row) {
                 return data !== undefined && data !== null ? data : '';
             }
         },
-
-        // ✅ v4.5: UF (Navegação)
+        // E-mail
         {
-            data: 'ufSigla',
-            name: 'ufSigla',
-            title: 'UF',
-            orderable: false,
-            searchable: false,
-            width: '60px',
-            className: 'text-center',
+            data: 'email',
+            name: 'Email',
+            title: 'E-mail',
+            orderable: true,
             render: function (data, type, row) {
                 return data !== undefined && data !== null ? data : '';
             }
         },
-
         // Telefone
         {
             data: 'telefone',
@@ -369,7 +370,146 @@ $(document).ready(function () {
                 return data !== undefined && data !== null ? data : '';
             }
         },
-
+        // Data  Nascimento
+        {
+            data: 'dataNascimento',
+            name: 'DataNascimento',
+            title: 'Data  Nascimento',
+            orderable: true,
+            render: function (data, type, row) {
+                return data !== undefined && data !== null ? data : '';
+            }
+        },
+        // Gênero
+        {
+            data: 'genero',
+            name: 'Genero',
+            title: 'Gênero',
+            orderable: true,
+            render: function (data, type, row) {
+                return data !== undefined && data !== null ? data : '';
+            }
+        },
+        // Estado  Civil
+        {
+            data: 'estadoCivil',
+            name: 'EstadoCivil',
+            title: 'Estado  Civil',
+            orderable: true,
+            render: function (data, type, row) {
+                return data !== undefined && data !== null ? data : '';
+            }
+        },
+        // ID  Tipo  Sanguíneo
+        {
+            data: 'idTipoSanguineo',
+            name: 'IdTipoSanguineo',
+            title: 'ID  Tipo  Sanguíneo',
+            orderable: true,
+            render: function (data, type, row) {
+                return data !== undefined && data !== null ? data : '';
+            }
+        },
+        // Endereço
+        {
+            data: 'endereco',
+            name: 'Endereco',
+            title: 'Endereço',
+            orderable: true,
+            render: function (data, type, row) {
+                return data !== undefined && data !== null ? data : '';
+            }
+        },
+        // Número
+        {
+            data: 'numero',
+            name: 'Numero',
+            title: 'Número',
+            orderable: true,
+            render: function (data, type, row) {
+                return data !== undefined && data !== null ? data : '';
+            }
+        },
+        // Complemento
+        {
+            data: 'complemento',
+            name: 'Complemento',
+            title: 'Complemento',
+            orderable: true,
+            render: function (data, type, row) {
+                return data !== undefined && data !== null ? data : '';
+            }
+        },
+        // Bairro
+        {
+            data: 'bairro',
+            name: 'Bairro',
+            title: 'Bairro',
+            orderable: true,
+            render: function (data, type, row) {
+                return data !== undefined && data !== null ? data : '';
+            }
+        },
+        // Cidade
+        {
+            data: 'cidade',
+            name: 'Cidade',
+            title: 'Cidade',
+            orderable: true,
+            render: function (data, type, row) {
+                return data !== undefined && data !== null ? data : '';
+            }
+        },
+        // ID  UF
+        {
+            data: 'idUf',
+            name: 'IdUf',
+            title: 'ID  UF',
+            orderable: true,
+            render: function (data, type, row) {
+                return data !== undefined && data !== null ? data : '';
+            }
+        },
+        // CEP
+        {
+            data: 'cep',
+            name: 'Cep',
+            title: 'CEP',
+            orderable: true,
+            render: function (data, type, row) {
+                return data !== undefined && data !== null ? data : '';
+            }
+        },
+        // Data  Admissão
+        {
+            data: 'dataAdmissao',
+            name: 'DataAdmissao',
+            title: 'Data  Admissão',
+            orderable: true,
+            render: function (data, type, row) {
+                return data !== undefined && data !== null ? data : '';
+            }
+        },
+        // Data  Demissão
+        {
+            data: 'dataDemissao',
+            name: 'DataDemissao',
+            title: 'Data  Demissão',
+            orderable: true,
+            render: function (data, type, row) {
+                return data !== undefined && data !== null ? data : '';
+            }
+        },
+        // Cargo
+        {
+            data: 'cargo',
+            name: 'Cargo',
+            title: 'Cargo',
+            orderable: true,
+            render: function (data, type, row) {
+                return data !== undefined && data !== null ? data : '';
+            }
+        },
         // Ativo
         {
             data: 'ativo',
@@ -383,19 +523,99 @@ $(document).ready(function () {
                     const checked = data ? 'checked' : '';
                     const id = getCleanId(row, 'id');
                     return `
-                    <div class="form-check form-switch">
-                        <input class="form-check-input toggle-ativo" 
-                               type="checkbox" 
-                               ${checked}
-                               data-id="${id}"
-                               data-current="${data}"
-                               title="Clique para ${data ? 'desativar' : 'ativar'}">
-                    </div>`;
+                        <div class="form-check form-switch">
+                            <input class="form-check-input toggle-ativo" 
+                                   type="checkbox" 
+                                   ${checked}
+                                   data-id="${id}"
+                                   data-current="${data}"
+                                   title="Clique para ${data ? 'desativar' : 'ativar'}">
+                        </div>`;
                 }
                 return data;
             }
         },
-
+        // Data  Criação ( UTC)
+        {
+            data: 'createdAtUtc',
+            name: 'CreatedAtUtc',
+            title: 'Data  Criação ( UTC)',
+            orderable: true,
+            render: function (data, type, row) {
+                if (type === 'display' && data) {
+                    const date = new Date(data);
+                    return date.toLocaleDateString('pt-BR');
+                }
+                return data || '';
+            }
+        },
+        // Criado  Por
+        {
+            data: 'createdByUserId',
+            name: 'CreatedByUserId',
+            title: 'Criado  Por',
+            orderable: true,
+            render: function (data, type, row) {
+                return data !== undefined && data !== null ? data : '';
+            }
+        },
+        // Data  Atualização ( UTC)
+        {
+            data: 'updatedAtUtc',
+            name: 'UpdatedAtUtc',
+            title: 'Data  Atualização ( UTC)',
+            orderable: true,
+            render: function (data, type, row) {
+                if (type === 'display' && data) {
+                    const date = new Date(data);
+                    return date.toLocaleDateString('pt-BR');
+                }
+                return data || '';
+            }
+        },
+        // Atualizado  Por
+        {
+            data: 'updatedByUserId',
+            name: 'UpdatedByUserId',
+            title: 'Atualizado  Por',
+            orderable: true,
+            render: function (data, type, row) {
+                return data !== undefined && data !== null ? data : '';
+            }
+        },
+        // ✅ Fornecedor (Navegação)
+        {
+            data: 'fornecedorNome',
+            name: 'fornecedorNome',
+            title: 'Fornecedor',
+            orderable: false,  // Campos de navegação não permitem ordenação
+            searchable: false,
+            render: function (data, type, row) {
+                return data !== undefined && data !== null ? data : '';
+            }
+        },
+        // ✅ Tipo Sanguineo (Navegação)
+        {
+            data: 'tipoSanguineoNome',
+            name: 'tipoSanguineoNome',
+            title: 'Tipo Sanguineo',
+            orderable: false,  // Campos de navegação não permitem ordenação
+            searchable: false,
+            render: function (data, type, row) {
+                return data !== undefined && data !== null ? data : '';
+            }
+        },
+        // ✅ Uf (Navegação)
+        {
+            data: 'ufNome',
+            name: 'ufNome',
+            title: 'Uf',
+            orderable: false,  // Campos de navegação não permitem ordenação
+            searchable: false,
+            render: function (data, type, row) {
+                return data !== undefined && data !== null ? data : '';
+            }
+        },
         // Ações
         {
             data: null,
@@ -408,22 +628,23 @@ $(document).ready(function () {
             render: function (data, type, row) {
                 const id = getCleanId(row, 'id');
                 let actions = '';
-
+                
                 if (window.crudPermissions.canEdit) {
                     actions += `<button class="btn btn-sm btn-primary btn-edit" data-id="${id}" title="Editar">
-                                <i class="fas fa-edit"></i>
-                            </button> `;
+                                    <i class="fas fa-edit"></i>
+                                </button> `;
                 }
-
+                
                 if (window.crudPermissions.canDelete) {
                     actions += `<button class="btn btn-sm btn-danger btn-delete" data-id="${id}" title="Excluir">
-                                <i class="fas fa-trash"></i>
-                            </button>`;
+                                    <i class="fas fa-trash"></i>
+                                </button>`;
                 }
-
+                
                 return actions || '<span class="text-muted">Sem ações</span>';
             }
         }
+
     ];
 
     // =========================================================================
@@ -432,11 +653,12 @@ $(document).ready(function () {
 
     const crud = new CapColaboradoresFornecedorCrud({
         controllerName: 'CapColaboradoresFornecedor',
+        apiRoute: 'api/gestaoterceirosprestadores/capcolaboradoresfornecedor',
         entityName: 'CapColaboradoresFornecedor',
         entityNamePlural: 'CapColaboradoresFornecedors',
         idField: 'id',
         tableSelector: '#tableCrud',
-        columns: columns,
+        columns: columns,  // ✅ CORRIGIDO: era "dataTableColumns"
         permissions: window.crudPermissions,
         exportConfig: {
             enabled: true,
@@ -466,10 +688,10 @@ $(document).ready(function () {
     $(document).on('change', '.row-select', function () {
         const totalCheckboxes = $('.row-select').length;
         const checkedCheckboxes = $('.row-select:checked').length;
-
+        
         // Atualiza estado do "Selecionar Todos"
         $('#selectAll').prop('checked', totalCheckboxes === checkedCheckboxes);
-
+        
         crud.updateSelectedCount();
     });
 
@@ -510,7 +732,7 @@ $(document).ready(function () {
                     if (response.success) {
                         console.log(`✅ [CapColaboradoresFornecedor] Toggle Ativo atualizado - ID: ${id}`);
                         $toggle.data('current', newValue);
-
+                        
                         // Usa SweetAlert se disponível, senão console
                         if (typeof Swal !== 'undefined') {
                             Swal.fire({
@@ -525,7 +747,7 @@ $(document).ready(function () {
                         // Reverte toggle em caso de erro
                         $toggle.prop('checked', currentValue);
                         console.error(`❌ [CapColaboradoresFornecedor] Erro ao atualizar Toggle Ativo:`, response);
-
+                        
                         if (typeof Swal !== 'undefined') {
                             Swal.fire({
                                 icon: 'error',
@@ -539,7 +761,7 @@ $(document).ready(function () {
                     // Reverte toggle em caso de erro
                     $toggle.prop('checked', currentValue);
                     console.error(`❌ [CapColaboradoresFornecedor] Erro AJAX Toggle Ativo:`, xhr);
-
+                    
                     if (typeof Swal !== 'undefined') {
                         Swal.fire({
                             icon: 'error',
@@ -599,13 +821,13 @@ $(document).ready(function () {
                         // ⭐ v4.4 CORRIGIDO: Mapeia o retorno da API para o formato do Select2
                         // Suporta: { items: [] }, { data: [] }, { results: [] } ou []
                         const items = data.items || data.data || data.results || data || [];
-
+                        
                         // ⭐ v4.4: Validação de resposta
                         if (!Array.isArray(items)) {
                             console.error('[Select2] Resposta não é um array:', data);
                             return { results: [] };
                         }
-
+                        
                         console.log('[Select2] Dados recebidos:', data);
                         console.log('[Select2] Itens extraídos:', items);
                         console.log('[Select2] Config:', { valueField, textField });
@@ -614,12 +836,12 @@ $(document).ready(function () {
                             results: items.map(function (item) {
                                 const id = item[valueField];
                                 const text = item[textField];
-
+                                
                                 // ⭐ v4.4: Validação de campos obrigatórios
                                 if (!id || !text) {
                                     console.warn('[Select2] Item sem campos obrigatórios:', item, { valueField, textField });
                                 }
-
+                                
                                 return {
                                     id: id || '',
                                     text: text || 'Sem descrição',
@@ -651,5 +873,5 @@ $(document).ready(function () {
         initSelect2();
     });
 
-    console.log('✅ [CapColaboradoresFornecedor] JavaScript v4.5 inicializado com sucesso!');
+    console.log('✅ [CapColaboradoresFornecedor] JavaScript inicializado com sucesso!');
 });

@@ -11,8 +11,4 @@
     <PackageReference Include="Microsoft.Data.SqlClient" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Include="wwwroot\js\tabsheet\tabsheet-config.js" />
-  </ItemGroup>
-
 </Project>

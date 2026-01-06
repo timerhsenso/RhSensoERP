@@ -1,15 +1,15 @@
-// =============================================================================
+﻿// =============================================================================
 // ARQUIVO GERADO POR GeradorFullStack v6.1
 // Entity: CapColaboradoresFornecedor
-// Module: ControleAcessoPortaria
-// Data: 2026-01-04 16:00:38
+// Module: GestaoTerceirosPrestadores
+// Data: 2026-01-06 12:37:23
 // AUTO-REGISTRO: Compatível com AddCrudToolServicesAutomatically()
 // =============================================================================
-using RhSensoERP.Web.Models.ControleAcessoPortaria.CapColaboradoresFornecedor;
+using RhSensoERP.Web.Models.GestaoTerceirosPrestadores.CapColaboradoresFornecedor;
 using RhSensoERP.Web.Models.Common;
 using RhSensoERP.Web.Services.Base;
 
-namespace RhSensoERP.Web.Services.ControleAcessoPortaria.CapColaboradoresFornecedor;
+namespace RhSensoERP.Web.Services.GestaoTerceirosPrestadores.CapColaboradoresFornecedor;
 
 /// <summary>
 /// Interface do serviço de API para CapColaboradoresFornecedor.

@@ -1,12 +1,12 @@
-// =============================================================================
+﻿// =============================================================================
 // ARQUIVO GERADO POR GeradorFullStack v4.0
 // Entity: CapColaboradoresFornecedor
-// Module: ControleAcessoPortaria
-// Data: 2026-01-04 16:00:38
+// Module: GestaoTerceirosPrestadores
+// Data: 2026-01-06 12:37:23
 // =============================================================================
 using System.ComponentModel.DataAnnotations;
 
-namespace RhSensoERP.Web.Models.ControleAcessoPortaria.CapColaboradoresFornecedor;
+namespace RhSensoERP.Web.Models.GestaoTerceirosPrestadores.CapColaboradoresFornecedor;
 
 /// <summary>
 /// Request para criação de CapColaboradoresFornecedor.
@@ -15,10 +15,10 @@ namespace RhSensoERP.Web.Models.ControleAcessoPortaria.CapColaboradoresFornecedo
 public class CreateCapColaboradoresFornecedorRequest
 {
     /// <summary>
-    /// ID Fornecedor
+    /// ID  Fornecedor
     /// </summary>
-    [Display(Name = "ID Fornecedor")]
-    [Required(ErrorMessage = "ID Fornecedor é obrigatório")]
+    [Display(Name = "ID  Fornecedor")]
+    [Required(ErrorMessage = "ID  Fornecedor é obrigatório")]
     public int IdFornecedor { get; set; }
 
     /// <summary>
@@ -59,9 +59,9 @@ public class CreateCapColaboradoresFornecedorRequest
     public string Telefone { get; set; } = string.Empty;
 
     /// <summary>
-    /// Data Nascimento
+    /// Data  Nascimento
     /// </summary>
-    [Display(Name = "Data Nascimento")]
+    [Display(Name = "Data  Nascimento")]
     public DateOnly? DataNascimento { get; set; }
 
     /// <summary>
@@ -72,16 +72,16 @@ public class CreateCapColaboradoresFornecedorRequest
     public string Genero { get; set; } = string.Empty;
 
     /// <summary>
-    /// Estado Civil
+    /// Estado  Civil
     /// </summary>
-    [Display(Name = "Estado Civil")]
-    [StringLength(50, ErrorMessage = "Estado Civil deve ter no máximo {1} caracteres")]
+    [Display(Name = "Estado  Civil")]
+    [StringLength(50, ErrorMessage = "Estado  Civil deve ter no máximo {1} caracteres")]
     public string EstadoCivil { get; set; } = string.Empty;
 
     /// <summary>
-    /// ID Tipo Sanguíneo
+    /// ID  Tipo  Sanguíneo
     /// </summary>
-    [Display(Name = "ID Tipo Sanguíneo")]
+    [Display(Name = "ID  Tipo  Sanguíneo")]
     public int? IdTipoSanguineo { get; set; }
 
     /// <summary>
@@ -120,9 +120,9 @@ public class CreateCapColaboradoresFornecedorRequest
     public string Cidade { get; set; } = string.Empty;
 
     /// <summary>
-    /// ID UF
+    /// ID  UF
     /// </summary>
-    [Display(Name = "ID UF")]
+    [Display(Name = "ID  UF")]
     public int? IdUf { get; set; }
 
     /// <summary>
@@ -133,16 +133,16 @@ public class CreateCapColaboradoresFornecedorRequest
     public string Cep { get; set; } = string.Empty;
 
     /// <summary>
-    /// Data Admissão
+    /// Data  Admissão
     /// </summary>
-    [Display(Name = "Data Admissão")]
-    [Required(ErrorMessage = "Data Admissão é obrigatório")]
+    [Display(Name = "Data  Admissão")]
+    [Required(ErrorMessage = "Data  Admissão é obrigatório")]
     public DateOnly DataAdmissao { get; set; }
 
     /// <summary>
-    /// Data Demissão
+    /// Data  Demissão
     /// </summary>
-    [Display(Name = "Data Demissão")]
+    [Display(Name = "Data  Demissão")]
     public DateOnly? DataDemissao { get; set; }
 
     /// <summary>

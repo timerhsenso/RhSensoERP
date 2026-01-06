@@ -1,2526 +1,543 @@
-@model List<GeradorEntidades.Models.TabelaInfo>
+@model List<GeradorEntidades.Models.ModuleInfo>
 @{
-    ViewData["Title"] = "Gerador Full-Stack";
-    var modulos = ViewBag.Modulos as List<GeradorEntidades.Models.ModuloConfig>;
+    ViewData["Title"] = "Gerador Frontend v4.5";
+    var apiUrl = ViewBag.ApiUrl;
 }
 
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-theme="dark">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>@ViewData["Title"] - RhSensoERP</title>
+    <title>@ViewData["Title"]</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet" />
-    <link href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/vs2015.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+    
     <style>
-        /* ==================== DARK MODE PROFISSIONAL - CORRIGIDO ==================== */
-        /* Fundo escuro, texto branco, SEM linhas brancas */
-
         :root {
-            /* Cores primárias - Indigo moderno */
             --primary-color: #6366f1;
-            --primary-light: #818cf8;
-            --primary-dark: #4f46e5;
-            --accent-color: #06b6d4;
+            --secondary-color: #1e293b;
+            --accent-color: #3b82f6;
             --success-color: #10b981;
-            --warning-color: #f59e0b;
             --danger-color: #ef4444;
-            --info-color: #3b82f6;
-        }
-
-        /* ==================== LIGHT MODE (Padrão) ==================== */
-        :root {
-            /* Fundos claros - Tons de cinza azulado */
-            --bg-primary: #f8fafc;
-            --bg-secondary: #ffffff;
-            --bg-tertiary: #f1f5f9;
-            --bg-hover: #e2e8f0;
-            /* Textos claros */
-            --text-primary: #1e293b;
-            --text-secondary: #64748b;
+            --warning-color: #f59e0b;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --text-light: #f8fafc;
             --text-muted: #94a3b8;
-            /* Bordas claras */
-            --border-color: #e2e8f0;
-            --border-light: #f1f5f9;
-        }
-
-        /* ==================== DARK MODE - FUNDO ESCURO, TEXTO BRANCO ==================== */
-        [data-theme="dark"] {
-            /* Fundos escuros - Azul marinho profundo */
-            --bg-primary: #0a0e1a; /* Fundo principal - Quase preto */
-            --bg-secondary: #141824; /* Cards e containers */
-            --bg-tertiary: #1e2433; /* Headers e seções */
-            --bg-hover: #2a3142; /* Hover states */
-            /* Textos escuros - BRANCO PURO E LEGÍVEL */
-            --text-primary: #ffffff; /* Texto principal - BRANCO PURO */
-            --text-secondary: #e2e8f0; /* Texto secundário - Branco azulado */
-            --text-muted: #94a3b8; /* Texto discreto - Cinza claro */
-            /* Bordas escuras - INVISÍVEIS, sem linhas brancas */
-            --border-color: #1e2433; /* Borda padrão - Quase invisível */
-            --border-light: #141824; /* Borda sutil - Invisível */
-            /* Cores de acento ajustadas */
-            --primary-light: #818cf8;
-            --accent-color: #22d3ee;
-            --success-color: #34d399;
-            --warning-color: #fbbf24;
-            --danger-color: #f87171;
-        }
-
-        /* ==================== COMPONENTES GLOBAIS ==================== */
-
-        * {
-            box-sizing: border-box;
         }
 
         body {
-            background: var(--bg-primary);
-            min-height: 100vh;
-            color: var(--text-primary);
-            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
-            font-size: 14px;
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            font-family: 'Inter', sans-serif;
         }
 
-        /* ==================== NAVBAR ==================== */
-        .navbar {
-            background: var(--bg-secondary) !important;
-            border-bottom: 1px solid var(--border-color);
-            padding: 0.5rem 0;
-            box-shadow: none;
-        }
-
-        [data-theme="dark"] .navbar {
-            border-bottom: none;
-        }
-
-        .navbar-brand {
-            font-weight: 700;
-            font-size: 1.1rem;
-            color: var(--primary-color) !important;
-        }
-
-            .navbar-brand i {
-                color: var(--primary-color);
-            }
-
-        /* ==================== CARDS ==================== */
         .card {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
+            background-color: var(--bg-card);
+            border: 1px solid #334155;
             border-radius: 12px;
-            box-shadow: none;
-        }
-
-        [data-theme="dark"] .card {
-            border: none;
+            margin-bottom: 20px;
         }
 
         .card-header {
-            background: var(--bg-tertiary);
-            border-bottom: 1px solid var(--border-color);
-            color: var(--text-primary);
+            background-color: rgba(99, 102, 241, 0.1);
+            border-bottom: 1px solid #334155;
+            color: var(--primary-color);
             font-weight: 600;
-            padding: 0.6rem 1rem;
-            border-radius: 12px 12px 0 0;
-            font-size: 0.85rem;
         }
 
-        [data-theme="dark"] .card-header {
-            border-bottom: none;
-        }
-
-        .card-body {
-            padding: 0.75rem;
-        }
-
-        /* ==================== TABELAS - SEM LINHAS BRANCAS ==================== */
-        .table {
-            color: var(--text-primary);
-            font-size: 0.8rem;
-            margin-bottom: 0;
-        }
-
-        .table-hover tbody tr:hover {
-            background-color: var(--bg-hover);
-            cursor: pointer;
-        }
-
-        .table thead th {
-            background: var(--bg-tertiary);
-            border-color: var(--border-color);
-            color: var(--text-secondary);
-            font-weight: 600;
-            font-size: 0.65rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            padding: 0.4rem 0.5rem;
-        }
-
-        .table td {
-            border-color: var(--border-light);
-            vertical-align: middle;
-            color: var(--text-primary);
-            padding: 0.35rem 0.5rem;
-        }
-
-        .selected-row {
-            background-color: rgba(99, 102, 241, 0.08) !important;
-            border-left: 3px solid var(--primary-color);
-        }
-
-        /* DARK MODE - TABELAS ESCURAS, TEXTO BRANCO, SEM BORDAS */
-        [data-theme="dark"] .table {
-            color: #ffffff !important;
-        }
-
-            [data-theme="dark"] .table td {
-                color: #ffffff !important;
-                border-color: transparent !important; /* SEM BORDAS VISÍVEIS */
-                background: transparent;
-            }
-
-            [data-theme="dark"] .table tbody tr {
-                background: var(--bg-secondary);
-                border: none;
-            }
-
-                [data-theme="dark"] .table tbody tr:hover {
-                    background: var(--bg-hover) !important;
-                }
-
-            [data-theme="dark"] .table thead th {
-                color: var(--text-secondary) !important;
-                background: var(--bg-tertiary);
-                border-color: transparent !important; /* SEM BORDAS VISÍVEIS */
-            }
-
-        [data-theme="dark"] .fw-medium,
-        [data-theme="dark"] .tabela-row td {
-            color: #ffffff !important;
-        }
-
-        [data-theme="dark"] .tabela-row:hover td {
-            color: #ffffff !important;
-        }
-
-        [data-theme="dark"] .selected-row {
-            background-color: rgba(99, 102, 241, 0.3) !important;
-            border-left: 3px solid var(--primary-light);
-        }
-
-            [data-theme="dark"] .selected-row td {
-                color: #ffffff !important;
-            }
-
-        /* ==================== BADGES ==================== */
-        .badge {
-            font-weight: 500;
-            font-size: 0.65rem;
-            padding: 0.2em 0.5em;
-        }
-
-        .badge-pk {
-            background: linear-gradient(135deg, #fbbf24, #f59e0b);
-            color: #000;
-        }
-
-        .badge-fk {
-            background: linear-gradient(135deg, #60a5fa, #3b82f6);
-            color: #fff;
-        }
-
-        .badge-fk-guid {
-            background: linear-gradient(135deg, #34d399, #10b981);
-            color: #fff;
-        }
-
-        .badge-identity {
-            background: linear-gradient(135deg, #a78bfa, #8b5cf6);
-            color: #fff;
-        }
-
-        .badge-nav {
-            background: linear-gradient(135deg, #f472b6, #ec4899);
-            color: #fff;
-        }
-
-        .badge-warning {
-            background: linear-gradient(135deg, #fbbf24, #f59e0b);
-            color: #000;
-        }
-
-        .badge-danger {
-            background: linear-gradient(135deg, #f87171, #ef4444);
-            color: #fff;
-        }
-
-        .badge-info {
-            background: linear-gradient(135deg, #60a5fa, #3b82f6);
-            color: #fff;
-        }
-
-        .bg-secondary {
-            background: var(--text-muted) !important;
-        }
-
-        /* ==================== ALERTAS ==================== */
-        .alert-no-pk, .alert-composite-pk, .alert-composite-fk {
-            border-radius: 6px;
-            padding: 0.5rem 0.75rem;
-            margin-bottom: 0.5rem;
-            font-size: 0.8rem;
-        }
-
-        .alert-no-pk {
-            background: #fef2f2;
-            border: 1px solid #fecaca;
-            border-left: 3px solid #ef4444;
-            color: #991b1b;
-        }
-
-        .alert-composite-pk {
-            background: #fffbeb;
-            border: 1px solid #fde68a;
-            border-left: 3px solid #f59e0b;
-            color: #92400e;
-        }
-
-        .alert-composite-fk {
-            background: #fff7ed;
-            border: 1px solid #fed7aa;
-            border-left: 3px solid #f97316;
-            color: #9a3412;
-        }
-
-        /* Alertas no dark mode */
-        [data-theme="dark"] .alert-no-pk {
-            background: rgba(239, 68, 68, 0.2);
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            border-left: 3px solid #f87171;
-            color: #fca5a5;
-        }
-
-        [data-theme="dark"] .alert-composite-pk {
-            background: rgba(245, 158, 11, 0.2);
-            border: 1px solid rgba(245, 158, 11, 0.3);
-            border-left: 3px solid #fbbf24;
-            color: #fcd34d;
-        }
-
-        [data-theme="dark"] .alert-composite-fk {
-            background: rgba(249, 115, 22, 0.2);
-            border: 1px solid rgba(249, 115, 22, 0.3);
-            border-left: 3px solid #fb923c;
-            color: #fdba74;
-        }
-
-        /* ==================== PREVIEW DE CÓDIGO ==================== */
-        .code-preview {
-            max-height: 350px;
-            overflow: auto;
-            background: #1e293b;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-        }
-
-        [data-theme="dark"] .code-preview {
-            background: #0f172a;
-            border: none;
-        }
-
-        .code-preview pre {
-            margin: 0;
-            padding: 0.75rem;
-            font-size: 0.75rem;
-        }
-
-        /* ==================== BOTÕES ==================== */
-        .btn-generate {
-            background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
-            border: none;
-            padding: 0.5rem 1rem;
-            font-weight: 600;
-            border-radius: 8px;
-            color: #fff;
-            font-size: 0.85rem;
-            transition: all 0.2s ease;
-        }
-
-            .btn-generate:hover {
-                background: linear-gradient(135deg, var(--primary-dark), var(--primary-color));
-                transform: translateY(-1px);
-                box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
-                color: #fff;
-            }
-
-        /* Botão TabSheet - Cyan/Teal */
-        .btn-tabsheet {
-            background: linear-gradient(135deg, #06b6d4, #14b8a6);
-            border: none;
-            padding: 0.5rem 1rem;
-            font-weight: 600;
-            border-radius: 8px;
-            color: #fff;
-            font-size: 0.85rem;
-            transition: all 0.2s ease;
-        }
-
-            .btn-tabsheet:hover {
-                background: linear-gradient(135deg, #0891b2, #0d9488);
-                transform: translateY(-1px);
-                box-shadow: 0 4px 12px rgba(6, 182, 212, 0.4);
-                color: #fff;
-            }
-
-            .btn-tabsheet:disabled {
-                background: linear-gradient(135deg, #64748b, #475569);
-                cursor: not-allowed;
-                transform: none;
-                box-shadow: none;
-            }
-
-        .btn-outline-secondary {
-            border-color: var(--border-color);
-            color: var(--text-secondary);
-            font-size: 0.85rem;
-        }
-
-            .btn-outline-secondary:hover {
-                background: var(--bg-tertiary);
-                border-color: var(--primary-color);
-                color: var(--primary-color);
-            }
-
-        [data-theme="dark"] .btn-outline-secondary {
-            border-color: var(--bg-tertiary);
-            color: var(--text-secondary);
-        }
-
-            [data-theme="dark"] .btn-outline-secondary:hover {
-                background: var(--bg-tertiary);
-                color: #ffffff;
-                border-color: var(--primary-light);
-            }
-
-        /* ==================== INPUTS E FORMULÁRIOS ==================== */
         .form-control, .form-select {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-            border-radius: 6px;
-            font-size: 0.85rem;
-            padding: 0.4rem 0.6rem;
+            background-color: #334155;
+            border: 1px solid #475569;
+            color: var(--text-light);
         }
 
-            .form-control:focus, .form-select:focus {
-                background: var(--bg-secondary);
-                border-color: var(--primary-color);
-                box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15);
-                color: var(--text-primary);
-            }
-
-        [data-theme="dark"] .form-control,
-        [data-theme="dark"] .form-select {
-            background: var(--bg-tertiary);
-            border: 1px solid var(--bg-tertiary);
-            color: #ffffff;
+        .form-control:focus, .form-select:focus {
+            background-color: #334155;
+            border-color: var(--primary-color);
+            color: var(--text-light);
+            box-shadow: 0 0 0 0.25rem rgba(99, 102, 241, 0.25);
         }
 
-            [data-theme="dark"] .form-control:focus,
-            [data-theme="dark"] .form-select:focus {
-                background: var(--bg-tertiary);
-                border-color: var(--primary-light);
-                box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.3);
-                color: #ffffff;
-            }
-
-        .form-control::placeholder {
-            color: var(--text-muted);
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
         }
 
-        .form-label {
-            color: var(--text-secondary);
-            font-weight: 500;
-            font-size: 0.8rem;
-            margin-bottom: 0.25rem;
-        }
+        .btn-success { background-color: var(--success-color); border: none; }
+        .btn-danger { background-color: var(--danger-color); border: none; }
 
-        [data-theme="dark"] .form-label {
-            color: var(--text-secondary);
-        }
-
-        .form-check-input {
-            background-color: var(--bg-secondary);
-            border-color: var(--border-color);
-            width: 1rem;
-            height: 1rem;
-        }
-
-            .form-check-input:checked {
-                background-color: var(--primary-color);
-                border-color: var(--primary-color);
-            }
-
-        [data-theme="dark"] .form-check-input {
-            background-color: var(--bg-tertiary);
-            border-color: var(--bg-hover);
-        }
-
-        /* ==================== SEARCH BOX ==================== */
-        .search-box {
-            position: relative;
-        }
-
-            .search-box i {
-                position: absolute;
-                left: 10px;
-                top: 50%;
-                transform: translateY(-50%);
-                color: var(--text-muted);
-                font-size: 0.8rem;
-            }
-
-            .search-box input {
-                padding-left: 32px;
-            }
-
-        /* ==================== ACCORDION/SEÇÕES ==================== */
-        .config-section {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            margin-bottom: 0.5rem;
-            overflow: hidden;
-        }
-
-        [data-theme="dark"] .config-section {
-            border: none;
-        }
-
-        .config-section-header {
-            background: var(--bg-tertiary);
-            padding: 0.5rem 0.75rem;
-            cursor: pointer;
+        .step-indicator {
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            margin-bottom: 30px;
+            padding: 0 50px;
+            position: relative;
+        }
+        
+        .step-indicator::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 60px;
+            right: 60px;
+            height: 2px;
+            background-color: #334155;
+            z-index: 0;
+            transform: translateY(-50%);
         }
 
-            .config-section-header:hover {
-                background: var(--bg-hover);
-            }
-
-            .config-section-header h6 {
-                margin: 0;
-                font-weight: 600;
-                font-size: 0.8rem;
-                display: flex;
-                align-items: center;
-                gap: 0.4rem;
-                color: var(--text-primary);
-            }
-
-                .config-section-header h6 i {
-                    color: var(--primary-color);
-                    font-size: 0.75rem;
-                }
-
-            .config-section-header .toggle-icon {
-                transition: transform 0.3s;
-                color: var(--text-muted);
-                font-size: 0.7rem;
-            }
-
-            .config-section-header.collapsed .toggle-icon {
-                transform: rotate(-90deg);
-            }
-
-        .config-section-body {
-            padding: 0.75rem;
-            border-top: 1px solid var(--border-light);
-        }
-
-        [data-theme="dark"] .config-section-body {
-            border-top: none;
-        }
-
-        /* ==================== FK CARDS ==================== */
-        .fk-card {
-            background: var(--bg-tertiary);
-            border-left: 3px solid var(--primary-color);
-            padding: 0.5rem 0.75rem;
-            margin-bottom: 0.4rem;
-            border-radius: 0 6px 6px 0;
-            font-size: 0.8rem;
-        }
-
-            .fk-card .fk-title {
-                font-weight: 600;
-                color: var(--primary-color);
-            }
-
-            .fk-card .fk-detail {
-                font-size: 0.7rem;
-                color: var(--text-secondary);
-            }
-
-        /* ==================== MODAIS ==================== */
-        .modal-content {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-        }
-
-        [data-theme="dark"] .modal-content {
-            border: none;
-        }
-
-        .modal-header {
-            background: var(--bg-tertiary);
-            border-bottom: 1px solid var(--border-color);
-            border-radius: 12px 12px 0 0;
-            padding: 0.75rem 1rem;
-        }
-
-        [data-theme="dark"] .modal-header {
-            border-bottom: none;
-        }
-
-        .modal-footer {
-            border-top: 1px solid var(--border-color);
-            padding: 0.75rem 1rem;
-        }
-
-        [data-theme="dark"] .modal-footer {
-            border-top: none;
-        }
-
-        .modal-title {
-            color: var(--text-primary);
-            font-size: 1rem;
-        }
-
-        .modal-body {
-            padding: 1rem;
-        }
-
-        [data-theme="dark"] .modal-header .btn-close {
-            filter: invert(1) grayscale(100%) brightness(200%);
-        }
-
-        /* ==================== NAV TABS ==================== */
-        .nav-tabs {
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        [data-theme="dark"] .nav-tabs {
-            border-bottom: 1px solid var(--bg-tertiary);
-        }
-
-        .nav-tabs .nav-link {
-            color: var(--text-secondary);
-            border: none;
-            padding: 0.5rem 1rem;
-            font-weight: 500;
-            font-size: 0.8rem;
-        }
-
-            .nav-tabs .nav-link:hover {
-                color: var(--primary-color);
-                border-color: transparent;
-            }
-
-            .nav-tabs .nav-link.active {
-                background: transparent;
-                color: var(--primary-color);
-                border: none;
-                border-bottom: 2px solid var(--primary-color);
-            }
-
-        [data-theme="dark"] .nav-tabs .nav-link {
-            color: var(--text-secondary);
-        }
-
-            [data-theme="dark"] .nav-tabs .nav-link.active {
-                color: var(--primary-light);
-                border-bottom-color: var(--primary-light);
-            }
-
-        .tab-content {
-            background: var(--bg-secondary);
-            border-radius: 0 0 8px 8px;
-            padding: 0.75rem;
-        }
-
-        /* ==================== LOADING OVERLAY ==================== */
-        #loadingOverlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.95);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-        }
-
-        [data-theme="dark"] #loadingOverlay {
-            background: rgba(10, 14, 26, 0.95);
-        }
-
-        #loadingOverlay h5 {
-            color: var(--text-primary);
-            font-size: 1rem;
-        }
-
-        #loadingOverlay p {
-            color: var(--text-secondary);
-            font-size: 0.85rem;
-        }
-
-        /* ==================== STATS CARDS ==================== */
-        .stats-card {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 0.6rem 0.5rem;
-            text-align: center;
-        }
-
-        [data-theme="dark"] .stats-card {
-            border: none;
-        }
-
-        .stats-card .stats-number {
-            font-size: 1.4rem;
-            font-weight: 700;
-            color: var(--primary-color);
-            line-height: 1.2;
-        }
-
-        .stats-card .stats-label {
-            font-size: 0.6rem;
+        .step-item {
+            z-index: 1;
+            background-color: var(--bg-card);
+            padding: 10px 20px;
+            border-radius: 20px;
+            border: 2px solid #334155;
             color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.03em;
             font-weight: 600;
-        }
-
-        [data-theme="dark"] .stats-card .stats-number {
-            color: var(--primary-light);
-        }
-
-        /* ==================== TOAST ==================== */
-        .toast {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-
-        [data-theme="dark"] .toast {
-            border: none;
-        }
-
-        .toast-header {
-            background: var(--bg-tertiary);
-            border-bottom: 1px solid var(--border-color);
-            padding: 0.5rem 0.75rem;
-        }
-
-        [data-theme="dark"] .toast-header {
-            border-bottom: none;
-        }
-
-        /* ==================== COLUMN CONFIG TABLE ==================== */
-        .column-config-table {
-            font-size: 0.75rem;
-        }
-
-            .column-config-table th {
-                font-size: 0.6rem;
-                text-transform: uppercase;
-                letter-spacing: 0.03em;
-                padding: 0.3rem;
-            }
-
-            .column-config-table td {
-                padding: 0.3rem;
-            }
-
-            .column-config-table .form-control,
-            .column-config-table .form-select {
-                font-size: 0.75rem;
-                padding: 0.2rem 0.4rem;
-            }
-
-        /* ==================== CODE ELEMENTS ==================== */
-        code {
-            background: var(--bg-tertiary);
-            padding: 0.15em 0.35em;
-            border-radius: 4px;
-            font-size: 0.8em;
-            color: var(--primary-dark);
-        }
-
-        [data-theme="dark"] code {
-            background: var(--bg-tertiary);
-            color: #a5b4fc;
-        }
-
-        .text-info code {
-            color: var(--accent-color);
-            background: rgba(6, 182, 212, 0.1);
-        }
-
-        [data-theme="dark"] .text-info code {
-            color: #22d3ee;
-            background: rgba(6, 182, 212, 0.15);
-        }
-
-        /* ==================== SCROLLBAR ==================== */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: var(--bg-tertiary);
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: var(--border-color);
-            border-radius: 3px;
-        }
-
-            ::-webkit-scrollbar-thumb:hover {
-                background: var(--text-muted);
-            }
-
-        [data-theme="dark"] ::-webkit-scrollbar-track {
-            background: var(--bg-primary);
-        }
-
-        [data-theme="dark"] ::-webkit-scrollbar-thumb {
-            background: var(--bg-hover);
-        }
-
-            [data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
-                background: var(--text-muted);
-            }
-
-        /* ==================== UTILITÁRIOS ==================== */
-        .text-muted {
-            color: var(--text-secondary) !important;
-        }
-
-        [data-theme="dark"] .text-muted {
-            color: var(--text-muted) !important;
-        }
-
-        a {
-            color: var(--primary-color);
-        }
-
-            a:hover {
-                color: var(--primary-dark);
-            }
-
-        [data-theme="dark"] a:hover {
-            color: var(--primary-light);
-        }
-
-        .spinner-border {
-            color: var(--primary-color) !important;
-            width: 2rem;
-            height: 2rem;
-        }
-
-        /* ==================== HEADER DA TABELA ==================== */
-        .table-header-card .card-body {
-            padding: 0.75rem 1rem;
-        }
-
-        .table-header-card h4 {
-            font-size: 1.1rem;
-            margin-bottom: 0.25rem;
-        }
-
-        .table-header-card p {
-            font-size: 0.8rem;
-            margin-bottom: 0;
-        }
-
-        [data-theme="dark"] .table-header-card h4,
-        [data-theme="dark"] #tabelaNome {
-            color: #ffffff !important;
-        }
-
-        [data-theme="dark"] #tabelaDescricao {
-            color: var(--text-secondary) !important;
-        }
-
-        /* ==================== ESPAÇAMENTOS ==================== */
-        .mb-4 {
-            margin-bottom: 1rem !important;
-        }
-
-        .mb-3 {
-            margin-bottom: 0.75rem !important;
-        }
-
-        .gap-3 {
-            gap: 0.75rem !important;
-        }
-
-        .py-5 {
-            padding-top: 2rem !important;
-            padding-bottom: 2rem !important;
-        }
-
-        /* ==================== ÍCONES DE STATUS ==================== */
-        .status-icon {
-            width: 18px;
-            text-align: center;
-            flex-shrink: 0;
-        }
-
-            .status-icon .fa-exclamation-circle {
-                color: #ef4444;
-            }
-
-            .status-icon .fa-exclamation-triangle {
-                color: #f59e0b;
-            }
-
-        [data-theme="dark"] .status-icon .fa-exclamation-circle {
-            color: #f87171;
-        }
-
-        [data-theme="dark"] .status-icon .fa-exclamation-triangle {
-            color: #fbbf24;
-        }
-
-        /* ==================== PLACEHOLDER ==================== */
-        #placeholderPanel .card-body {
-            padding: 2rem;
-        }
-
-        #placeholderPanel i {
-            font-size: 2.5rem;
-        }
-
-        #placeholderPanel h4 {
-            font-size: 1rem;
-            margin-top: 1rem;
-        }
-
-        #placeholderPanel p {
-            font-size: 0.85rem;
-        }
-
-        /* ==================== THEME TOGGLE BUTTON ==================== */
-        .theme-toggle {
-            background: var(--bg-tertiary);
-            border: 1px solid var(--border-color);
-            color: var(--text-secondary);
-            width: 32px;
-            height: 32px;
-            border-radius: 6px;
             display: flex;
             align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.2s;
+            gap: 10px;
+            transition: all 0.3s;
         }
 
-            .theme-toggle:hover {
-                background: var(--bg-hover);
-                color: var(--primary-color);
-                border-color: var(--primary-color);
-            }
-
-        [data-theme="dark"] .theme-toggle {
-            border: none;
+        .step-item.active {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.3);
         }
 
-        .theme-toggle i {
-            font-size: 0.9rem;
+        .step-item.completed {
+            border-color: var(--success-color);
+            color: var(--success-color);
         }
 
-        /* ==================== TRANSIÇÕES SUAVES ==================== */
-        body, .card, .navbar, .modal-content, .form-control, .form-select,
-        .btn, .table, .badge, .stats-card, .config-section, .fk-card {
-            transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+        .json-viewer {
+            background-color: #0f172a;
+            color: #a5b4fc;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Consolas', monospace;
+            font-size: 0.85rem;
+            height: 400px;
+            overflow: auto;
+            border: 1px solid #334155;
+        }
+        
+        .comparison-table td, .comparison-table th {
+            vertical-align: middle;
         }
     </style>
 </head>
 <body>
-    <!-- Loading Overlay -->
-    <div id="loadingOverlay">
-        <div class="text-center">
-            <div class="spinner-border mb-3" style="width: 3rem; height: 3rem;"></div>
-            <h5>Gerando código Full-Stack...</h5>
-            <p>Aguarde enquanto todos os arquivos são gerados</p>
+
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h1 class="display-6 fw-bold text-primary"><i class="fas fa-magic me-2"></i>Gerador Frontend Enterprise</h1>
+        <p class="text-muted">Gere controllers, views e services diretamente para seu projeto</p>
+    </div>
+
+    <!-- STEPPER -->
+    <div class="step-indicator">
+        <div class="step-item active" id="step1-indicator">
+            <i class="fas fa-1"></i> Seleção
+        </div>
+        <div class="step-item" id="step2-indicator">
+            <i class="fas fa-2"></i> Análise & Comparação
+        </div>
+        <div class="step-item" id="step3-indicator">
+            <i class="fas fa-3"></i> Geração
         </div>
     </div>
 
-    <!-- Navbar -->
-    <nav class="navbar navbar-light mb-3">
-        <div class="container-fluid px-3">
-            <a class="navbar-brand" href="#">
-                <i class="fas fa-rocket me-2"></i>
-                Gerador Full-Stack v3.0
-            </a>
-            <div class="d-flex align-items-center gap-2">
-                <span class="text-muted" style="font-size: 0.8rem;">
-                    <i class="fas fa-database me-1"></i>
-                    <span id="totalTabelas">@ViewBag.TotalTabelas</span> tabelas
-                </span>
-                <button class="btn btn-sm btn-outline-secondary" onclick="refreshCache()" title="Recarregar Cache">
-                    <i class="fas fa-sync-alt"></i>
-                </button>
-                <button class="theme-toggle" onclick="toggleDarkMode()" title="Alternar tema" id="themeToggle">
-                    <i class="fas fa-moon" id="themeIcon"></i>
+    <!-- STEP 1: SELECTION -->
+    <div class="card" id="step1">
+        <div class="card-header"><i class="fas fa-search me-2"></i>Passo 1: Selecionar Entidade</div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Módulo</label>
+                    <select class="form-select" id="slcModule" onchange="loadEntities()">
+                        <option value="">Selecione um módulo...</option>
+                        @foreach (var module in Model)
+                        {
+                            <option value="@module.Name">@module.DisplayName (@module.EntityCount)</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Entidade</label>
+                    <select class="form-select" id="slcEntity" disabled>
+                        <option value="">Aguardando seleção do módulo...</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="d-flex justify-content-end mt-4">
+                <button class="btn btn-primary" id="btnGoToStep2" onclick="goToStep2()" disabled>
+                    Carregar Metadados <i class="fas fa-arrow-right ms-2"></i>
                 </button>
             </div>
         </div>
-    </nav>
+    </div>
 
-    <div class="container-fluid px-3">
-        <div class="row g-3">
-            <!-- PAINEL ESQUERDO: Lista de Tabelas -->
-            <div class="col-lg-4 col-xl-3">
-                <div class="card mb-3">
-                    <div class="card-header d-flex justify-content-between align-items-center py-2">
-                        <span><i class="fas fa-table me-2"></i>Tabelas</span>
-                        <span class="badge bg-secondary" id="tabelasCount">@Model.Count</span>
+    <!-- STEP 2: ANALYSIS & COMPARISON -->
+    <div class="card d-none" id="step2">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span><i class="fas fa-microscope me-2"></i>Passo 2: Análise e Comparação</span>
+            <button class="btn btn-sm btn-outline-light" onclick="goToStep1()">
+                <i class="fas fa-arrow-left me-1"></i> Voltar
+            </button>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <!-- LEFT: INFO & JSON -->
+                <div class="col-md-5">
+                    <h6 class="text-primary mb-3">Metadados da API (JSON)</h6>
+                    <div class="mb-3">
+                        <label class="form-label small text-muted">Entidade</label>
+                        <input type="text" class="form-control form-control-sm" id="txtEntityName" readonly>
                     </div>
-                    <div class="card-body p-2">
-                        <!-- Busca -->
-                        <div class="search-box mb-2">
-                            <i class="fas fa-search"></i>
-                            <input type="text" id="searchInput" class="form-control form-control-sm"
-                                   placeholder="Buscar tabela..." onkeyup="filtrarTabelas()" />
+                    <div class="mb-3">
+                        <label class="form-label small text-muted">Rota API</label>
+                        <input type="text" class="form-control form-control-sm" id="txtApiRoute" readonly>
+                    </div>
+                    
+                    <textarea id="jsonPreview" class="form-control json-viewer mb-3" readonly></textarea>
+                </div>
+
+                <!-- RIGHT: COMPARISON RESULTS -->
+                <div class="col-md-7">
+                    <h6 class="text-primary mb-3">Comparação com Banco de Dados</h6>
+                    
+                    <div id="comparisonLoader" class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status"></div>
+                        <p class="mt-2 text-muted">Comparando com estrutura do banco...</p>
+                    </div>
+
+                    <div id="comparisonResult" class="d-none">
+                        <!-- STATUS ALERT -->
+                        <div id="statusAlert" class="alert alert-success d-flex align-items-center mb-3">
+                            <i class="fas fa-check-circle fs-4 me-3"></i>
+                            <div>
+                                <strong id="statusTitle">Sucesso!</strong>
+                                <div id="statusMsg" class="small">A estrutura da API corresponde ao Banco de Dados.</div>
+                            </div>
                         </div>
 
-                        <!-- Lista de Tabelas -->
-                        <div class="table-responsive" style="max-height: 60vh; overflow-y: auto;">
-                            <table class="table table-hover table-sm mb-0" id="tabelasTable">
-                                <thead class="sticky-top">
+                        <!-- MISMATCH TABLE -->
+                        <div id="mismatchContainer" class="d-none">
+                             <table class="table table-dark table-sm table-bordered comparison-table">
+                                <thead>
                                     <tr>
-                                        <th style="width: 28px;">
-                                            <input type="checkbox" class="form-check-input" id="selectAll"
-                                                   onchange="toggleSelectAll(this)" />
-                                        </th>
-                                        <th>Tabela</th>
-                                        <th class="text-center" style="width: 60px;">Info</th>
+                                        <th>Propriedade/Coluna</th>
+                                        <th>API (JSON)</th>
+                                        <th>Banco (SQL)</th>
+                                        <th>Status</th>
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    @foreach (var tabela in Model.OrderBy(t => t.NomeTabela))
-                                    {
-                                        var hasNoPk = !tabela.HasPrimaryKey;
-                                        var hasCompositePk = tabela.HasCompositePrimaryKey;
-
-                                        <tr class="tabela-row"
-                                            data-tabela="@tabela.NomeTabela"
-                                            data-has-pk="@tabela.HasPrimaryKey.ToString().ToLower()"
-                                            data-composite-pk="@tabela.HasCompositePrimaryKey.ToString().ToLower()"
-                                            onclick="selectTabela('@tabela.NomeTabela', this)">
-                                            <td onclick="event.stopPropagation();">
-                                                <input type="checkbox" class="form-check-input tabela-check"
-                                                       value="@tabela.NomeTabela" />
-                                            </td>
-                                            <td>
-                                                <div class="d-flex align-items-center gap-2">
-                                                    <span class="status-icon">
-                                                        @if (hasNoPk)
-                                                        {
-                                                            <i class="fas fa-exclamation-circle" title="Sem Primary Key - Será necessário definir"></i>
-                                                        }
-                                                        else if (hasCompositePk)
-                                                        {
-                                                            <i class="fas fa-exclamation-triangle" title="PK Composta"></i>
-                                                        }
-                                                    </span>
-                                                    <span class="fw-medium">@tabela.NomeTabela</span>
-                                                </div>
-                                            </td>
-                                            <td class="text-center">
-                                                <span class="badge bg-secondary" title="Colunas">@tabela.Colunas.Count</span>
-                                                @if (tabela.ForeignKeys.Count > 0)
-                                                {
-                                                    <span class="badge badge-fk" title="FKs">@tabela.ForeignKeys.Count</span>
-                                                }
-                                            </td>
-                                        </tr>
-                                    }
+                                <tbody id="mismatchBody">
+                                    <!-- Rows injected via JS -->
                                 </tbody>
-                            </table>
+                             </table>
                         </div>
-                    </div>
-                </div>
 
-                <!-- Ações em Lote -->
-                <div class="card">
-                    <div class="card-body p-2">
-                        <div class="d-grid gap-2">
-                            <button class="btn btn-generate btn-sm" onclick="abrirModalConfiguracao()" id="btnConfigurar" disabled>
-                                <i class="fas fa-cog me-1"></i>Configurar Geração
-                            </button>
-                            <button class="btn btn-outline-secondary btn-sm" onclick="gerarLoteFullStack()" id="btnGerarLote" disabled>
-                                <i class="fas fa-layer-group me-1"></i>Gerar Selecionadas
-                            </button>
-                            <!-- NOVO BOTÃO TABSHEET -->
-                            <button class="btn btn-tabsheet btn-sm" onclick="abrirModalTabSheet()" id="btnGerarTabSheet" disabled>
-                                <i class="fas fa-folder-tree me-1"></i>Gerar TabSheet
-                            </button>
-                        </div>
-                        <div class="mt-2 text-center">
-                            <small class="text-muted" style="font-size: 0.7rem;">
-                                <span id="selecionadasCount">0</span> tabela(s) selecionada(s)
-                            </small>
+                         <!-- MISSING COLUMNS -->
+                        <div id="missingContainer" class="d-none mt-3">
+                             <h6 class="text-warning small"><i class="fas fa-exclamation-triangle me-1"></i> Colunas não encontradas no Banco:</h6>
+                             <ul id="missingList" class="text-danger small"></ul>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- PAINEL CENTRAL: Detalhes da Tabela -->
-            <div class="col-lg-8 col-xl-9">
-                <!-- Placeholder quando nada selecionado -->
-                <div id="placeholderPanel" class="card">
-                    <div class="card-body text-center py-5">
-                        <i class="fas fa-hand-pointer fa-4x text-muted mb-4"></i>
-                        <h4 class="text-muted">Selecione uma tabela</h4>
-                        <p class="text-muted mb-0">
-                            Clique em uma tabela na lista à esquerda para ver seus detalhes
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Detalhes da Tabela (inicialmente oculto) -->
-                <div id="detailsPanel" style="display: none;">
-                    <!-- Header com Nome da Tabela -->
-                    <div class="card table-header-card mb-3">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h4 class="mb-0">
-                                        <i class="fas fa-table me-2 text-primary" style="font-size: 0.9rem;"></i>
-                                        <span id="tabelaNome">-</span>
-                                    </h4>
-                                    <p class="text-muted mb-0" id="tabelaDescricao">-</p>
-                                </div>
-                                <div class="d-flex gap-2">
-                                    <!-- BOTÃO TABSHEET NO HEADER -->
-                                    <button class="btn btn-tabsheet btn-sm" onclick="abrirModalTabSheet()" title="Gerar TabSheet (Mestre/Detalhe)">
-                                        <i class="fas fa-folder-tree me-1"></i>TabSheet
-                                    </button>
-                                    <button class="btn btn-generate btn-sm" onclick="abrirModalConfiguracao()">
-                                        <i class="fas fa-rocket me-1"></i>Gerar Full-Stack
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Alertas -->
-                            <div id="alertasContainer" class="mt-2"></div>
-                        </div>
-                    </div>
-
-                    <!-- Stats Cards - mais compactos -->
-                    <div class="row g-2 mb-3">
-                        <div class="col-3">
-                            <div class="stats-card">
-                                <div class="stats-number" id="statsColunas">0</div>
-                                <div class="stats-label">Colunas</div>
-                            </div>
-                        </div>
-                        <div class="col-3">
-                            <div class="stats-card">
-                                <div class="stats-number" id="statsFks">0</div>
-                                <div class="stats-label">Foreign Keys</div>
-                            </div>
-                        </div>
-                        <div class="col-3">
-                            <div class="stats-card">
-                                <div class="stats-number" id="statsIndices">0</div>
-                                <div class="stats-label">Índices</div>
-                            </div>
-                        </div>
-                        <div class="col-3">
-                            <div class="stats-card">
-                                <div class="stats-number" id="statsPk" style="font-size: 1rem;">-</div>
-                                <div class="stats-label">Primary Key</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Tabs: Colunas, FKs, Índices -->
-                    <div class="card">
-                        <div class="card-body p-0">
-                            <ul class="nav nav-tabs" role="tablist">
-                                <li class="nav-item">
-                                    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tabColunas">
-                                        <i class="fas fa-columns me-2"></i>Colunas
-                                    </button>
-                                </li>
-                                <li class="nav-item">
-                                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabFks">
-                                        <i class="fas fa-link me-2"></i>Foreign Keys
-                                    </button>
-                                </li>
-                                <li class="nav-item">
-                                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabIndices">
-                                        <i class="fas fa-sort-amount-down me-2"></i>Índices
-                                    </button>
-                                </li>
-                            </ul>
-                            <div class="tab-content">
-                                <!-- Tab Colunas -->
-                                <div class="tab-pane fade show active" id="tabColunas">
-                                    <div class="table-responsive" style="max-height: 400px;">
-                                        <table class="table table-hover table-sm mb-0">
-                                            <thead class="sticky-top" style="background: rgba(15, 23, 42, 0.9);">
-                                                <tr>
-                                                    <th>Coluna</th>
-                                                    <th>Tipo SQL</th>
-                                                    <th>Tipo C#</th>
-                                                    <th>Tamanho</th>
-                                                    <th class="text-center">Null</th>
-                                                    <th class="text-center">Flags</th>
-                                                    <th>Descrição</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="colunasBody"></tbody>
-                                        </table>
-                                    </div>
-                                </div>
-
-                                <!-- Tab FKs -->
-                                <div class="tab-pane fade" id="tabFks">
-                                    <div id="fksContainer"></div>
-                                </div>
-
-                                <!-- Tab Índices -->
-                                <div class="tab-pane fade" id="tabIndices">
-                                    <div class="table-responsive">
-                                        <table class="table table-hover table-sm mb-0">
-                                            <thead>
-                                                <tr>
-                                                    <th>Nome</th>
-                                                    <th>Colunas</th>
-                                                    <th class="text-center">Unique</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="indicesBody"></tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+             <div class="d-flex justify-content-end mt-4">
+                <button class="btn btn-primary" id="btnGoToStep3" onclick="goToStep3()">
+                    Validar e Prosseguir <i class="fas fa-arrow-right ms-2"></i>
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- =========================================================================
-         MODAL DE CONFIGURAÇÃO FULL-STACK
-         ========================================================================= -->
-    <div class="modal fade" id="modalConfiguracao" tabindex="-1" data-bs-backdrop="static">
-        <div class="modal-dialog modal-xl modal-dialog-scrollable">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">
-                        <i class="fas fa-cog me-2"></i>
-                        Configurar Geração: <span id="modalTabelaNome">-</span>
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <!-- Alertas no Modal -->
-                    <div id="modalAlertas"></div>
-
-                    <!-- SEÇÃO 1: IDENTIFICAÇÃO -->
-                    <div class="config-section">
-                        <div class="config-section-header" onclick="toggleSection(this)">
-                            <h6><i class="fas fa-tag"></i> Identificação</h6>
-                            <i class="fas fa-chevron-down toggle-icon"></i>
-                        </div>
-                        <div class="config-section-body">
-                            <div class="row">
-                                <div class="col-md-4 mb-3">
-                                    <label class="form-label">Código da Função *</label>
-                                    <div class="input-group">
-                                        <input type="text" class="form-control" id="cfgCdFuncao"
-                                               placeholder="Ex: SISCARGO" required />
-                                        <button class="btn btn-outline-secondary" type="button"
-                                                onclick="abrirModalFuncoes()">
-                                            <i class="fas fa-search"></i>
-                                        </button>
-                                    </div>
-                                    <small id="cfgDcFuncao" class="text-muted"></small>
-                                </div>
-                                <div class="col-md-2 mb-3">
-                                    <label class="form-label">Sistema</label>
-                                    <select class="form-select" id="cfgCdSistema">
-                                        <option value="RHU">RHU</option>
-                                        <option value="SEG">SEG</option>
-                                        <option value="CPO">CPO</option>
-                                        <option value="TRE">TRE</option>
-                                        <option value="MSO">MSO</option>
-                                        <option value="AVA">AVA</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">Título / Display Name *</label>
-                                    <input type="text" class="form-control" id="cfgDisplayName"
-                                           placeholder="Ex: Cadastro de Cargos" />
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-12 mb-3">
-                                    <label class="form-label">Descrição</label>
-                                    <input type="text" class="form-control" id="cfgDescricao"
-                                           placeholder="Descrição da funcionalidade..." />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- SEÇÃO 1.5: CHAVE PRIMÁRIA (só aparece para tabelas sem PK) -->
-                    <div class="config-section" id="secaoPrimaryKey" style="display: none;">
-                        <div class="config-section-header" onclick="toggleSection(this)">
-                            <h6><i class="fas fa-key text-warning"></i> Chave Primária</h6>
-                            <i class="fas fa-chevron-down toggle-icon"></i>
-                        </div>
-                        <div class="config-section-body">
-                            <div class="alert alert-warning py-2 mb-3" style="font-size: 0.8rem;">
-                                <i class="fas fa-exclamation-triangle me-2"></i>
-                                <strong>Esta tabela não possui chave primária definida no banco.</strong>
-                                Selecione a(s) coluna(s) que serão usadas como chave primária na entidade.
-                            </div>
-                            <div class="table-responsive" style="max-height: 250px;">
-                                <table class="table table-sm column-config-table mb-0">
-                                    <thead class="sticky-top" style="background: var(--bg-tertiary);">
-                                        <tr>
-                                            <th style="width: 40px;">
-                                                <i class="fas fa-key text-warning" title="Marcar como PK"></i>
-                                            </th>
-                                            <th>Coluna</th>
-                                            <th>Tipo SQL</th>
-                                            <th>Tipo C#</th>
-                                            <th style="width: 60px;">Nullable</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="pkColunasBody"></tbody>
-                                </table>
-                            </div>
-                            <div class="mt-2">
-                                <small class="text-muted">
-                                    <i class="fas fa-info-circle me-1"></i>
-                                    Dica: Prefira colunas NOT NULL. Para PK composta, marque múltiplas colunas.
-                                </small>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- SEÇÃO 2: MENU E NAVEGAÇÃO -->
-                    <div class="config-section">
-                        <div class="config-section-header collapsed" onclick="toggleSection(this)">
-                            <h6><i class="fas fa-sitemap"></i> Menu e Navegação</h6>
-                            <i class="fas fa-chevron-down toggle-icon"></i>
-                        </div>
-                        <div class="config-section-body" style="display: none;">
-                            <div class="row">
-                                <div class="col-md-4 mb-3">
-                                    <label class="form-label">Módulo</label>
-                                    <select class="form-select" id="cfgModulo" onchange="atualizarRota()">
-                                        @foreach (var m in modulos ?? new List<GeradorEntidades.Models.ModuloConfig>())
-                                        {
-                                            <option value="@m.Nome" data-rota="@m.Rota" data-sistema="@m.CdSistema">
-                                                @m.Nome
-                                            </option>
-                                        }
-                                    </select>
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    <label class="form-label">Rota</label>
-                                    <input type="text" class="form-control" id="cfgModuloRota"
-                                           placeholder="gestaodepessoas" />
-                                </div>
-                                <div class="col-md-2 mb-3">
-                                    <label class="form-label">Ordem</label>
-                                    <input type="number" class="form-control" id="cfgMenuOrder" value="10" />
-                                </div>
-                                <div class="col-md-2 mb-3">
-                                    <label class="form-label">Ícone</label>
-                                    <input type="text" class="form-control" id="cfgIcone"
-                                           value="fas fa-table" placeholder="fas fa-xxx" />
-                                </div>
-                            </div>
-                            <div class="form-check">
-                                <input type="checkbox" class="form-check-input" id="cfgGerarMenuItem" checked />
-                                <label class="form-check-label" for="cfgGerarMenuItem">
-                                    Adicionar ao menu automaticamente
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- SEÇÃO 3: COLUNAS DA LISTAGEM -->
-                    <div class="config-section">
-                        <div class="config-section-header collapsed" onclick="toggleSection(this)">
-                            <h6><i class="fas fa-list"></i> Colunas da Listagem (DataTable)</h6>
-                            <i class="fas fa-chevron-down toggle-icon"></i>
-                        </div>
-                        <div class="config-section-body" style="display: none;">
-                            <div class="table-responsive" style="max-height: 300px;">
-                                <table class="table table-sm column-config-table mb-0">
-                                    <thead class="sticky-top" style="background: rgba(15, 23, 42, 0.9);">
-                                        <tr>
-                                            <th style="width: 40px;">
-                                                <input type="checkbox" class="form-check-input"
-                                                       id="selectAllListagem" onchange="toggleAllListagem(this)" checked />
-                                            </th>
-                                            <th>Coluna</th>
-                                            <th>Título</th>
-                                            <th style="width: 100px;">Formato</th>
-                                            <th style="width: 80px;">Largura</th>
-                                            <th style="width: 80px;">Alinhamento</th>
-                                            <th style="width: 50px;" class="text-center">Ord</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="listagemColunasBody"></tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- SEÇÃO 4: CAMPOS DO FORMULÁRIO -->
-                    <div class="config-section">
-                        <div class="config-section-header collapsed" onclick="toggleSection(this)">
-                            <h6><i class="fas fa-edit"></i> Campos do Formulário</h6>
-                            <i class="fas fa-chevron-down toggle-icon"></i>
-                        </div>
-                        <div class="config-section-body" style="display: none;">
-                            <div class="table-responsive" style="max-height: 300px;">
-                                <table class="table table-sm column-config-table mb-0">
-                                    <thead class="sticky-top" style="background: rgba(15, 23, 42, 0.9);">
-                                        <tr>
-                                            <th style="width: 40px;">
-                                                <input type="checkbox" class="form-check-input"
-                                                       id="selectAllFormulario" onchange="toggleAllFormulario(this)" checked />
-                                            </th>
-                                            <th>Campo</th>
-                                            <th>Label</th>
-                                            <th style="width: 120px;">Tipo Input</th>
-                                            <th style="width: 80px;">Colunas</th>
-                                            <th style="width: 50px;" class="text-center">Obrig</th>
-                                            <th style="width: 50px;" class="text-center">Desab</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="formularioColunasBody"></tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- SEÇÃO 5: RELACIONAMENTOS (FKs) -->
-                    <div class="config-section">
-                        <div class="config-section-header collapsed" onclick="toggleSection(this)">
-                            <h6><i class="fas fa-link"></i> Relacionamentos (Navigation Properties)</h6>
-                            <i class="fas fa-chevron-down toggle-icon"></i>
-                        </div>
-                        <div class="config-section-body" style="display: none;">
-                            <div id="fksConfigContainer" class="mb-3"></div>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-check">
-                                        <input type="checkbox" class="form-check-input" id="cfgGerarNavigation" checked />
-                                        <label class="form-check-label" for="cfgGerarNavigation">
-                                            Gerar Navigation Properties
-                                        </label>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-check">
-                                        <input type="checkbox" class="form-check-input" id="cfgApenasNavigationPorGuid" />
-                                        <label class="form-check-label" for="cfgApenasNavigationPorGuid">
-                                            Apenas FKs por Guid (ignorar códigos legados)
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- SEÇÃO 6: OPÇÕES DE GERAÇÃO -->
-                    <div class="config-section">
-                        <div class="config-section-header collapsed" onclick="toggleSection(this)">
-                            <h6><i class="fas fa-sliders-h"></i> Opções de Geração</h6>
-                            <i class="fas fa-chevron-down toggle-icon"></i>
-                        </div>
-                        <div class="config-section-body" style="display: none;">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <h6 class="text-muted mb-3">Backend</h6>
-                                    <div class="form-check mb-2">
-                                        <input type="checkbox" class="form-check-input" id="cfgGerarEntidade" checked />
-                                        <label class="form-check-label" for="cfgGerarEntidade">
-                                            Gerar Entidade.cs (Domain)
-                                        </label>
-                                    </div>
-                                    <div class="form-check mb-2">
-                                        <input type="checkbox" class="form-check-input" id="cfgGerarApiController" />
-                                        <label class="form-check-label" for="cfgGerarApiController">
-                                            Gerar API Controller
-                                        </label>
-                                    </div>
-                                    <div class="form-check mb-2">
-                                        <input type="checkbox" class="form-check-input" id="cfgIsLegacyTable" checked />
-                                        <label class="form-check-label" for="cfgIsLegacyTable">
-                                            Tabela Legada (sem Id Guid auto)
-                                        </label>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <h6 class="text-muted mb-3">Frontend</h6>
-                                    <div class="form-check mb-2">
-                                        <input type="checkbox" class="form-check-input" id="cfgGerarWebController" checked />
-                                        <label class="form-check-label" for="cfgGerarWebController">
-                                            Gerar Web Controller
-                                        </label>
-                                    </div>
-                                    <div class="form-check mb-2">
-                                        <input type="checkbox" class="form-check-input" id="cfgGerarWebModels" checked />
-                                        <label class="form-check-label" for="cfgGerarWebModels">
-                                            Gerar DTOs e ViewModels
-                                        </label>
-                                    </div>
-                                    <div class="form-check mb-2">
-                                        <input type="checkbox" class="form-check-input" id="cfgGerarWebServices" checked />
-                                        <label class="form-check-label" for="cfgGerarWebServices">
-                                            Gerar Services (API Client)
-                                        </label>
-                                    </div>
-                                    <div class="form-check mb-2">
-                                        <input type="checkbox" class="form-check-input" id="cfgGerarView" checked />
-                                        <label class="form-check-label" for="cfgGerarView">
-                                            Gerar View (Index.cshtml)
-                                        </label>
-                                    </div>
-                                    <div class="form-check mb-2">
-                                        <input type="checkbox" class="form-check-input" id="cfgGerarJavaScript" checked />
-                                        <label class="form-check-label" for="cfgGerarJavaScript">
-                                            Gerar JavaScript
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+    <!-- STEP 3: CONFIG & GENERATE -->
+    <div class="card d-none" id="step3">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span><i class="fas fa-cogs me-2"></i>Passo 3: Configuração e Geração</span>
+            <button class="btn btn-sm btn-outline-light" onclick="goToStep2()">
+                <i class="fas fa-arrow-left me-1"></i> Voltar
+            </button>
+        </div>
+         <div class="card-body">
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <h6 class="text-primary">Arquivos a Gerar</h6>
+                    <div class="list-group">
+                         <label class="list-group-item bg-dark text-light border-secondary">
+                            <input class="form-check-input me-2" type="checkbox" id="chkWebController" checked>
+                            Web Controller
+                        </label>
+                        <label class="list-group-item bg-dark text-light border-secondary">
+                            <input class="form-check-input me-2" type="checkbox" id="chkWebModels" checked>
+                            Web ViewModels (DTOs)
+                        </label>
+                         <label class="list-group-item bg-dark text-light border-secondary">
+                            <input class="form-check-input me-2" type="checkbox" id="chkWebServices" checked>
+                            API Service Client
+                        </label>
+                        <label class="list-group-item bg-dark text-light border-secondary">
+                            <input class="form-check-input me-2" type="checkbox" id="chkView" checked>
+                            Razor View (Index/Form)
+                        </label>
+                        <label class="list-group-item bg-dark text-light border-secondary">
+                            <input class="form-check-input me-2" type="checkbox" id="chkJs" checked>
+                            JavaScript File
+                        </label>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-                        <i class="fas fa-times me-2"></i>Cancelar
-                    </button>
-                    <button type="button" class="btn btn-info text-white" onclick="previewFullStack()">
-                        <i class="fas fa-eye me-2"></i>Preview
-                    </button>
-                    <button type="button" class="btn btn-generate" onclick="gerarFullStack()">
-                        <i class="fas fa-download me-2"></i>Gerar e Baixar ZIP
-                    </button>
+                <div class="col-md-6">
+                     <h6 class="text-primary">Configurações Adicionais</h6>
+                     <div class="mb-3">
+                        <label class="form-label">CdFuncao (Opcional)</label>
+                        <input type="text" class="form-control" id="txtCdFuncaoOverride" placeholder="Ex: CAP_COLABORADORESDOCS">
+                        <small class="text-muted">Deixe em branco para usar o do manifesto</small>
+                     </div>
+                     <div class="mb-3">
+                        <label class="form-label">DisplayName (Opcional)</label>
+                        <input type="text" class="form-control" id="txtDisplayNameOverride" placeholder="Ex: Cadastro de Documentos">
+                     </div>
+                     <div class="alert alert-info border-info">
+                         <i class="fas fa-info-circle me-1"></i>
+                         Os arquivos serão gerados diretamente em: <br>
+                         <code>C:\ProjetosAspNet\RhSensoERP\src\</code>
+                     </div>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <!-- =========================================================================
-         MODAL DE PESQUISA DE FUNÇÕES
-         ========================================================================= -->
-    <div class="modal fade" id="modalFuncoes" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">
-                        <i class="fas fa-search me-2"></i>Pesquisar Função
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="search-box mb-3">
-                        <i class="fas fa-search"></i>
-                        <input type="text" class="form-control" id="filtroFuncao"
-                               placeholder="Buscar por código ou descrição..."
-                               onkeyup="filtrarFuncoes()" />
-                    </div>
-                    <div class="table-responsive" style="max-height: 400px;">
-                        <table class="table table-hover table-sm" id="tabelaFuncoes">
-                            <thead class="sticky-top" style="background: rgba(15, 23, 42, 0.9);">
-                                <tr>
-                                    <th>Código</th>
-                                    <th>Descrição</th>
-                                    <th>Sistema</th>
-                                    <th style="width: 60px;"></th>
-                                </tr>
-                            </thead>
-                            <tbody id="funcoesBody"></tbody>
-                        </table>
-                    </div>
-                    <div class="text-muted mt-2">
-                        <small><span id="funcoesCount">0</span> funções encontradas</small>
-                    </div>
-                </div>
+            <div class="d-flex justify-content-center mt-5">
+                <button class="btn btn-success btn-lg px-5" id="btnGenerate" onclick="generateFiles()">
+                    <i class="fas fa-rocket me-2"></i> Gerar Arquivos no Projeto
+                </button>
             </div>
-        </div>
+         </div>
     </div>
+</div>
 
-    <!-- =========================================================================
-         MODAL DE PREVIEW
-         ========================================================================= -->
-    <div class="modal fade" id="modalPreview" tabindex="-1">
-        <div class="modal-dialog modal-xl modal-dialog-scrollable">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">
-                        <i class="fas fa-eye me-2"></i>Preview: <span id="previewEntidade">-</span>
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body p-0">
-                    <!-- Warnings -->
-                    <div id="previewWarnings" class="p-3"></div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-                    <!-- Tabs de arquivos -->
-                    <ul class="nav nav-tabs px-3" id="previewTabs" role="tablist"></ul>
-                    <div class="tab-content p-3" id="previewTabContent"></div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-                        Fechar
-                    </button>
-                    <button type="button" class="btn btn-generate" onclick="gerarFullStack()">
-                        <i class="fas fa-download me-2"></i>Gerar e Baixar ZIP
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
+<script>
+    let currentEntity = null;
 
+    // STEP 1 LOGIC
+    async function loadEntities() {
+        const module = document.getElementById('slcModule').value;
+        const slcEntity = document.getElementById('slcEntity');
+        const btnNext = document.getElementById('btnGoToStep2');
+        
+        slcEntity.innerHTML = '<option value="">Carregando...</option>';
+        slcEntity.disabled = true;
+        btnNext.disabled = true;
 
-    <!-- Toast -->
-    <div class="toast-container position-fixed bottom-0 end-0 p-3">
-        <div id="toast" class="toast" role="alert">
-            <div class="toast-header">
-                <i id="toastIcon" class="fas fa-check-circle text-success me-2"></i>
-                <strong class="me-auto" id="toastTitle">Sucesso</strong>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
-            </div>
-            <div class="toast-body" id="toastBody"></div>
-        </div>
-    </div>
-
-    <!-- Scripts -->
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/csharp.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/xml.min.js"></script>
-
-  
-
-    <script>
-        // =====================================================================
-        // DARK MODE
-        // =====================================================================
-        function toggleDarkMode() {
-            const html = document.documentElement;
-            const currentTheme = html.getAttribute('data-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-
-            html.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-
-            // Atualizar ícone
-            const icon = document.getElementById('themeIcon');
-            icon.className = newTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        if (!module) {
+            slcEntity.innerHTML = '<option value="">Aguardando seleção do módulo...</option>';
+            return;
         }
 
-        // Aplicar tema salvo ao carregar
-        (function() {
-            const savedTheme = localStorage.getItem('theme') || 'light';
-            document.documentElement.setAttribute('data-theme', savedTheme);
-
-            // Atualizar ícone após DOM carregar
-            document.addEventListener('DOMContentLoaded', function() {
-                const icon = document.getElementById('themeIcon');
-                if (icon) {
-                    icon.className = savedTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
-                }
+        try {
+            const response = await fetch('/Manifest/GetEntities?module=' + module);
+            const entities = await response.json();
+            
+            slcEntity.innerHTML = '<option value="">Selecione uma entidade...</option>';
+            entities.forEach(e => {
+                const opt = document.createElement('option');
+                opt.value = e.entityName;
+                opt.textContent = `${e.displayName} (${e.entityName})`;
+                slcEntity.appendChild(opt);
             });
-        })();
-
-        // =====================================================================
-        // VARIÁVEIS GLOBAIS
-        // =====================================================================
-        let tabelaSelecionada = null;
-        let tabelaDetalhes = null;
-        let funcoesCarregadas = [];
-        let modalConfiguracao = null;
-        let modalFuncoes = null;
-        let modalPreview = null;
-
-        // VARIÁVEL GLOBAL PARA TABSHEET
-        window.selectedTableName = null;
-
-        // =====================================================================
-        // INICIALIZAÇÃO
-        // =====================================================================
-        $(document).ready(function() {
-            modalConfiguracao = new bootstrap.Modal(document.getElementById('modalConfiguracao'));
-            modalFuncoes = new bootstrap.Modal(document.getElementById('modalFuncoes'));
-            modalPreview = new bootstrap.Modal(document.getElementById('modalPreview'));
-
-            hljs.highlightAll();
-
-            // Atualizar contador de selecionadas
-            $(document).on('change', '.tabela-check', atualizarContadorSelecionadas);
-        });
-
-        // =====================================================================
-        // FUNÇÃO PARA ABRIR MODAL TABSHEET
-        // =====================================================================
-        function abrirModalTabSheet() {
-            if (!tabelaSelecionada) {
-                showToast('Atenção', 'Selecione uma tabela primeiro', 'warning');
-                return;
-            }
-
-            // Usar a API do TabSheetConfig
-            if (typeof TabSheetConfig !== 'undefined') {
-                TabSheetConfig.openModal(tabelaSelecionada);
-            } else {
-                showToast('Erro', 'Módulo TabSheet não carregado', 'error');
-            }
+            
+            slcEntity.disabled = false;
+        } catch (error) {
+            console.error(error);
+            slcEntity.innerHTML = '<option value="">Erro ao carregar</option>';
         }
+    }
 
-        // =====================================================================
-        // FUNÇÕES DE SELEÇÃO DE TABELAS
-        // =====================================================================
-        function filtrarTabelas() {
-            const termo = $('#searchInput').val().toLowerCase();
-            let count = 0;
+    document.getElementById('slcEntity').addEventListener('change', function() {
+        document.getElementById('btnGoToStep2').disabled = !this.value;
+    });
 
-            $('.tabela-row').each(function() {
-                const nome = $(this).data('tabela').toLowerCase();
-                const match = nome.includes(termo);
-                $(this).toggle(match);
-                if (match) count++;
+    function goToStep2() {
+        const entityName = document.getElementById('slcEntity').value;
+        if(!entityName) return;
+        
+        showStep(2);
+        loadEntityAnalysis(entityName);
+    }
+
+    // STEP 2 LOGIC
+    async function loadEntityAnalysis(entityName) {
+        // Reset UI
+        document.getElementById('comparisonLoader').classList.remove('d-none');
+        document.getElementById('comparisonResult').classList.add('d-none');
+        document.getElementById('jsonPreview').value = 'Carregando...';
+        
+        try {
+            // 1. Get Details for JSON View
+            const resEntity = await fetch('/Manifest/GetEntity?name=' + entityName);
+            currentEntity = await resEntity.json();
+            
+            document.getElementById('txtEntityName').value = currentEntity.entityName;
+            document.getElementById('txtApiRoute').value = currentEntity.route;
+            document.getElementById('jsonPreview').value = JSON.stringify(currentEntity, null, 2);
+
+            // 2. Perform Comparison
+            const resCompare = await fetch('/Manifest/CompareEntity', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ entityName: entityName })
             });
 
-            $('#tabelasCount').text(count);
+            const comparison = await resCompare.json();
+            renderComparison(comparison);
+
+        } catch (error) {
+            console.error(error);
+            Swal.fire('Erro', 'Falha ao analisar entidade: ' + error.message, 'error');
+        } finally {
+            document.getElementById('comparisonLoader').classList.add('d-none');
+            document.getElementById('comparisonResult').classList.remove('d-none');
+        }
+    }
+
+    function renderComparison(data) {
+        const alert = document.getElementById('statusAlert');
+        const title = document.getElementById('statusTitle');
+        const msg = document.getElementById('statusMsg');
+        const mismatchContainer = document.getElementById('mismatchContainer');
+        const mismatchBody = document.getElementById('mismatchBody');
+        const missingContainer = document.getElementById('missingContainer');
+        const missingList = document.getElementById('missingList');
+
+        mismatchBody.innerHTML = '';
+        missingList.innerHTML = '';
+        mismatchContainer.classList.add('d-none');
+        missingContainer.classList.add('d-none');
+
+        if (!data.tableExists) {
+            alert.className = 'alert alert-danger d-flex align-items-center mb-3';
+            title.textContent = 'Erro Crítico!';
+            msg.textContent = `A tabela '${data.tableName}' não existe no banco de dados.`;
+            return;
         }
 
-        function toggleSelectAll(checkbox) {
-            $('.tabela-check:visible:not(:disabled)').prop('checked', checkbox.checked);
-            atualizarContadorSelecionadas();
-        }
-
-        function atualizarContadorSelecionadas() {
-            const count = $('.tabela-check:checked').length;
-            $('#selecionadasCount').text(count);
-            $('#btnConfigurar').prop('disabled', count === 0);
-            $('#btnGerarLote').prop('disabled', count === 0);
-            $('#btnGerarTabSheet').prop('disabled', count === 0 && !tabelaSelecionada);
-        }
-
-        async function selectTabela(nome, row) {
-            // Remove seleção anterior
-            $('.tabela-row').removeClass('selected-row');
-            $(row).addClass('selected-row');
-
-            tabelaSelecionada = nome;
-
-            // ATUALIZA VARIÁVEL GLOBAL PARA TABSHEET
-            window.selectedTableName = nome;
-
-            // Habilita botão TabSheet
-            $('#btnGerarTabSheet').prop('disabled', false);
-
-            // Mostra loading
-            $('#placeholderPanel').hide();
-            $('#detailsPanel').show();
-            $('#tabelaNome').html('<i class="fas fa-spinner fa-spin"></i> Carregando...');
-
-            try {
-                const response = await fetch(`/Home/GetTabela?nome=${encodeURIComponent(nome)}`);
-                if (!response.ok) throw new Error('Tabela não encontrada');
-
-                tabelaDetalhes = await response.json();
-                renderizarDetalhes(tabelaDetalhes);
-            } catch (error) {
-                showToast('Erro', error.message, 'error');
-            }
-        }
-
-        function renderizarDetalhes(tabela) {
-            console.log('📊 [DEBUG] Dados da tabela recebidos:', tabela);
-            console.log('📊 [DEBUG] Colunas:', tabela.colunas);
-            console.log('📊 [DEBUG] FKs:', tabela.foreignKeys);
-            console.log('📊 [DEBUG] Indices:', tabela.indices);
-
-            // Garantir arrays válidos
-            const colunas = tabela.colunas || [];
-            const foreignKeys = tabela.foreignKeys || [];
-            const indices = tabela.indices || [];
-            const primaryKeyColumns = tabela.primaryKeyColumns || [];
-
-            // Header
-            $('#tabelaNome').text(tabela.nomeTabela || '-');
-            $('#tabelaDescricao').text(tabela.descricao || 'Sem descrição');
-
-            // Stats
-            $('#statsColunas').text(colunas.length);
-            $('#statsFks').text(foreignKeys.length);
-            $('#statsIndices').text(indices.length);
-            $('#statsPk').text(tabela.primaryKey ? tabela.primaryKey.nomePascalCase : '❌');
-
-            // Alertas
-            let alertas = '';
-            if (!tabela.hasPrimaryKey) {
-                alertas += `<div class="alert-no-pk">
-                    <i class="fas fa-info-circle me-2"></i>
-                    <strong>Sem Primary Key:</strong> Esta tabela não possui chave primária definida no banco.
-                    Você poderá definir a PK manualmente na configuração.
-                </div>`;
-            }
-            if (tabela.hasCompositePrimaryKey) {
-                const pkCols = primaryKeyColumns.map(c => c.nome).join(', ');
-                alertas += `<div class="alert-composite-pk">
-                    <i class="fas fa-exclamation-triangle me-2"></i>
-                    <strong>PK Composta:</strong> Esta tabela possui chave primária composta (${pkCols}).
-                    Algumas funcionalidades podem ter limitações.
-                </div>`;
-            }
-            if (tabela.hasCompositeForeignKeys) {
-                alertas += `<div class="alert-composite-fk">
-                    <i class="fas fa-info-circle me-2"></i>
-                    <strong>FK Composta:</strong> Algumas FKs compostas foram detectadas e serão ignoradas na geração de navegações.
-                </div>`;
-            }
-            $('#alertasContainer').html(alertas);
-
-            // Colunas
-            let colunasHtml = '';
-            for (const col of colunas) {
-                let flags = '';
-                if (col.isPrimaryKey) flags += '<span class="badge badge-pk me-1">PK</span>';
-                if (col.isIdentity) flags += '<span class="badge badge-identity me-1">ID</span>';
-                if (col.foreignKey) {
-                    const fkBadge = col.foreignKey.isFkByGuid ? 'badge-fk-guid' : 'badge-fk';
-                    flags += `<span class="badge ${fkBadge} me-1" title="→ ${col.foreignKey.tabelaDestino}">FK</span>`;
-                }
-
-                colunasHtml += `<tr>
-                    <td><code>${col.nome}</code></td>
-                    <td><span class="text-muted">${col.tipo}</span></td>
-                    <td><code class="text-info">${col.tipoCSharp}</code></td>
-                    <td>${col.tamanho || '-'}</td>
-                    <td class="text-center">${col.isNullable ? '✓' : ''}</td>
-                    <td>${flags}</td>
-                    <td><small class="text-muted">${col.descricao || ''}</small></td>
-                </tr>`;
-            }
-            $('#colunasBody').html(colunasHtml);
-
-            // FKs
-            let fksHtml = '';
-            if (foreignKeys.length === 0) {
-                fksHtml = '<p class="text-muted text-center py-4">Nenhuma Foreign Key encontrada</p>';
-            } else {
-                for (const fk of foreignKeys) {
-                    const tipoFk = fk.isFkByGuid ?
-                        '<span class="badge badge-fk-guid">Por Guid</span>' :
-                        '<span class="badge badge-fk">Por Código</span>';
-
-                    const composta = fk.isParteDeFkComposta ?
-                        '<span class="badge badge-warning ms-2">FK Composta</span>' : '';
-
-                    fksHtml += `<div class="fk-card">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <span class="fk-title">${fk.navigationPropertyName}</span>
-                                ${tipoFk}${composta}
-                            </div>
-                        </div>
-                        <div class="fk-detail mt-1">
-                            <code>${fk.colunaOrigem}</code> →
-                            <code>${fk.tabelaDestino}.${fk.colunaDestino}</code>
-                            ${fk.colunaDisplay ? ` | Display: <code>${fk.colunaDisplay}</code>` : ''}
-                        </div>
-                    </div>`;
-                }
-            }
-            $('#fksContainer').html(fksHtml);
-
-            // Índices
-            let indicesHtml = '';
-            if (indices.length === 0) {
-                indicesHtml = '<tr><td colspan="3" class="text-center text-muted py-4">Nenhum índice encontrado</td></tr>';
-            } else {
-                for (const idx of indices) {
-                    const idxColunas = idx.colunas || [];
-                    indicesHtml += `<tr>
-                        <td><code>${idx.nome}</code></td>
-                        <td>${idxColunas.map(c => `<code>${c}</code>`).join(', ')}</td>
-                        <td class="text-center">${idx.isUnique ? '<span class="badge bg-warning">Unique</span>' : ''}</td>
-                    </tr>`;
-                }
-            }
-            $('#indicesBody').html(indicesHtml);
-        }
-
-        // =====================================================================
-        // MODAL DE CONFIGURAÇÃO
-        // =====================================================================
-        function abrirModalConfiguracao() {
-            // Pode ser chamado para uma única tabela ou para múltiplas
-            const selecionadas = $('.tabela-check:checked').map(function() { return $(this).val(); }).get();
-
-            if (selecionadas.length === 0 && !tabelaSelecionada) {
-                showToast('Atenção', 'Selecione uma ou mais tabelas', 'warning');
-                return;
-            }
-
-            const tabela = selecionadas.length === 1 ? selecionadas[0] : (tabelaSelecionada || selecionadas[0]);
-
-            // Carrega detalhes se necessário
-            if (!tabelaDetalhes || tabelaDetalhes.nomeTabela !== tabela) {
-                selectTabela(tabela, $(`.tabela-row[data-tabela="${tabela}"]`)[0]).then(() => {
-                    preencherModalConfiguracao();
-                    modalConfiguracao.show();
+        if (data.isMatch) {
+            alert.className = 'alert alert-success d-flex align-items-center mb-3';
+            title.textContent = 'Tudo Certo!';
+            msg.textContent = 'A estrutura da API corresponde perfeitamente ao Banco de Dados.';
+        } else {
+            alert.className = 'alert alert-warning d-flex align-items-center mb-3';
+            title.textContent = 'Atenção!';
+            msg.textContent = 'Existem divergências entre a API e o Banco de Dados.';
+            
+            // Render Mismatches
+            if (data.mismatches.length > 0) {
+                mismatchContainer.classList.remove('d-none');
+                data.mismatches.forEach(m => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${m.propertyName} / ${m.columnName}</td>
+                        <td class="text-info">${m.apiType}</td>
+                        <td class="text-warning">${m.dbType}</td>
+                        <td class="text-danger"><i class="fas fa-times me-1"></i> Tipo Diferente</td>
+                    `;
+                    mismatchBody.appendChild(tr);
                 });
-            } else {
-                preencherModalConfiguracao();
-                modalConfiguracao.show();
-            }
-        }
-
-        function preencherModalConfiguracao() {
-            if (!tabelaDetalhes) return;
-
-            const tabela = tabelaDetalhes;
-
-            // Header
-            $('#modalTabelaNome').text(tabela.nomeTabela);
-
-            // Alertas
-            let alertas = '';
-            // Removido bloqueio - agora permite gerar após selecionar PK
-            $('#modalAlertas').html(alertas);
-
-            // Seção de Chave Primária - mostrar apenas se tabela não tem PK
-            if (!tabela.hasPrimaryKey) {
-                $('#secaoPrimaryKey').show();
-                // Expandir automaticamente
-                $('#secaoPrimaryKey .config-section-header').removeClass('collapsed');
-                $('#secaoPrimaryKey .config-section-body').show();
-
-                // Preencher lista de colunas para seleção de PK
-                let pkHtml = '';
-                for (const col of tabela.colunas) {
-                    const nullableText = col.isNullable ?
-                        '<span class="text-warning">✓ Nullable</span>' :
-                        '<span class="text-success">✗ NOT NULL</span>';
-
-                    pkHtml += `<tr>
-                        <td>
-                            <input type="checkbox" class="form-check-input pk-column-check"
-                                   data-col="${col.nome}" data-col-pascal="${col.nomePascalCase}" />
-                        </td>
-                        <td><code>${col.nome}</code></td>
-                        <td><span class="text-muted">${col.tipo}</span></td>
-                        <td><code class="text-info">${col.tipoCSharp}</code></td>
-                        <td>${nullableText}</td>
-                    </tr>`;
-                }
-                $('#pkColunasBody').html(pkHtml);
-            } else {
-                $('#secaoPrimaryKey').hide();
             }
 
-            // Identificação
-            $('#cfgDisplayName').val(formatDisplayName(tabela.nomePascalCase));
-            $('#cfgDescricao').val(tabela.descricao || '');
-
-            // Colunas de Listagem
-            let listagemHtml = '';
-            let order = 0;
-            for (const col of tabela.colunas) {
-                if (col.isPrimaryKey && col.isGuid) continue; // Pula GUID PKs da listagem
-
-                const checked = !col.isPrimaryKey ? 'checked' : '';
-                const format = getDefaultFormat(col);
-
-                listagemHtml += `<tr>
-                    <td><input type="checkbox" class="form-check-input listagem-check" data-col="${col.nome}" ${checked} /></td>
-                    <td><code>${col.nome}</code></td>
-                    <td><input type="text" class="form-control form-control-sm listagem-title" data-col="${col.nome}"
-                               value="${formatDisplayName(col.nomePascalCase)}" /></td>
-                    <td>
-                        <select class="form-select form-select-sm listagem-format" data-col="${col.nome}">
-                            <option value="text" ${format === 'text' ? 'selected' : ''}>Texto</option>
-                            <option value="date" ${format === 'date' ? 'selected' : ''}>Data</option>
-                            <option value="datetime" ${format === 'datetime' ? 'selected' : ''}>Data/Hora</option>
-                            <option value="currency" ${format === 'currency' ? 'selected' : ''}>Moeda</option>
-                            <option value="boolean" ${format === 'boolean' ? 'selected' : ''}>Sim/Não</option>
-                        </select>
-                    </td>
-                    <td><input type="text" class="form-control form-control-sm listagem-width" data-col="${col.nome}"
-                               placeholder="auto" /></td>
-                    <td>
-                        <select class="form-select form-select-sm listagem-align" data-col="${col.nome}">
-                            <option value="left">Esq</option>
-                            <option value="center">Centro</option>
-                            <option value="right">Dir</option>
-                        </select>
-                    </td>
-                    <td class="text-center">${++order}</td>
-                </tr>`;
-            }
-            $('#listagemColunasBody').html(listagemHtml);
-
-        // Colunas de Formulário
-        let formularioHtml = '';
-        order = 0;
-        for (const col of tabela.colunas) {
-            // CORREÇÃO: PKs de texto (código manual) DEVEM aparecer no formulário
-            // Pular apenas se: PK+Identity, PK+Guid, ou Computed
-            const isPkAutoGerada = col.isPrimaryKey && (col.isIdentity || col.isGuid);
-            if (isPkAutoGerada || col.isComputed) continue;
-
-            const inputType = getDefaultInputType(col);
-            const colSize = getDefaultColSize(col);
-            const required = (!col.isNullable || col.isPrimaryKey) ? 'checked' : '';
-
-            // Badge visual para PKs de texto
-            const isPkTexto = col.isPrimaryKey && !col.isIdentity && !col.isGuid;
-            const pkBadge = isPkTexto ? ' <span class="badge badge-pk" title="Chave Primária - Editável apenas na criação">PK</span>' : '';
-
-            formularioHtml += `<tr>
-                <td><input type="checkbox" class="form-check-input formulario-check" data-col="${col.nome}" checked /></td>
-                <td><code>${col.nome}</code>${pkBadge}</td>
-                <td><input type="text" class="form-control form-control-sm formulario-label" data-col="${col.nome}"
-                           value="${formatDisplayName(col.nomePascalCase)}" /></td>
-                <td>
-                    <select class="form-select form-select-sm formulario-type" data-col="${col.nome}">
-                        <option value="text" ${inputType === 'text' ? 'selected' : ''}>Texto</option>
-                        <option value="number" ${inputType === 'number' ? 'selected' : ''}>Número</option>
-                        <option value="date" ${inputType === 'date' ? 'selected' : ''}>Data</option>
-                        <option value="datetime-local" ${inputType === 'datetime-local' ? 'selected' : ''}>Data/Hora</option>
-                        <option value="checkbox" ${inputType === 'checkbox' ? 'selected' : ''}>Checkbox</option>
-                        <option value="select" ${inputType === 'select' ? 'selected' : ''}>Select</option>
-                        <option value="textarea" ${inputType === 'textarea' ? 'selected' : ''}>Textarea</option>
-                    </select>
-                </td>
-                <td>
-                    <select class="form-select form-select-sm formulario-colsize" data-col="${col.nome}">
-                        <option value="2" ${colSize === 2 ? 'selected' : ''}>2</option>
-                        <option value="3" ${colSize === 3 ? 'selected' : ''}>3</option>
-                        <option value="4" ${colSize === 4 ? 'selected' : ''}>4</option>
-                        <option value="6" ${colSize === 6 ? 'selected' : ''}>6</option>
-                        <option value="8" ${colSize === 8 ? 'selected' : ''}>8</option>
-                        <option value="12" ${colSize === 12 ? 'selected' : ''}>12</option>
-                    </select>
-                </td>
-                <td class="text-center"><input type="checkbox" class="form-check-input formulario-required" data-col="${col.nome}" ${required} /></td>
-                <td class="text-center"><input type="checkbox" class="form-check-input formulario-disabled" data-col="${col.nome}" /></td>
-            </tr>`;
-        }
-        $('#formularioColunasBody').html(formularioHtml);
-
-            // FKs
-            let fksHtml = '';
-            if (tabela.foreignKeys.length === 0) {
-                fksHtml = '<p class="text-muted">Nenhuma Foreign Key encontrada</p>';
-            } else {
-                for (const fk of tabela.foreignKeys) {
-                    const tipoFk = fk.isFkByGuid ?
-                        '<span class="badge badge-fk-guid">Guid</span>' :
-                        '<span class="badge badge-fk">Código</span>';
-
-                    const ignorar = fk.isParteDeFkComposta ? 'checked disabled' : '';
-
-                    fksHtml += `<div class="fk-card d-flex justify-content-between align-items-center">
-                        <div>
-                            <input type="text" class="form-control form-control-sm d-inline-block fk-navname"
-                                   data-col="${fk.colunaOrigem}" value="${fk.navigationPropertyName}"
-                                   style="width: 150px;" ${fk.isParteDeFkComposta ? 'disabled' : ''} />
-                            ${tipoFk}
-                            <span class="fk-detail ms-2">
-                                <code>${fk.colunaOrigem}</code> → <code>${fk.tabelaDestino}</code>
-                            </span>
-                        </div>
-                        <div class="form-check">
-                            <input type="checkbox" class="form-check-input fk-ignorar" data-col="${fk.colunaOrigem}" ${ignorar} />
-                            <label class="form-check-label text-muted">Ignorar</label>
-                        </div>
-                    </div>`;
-                }
-            }
-            $('#fksConfigContainer').html(fksHtml);
-        }
-
-        function toggleSection(header) {
-            const body = $(header).next('.config-section-body');
-            const isCollapsed = $(header).hasClass('collapsed');
-
-            if (isCollapsed) {
-                $(header).removeClass('collapsed');
-                body.slideDown(200);
-            } else {
-                $(header).addClass('collapsed');
-                body.slideUp(200);
-            }
-        }
-
-        function toggleAllListagem(checkbox) {
-            $('.listagem-check').prop('checked', checkbox.checked);
-        }
-
-        function toggleAllFormulario(checkbox) {
-            $('.formulario-check').prop('checked', checkbox.checked);
-        }
-
-        function atualizarRota() {
-            const option = $('#cfgModulo option:selected');
-            $('#cfgModuloRota').val(option.data('rota'));
-            $('#cfgCdSistema').val(option.data('sistema'));
-        }
-
-        // =====================================================================
-        // GERAÇÃO FULL-STACK
-        // =====================================================================
-        function coletarConfiguracao() {
-            // Coleta colunas definidas como PK (para tabelas sem PK no banco)
-            const colunasPkDefinidas = [];
-            $('.pk-column-check:checked').each(function() {
-                colunasPkDefinidas.push({
-                    nome: $(this).data('col'),
-                    nomePascalCase: $(this).data('col-pascal')
+            // Render Missing
+            if (data.missingColumns.length > 0) {
+                missingContainer.classList.remove('d-none');
+                data.missingColumns.forEach(c => {
+                    const li = document.createElement('li');
+                    li.textContent = `Coluna '${c}' existe na API mas não no Banco.`;
+                    missingList.appendChild(li);
                 });
+            }
+        }
+    }
+
+    // STEP 3 LOGIC
+    function goToStep3() {
+        showStep(3);
+    }
+
+    async function generateFiles() {
+        const btn = document.getElementById('btnGenerate');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Gerando...';
+
+        const request = {
+            entityName: currentEntity.entityName,
+            cdFuncao: document.getElementById('txtCdFuncaoOverride').value,
+            displayName: document.getElementById('txtDisplayNameOverride').value,
+            gerarWebController: document.getElementById('chkWebController').checked,
+            gerarWebModels: document.getElementById('chkWebModels').checked,
+            gerarWebServices: document.getElementById('chkWebServices').checked,
+            gerarView: document.getElementById('chkView').checked,
+            gerarJavaScript: document.getElementById('chkJs').checked
+        };
+
+        try {
+            const response = await fetch('/Manifest/GenerateToDisk', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(request)
             });
 
-            // Coleta configurações de listagem
-            const colunasListagem = [];
-            let order = 0;
-            $('.listagem-check:checked').each(function() {
-                const col = $(this).data('col');
-                colunasListagem.push({
-                    nome: col,
-                    visible: true,
-                    order: order++,
-                    title: $(`.listagem-title[data-col="${col}"]`).val(),
-                    format: $(`.listagem-format[data-col="${col}"]`).val(),
-                    width: $(`.listagem-width[data-col="${col}"]`).val() || null,
-                    align: $(`.listagem-align[data-col="${col}"]`).val(),
-                    sortable: true
-                });
-            });
+            const result = await response.json();
 
-            // Coleta configurações de formulário
-            const colunasFormulario = [];
-            order = 0;
-            $('.formulario-check:checked').each(function() {
-                const col = $(this).data('col');
-                colunasFormulario.push({
-                    nome: col,
-                    visible: true,
-                    order: order++,
-                    label: $(`.formulario-label[data-col="${col}"]`).val(),
-                    inputType: $(`.formulario-type[data-col="${col}"]`).val(),
-                    colSize: parseInt($(`.formulario-colsize[data-col="${col}"]`).val()),
-                    required: $(`.formulario-required[data-col="${col}"]`).is(':checked'),
-                    disabled: $(`.formulario-disabled[data-col="${col}"]`).is(':checked')
-                });
-            });
-
-            // Coleta configurações de FKs
-            const configuracoesFk = [];
-            $('.fk-ignorar').each(function() {
-                const col = $(this).data('col');
-                configuracoesFk.push({
-                    colunaOrigem: col,
-                    navigationName: $(`.fk-navname[data-col="${col}"]`).val(),
-                    ignorar: $(this).is(':checked')
-                });
-            });
-
-            return {
-                nomeTabela: tabelaDetalhes.nomeTabela,
-                cdFuncao: $('#cfgCdFuncao').val(),
-                cdSistema: $('#cfgCdSistema').val(),
-                displayName: $('#cfgDisplayName').val(),
-                descricao: $('#cfgDescricao').val(),
-                modulo: $('#cfgModulo').val(),
-                moduloRota: $('#cfgModuloRota').val(),
-                icone: $('#cfgIcone').val(),
-                menuOrder: parseInt($('#cfgMenuOrder').val()) || 10,
-                gerarMenuItem: $('#cfgGerarMenuItem').is(':checked'),
-                gerarEntidade: $('#cfgGerarEntidade').is(':checked'),
-                gerarApiController: $('#cfgGerarApiController').is(':checked'),
-                gerarNavigation: $('#cfgGerarNavigation').is(':checked'),
-                apenasNavigationPorGuid: $('#cfgApenasNavigationPorGuid').is(':checked'),
-                isLegacyTable: $('#cfgIsLegacyTable').is(':checked'),
-                gerarWebController: $('#cfgGerarWebController').is(':checked'),
-                gerarWebModels: $('#cfgGerarWebModels').is(':checked'),
-                gerarWebServices: $('#cfgGerarWebServices').is(':checked'),
-                gerarView: $('#cfgGerarView').is(':checked'),
-                gerarJavaScript: $('#cfgGerarJavaScript').is(':checked'),
-                colunasListagem: colunasListagem,
-                colunasFormulario: colunasFormulario,
-                configuracoesFk: configuracoesFk,
-                colunasPkDefinidas: colunasPkDefinidas
-            };
-        }
-
-        function validarConfiguracao(config) {
-            // Validar código da função
-            if (!config.cdFuncao) {
-                showToast('Atenção', 'Informe o código da função', 'warning');
-                return false;
-            }
-
-            // Validar PK para tabelas sem PK definida no banco
-            if (!tabelaDetalhes.hasPrimaryKey && config.colunasPkDefinidas.length === 0) {
-                showToast('Atenção', 'Selecione pelo menos uma coluna como Chave Primária', 'warning');
-                // Destacar a seção de PK
-                $('#secaoPrimaryKey').addClass('border-warning');
-                $('#secaoPrimaryKey .config-section-header').removeClass('collapsed');
-                $('#secaoPrimaryKey .config-section-body').slideDown(200);
-                return false;
-            }
-
-            return true;
-        }
-
-        async function previewFullStack() {
-            const config = coletarConfiguracao();
-
-            if (!validarConfiguracao(config)) {
-                return;
-            }
-
-            try {
-                $('#loadingOverlay').css('display', 'flex');
-
-                const response = await fetch('/Home/PreviewFullStack', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(config)
-                });
-
-                const result = await response.json();
-
-                if (!result.success) {
-                    throw new Error(result.error);
-                }
-
-                // Renderiza preview
-                $('#previewEntidade').text(result.nomeEntidade);
-
-                // Warnings
-                let warningsHtml = '';
-                if (result.warnings && result.warnings.length > 0) {
-                    warningsHtml = '<div class="alert alert-warning">';
-                    result.warnings.forEach(w => {
-                        warningsHtml += `<div><i class="fas fa-exclamation-triangle me-2"></i>${w}</div>`;
-                    });
-                    warningsHtml += '</div>';
-                }
-                $('#previewWarnings').html(warningsHtml);
-
-                // Tabs
-                let tabsHtml = '';
-                let tabContentHtml = '';
-                let first = true;
-
-                for (const file of result.files) {
-                    const tabId = file.fileName.replace(/\./g, '-');
-                    const active = first ? 'active' : '';
-                    const show = first ? 'show active' : '';
-                    first = false;
-
-                    tabsHtml += `<li class="nav-item">
-                        <button class="nav-link ${active}" data-bs-toggle="tab" data-bs-target="#tab-${tabId}">
-                            ${file.fileName}
-                        </button>
-                    </li>`;
-
-                    const lang = file.fileName.endsWith('.cs') ? 'csharp' :
-                                 file.fileName.endsWith('.js') ? 'javascript' :
-                                 file.fileName.endsWith('.cshtml') ? 'xml' : 'plaintext';
-
-                    tabContentHtml += `<div class="tab-pane fade ${show}" id="tab-${tabId}">
-                        <small class="text-muted d-block mb-2">${file.relativePath}</small>
-                        <div class="code-preview">
-                            <pre><code class="language-${lang}">${escapeHtml(file.content)}</code></pre>
-                        </div>
-                    </div>`;
-                }
-
-                $('#previewTabs').html(tabsHtml);
-                $('#previewTabContent').html(tabContentHtml);
-
-                // Aplica syntax highlighting
-                document.querySelectorAll('#previewTabContent pre code').forEach((block) => {
-                    hljs.highlightElement(block);
-                });
-
-                modalPreview.show();
-
-            } catch (error) {
-                showToast('Erro', error.message, 'error');
-            } finally {
-                $('#loadingOverlay').hide();
-            }
-        }
-
-        async function gerarFullStack() {
-            const config = coletarConfiguracao();
-
-            if (!validarConfiguracao(config)) {
-                return;
-            }
-
-            try {
-                $('#loadingOverlay').css('display', 'flex');
-
-                const response = await fetch('/Home/DownloadFullStackZip', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(config)
-                });
-
-                if (!response.ok) {
-                    const error = await response.text();
-                    throw new Error(error);
-                }
-
-                // Download do arquivo
-                const blob = await response.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `${tabelaDetalhes.nomePascalCase}_FullStack.zip`;
-                a.click();
-                window.URL.revokeObjectURL(url);
-
-                showToast('Sucesso', 'Arquivos gerados com sucesso!', 'success');
-
-                // Fecha modais
-                modalConfiguracao.hide();
-                if (modalPreview._isShown) modalPreview.hide();
-
-            } catch (error) {
-                showToast('Erro', error.message, 'error');
-            } finally {
-                $('#loadingOverlay').hide();
-            }
-        }
-
-        async function gerarLoteFullStack() {
-            const selecionadas = $('.tabela-check:checked').map(function() { return $(this).val(); }).get();
-
-            if (selecionadas.length === 0) {
-                showToast('Atenção', 'Selecione pelo menos uma tabela', 'warning');
-                return;
-            }
-
-            // Para lote, usa configurações padrão
-            const cdFuncao = prompt('Informe o prefixo do CdFuncao (ex: SIS):', 'SIS');
-            if (!cdFuncao) return;
-
-            const requests = selecionadas.map(tabela => ({
-                nomeTabela: tabela,
-                cdFuncao: cdFuncao + tabela.toUpperCase().substring(0, 5),
-                cdSistema: 'RHU',
-                modulo: 'GestaoDePessoas',
-                moduloRota: 'gestaodepessoas'
-            }));
-
-            try {
-                $('#loadingOverlay').css('display', 'flex');
-
-                const response = await fetch('/Home/DownloadLoteFullStackZip', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(requests)
-                });
-
-                if (!response.ok) {
-                    throw new Error('Erro ao gerar arquivos em lote');
-                }
-
-                const blob = await response.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'FullStack_Lote.zip';
-                a.click();
-
-                showToast('Sucesso', `${selecionadas.length} entidades geradas!`, 'success');
-
-            } catch (error) {
-                showToast('Erro', error.message, 'error');
-            } finally {
-                $('#loadingOverlay').hide();
-            }
-        }
-
-        // =====================================================================
-        // MODAL DE FUNÇÕES
-        // =====================================================================
-        async function abrirModalFuncoes() {
-            if (funcoesCarregadas.length === 0) {
-                await carregarFuncoes();
-            }
-            renderizarFuncoes(funcoesCarregadas);
-            modalFuncoes.show();
-            setTimeout(() => $('#filtroFuncao').focus(), 300);
-        }
-
-        async function carregarFuncoes() {
-            try {
-                const response = await fetch('/Home/GetFuncoes');
-                funcoesCarregadas = await response.json();
-            } catch (error) {
-                console.error('Erro ao carregar funções:', error);
-            }
-        }
-
-        function renderizarFuncoes(funcoes) {
-            let html = '';
-            for (const f of funcoes) {
-                html += `<tr class="funcao-row" style="cursor: pointer;"
-                            onclick="selecionarFuncao('${escapeHtml(f.cdFuncao)}', '${escapeHtml(f.dcFuncao || '')}', '${escapeHtml(f.cdSistema)}')"
-                            data-codigo="${f.cdFuncao.toLowerCase()}"
-                            data-descricao="${(f.dcFuncao || '').toLowerCase()}">
-                    <td><code class="text-info">${escapeHtml(f.cdFuncao)}</code></td>
-                    <td>${escapeHtml(f.dcFuncao || '-')}</td>
-                    <td><span class="badge bg-secondary">${escapeHtml(f.cdSistema)}</span></td>
-                    <td><button class="btn btn-sm btn-outline-primary"><i class="fas fa-check"></i></button></td>
-                </tr>`;
-            }
-            $('#funcoesBody').html(html || '<tr><td colspan="4" class="text-center text-muted">Nenhuma função encontrada</td></tr>');
-            $('#funcoesCount').text(funcoes.length);
-        }
-
-        function filtrarFuncoes() {
-            const termo = $('#filtroFuncao').val().toLowerCase();
-            let count = 0;
-
-            $('.funcao-row').each(function() {
-                const codigo = $(this).data('codigo') || '';
-                const descricao = $(this).data('descricao') || '';
-                const match = codigo.includes(termo) || descricao.includes(termo);
-                $(this).toggle(match);
-                if (match) count++;
-            });
-
-            $('#funcoesCount').text(count);
-        }
-
-        function selecionarFuncao(cdFuncao, dcFuncao, cdSistema) {
-            $('#cfgCdFuncao').val(cdFuncao);
-            $('#cfgCdSistema').val(cdSistema);
-            $('#cfgDcFuncao').html(`<i class="fas fa-info-circle me-1"></i>${dcFuncao}`);
-            modalFuncoes.hide();
-            showToast('Função Selecionada', `${cdFuncao} - ${dcFuncao}`, 'success');
-        }
-
-        // =====================================================================
-        // UTILITÁRIOS
-        // =====================================================================
-        async function refreshCache() {
-            try {
-                const response = await fetch('/Home/RefreshCache', { method: 'POST' });
-                const result = await response.json();
-
-                if (result.success) {
-                    showToast('Cache Atualizado', `${result.count} tabelas recarregadas`, 'success');
+            if (response.ok) {
+                Swal.fire({
+                    title: 'Gerado com Sucesso!',
+                    text: result.message,
+                    icon: 'success',
+                    confirmButtonText: 'Concluir'
+                }).then(() => {
                     location.reload();
-                }
-            } catch (error) {
-                showToast('Erro', error.message, 'error');
+                });
+            } else {
+                throw new Error(result.error || 'Erro desconhecido');
             }
+        } catch (error) {
+            Swal.fire('Erro', error.message, 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-rocket me-2"></i> Gerar Arquivos no Projeto';
         }
+    }
 
-        function showToast(title, message, type) {
-            const icons = {
-                success: 'fas fa-check-circle text-success',
-                warning: 'fas fa-exclamation-triangle text-warning',
-                error: 'fas fa-times-circle text-danger'
-            };
+    // UTILS
+    function showStep(stepNumber) {
+        // Hide all cards
+        document.getElementById('step1').classList.add('d-none');
+        document.getElementById('step2').classList.add('d-none');
+        document.getElementById('step3').classList.add('d-none');
 
-            $('#toastIcon').attr('class', icons[type] || icons.success);
-            $('#toastTitle').text(title);
-            $('#toastBody').text(message);
+        // Show target
+        document.getElementById(`step${stepNumber}`).classList.remove('d-none');
 
-            const toast = new bootstrap.Toast($('#toast')[0]);
-            toast.show();
-        }
+        // Update indicators
+        document.querySelectorAll('.step-item').forEach((el, index) => {
+            el.classList.remove('active', 'completed');
+            if (index + 1 === stepNumber) el.classList.add('active');
+            if (index + 1 < stepNumber) el.classList.add('completed');
+        });
+    }
 
-        function escapeHtml(text) {
-            if (!text) return '';
-            return text.replace(/&/g, '&amp;')
-                       .replace(/</g, '&lt;')
-                       .replace(/>/g, '&gt;')
-                       .replace(/"/g, '&quot;');
-        }
+    function goToStep1() { showStep(1); }
+</script>
 
-        function formatDisplayName(name) {
-            if (!name) return '';
-            return name
-                .replace(/([A-Z])/g, ' $1')
-                .replace(/^./, s => s.toUpperCase())
-                .replace(/Cd /g, 'Código ')
-                .replace(/Dc /g, '')
-                .replace(/Dt /g, 'Data ')
-                .replace(/Nr /g, 'Número ')
-                .replace(/Id /g, '')
-                .trim();
-        }
-
-        function getDefaultFormat(col) {
-            if (col.tipo.toLowerCase().includes('date')) return 'date';
-            if (col.tipo.toLowerCase() === 'bit') return 'boolean';
-            if (['decimal', 'money', 'numeric'].includes(col.tipo.toLowerCase())) return 'currency';
-            return 'text';
-        }
-
-        function getDefaultInputType(col) {
-            if (col.tipo.toLowerCase().includes('date')) return col.tipo.toLowerCase() === 'date' ? 'date' : 'datetime-local';
-            if (col.tipo.toLowerCase() === 'bit') return 'checkbox';
-            if (['int', 'bigint', 'smallint', 'decimal', 'float'].includes(col.tipo.toLowerCase())) return 'number';
-            if (col.tamanho && col.tamanho > 255) return 'textarea';
-            if (col.foreignKey) return 'select';
-            return 'text';
-        }
-
-        function getDefaultColSize(col) {
-            if (col.tipo.toLowerCase() === 'bit') return 2;
-            if (col.tipo.toLowerCase().includes('date')) return 4;
-            if (['int', 'bigint', 'smallint'].includes(col.tipo.toLowerCase())) return 3;
-            if (col.tamanho && col.tamanho < 20) return 3;
-            if (col.tamanho && col.tamanho > 255) return 12;
-            return 6;
-        }
-    </script>
 </body>
 </html>

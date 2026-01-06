@@ -1,12 +1,12 @@
-// =============================================================================
+﻿// =============================================================================
 // ARQUIVO GERADO POR GeradorFullStack v4.0
 // Entity: CapColaboradoresFornecedor
-// Module: ControleAcessoPortaria
-// Data: 2026-01-04 16:00:38
+// Module: GestaoTerceirosPrestadores
+// Data: 2026-01-06 12:37:23
 // =============================================================================
 using RhSensoERP.Web.Models.Base;
 
-namespace RhSensoERP.Web.Models.ControleAcessoPortaria.CapColaboradoresFornecedor;
+namespace RhSensoERP.Web.Models.GestaoTerceirosPrestadores.CapColaboradoresFornecedor;
 
 /// <summary>
 /// ViewModel para listagem de CapColaboradoresFornecedor.
@@ -21,7 +21,7 @@ public class CapColaboradoresFornecedorListViewModel : BaseListViewModel
         
         // Configurações específicas
         PageTitle = "CapColaboradoresFornecedor";
-        PageIcon = "fas fa-table";
+        PageIcon = "";
         CdFuncao = "CAP_FM_COLABORADORES";
     }
 

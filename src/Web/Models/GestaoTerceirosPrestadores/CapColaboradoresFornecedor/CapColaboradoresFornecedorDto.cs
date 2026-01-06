@@ -1,30 +1,30 @@
-// =============================================================================
-// ARQUIVO GERADO POR GeradorFullStack v4.1
+﻿// =============================================================================
+// ARQUIVO GERADO POR GeradorFullStack v4.0
 // Entity: CapColaboradoresFornecedor
-// Module: ControleAcessoPortaria
-// Data: 2026-01-04 22:00:00
-// v4.1: ADICIONADAS propriedades de navegação
+// Module: GestaoTerceirosPrestadores
+// Data: 2026-01-06 12:37:23
 // =============================================================================
-namespace RhSensoERP.Web.Models.ControleAcessoPortaria.CapColaboradoresFornecedor;
+
+namespace RhSensoERP.Web.Models.GestaoTerceirosPrestadores.CapColaboradoresFornecedor;
 
 /// <summary>
 /// DTO de leitura para CapColaboradoresFornecedor.
-/// Compatível com backend: RhSensoERP.Modules.ControleAcessoPortaria.Application.DTOs.CapColaboradoresFornecedorDto
+/// Compatível com backend: RhSensoERP.Modules.GestaoTerceirosPrestadores.Application.DTOs.CapColaboradoresFornecedorDto
 /// </summary>
 public class CapColaboradoresFornecedorDto
 {
     /// <summary>
-    /// Id
+    /// ID
     /// </summary>
     public int Id { get; set; }
 
     /// <summary>
-    /// Tenant Id
+    /// Tenant  ID
     /// </summary>
     public Guid TenantId { get; set; }
 
     /// <summary>
-    /// ID Fornecedor
+    /// ID  Fornecedor
     /// </summary>
     public int IdFornecedor { get; set; }
 
@@ -54,7 +54,7 @@ public class CapColaboradoresFornecedorDto
     public string Telefone { get; set; } = string.Empty;
 
     /// <summary>
-    /// Data Nascimento
+    /// Data  Nascimento
     /// </summary>
     public DateOnly? DataNascimento { get; set; }
 
@@ -64,12 +64,12 @@ public class CapColaboradoresFornecedorDto
     public string Genero { get; set; } = string.Empty;
 
     /// <summary>
-    /// Estado Civil
+    /// Estado  Civil
     /// </summary>
     public string EstadoCivil { get; set; } = string.Empty;
 
     /// <summary>
-    /// ID Tipo Sanguíneo
+    /// ID  Tipo  Sanguíneo
     /// </summary>
     public int? IdTipoSanguineo { get; set; }
 
@@ -99,7 +99,7 @@ public class CapColaboradoresFornecedorDto
     public string Cidade { get; set; } = string.Empty;
 
     /// <summary>
-    /// ID UF
+    /// ID  UF
     /// </summary>
     public int? IdUf { get; set; }
 
@@ -109,12 +109,12 @@ public class CapColaboradoresFornecedorDto
     public string Cep { get; set; } = string.Empty;
 
     /// <summary>
-    /// Data Admissão
+    /// Data  Admissão
     /// </summary>
     public DateOnly DataAdmissao { get; set; }
 
     /// <summary>
-    /// Data Demissão
+    /// Data  Demissão
     /// </summary>
     public DateOnly? DataDemissao { get; set; }
 
@@ -129,22 +129,22 @@ public class CapColaboradoresFornecedorDto
     public bool Ativo { get; set; }
 
     /// <summary>
-    /// Created At Utc
+    /// Data  Criação ( UTC)
     /// </summary>
     public DateTime CreatedAtUtc { get; set; }
 
     /// <summary>
-    /// Created By User Id
+    /// Criado  Por
     /// </summary>
     public Guid? CreatedByUserId { get; set; }
 
     /// <summary>
-    /// Updated At Utc
+    /// Data  Atualização ( UTC)
     /// </summary>
     public DateTime UpdatedAtUtc { get; set; }
 
     /// <summary>
-    /// Updated By User Id
+    /// Atualizado  Por
     /// </summary>
     public Guid? UpdatedByUserId { get; set; }
 
@@ -153,17 +153,18 @@ public class CapColaboradoresFornecedorDto
     // =========================================================================
 
     /// <summary>
-    /// Campo 'RazaoSocial' da navegação Fornecedor.
+    /// Campo 'Nome' da navegação Fornecedor.
     /// </summary>
-    public string? FornecedorRazaoSocial { get; set; }
+    public string? FornecedorNome { get; set; }
 
     /// <summary>
-    /// Campo 'Descricao' da navegação TipoSanguineo.
+    /// Campo 'Nome' da navegação TipoSanguineo.
     /// </summary>
-    public string? TipoSanguineoDescricao { get; set; }
+    public string? TipoSanguineoNome { get; set; }
 
     /// <summary>
-    /// Campo 'Sigla' da navegação Uf.
+    /// Campo 'Nome' da navegação Uf.
     /// </summary>
-    public string? UfSigla { get; set; }
+    public string? UfNome { get; set; }
+
 }

@@ -300,12 +300,8 @@ public static class ViewTemplate
             var select2Class = isSelect2Ajax ? "select2-ajax" : "form-select";
 
             // ⭐ v4.3 MUDANÇA: URL do Select2 agora é RELATIVA (sem host)
-            var select2Url = !string.IsNullOrEmpty(config.SelectApiRoute)
-                ? config.SelectApiRoute
-                : !string.IsNullOrEmpty(config.SelectEndpoint)
-                    ? config.SelectEndpoint
-                    : GenerateSelect2ApiUrl(prop, entity);
-
+            // ⭐ v4.5 CORRIGIDO: Usa entity.Select2Lookups (do JSON) primeiro!
+            var select2Url = GetSelect2UrlFromLookups(prop.Name, entity, config);
             var select2Attrs = isSelect2Ajax
                 ? $@" data-select2-url=""{select2Url}"" data-value-field=""{config.SelectValueField ?? "id"}"" data-text-field=""{config.SelectTextField ?? "nome"}"" style=""width: 100%"""
                 : "";
@@ -375,6 +371,32 @@ public static class ViewTemplate
     /// 
     /// IMPORTANTE: JavaScript usa window.AppConfig.buildApiUrl() para construir URL completa!
     /// </summary>
+
+    /// <summary>
+    /// ✅ v4.5 NOVO: Busca URL do Select2 em entity.Select2Lookups (vem do JSON).
+    /// Isso garante que usa os endpoints corretos definidos no manifesto.
+    /// </summary>
+    private static string GetSelect2UrlFromLookups(string propertyName, EntityConfig entity, FormConfig config)
+    {
+        // ✅ PRIORIDADE 1: Busca em entity.Select2Lookups (endpoints do JSON/manifesto)
+        var lookup = entity.Select2Lookups?.FirstOrDefault(l =>
+            l.PropertyName.Equals(propertyName, StringComparison.OrdinalIgnoreCase));
+
+        if (lookup != null && !string.IsNullOrEmpty(lookup.ApiRoute))
+        {
+            return lookup.ApiRoute;  // ✅ USA O ENDPOINT DO JSON!
+        }
+
+        // ✅ PRIORIDADE 2: Se veio do wizard/config
+        if (!string.IsNullOrEmpty(config.SelectApiRoute))
+            return config.SelectApiRoute;
+
+        if (!string.IsNullOrEmpty(config.SelectEndpoint))
+            return config.SelectEndpoint;
+
+        // ✅ PRIORIDADE 3: Gera automaticamente (fallback)
+        return GenerateSelect2ApiUrl(new PropertyConfig { Name = propertyName }, entity);
+    }
     private static string GenerateSelect2ApiUrl(PropertyConfig prop, EntityConfig entity)
     {
         // Extrai nome da entidade relacionada do campo

@@ -36,6 +36,7 @@ public static class WebModelsTemplate
     {
         var modulePath = GetModulePath(entity.Module);
         var properties = GenerateProperties(entity.Properties);
+        var navigationProperties = GenerateNavigationProperties(entity.NavigationProperties);
 
         var content = $@"// =============================================================================
 // ARQUIVO GERADO POR GeradorFullStack v4.0
@@ -52,7 +53,7 @@ namespace RhSensoERP.Web.Models.{modulePath}.{entity.Name};
 /// </summary>
 public class {entity.Name}Dto
 {{
-{properties}
+{properties}{(string.IsNullOrEmpty(navigationProperties) ? "" : "\n" + navigationProperties)}
 }}
 ";
 
@@ -468,6 +469,36 @@ public class {lookup.DtoName}
             return "Common";
 
         return moduleName;
+    }
+
+
+    /// <summary>
+    /// ✅ v4.1 NOVO: Gera propriedades de navegação para o DTO.
+    /// Estas propriedades vêm de entidades relacionadas via FK.
+    /// Ex: FornecedorRazaoSocial, TipoSanguineoDescricao, UfSigla
+    /// </summary>
+    private static string GenerateNavigationProperties(List<NavigationPropertyConfig> navigationProperties)
+    {
+        if (navigationProperties == null || !navigationProperties.Any())
+            return string.Empty;
+
+        var sb = new System.Text.StringBuilder();
+
+        sb.AppendLine();
+        sb.AppendLine("    // =========================================================================");
+        sb.AppendLine("    // PROPRIEDADES DE NAVEGAÇÃO (campos de entidades relacionadas)");
+        sb.AppendLine("    // =========================================================================");
+
+        foreach (var nav in navigationProperties)
+        {
+            sb.AppendLine();
+            sb.AppendLine($"    /// <summary>");
+            sb.AppendLine($"    /// Campo '{nav.DisplayField}' da navegação {nav.NavigationName}.");
+            sb.AppendLine($"    /// </summary>");
+            sb.AppendLine($"    public {nav.CSharpType} {nav.Name} {{ get; set; }}");
+        }
+
+        return sb.ToString();
     }
 
     #endregion

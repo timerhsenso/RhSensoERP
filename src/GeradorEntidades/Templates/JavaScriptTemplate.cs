@@ -300,6 +300,7 @@ $(document).ready(function () {{
 
     const crud = new {entity.Name}Crud({{
         controllerName: '{entity.Name}',
+        apiRoute: '{entity.ApiRoute}',
         entityName: '{entity.DisplayName}',
         entityNamePlural: '{entity.DisplayName}s',
         idField: '{idFieldLower}',
@@ -707,6 +708,31 @@ $(document).ready(function () {{
             }}
         }},");
             }
+        }
+
+
+        // =====================================================================
+        // ✅ v4.5: COLUNAS DE NAVEGAÇÃO (CAMPOS DE ENTIDADES RELACIONADAS)
+        // =====================================================================
+        // Gera colunas automaticamente para propriedades de navegação
+        // Ex: FornecedorRazaoSocial, TipoSanguineoDescricao, UfSigla
+        // =====================================================================
+
+        foreach (var nav in entity.NavigationProperties)
+        {
+            var navNameCamel = char.ToLower(nav.Name[0]) + nav.Name.Substring(1);
+
+            sb.AppendLine($@"        // ✅ {nav.DisplayName} (Navegação)
+        {{
+            data: '{navNameCamel}',
+            name: '{navNameCamel}',
+            title: '{nav.DisplayName}',
+            orderable: false,  // Campos de navegação não permitem ordenação
+            searchable: false,
+            render: function (data, type, row) {{
+                return data !== undefined && data !== null ? data : '';
+            }}
+        }},");
         }
 
         // =====================================================================

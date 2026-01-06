@@ -483,8 +483,8 @@ public class FullStackRequest
     // =========================================================================
     // MENU E NAVEGAÇÃO
     // =========================================================================
-    public string Modulo { get; set; } = "GestaoDePessoas";
-    public string ModuloRota { get; set; } = "gestaodepessoas";
+    public string Modulo { get; set; } = string.Empty;
+    public string ModuloRota { get; set; } = string.Empty;
     public string Icone { get; set; } = "fas fa-table";
     public int MenuOrder { get; set; } = 10;
     public bool GerarMenuItem { get; set; } = true;
@@ -686,6 +686,55 @@ public class GeneratedFile
     public string FileType { get; set; } = string.Empty;
 }
 
+/// <summary>
+/// ✅ v4.1 NOVO: Configuração de propriedade de navegação para exibição no DTO.
+/// Representa um campo calculado que vem de uma entidade relacionada via FK.
+/// 
+/// EXEMPLO:
+/// - Name: "FornecedorRazaoSocial"
+/// - DisplayName: "Fornecedor"
+/// - NavigationName: "Fornecedor"
+/// - DisplayField: "RazaoSocial"
+/// - ForeignKeyProperty: "IdFornecedor"
+/// </summary>
+public class NavigationPropertyConfig
+{
+    /// <summary>
+    /// Nome da propriedade no DTO (ex: "FornecedorRazaoSocial")
+    /// </summary>
+    public string Name { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Nome para exibição na grid (ex: "Fornecedor")
+    /// </summary>
+    public string DisplayName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Nome da navegação na entidade backend (ex: "Fornecedor")
+    /// </summary>
+    public string NavigationName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Campo a ser exibido da entidade relacionada (ex: "RazaoSocial", "Descricao", "Sigla")
+    /// </summary>
+    public string DisplayField { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Tipo C# da propriedade (sempre string? para navegações)
+    /// </summary>
+    public string CSharpType => "string?";
+
+    /// <summary>
+    /// FK origem (ex: "IdFornecedor")
+    /// </summary>
+    public string ForeignKeyProperty { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Entidade destino (ex: "Fornecedor", "TipoSanguineo")
+    /// </summary>
+    public string TargetEntity { get; set; } = string.Empty;
+}
+
 #endregion
 
 #region EntityConfig (Compatível com Templates)
@@ -704,8 +753,8 @@ public class EntityConfig
     public string TableName { get; set; } = string.Empty;
     public string CdFuncao { get; set; } = string.Empty;
     public string CdSistema { get; set; } = "RHU";
-    public string Module { get; set; } = "GestaoDePessoas";
-    public string ModuleRoute { get; set; } = "gestaodepessoas";
+    public string Module { get; set; } = string.Empty;
+    public string ModuleRoute { get; set; } = string.Empty;
     public string ModuleRouteLower => ModuleRoute.ToLowerInvariant();
     public string? BackendNamespace { get; set; }
 
@@ -741,6 +790,9 @@ public class EntityConfig
 
     // Propriedades
     public List<PropertyConfig> Properties { get; set; } = [];
+
+    // ✅ v4.1: Propriedades de navegação para exibição
+    public List<NavigationPropertyConfig> NavigationProperties { get; set; } = [];
 
     /// <summary>
     /// Lista de lookups Select2 detectados automaticamente.
@@ -957,16 +1009,16 @@ public class EntityConfig
         // =========================================================================
         foreach (var prop in config.Properties.Where(p => p.Form != null && !string.IsNullOrEmpty(p.Form.SelectEndpoint)))
         {
-            var endpoint = prop.Form.SelectEndpoint; 
+            var endpoint = prop.Form.SelectEndpoint;
             // Ex: /api/gestaoterceirosprestadores/capfornecedores
-            
+
             // Tenta extrair o nome da entidade do endpoint ou da FK
             var entityName = prop.ForeignKeyTable ?? "Unknown";
             if (!string.IsNullOrEmpty(prop.ForeignKeyTable))
             {
                 entityName = TabelaInfo.ToPascalCase(prop.ForeignKeyTable);
             }
-            else 
+            else
             {
                 // Fallback: extrai do endpoint (último segmento)
                 var segments = endpoint.Split('/', StringSplitOptions.RemoveEmptyEntries);
@@ -974,7 +1026,7 @@ public class EntityConfig
                 {
                     entityName = TabelaInfo.ToPascalCase(segments.Last());
                     // Remove plural "es" ou "s" básico se possível (bem simplista)
-                    if (entityName.EndsWith("s")) entityName = entityName.TrimEnd('s'); 
+                    if (entityName.EndsWith("s")) entityName = entityName.TrimEnd('s');
                     if (entityName.EndsWith("e")) entityName = entityName.TrimEnd('e'); // remove 'es' -> 'e' (errado), melhor deixar plural se não tiver FK info
                 }
             }
@@ -996,7 +1048,97 @@ public class EntityConfig
             });
         }
 
+        // =========================================================================
+        // ✅ v4.1: Popula NavigationProperties baseado nas ForeignKeys da tabela
+        // =========================================================================
+        // Processa FKs únicas (evita duplicatas) e gera propriedades de navegação
+        // para exibição no frontend (ex: FornecedorRazaoSocial, TipoSanguineoDescricao)
+        // =========================================================================
+
+        var fksUnicas = tabela.ForeignKeys
+            .Where(fk => !fk.IsParteDeFkComposta) // Ignora FKs compostas
+            .GroupBy(fk => fk.ChaveUnica)
+            .Select(g => g.First())
+            .ToList();
+
+        foreach (var fk in fksUnicas)
+        {
+            // Busca configuração customizada (se definida pelo usuário)
+            var fkConfig = request.ConfiguracoesFk?
+                .FirstOrDefault(c => c.ColunaOrigem.Equals(fk.ColunaOrigem, StringComparison.OrdinalIgnoreCase));
+
+            // Se usuário marcou para ignorar, pula
+            if (fkConfig?.Ignorar == true)
+                continue;
+
+            // Nome da navegação (ex: "Fornecedor", "TipoSanguineo")
+            var navigationName = fkConfig?.NavigationName ?? fk.NavigationPropertyName;
+
+            // Campo de display da entidade relacionada
+            // Tenta usar configuração do usuário, senão detecta automaticamente
+            var displayField = fkConfig?.DisplayColumn;
+
+            if (string.IsNullOrEmpty(displayField))
+            {
+                // Detecta campo de display baseado em padrões comuns
+                displayField = DetectDisplayField(fk.TabelaDestino);
+            }
+
+            // Nome da propriedade no DTO (ex: "FornecedorRazaoSocial")
+            var propertyName = $"{navigationName}{displayField}";
+
+            // DisplayName para a coluna da grid (ex: "Fornecedor")
+            var displayName = FormatDisplayName(navigationName);
+
+            config.NavigationProperties.Add(new NavigationPropertyConfig
+            {
+                Name = propertyName,
+                DisplayName = displayName,
+                NavigationName = navigationName,
+                DisplayField = displayField,
+                ForeignKeyProperty = TabelaInfo.ToPascalCase(fk.ColunaOrigem),
+                TargetEntity = fk.EntidadeDestino
+            });
+        }
+
         return config;
+    }
+
+    /// <summary>
+    /// ✅ v4.1 NOVO: Detecta o campo de display provável de uma tabela relacionada.
+    /// Usa heurísticas baseadas em padrões comuns de nomenclatura.
+    /// </summary>
+    private static string DetectDisplayField(string tableName)
+    {
+        var lowerTable = tableName.ToLower();
+
+        // Padrões específicos por tipo de tabela
+        if (lowerTable.Contains("fornece") || lowerTable.Contains("cliente") ||
+            lowerTable.Contains("empresa") || lowerTable.Contains("pessoa"))
+        {
+            return "RazaoSocial"; // ou "Nome"
+        }
+
+        if (lowerTable.Contains("tipo") || lowerTable.Contains("categoria") ||
+            lowerTable.Contains("classe") || lowerTable.Contains("grupo"))
+        {
+            return "Descricao";
+        }
+
+        if (lowerTable.Contains("uf") || lowerTable.Contains("estado") ||
+            lowerTable.Contains("pais") || lowerTable.Contains("moeda"))
+        {
+            return "Sigla";
+        }
+
+        if (lowerTable.Contains("cidade") || lowerTable.Contains("bairro") ||
+            lowerTable.Contains("logradouro"))
+        {
+            return "Nome";
+        }
+
+        // Padrão genérico
+        return "Descricao";
     }
 
     private static string FormatDisplayName(string name)

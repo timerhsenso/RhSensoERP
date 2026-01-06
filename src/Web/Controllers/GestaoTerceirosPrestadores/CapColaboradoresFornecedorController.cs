@@ -1,26 +1,26 @@
-// =============================================================================
+﻿// =============================================================================
 // ARQUIVO GERADO POR GeradorFullStack v4.0
 // Entity: CapColaboradoresFornecedor
-// Module: ControleAcessoPortaria
-// Data: 2026-01-04 16:00:38
+// Module: GestaoTerceirosPrestadores
+// Data: 2026-01-06 12:37:23
 // =============================================================================
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RhSensoERP.Web.Attributes;
 using RhSensoERP.Web.Controllers.Base;
-using RhSensoERP.Web.Models.ControleAcessoPortaria.CapColaboradoresFornecedor;
-using RhSensoERP.Web.Services.ControleAcessoPortaria.CapColaboradoresFornecedor;
+using RhSensoERP.Web.Models.GestaoTerceirosPrestadores.CapColaboradoresFornecedor;
+using RhSensoERP.Web.Services.GestaoTerceirosPrestadores.CapColaboradoresFornecedor;
 using RhSensoERP.Web.Services.Permissions;
 
-namespace RhSensoERP.Web.Controllers.ControleAcessoPortaria;
+namespace RhSensoERP.Web.Controllers.GestaoTerceirosPrestadores;
 
 // =============================================================================
 // MENU ITEM - Configuração para aparecer no menu dinâmico
 // =============================================================================
 [MenuItem(
-    Module = MenuModule.ControleAcessoPortaria,
+    Module = MenuModule.GestaooDeTerceiros,
     DisplayName = "CapColaboradoresFornecedor",
-    Icon = "fas fa-table",
+    Icon = "",
     Order = 10,
     CdFuncao = "SEG_FM_TSISTEMA"
 )]
@@ -96,7 +96,7 @@ public class CapColaboradoresFornecedorController
             CdFuncao,
             permissions);
 
-        return View("~/Views/ControleAcessoPortaria/CapColaboradoresFornecedor/Index.cshtml", viewModel);
+        return View("~/Views/GestaoTerceirosPrestadores/CapColaboradoresFornecedor/Index.cshtml", viewModel);
     }
 
     // =========================================================================

@@ -1,9 +1,9 @@
-@model RhSensoERP.Web.Models.ControleAcessoPortaria.CapColaboradoresFornecedor.CapColaboradoresFornecedorListViewModel
+﻿@model RhSensoERP.Web.Models.GestaoTerceirosPrestadores.CapColaboradoresFornecedor.CapColaboradoresFornecedorListViewModel
 @{
     ViewData["Title"] = Model.PageTitle;
     Layout = "_CrudLayout";
     ViewData["EntityName"] = "CapColaboradoresFornecedor";
-    ViewData["IconClass"] = "fas fa-table";
+    ViewData["IconClass"] = "";
 }
 
 @* ============================================================================
@@ -39,29 +39,35 @@
     <input type="hidden" id="Id" name="Id" />
     <div class="row">
                 <div class="col-md-6 mb-3">
-                    <label for="IdFornecedor" class="form-label">
-                        ID Fornecedor <span class="text-danger">*</span>
+                    <label for="TenantId" class="form-label">
+                        Tenant  ID <span class="text-danger">*</span>
                     </label>
-                    <select class="form-control select2-ajax" id="IdFornecedor" name="IdFornecedor" 
-                    required  data-select2-url="/api/TESTE/fornecedor/lookup" data-value-field="id" data-text-field="nome" style="width: 100%">
-                        <option value="">Selecione...</option>
-                        <!-- Preencher via JavaScript -->
-                    </select>
+                    <input type="text" class="form-control" id="TenantId" name="TenantId" 
+                           placeholder="Digite tenant id..." required  />
+                    
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="IdFornecedor" class="form-label">
+                        ID  Fornecedor <span class="text-danger">*</span>
+                    </label>
+                    <input type="number" class="form-control" id="IdFornecedor" name="IdFornecedor" 
+                           placeholder="Digite id fornecedor..." required  />
+                    
                 </div>
                 <div class="col-md-6 mb-3">
                     <label for="Nome" class="form-label">
                         Nome <span class="text-danger">*</span>
                     </label>
                     <input type="text" class="form-control" id="Nome" name="Nome" 
-                           placeholder="" required  maxlength="255" />
+                           placeholder="Digite nome..." required  maxlength="255" />
                     
                 </div>
-                <div class="col-md-6 mb-3">
+                <div class="col-md-3 mb-3">
                     <label for="Cpf" class="form-label">
                         CPF <span class="text-danger">*</span>
                     </label>
                     <input type="text" class="form-control" id="Cpf" name="Cpf" 
-                           placeholder="" required  maxlength="14" />
+                           placeholder="Digite cpf..." required  maxlength="14" />
                     
                 </div>
                 <div class="col-md-6 mb-3">
@@ -69,7 +75,7 @@
                         RG
                     </label>
                     <input type="text" class="form-control" id="Rg" name="Rg" 
-                           placeholder=""   maxlength="20" />
+                           placeholder="Digite rg..."   maxlength="20" />
                     
                 </div>
                 <div class="col-md-6 mb-3">
@@ -77,7 +83,7 @@
                         E-mail
                     </label>
                     <input type="text" class="form-control" id="Email" name="Email" 
-                           placeholder=""   maxlength="100" />
+                           placeholder="Digite e-mail..."   maxlength="100" />
                     
                 </div>
                 <div class="col-md-6 mb-3">
@@ -85,15 +91,15 @@
                         Telefone
                     </label>
                     <input type="text" class="form-control" id="Telefone" name="Telefone" 
-                           placeholder=""   maxlength="20" />
+                           placeholder="Digite telefone..."   maxlength="20" />
                     
                 </div>
-                <div class="col-md-6 mb-3">
+                <div class="col-md-4 mb-3">
                     <label for="DataNascimento" class="form-label">
-                        Data Nascimento
+                        Data  Nascimento
                     </label>
-                    <input type="text" class="form-control" id="DataNascimento" name="DataNascimento" 
-                           placeholder=""   />
+                    <input type="date" class="form-control" id="DataNascimento" name="DataNascimento" 
+                           placeholder="Digite data nascimento..."   />
                     
                 </div>
                 <div class="col-md-6 mb-3">
@@ -101,41 +107,38 @@
                         Gênero
                     </label>
                     <input type="text" class="form-control" id="Genero" name="Genero" 
-                           placeholder=""   maxlength="20" />
+                           placeholder="Digite gênero..."   maxlength="20" />
                     
                 </div>
                 <div class="col-md-6 mb-3">
                     <label for="EstadoCivil" class="form-label">
-                        Estado Civil
+                        Estado  Civil
                     </label>
                     <input type="text" class="form-control" id="EstadoCivil" name="EstadoCivil" 
-                           placeholder=""   maxlength="50" />
+                           placeholder="Digite estado civil..."   maxlength="50" />
                     
                 </div>
-                <div class="col-md-6 mb-3">
+                <div class="col-md-3 mb-3">
                     <label for="IdTipoSanguineo" class="form-label">
-                        ID Tipo Sanguíneo
+                        ID  Tipo  Sanguíneo
                     </label>
-                    <select class="form-control select2-ajax" id="IdTipoSanguineo" name="IdTipoSanguineo"  
-                    data-select2-url="/api/TESTE2/tiposanguineo/lookup" data-value-field="id" data-text-field="nome" style="width: 100%">
-                        <option value="">Selecione...</option>
-                        <!-- Preencher via JavaScript -->
-                    </select>
+                    <input type="number" class="form-control" id="IdTipoSanguineo" name="IdTipoSanguineo" 
+                           placeholder="Digite id tipo sanguíneo..."   />
+                    
                 </div>
-                <div class="col-md-6 mb-3">
+                <div class="col-md-12 mb-3">
                     <label for="Endereco" class="form-label">
                         Endereço
                     </label>
-                    <input type="text" class="form-control" id="Endereco" name="Endereco" 
-                           placeholder=""   maxlength="500" />
-                    
+                    <textarea class="form-control" id="Endereco" name="Endereco" 
+                              rows="3" placeholder="Digite endereço..."   maxlength="500"></textarea>
                 </div>
                 <div class="col-md-6 mb-3">
                     <label for="Numero" class="form-label">
                         Número
                     </label>
                     <input type="text" class="form-control" id="Numero" name="Numero" 
-                           placeholder=""   maxlength="20" />
+                           placeholder="Digite número..."   maxlength="20" />
                     
                 </div>
                 <div class="col-md-6 mb-3">
@@ -143,7 +146,7 @@
                         Complemento
                     </label>
                     <input type="text" class="form-control" id="Complemento" name="Complemento" 
-                           placeholder=""   maxlength="200" />
+                           placeholder="Digite complemento..."   maxlength="200" />
                     
                 </div>
                 <div class="col-md-6 mb-3">
@@ -151,7 +154,7 @@
                         Bairro
                     </label>
                     <input type="text" class="form-control" id="Bairro" name="Bairro" 
-                           placeholder=""   maxlength="100" />
+                           placeholder="Digite bairro..."   maxlength="100" />
                     
                 </div>
                 <div class="col-md-6 mb-3">
@@ -159,40 +162,39 @@
                         Cidade
                     </label>
                     <input type="text" class="form-control" id="Cidade" name="Cidade" 
-                           placeholder=""   maxlength="100" />
+                           placeholder="Digite cidade..."   maxlength="100" />
                     
                 </div>
-                <div class="col-md-6 mb-3">
+                <div class="col-md-3 mb-3">
                     <label for="IdUf" class="form-label">
-                        ID UF
+                        ID  UF
                     </label>
-                    <select class="form-control select2-ajax" id="IdUf" name="IdUf"   data-select2-url="/api/TESTE3/uf/lookup" data-value-field="id" data-text-field="nome" style="width: 100%">
-                        <option value="">Selecione...</option>
-                        <!-- Preencher via JavaScript -->
-                    </select>
+                    <input type="number" class="form-control" id="IdUf" name="IdUf" 
+                           placeholder="Digite id uf..."   />
+                    
                 </div>
-                <div class="col-md-6 mb-3">
+                <div class="col-md-3 mb-3">
                     <label for="Cep" class="form-label">
                         CEP
                     </label>
                     <input type="text" class="form-control" id="Cep" name="Cep" 
-                           placeholder=""   maxlength="10" />
+                           placeholder="Digite cep..."   maxlength="10" />
                     
                 </div>
-                <div class="col-md-6 mb-3">
+                <div class="col-md-4 mb-3">
                     <label for="DataAdmissao" class="form-label">
-                        Data Admissão <span class="text-danger">*</span>
+                        Data  Admissão <span class="text-danger">*</span>
                     </label>
-                    <input type="text" class="form-control" id="DataAdmissao" name="DataAdmissao" 
-                           placeholder="" required  />
+                    <input type="date" class="form-control" id="DataAdmissao" name="DataAdmissao" 
+                           placeholder="Digite data admissão..." required  />
                     
                 </div>
-                <div class="col-md-6 mb-3">
+                <div class="col-md-4 mb-3">
                     <label for="DataDemissao" class="form-label">
-                        Data Demissão
+                        Data  Demissão
                     </label>
-                    <input type="text" class="form-control" id="DataDemissao" name="DataDemissao" 
-                           placeholder=""   />
+                    <input type="date" class="form-control" id="DataDemissao" name="DataDemissao" 
+                           placeholder="Digite data demissão..."   />
                     
                 </div>
                 <div class="col-md-6 mb-3">
@@ -200,16 +202,48 @@
                         Cargo
                     </label>
                     <input type="text" class="form-control" id="Cargo" name="Cargo" 
-                           placeholder=""   maxlength="100" />
+                           placeholder="Digite cargo..."   maxlength="100" />
                     
                 </div>
-                <div class="col-md-6 mb-3">
+                <div class="col-md-2 mb-3">
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" id="Ativo" name="Ativo" >
                         <label class="form-check-label" for="Ativo">
                             Ativo
                         </label>
                     </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="CreatedAtUtc" class="form-label">
+                        Data  Criação ( UTC) <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" class="form-control" id="CreatedAtUtc" name="CreatedAtUtc" 
+                           placeholder="Digite data criação (utc)..." required  />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="CreatedByUserId" class="form-label">
+                        Criado  Por
+                    </label>
+                    <input type="text" class="form-control" id="CreatedByUserId" name="CreatedByUserId" 
+                           placeholder="Digite criado por..."   />
+                    
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="UpdatedAtUtc" class="form-label">
+                        Data  Atualização ( UTC) <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" class="form-control" id="UpdatedAtUtc" name="UpdatedAtUtc" 
+                           placeholder="Digite data atualização (utc)..." required  />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="UpdatedByUserId" class="form-label">
+                        Atualizado  Por
+                    </label>
+                    <input type="text" class="form-control" id="UpdatedByUserId" name="UpdatedByUserId" 
+                           placeholder="Digite atualizado por..."   />
+                    
                 </div>
     </div>
 
@@ -219,5 +253,5 @@
    Script específico da entidade
    ============================================================================ *@
 @section PageScripts {
-    <script src="~/js/controleacessoportaria/capcolaboradoresfornecedor/capcolaboradoresfornecedor.js" asp-append-version="true"></script>
+    <script src="~/js/gestaoterceirosprestadores/capcolaboradoresfornecedor/capcolaboradoresfornecedor.js" asp-append-version="true"></script>
 }

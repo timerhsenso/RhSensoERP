@@ -1,0 +1,519 @@
+@{
+    ViewData["Title"] = "Gerador Full-Stack v2.0";
+}
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"]</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+
+    <style>
+        body {
+            padding-top: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .main-container {
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .section-card {
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background-color: #f8f9fa;
+        }
+        .section-title {
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 15px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+        .info-badge {
+            background-color: #e7f3ff;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            padding: 12px 30px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        .property-card {
+            background-color: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            transition: all 0.3s;
+        }
+        .property-card:hover {
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+        .badge-property {
+            font-size: 0.75rem;
+            padding: 4px 8px;
+            margin-right: 5px;
+        }
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+        }
+        pre {
+            background-color: #f4f4f4;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            max-height: 400px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid px-4">
+        <div class="main-container">
+            <!-- Cabeçalho -->
+            <div class="header">
+                <h1><i class="fas fa-rocket"></i> Gerador Full-Stack v2.0</h1>
+                <p class="lead mb-0">Sistema inteligente de geração de código usando templates C#</p>
+            </div>
+
+            <!-- Alerta de Instruções -->
+            <div class="info-badge">
+                <h5><i class="fas fa-info-circle"></i> Como usar:</h5>
+                <ol class="mb-0">
+                    <li>Carregue o JSON do manifesto (da URL ou arquivo local)</li>
+                    <li>Revise as configurações da entidade</li>
+                    <li>Clique em "Gerar Código" para criar todos os arquivos</li>
+                    <li>Baixe o ZIP com os arquivos gerados</li>
+                </ol>
+            </div>
+
+            <!-- Etapa 1: Carregar JSON -->
+            <div class="section-card">
+                <h4 class="section-title"><i class="fas fa-download"></i> Etapa 1: Carregar JSON do Manifesto</h4>
+                
+                <div class="row mb-3">
+                    <div class="col-md-8">
+                        <label class="form-label fw-bold">URL do Manifesto:</label>
+                        <input type="text" id="jsonUrl" class="form-control form-control-lg" 
+                               placeholder="https://localhost:7193/api/manifest/entities/CapColaboradoresFornecedor"
+                               value="https://localhost:7193/api/manifest/entities/CapColaboradoresFornecedor">
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button class="btn btn-primary w-100" id="loadFromUrl">
+                            <i class="fas fa-download"></i> Carregar da URL
+                        </button>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-8">
+                        <label class="form-label fw-bold">Ou carregue um arquivo JSON:</label>
+                        <input type="file" class="form-control" id="jsonFile" accept=".json">
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button class="btn btn-secondary w-100" id="loadFromFile">
+                            <i class="fas fa-upload"></i> Carregar Arquivo
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading Spinner -->
+            <div class="loading-spinner" id="loadingSpinner">
+                <div class="spinner-border text-primary" role="status"></div>
+                <p class="mt-3">Carregando metadados...</p>
+            </div>
+
+            <!-- Etapa 2: Configuração da Entidade (oculto inicialmente) -->
+            <div class="section-card" id="entityConfigSection" style="display: none;">
+                <h4 class="section-title"><i class="fas fa-cog"></i> Etapa 2: Configuração da Entidade</h4>
+                
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Nome da Entidade:</label>
+                        <input type="text" class="form-control" id="entityName" readonly>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Nome de Exibição:</label>
+                        <input type="text" class="form-control" id="displayName">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Módulo:</label>
+                        <input type="text" class="form-control" id="moduleName">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Código da Função:</label>
+                        <input type="text" class="form-control" id="cdFuncao">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Código do Sistema:</label>
+                        <input type="text" class="form-control" id="cdSistema" value="CAP">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Ícone:</label>
+                        <input type="text" class="form-control" id="icon" value="fas fa-table">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Ordem no Menu:</label>
+                        <input type="number" class="form-control" id="menuOrder" value="10">
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <h5><i class="fas fa-list"></i> Propriedades da Entidade:</h5>
+                    <div id="propertiesList"></div>
+                </div>
+
+                <div class="mt-4">
+                    <h5><i class="fas fa-code"></i> JSON Completo (Debug):</h5>
+                    <button class="btn btn-sm btn-outline-secondary mb-2" id="toggleJson">
+                        <i class="fas fa-eye"></i> Mostrar/Ocultar JSON
+                    </button>
+                    <pre id="jsonDebug" style="display: none;"></pre>
+                </div>
+            </div>
+
+            <!-- Etapa 3: Gerar Código -->
+            <div class="text-center my-4" id="generateSection" style="display: none;">
+                <button class="btn btn-primary btn-lg" id="generateBtn">
+                    <i class="fas fa-magic"></i> Gerar Código Completo
+                </button>
+                <p class="text-muted mt-2">
+                    <small>Serão gerados: Controller, Models, Services, View, JavaScript</small>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        let entityMetadata = null;
+
+        $(document).ready(function() {
+            console.log('🚀 Gerador Full-Stack v2.0 iniciado');
+
+            // =====================================================================
+            // CARREGAR JSON DA URL
+            // =====================================================================
+            $('#loadFromUrl').click(function() {
+                const url = $('#jsonUrl').val().trim();
+                if (!url) {
+                    Swal.fire('Erro', 'Por favor, informe a URL do JSON', 'error');
+                    return;
+                }
+                loadJsonFromUrl(url);
+            });
+
+            // =====================================================================
+            // CARREGAR JSON DE ARQUIVO
+            // =====================================================================
+            $('#loadFromFile').click(function() {
+                const file = $('#jsonFile')[0].files[0];
+                if (!file) {
+                    Swal.fire('Erro', 'Por favor, selecione um arquivo JSON', 'error');
+                    return;
+                }
+                loadJsonFromFile(file);
+            });
+
+            // =====================================================================
+            // GERAR CÓDIGO
+            // =====================================================================
+            $('#generateBtn').click(function() {
+                generateCode();
+            });
+
+            // =====================================================================
+            // TOGGLE JSON DEBUG
+            // =====================================================================
+            $('#toggleJson').click(function() {
+                $('#jsonDebug').slideToggle();
+            });
+        });
+
+        // =========================================================================
+        // CARREGAR JSON DA URL
+        // =========================================================================
+        function loadJsonFromUrl(url) {
+            $('#loadingSpinner').show();
+            $('#entityConfigSection').hide();
+            $('#generateSection').hide();
+
+            console.log('📥 Carregando JSON de:', url);
+
+            $.ajax({
+                url: url,
+                type: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    console.log('✅ JSON carregado com sucesso:', data);
+                    processJsonData(data);
+                },
+                error: function(xhr, status, error) {
+                    console.error('❌ Erro ao carregar JSON:', error);
+                    $('#loadingSpinner').hide();
+                    Swal.fire('Erro', `Não foi possível carregar o JSON: ${error}`, 'error');
+                }
+            });
+        }
+
+        // =========================================================================
+        // CARREGAR JSON DE ARQUIVO
+        // =========================================================================
+        function loadJsonFromFile(file) {
+            $('#loadingSpinner').show();
+            $('#entityConfigSection').hide();
+            $('#generateSection').hide();
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    console.log('✅ JSON do arquivo carregado:', data);
+                    processJsonData(data);
+                } catch (error) {
+                    console.error('❌ Erro ao parsear JSON:', error);
+                    $('#loadingSpinner').hide();
+                    Swal.fire('Erro', 'Arquivo JSON inválido', 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // =========================================================================
+        // PROCESSAR DADOS DO JSON
+        // =========================================================================
+        function processJsonData(data) {
+            entityMetadata = data;
+            
+            console.log('📋 Metadados processados:', {
+                entityName: entityMetadata.entityName,
+                displayName: entityMetadata.displayName,
+                moduleName: entityMetadata.moduleName,
+                cdFuncao: entityMetadata.permissions?.cdFuncao,
+                propertiesCount: entityMetadata.properties?.length
+            });
+
+            // ✅ PREENCHE OS CAMPOS (USA OS NOMES CORRETOS DO JSON)
+            $('#entityName').val(entityMetadata.entityName || '');
+            $('#displayName').val(entityMetadata.displayName || entityMetadata.entityName || '');
+            $('#moduleName').val(entityMetadata.moduleName || 'GestaoTerceirosPrestadores');
+            $('#cdFuncao').val(entityMetadata.permissions?.cdFuncao || '');
+            $('#cdSistema').val(entityMetadata.permissions?.cdSistema || 'CAP');
+
+            // Exibe propriedades
+            displayProperties();
+
+            // Exibe JSON completo
+            $('#jsonDebug').text(JSON.stringify(entityMetadata, null, 2));
+
+            // Mostra seções
+            $('#loadingSpinner').hide();
+            $('#entityConfigSection').slideDown();
+            $('#generateSection').slideDown();
+
+            Swal.fire('Sucesso', `Entidade "${entityMetadata.entityName}" carregada!`, 'success');
+        }
+
+        // =========================================================================
+        // EXIBIR PROPRIEDADES
+        // =========================================================================
+        function displayProperties() {
+            const $list = $('#propertiesList');
+            $list.empty();
+
+            if (!entityMetadata.properties || entityMetadata.properties.length === 0) {
+                $list.html('<p class="text-muted">Nenhuma propriedade encontrada.</p>');
+                return;
+            }
+
+            entityMetadata.properties.forEach(prop => {
+                const badges = [];
+                
+                if (prop.isPrimaryKey) badges.push('<span class="badge bg-warning badge-property">PK</span>');
+                if (prop.isRequired) badges.push('<span class="badge bg-danger badge-property">Obrigatório</span>');
+                if (prop.list?.show) badges.push('<span class="badge bg-success badge-property">Grid</span>');
+                if (prop.form?.show) badges.push('<span class="badge bg-info badge-property">Form</span>');
+                if (prop.lookup) badges.push('<span class="badge bg-primary badge-property">Select2</span>');
+
+                const card = `
+                    <div class="property-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>${prop.displayName || prop.name}</strong>
+                                <span class="text-muted ms-2">(${prop.type})</span>
+                            </div>
+                            <div>
+                                ${badges.join(' ')}
+                            </div>
+                        </div>
+                        ${prop.lookup ? `
+                            <div class="mt-2">
+                                <small class="text-muted">
+                                    <i class="fas fa-link"></i> Lookup: ${prop.lookup.endpoint}
+                                </small>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+                $list.append(card);
+            });
+        }
+
+        // =========================================================================
+        // GERAR CÓDIGO
+        // =========================================================================
+        function generateCode() {
+            console.log('⚙️ Iniciando geração de código...');
+
+            // ✅ MONTA O REQUEST NO FORMATO CORRETO
+            const wizardRequest = {
+                entityName: $('#entityName').val(),
+                displayName: $('#displayName').val(),
+                moduleName: $('#moduleName').val(),  // ✅ NOME CORRETO!
+                cdFuncao: $('#cdFuncao').val(),
+                cdSistema: $('#cdSistema').val(),
+                icon: $('#icon').val(),
+                menuOrder: parseInt($('#menuOrder').val()),
+                
+                // Grid columns - pega do JSON
+                gridColumns: entityMetadata.properties
+                    .filter(p => p.list?.show)
+                    .map(p => ({
+                        name: p.name,
+                        title: p.displayName || p.name,
+                        visible: true,
+                        order: p.list.order || 0,
+                        format: p.list.format || 'text',
+                        sortable: p.list.sortable !== false
+                    })),
+
+                // Form fields - pega do JSON
+                formFields: entityMetadata.properties
+                    .filter(p => p.form?.show)
+                    .map(p => ({
+                        name: p.name,
+                        label: p.displayName || p.name,
+                        type: p.type,
+                        inputType: p.form.inputType || 'text',
+                        colSize: p.form.colSize || 6,
+                        order: p.form.order || 0,
+                        required: p.isRequired || false,
+                        placeholder: p.form.placeholder || '',
+                        helpText: p.form.helpText || '',
+                        maxLength: p.maxLength,
+                        
+                        // ✅ SELECT2 CONFIG
+                        isSelect2Ajax: !!p.lookup,
+                        selectEndpoint: p.lookup?.endpoint || '',
+                        selectValueField: p.lookup?.valueField || 'id',
+                        selectTextField: p.lookup?.textField || 'nome'
+                    })),
+
+                formLayout: {
+                    columns: 2,
+                    useTabs: false,
+                    tabs: []
+                },
+
+                gerarEntidade: false,
+                gerarWebController: true,
+                gerarWebModels: true,
+                gerarWebServices: true,
+                gerarView: true,
+                gerarJavaScript: true
+            };
+
+            console.log('📤 Request montado:', wizardRequest);
+
+            // ✅ CHAMA A API REAL
+            Swal.fire({
+                title: 'Gerando código...',
+                text: 'Aguarde enquanto os arquivos são criados',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            $.ajax({
+                url: '/api/generator/download-zip',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(wizardRequest),
+                xhrFields: {
+                    responseType: 'blob'
+                },
+                success: function(blob) {
+                    console.log('✅ Código gerado com sucesso!');
+                    
+                    // Download do ZIP
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `${wizardRequest.entityName}_Frontend.zip`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+
+                    Swal.fire('Sucesso!', 'Código gerado e download iniciado', 'success');
+                },
+                error: function(xhr, status, error) {
+                    console.error('❌ Erro ao gerar código:', error);
+                    console.error('Response:', xhr);
+                    
+                    Swal.fire('Erro', `Falha ao gerar código: ${error}`, 'error');
+                }
+            });
+        }
+    </script>
+</body>
+</html>

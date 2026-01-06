@@ -1,18 +1,18 @@
-// =============================================================================
+﻿// =============================================================================
 // ARQUIVO GERADO POR GeradorFullStack v6.1
 // Entity: CapColaboradoresFornecedor
-// Module: ControleAcessoPortaria
-// ApiRoute: api/gestaodepessoas/capcolaboradoresfornecedor
-// Data: 2026-01-04 16:00:38
+// Module: GestaoTerceirosPrestadores
+// ApiRoute: api/gestaoterceirosprestadores/capcolaboradoresfornecedor
+// Data: 2026-01-06 12:37:23
 // AUTO-REGISTRO: Compatível com AddCrudToolServicesAutomatically()
 // =============================================================================
 using System.Text;
 using System.Text.Json;
-using RhSensoERP.Web.Models.ControleAcessoPortaria.CapColaboradoresFornecedor;
+using RhSensoERP.Web.Models.GestaoTerceirosPrestadores.CapColaboradoresFornecedor;
 using RhSensoERP.Web.Models.Common;
 using RhSensoERP.Web.Services.Base;
 
-namespace RhSensoERP.Web.Services.ControleAcessoPortaria.CapColaboradoresFornecedor;
+namespace RhSensoERP.Web.Services.GestaoTerceirosPrestadores.CapColaboradoresFornecedor;
 
 /// <summary>
 /// Serviço de API para CapColaboradoresFornecedor.
@@ -24,7 +24,7 @@ public class CapColaboradoresFornecedorApiService
     : BaseApiService<CapColaboradoresFornecedorDto, CreateCapColaboradoresFornecedorRequest, UpdateCapColaboradoresFornecedorRequest, int>,
       ICapColaboradoresFornecedorApiService
 {
-    private const string ApiRoute = "/api/gestaoterceirosprestadores/capcolaboradoresfornecedor";
+    private const string ApiRoute = "api/gestaoterceirosprestadores/capcolaboradoresfornecedor";
     private static readonly JsonSerializerOptions _jsonOptions = new()
     {
         PropertyNameCaseInsensitive = true

@@ -1,5 +1,6 @@
 // =============================================================================
 // WIZARD REQUEST v4.0 - SELECT2 AJAX SUPPORT
+// ✅ CORRIGIDO: moduleName (não "modulo")
 // =============================================================================
 
 using System.Text.Json;
@@ -31,10 +32,10 @@ public class WizardRequest
     public string? ApiRoute { get; set; }
 
     // =========================================================================
-    // ⭐ v3.5: MÓDULO EXPLÍCITO
+    // ✅ CORRIGIDO: USA "moduleName" (não "modulo")
     // =========================================================================
 
-    [JsonPropertyName("modulo")]
+    [JsonPropertyName("moduleName")]
     public string? Modulo { get; set; }
 
     // =========================================================================
@@ -70,7 +71,7 @@ public class WizardRequest
             Icone = Icon,
             MenuOrder = MenuOrder,
             ApiRoute = ApiRoute,
-            Modulo = Modulo,
+            Modulo = Modulo ?? string.Empty,  // ✅ GARANTIA
             FormLayout = new FormLayoutConfig
             {
                 Columns = FormLayout.Columns,

@@ -15,20 +15,26 @@ namespace GeradorEntidades.Controllers;
 public class HomeController : Controller
 {
     private readonly DatabaseService _dbService;
+    private readonly ManifestService _manifestService;
     private readonly CodeGeneratorService _codeGenerator;
     private readonly FullStackGeneratorService _fullStackGenerator;
     private readonly ILogger<HomeController> _logger;
+    private readonly IConfiguration _configuration;
 
     public HomeController(
         DatabaseService dbService,
+        ManifestService manifestService,
         CodeGeneratorService codeGenerator,
         FullStackGeneratorService fullStackGenerator,
-        ILogger<HomeController> logger)
+        ILogger<HomeController> logger,
+        IConfiguration configuration)
     {
         _dbService = dbService;
+        _manifestService = manifestService;
         _codeGenerator = codeGenerator;
         _fullStackGenerator = fullStackGenerator;
         _logger = logger;
+        _configuration = configuration;
     }
 
     // =========================================================================
@@ -36,17 +42,21 @@ public class HomeController : Controller
     // =========================================================================
 
     /// <summary>
-    /// Página inicial com lista de tabelas.
+    /// Página inicial com lista de módulos (Novo Wizard).
     /// </summary>
     public async Task<IActionResult> Index()
     {
-        var tabelas = await _dbService.GetTabelasAsync();
-        var modulos = ModuloConfig.GetModulos();
-
-        ViewBag.Modulos = modulos;
-        ViewBag.TotalTabelas = tabelas.Count;
-
-        return View(tabelas);
+        try
+        {
+            var modules = await _manifestService.GetModulesAsync();
+            ViewBag.ApiUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7193";
+            return View(modules);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao carregar módulos");
+            return View(new List<ModuleInfo>());
+        }
     }
 
     // =========================================================================

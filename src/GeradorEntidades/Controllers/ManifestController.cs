@@ -19,183 +19,251 @@ public class ManifestController : Controller
 {
     private readonly ManifestService _manifestService;
     private readonly FullStackGeneratorService _fullStackGenerator;
+    private readonly DatabaseService _dbService;
+    private readonly IConfiguration _configuration;
     private readonly ILogger<ManifestController> _logger;
 
     public ManifestController(
         ManifestService manifestService,
         FullStackGeneratorService fullStackGenerator,
+        DatabaseService dbService,
+        IConfiguration configuration,
         ILogger<ManifestController> logger)
     {
         _manifestService = manifestService;
         _fullStackGenerator = fullStackGenerator;
+        _dbService = dbService;
+        _configuration = configuration;
         _logger = logger;
     }
 
     // =========================================================================
-    // PÁGINA PRINCIPAL - Lista entidades do backend
+    // ✅ ENDPOINTS PARA O WIZARD - LISTAGEM DE MÓDULOS E ENTIDADES
     // =========================================================================
 
     /// <summary>
-    /// Página com lista de entidades do backend (via manifesto).
-    /// </summary>
-    [HttpGet]
-    public async Task<IActionResult> Index()
-    {
-        try
-        {
-            var modules = await _manifestService.GetModulesAsync();
-            var manifest = await _manifestService.GetManifestAsync();
-
-            ViewBag.TotalEntidades = manifest?.Entities.Count ?? 0;
-            ViewBag.TotalModulos = modules.Count;
-            ViewBag.GeneratedAt = manifest?.GeneratedAt ?? "N/A";
-            ViewBag.ApiUrl = HttpContext.RequestServices
-                .GetRequiredService<IConfiguration>()["ApiSettings:BaseUrl"] ?? "https://localhost:7193";
-
-            return View(modules);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Erro ao carregar manifesto");
-            ViewBag.Error = $"Erro ao conectar com a API: {ex.Message}";
-            return View(new List<ModuleInfo>());
-        }
-    }
-
-    // =========================================================================
-    // APIs AJAX
-    // =========================================================================
-
-    /// <summary>
-    /// Lista módulos do backend.
+    /// Lista todos os módulos disponíveis.
+    /// GET: /Manifest/GetModules
     /// </summary>
     [HttpGet]
     public async Task<IActionResult> GetModules()
     {
         try
         {
+            _logger.LogInformation("📦 Carregando lista de módulos");
+
             var modules = await _manifestService.GetModulesAsync();
+
+            _logger.LogInformation("✅ {Count} módulos carregados", modules.Count);
+
             return Json(modules);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erro ao buscar módulos");
+            _logger.LogError(ex, "❌ Erro ao listar módulos");
             return StatusCode(500, new { error = ex.Message });
         }
     }
 
     /// <summary>
-    /// Lista entidades de um módulo.
+    /// Lista entidades de um módulo específico.
+    /// GET: /Manifest/GetEntities?module=NomeModulo
     /// </summary>
     [HttpGet]
-    public async Task<IActionResult> GetEntities(string module)
+    public async Task<IActionResult> GetEntities([FromQuery] string module)
     {
         try
         {
-            var entities = await _manifestService.GetEntitiesByModuleAsync(module);
-            return Json(entities.Select(e => new
+            _logger.LogInformation("📋 Carregando entidades do módulo: {Module}", module);
+
+            if (string.IsNullOrEmpty(module))
             {
-                e.EntityName,
-                e.DisplayName,
-                e.TableName,
-                e.Route,
-                e.CdSistema,
-                e.CdFuncao,
-                e.Icon,
-                PropertiesCount = e.Properties.Count,
-                NavigationsCount = e.Navigations.Count,
-                HasCdFuncao = !string.IsNullOrEmpty(e.CdFuncao)
-            }));
+                return BadRequest(new { error = "Parâmetro 'module' é obrigatório" });
+            }
+
+            var entities = await _manifestService.GetEntitiesByModuleAsync(module);
+
+            _logger.LogInformation("✅ {Count} entidades encontradas em {Module}",
+                entities.Count, module);
+
+            return Json(entities);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erro ao buscar entidades do módulo {Module}", module);
+            _logger.LogError(ex, "❌ Erro ao listar entidades do módulo {Module}", module);
             return StatusCode(500, new { error = ex.Message });
         }
     }
 
     /// <summary>
-    /// Obtém detalhes de uma entidade.
+    /// Obtém detalhes completos de uma entidade.
+    /// GET: /Manifest/GetEntityDetails?entityName=NomeEntidade
     /// </summary>
     [HttpGet]
-    public async Task<IActionResult> GetEntity(string name)
+    public async Task<IActionResult> GetEntityDetails([FromQuery] string entityName)
     {
         try
         {
-            var entity = await _manifestService.GetEntityAsync(name);
+            _logger.LogInformation("🔍 Carregando detalhes da entidade: {Entity}", entityName);
+
+            if (string.IsNullOrEmpty(entityName))
+            {
+                return BadRequest(new { error = "Parâmetro 'entityName' é obrigatório" });
+            }
+
+            var entity = await _manifestService.GetEntityAsync(entityName);
+
             if (entity == null)
-                return NotFound(new { error = $"Entidade '{name}' não encontrada" });
+            {
+                _logger.LogWarning("⚠️ Entidade '{Entity}' não encontrada", entityName);
+                return NotFound(new { error = $"Entidade '{entityName}' não encontrada" });
+            }
+
+            _logger.LogInformation("✅ Entidade {Entity} carregada com {Props} propriedades",
+                entityName, entity.Properties.Count);
 
             return Json(entity);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erro ao buscar entidade {Name}", name);
+            _logger.LogError(ex, "❌ Erro ao obter entidade {Entity}", entityName);
             return StatusCode(500, new { error = ex.Message });
         }
     }
 
-    /// <summary>
-    /// Força atualização do cache do manifesto.
-    /// </summary>
+    // =========================================================================
+    // COMPARAÇÃO E GERAÇÃO EM DISCO
+    // =========================================================================
+
     [HttpPost]
-    public async Task<IActionResult> RefreshManifest()
+    public async Task<IActionResult> CompareEntity([FromBody] ManifestGenerateRequest request)
     {
         try
         {
-            var manifest = await _manifestService.GetManifestAsync(forceRefresh: true);
-            return Json(new
+            var entity = await _manifestService.GetEntityAsync(request.EntityName);
+            if (entity == null)
+                return NotFound(new { error = $"Entidade '{request.EntityName}' não encontrada no manifesto" });
+
+            var dbTable = await _dbService.GetTabelaAsync(entity.TableName);
+            var result = new EntityComparisonResult
             {
-                success = true,
-                count = manifest?.Entities.Count ?? 0,
-                generatedAt = manifest?.GeneratedAt
-            });
+                EntityName = entity.EntityName,
+                TableName = entity.TableName,
+                TableExists = dbTable != null
+            };
+
+            if (dbTable != null)
+            {
+                // Verify Columns
+                var dbColumns = dbTable.Colunas.ToDictionary(c => c.Nome, StringComparer.OrdinalIgnoreCase);
+
+                foreach (var prop in entity.Properties)
+                {
+                    var colName = prop.ColumnName ?? prop.Name;
+                    if (!dbColumns.TryGetValue(colName, out var dbCol))
+                    {
+                        result.MissingColumns.Add(colName);
+                        continue;
+                    }
+
+                    // Simple Type Comparison
+                    var apiTypeRaw = prop.Type.Replace("?", "");
+                    var dbTypeRaw = dbCol.TipoCSharp.Replace("?", "");
+
+                    // Normalize for comparison (e.g. Int32 vs int)
+                    if (!AreTypesCompatible(apiTypeRaw, dbTypeRaw))
+                    {
+                        result.Mismatches.Add(new PropertyMismatch
+                        {
+                            PropertyName = prop.Name,
+                            ColumnName = colName,
+                            ApiType = prop.Type,
+                            DbType = dbCol.TipoCSharp,
+                            Message = $"Tipo incompatível: API espera {prop.Type}, Banco é {dbCol.TipoCSharp}"
+                        });
+                    }
+                }
+
+                // Check for extra columns in DB
+                var entityCols = entity.Properties.Select(p => p.ColumnName ?? p.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
+                foreach (var dbColName in dbColumns.Keys)
+                {
+                    if (!entityCols.Contains(dbColName))
+                    {
+                        result.ExtraColumns.Add(dbColName);
+                    }
+                }
+            }
+
+            return Json(result);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erro ao atualizar manifesto");
+            _logger.LogError(ex, "Erro ao comparar entidade {Entity}", request.EntityName);
             return StatusCode(500, new { error = ex.Message });
         }
     }
 
-    // =========================================================================
-    // GERAÇÃO DE FRONTEND
-    // =========================================================================
-
     /// <summary>
-    /// Gera frontend para uma entidade do backend.
+    /// Obtém detalhes de uma entidade (compatibilidade com JavaScript).
+    /// GET: /Manifest/GetEntity?name=NomeEntidade
     /// </summary>
-    [HttpPost]
-    public async Task<IActionResult> GerarFrontend([FromBody] ManifestGenerateRequest request)
+    [HttpGet]
+    public async Task<IActionResult> GetEntity([FromQuery] string name)
     {
-        _logger.LogInformation("GerarFrontend iniciado para entidade: {Entity}", request.EntityName);
-
         try
         {
-            // 1. Busca entidade do manifesto
-            var entity = await _manifestService.GetEntityAsync(request.EntityName);
-            if (entity == null)
+            _logger.LogInformation("🔍 Carregando entidade: {Entity}", name);
+
+            if (string.IsNullOrEmpty(name))
             {
-                return NotFound(new { error = $"Entidade '{request.EntityName}' não encontrada no manifesto" });
+                return BadRequest(new { error = "Parâmetro 'name' é obrigatório" });
             }
 
-            // 2. Converte para TabelaInfo
-            var tabela = _manifestService.ConvertToTabelaInfo(entity);
+            var entity = await _manifestService.GetEntityAsync(name);
 
-            // 3. Converte para FullStackRequest (apenas frontend!)
+            if (entity == null)
+            {
+                _logger.LogWarning("⚠️ Entidade '{Entity}' não encontrada", name);
+                return NotFound(new { error = $"Entidade '{name}' não encontrada" });
+            }
+
+            _logger.LogInformation("✅ Entidade {Entity} carregada com {Props} propriedades",
+                name, entity.Properties.Count);
+
+            return Json(entity);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "❌ Erro ao obter entidade {Entity}", name);
+            return StatusCode(500, new { error = ex.Message });
+        }
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> GenerateToDisk([FromBody] ManifestGenerateRequest request)
+    {
+        try
+        {
+            // 1. Get Params
+            var outputPath = _configuration["GenerationSettings:OutputPath"];
+            if (string.IsNullOrEmpty(outputPath))
+                return BadRequest(new { error = "OutputPath não configurado no appsettings.json" });
+
+            // 2. Refresh Entity
+            var entity = await _manifestService.GetEntityAsync(request.EntityName);
+            if (entity == null) return NotFound($"Entidade '{request.EntityName}' não encontrada");
+
+            // 3. Convert & Generate
+            var tabela = _manifestService.ConvertToTabelaInfo(entity);
             var fullRequest = _manifestService.ConvertToFullStackRequest(entity);
 
-            // 4. Aplica overrides do request (se fornecidos)
-            if (!string.IsNullOrEmpty(request.CdFuncao))
-                fullRequest.CdFuncao = request.CdFuncao;
-            if (!string.IsNullOrEmpty(request.DisplayName))
-                fullRequest.DisplayName = request.DisplayName;
-            if (!string.IsNullOrEmpty(request.Icone))
-                fullRequest.Icone = request.Icone;
-            if (request.MenuOrder > 0)
-                fullRequest.MenuOrder = request.MenuOrder;
+            // Apply overrides
+            if (!string.IsNullOrEmpty(request.CdFuncao)) fullRequest.CdFuncao = request.CdFuncao;
+            if (!string.IsNullOrEmpty(request.DisplayName)) fullRequest.DisplayName = request.DisplayName;
+            if (request.MenuOrder > 0) fullRequest.MenuOrder = request.MenuOrder;
 
-            // Configurações de geração (apenas frontend)
+            // Frontend Only
             fullRequest.GerarEntidade = false;
             fullRequest.GerarApiController = false;
             fullRequest.GerarWebController = request.GerarWebController;
@@ -204,194 +272,63 @@ public class ManifestController : Controller
             fullRequest.GerarView = request.GerarView;
             fullRequest.GerarJavaScript = request.GerarJavaScript;
 
-            // 5. Gera os arquivos
             var result = _fullStackGenerator.Generate(tabela, fullRequest);
+            if (!result.Success) return BadRequest(new { error = result.Error });
 
-            if (!result.Success)
+            // 4. Write to Disk
+            var savedFiles = new List<string>();
+            foreach (var file in result.AllFiles)
             {
-                return BadRequest(new { error = result.Error });
-            }
+                var fullPath = Path.Combine(outputPath, file.RelativePath);
 
-            _logger.LogInformation(
-                "Frontend gerado para {Entity}: {FileCount} arquivos",
-                request.EntityName,
-                result.AllFiles.Count());
+                var dir = Path.GetDirectoryName(fullPath);
+                if (dir != null && !Directory.Exists(dir))
+                    Directory.CreateDirectory(dir);
+
+                await System.IO.File.WriteAllTextAsync(fullPath, file.Content, Encoding.UTF8);
+                savedFiles.Add(fullPath);
+            }
 
             return Json(new
             {
                 success = true,
-                nomeEntidade = result.NomeEntidade,
-                warnings = result.Warnings,
-                files = result.AllFiles.Select(f => new
-                {
-                    f.FileName,
-                    f.RelativePath,
-                    f.FileType,
-                    f.Content
-                })
+                message = $"{savedFiles.Count} arquivos gerados com sucesso em {outputPath}",
+                files = savedFiles
             });
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erro ao gerar frontend para {Entity}", request.EntityName);
+            _logger.LogError(ex, "Erro ao salvar arquivos no disco");
             return StatusCode(500, new { error = ex.Message });
         }
-    }
-
-    /// <summary>
-    /// Download ZIP do frontend gerado.
-    /// </summary>
-    [HttpPost]
-    public async Task<IActionResult> DownloadFrontendZip([FromBody] ManifestGenerateRequest request)
-    {
-        try
-        {
-            // 1. Busca entidade
-            var entity = await _manifestService.GetEntityAsync(request.EntityName);
-            if (entity == null)
-                return NotFound($"Entidade '{request.EntityName}' não encontrada");
-
-            // 2. Converte
-            var tabela = _manifestService.ConvertToTabelaInfo(entity);
-            var fullRequest = _manifestService.ConvertToFullStackRequest(entity);
-
-            // Aplica overrides
-            if (!string.IsNullOrEmpty(request.CdFuncao))
-                fullRequest.CdFuncao = request.CdFuncao;
-            if (!string.IsNullOrEmpty(request.DisplayName))
-                fullRequest.DisplayName = request.DisplayName;
-
-            // Apenas frontend
-            fullRequest.GerarEntidade = false;
-            fullRequest.GerarApiController = false;
-
-            // 3. Gera
-            var result = _fullStackGenerator.Generate(tabela, fullRequest);
-            if (!result.Success)
-                return BadRequest(result.Error);
-
-            // 4. Cria ZIP
-            using var memoryStream = new MemoryStream();
-            using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
-            {
-                foreach (var file in result.AllFiles)
-                {
-                    var entry = archive.CreateEntry(file.RelativePath);
-                    using var entryStream = entry.Open();
-                    using var writer = new StreamWriter(entryStream, Encoding.UTF8);
-                    await writer.WriteAsync(file.Content);
-                }
-
-                // README
-                var readmeEntry = archive.CreateEntry("README.md");
-                using var readmeStream = readmeEntry.Open();
-                using var readmeWriter = new StreamWriter(readmeStream, Encoding.UTF8);
-                await readmeWriter.WriteAsync(GenerateReadme(result, entity));
-            }
-
-            memoryStream.Position = 0;
-            return File(memoryStream.ToArray(), "application/zip", $"{result.NomeEntidade}_Frontend.zip");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Erro ao gerar ZIP para {Entity}", request.EntityName);
-            return StatusCode(500, ex.Message);
-        }
-    }
-
-    /// <summary>
-    /// Geração em lote para múltiplas entidades.
-    /// </summary>
-    [HttpPost]
-    public async Task<IActionResult> GerarLote([FromBody] List<ManifestGenerateRequest> requests)
-    {
-        if (requests == null || requests.Count == 0)
-            return BadRequest(new { error = "Nenhuma entidade selecionada" });
-
-        var results = new List<object>();
-
-        foreach (var request in requests)
-        {
-            try
-            {
-                var entity = await _manifestService.GetEntityAsync(request.EntityName);
-                if (entity == null)
-                {
-                    results.Add(new { entityName = request.EntityName, success = false, error = "Não encontrada" });
-                    continue;
-                }
-
-                var tabela = _manifestService.ConvertToTabelaInfo(entity);
-                var fullRequest = _manifestService.ConvertToFullStackRequest(entity);
-
-                // Apenas frontend
-                fullRequest.GerarEntidade = false;
-                fullRequest.GerarApiController = false;
-
-                var result = _fullStackGenerator.Generate(tabela, fullRequest);
-
-                results.Add(new
-                {
-                    entityName = request.EntityName,
-                    success = result.Success,
-                    error = result.Error,
-                    filesCount = result.AllFiles.Count(),
-                    warnings = result.Warnings
-                });
-            }
-            catch (Exception ex)
-            {
-                results.Add(new { entityName = request.EntityName, success = false, error = ex.Message });
-            }
-        }
-
-        return Json(new { results });
-    }
-
-    /// <summary>
-    /// Download ZIP em lote.
-    /// </summary>
-    [HttpPost]
-    public async Task<IActionResult> DownloadLoteZip([FromBody] List<ManifestGenerateRequest> requests)
-    {
-        if (requests == null || requests.Count == 0)
-            return BadRequest("Nenhuma entidade selecionada");
-
-        using var memoryStream = new MemoryStream();
-        using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
-        {
-            foreach (var request in requests)
-            {
-                var entity = await _manifestService.GetEntityAsync(request.EntityName);
-                if (entity == null) continue;
-
-                var tabela = _manifestService.ConvertToTabelaInfo(entity);
-                var fullRequest = _manifestService.ConvertToFullStackRequest(entity);
-
-                fullRequest.GerarEntidade = false;
-                fullRequest.GerarApiController = false;
-
-                var result = _fullStackGenerator.Generate(tabela, fullRequest);
-                if (!result.Success) continue;
-
-                foreach (var file in result.AllFiles)
-                {
-                    var entry = archive.CreateEntry($"{result.NomeEntidade}/{file.RelativePath}");
-                    using var entryStream = entry.Open();
-                    using var writer = new StreamWriter(entryStream, Encoding.UTF8);
-                    await writer.WriteAsync(file.Content);
-                }
-            }
-        }
-
-        memoryStream.Position = 0;
-        var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-        return File(memoryStream.ToArray(), "application/zip", $"Frontend_Lote_{timestamp}.zip");
     }
 
     // =========================================================================
     // HELPERS
     // =========================================================================
+
+    private bool AreTypesCompatible(string apiType, string dbType)
+    {
+        var map = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            { "int", "int" },
+            { "Int32", "int" },
+            { "long", "long" },
+            { "Int64", "long" },
+            { "string", "string" },
+            { "bool", "bool" },
+            { "Boolean", "bool" },
+            { "DateTime", "DateTime" },
+            { "decimal", "decimal" },
+            { "double", "double" },
+            { "Guid", "Guid" }
+        };
+
+        var normApi = map.TryGetValue(apiType, out var v1) ? v1 : apiType;
+        var normDb = map.TryGetValue(dbType, out var v2) ? v2 : dbType;
+
+        return normApi.Equals(normDb, StringComparison.OrdinalIgnoreCase);
+    }
 
     private static string GenerateReadme(FullStackResult result, EntityManifestItem entity)
     {
