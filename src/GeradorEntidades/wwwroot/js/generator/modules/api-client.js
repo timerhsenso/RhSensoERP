@@ -1,6 +1,13 @@
 // =============================================================================
-// API CLIENT v3.7 - CORRIGIDO (FUNCIONANDO)
-// v3.7.1 - 🔧 CORREÇÃO: Métodos helpers movidos para o escopo correto
+// API CLIENT v3.9 - LÓGICA CORRETA
+// =============================================================================
+// CHANGELOG v3.9:
+// - 🎯 CORREÇÃO: Auto-geração de formFields com lógica CORRETA
+//   • Exclui campos com form.showOnCreate === false
+//   • Exclui campos isReadOnly
+//   • Exclui campos de auditoria
+//   • Respeita configurações do JSON v4.3
+// 
 // v3.7 - Auto-gera CdFuncao, campos e colunas
 // =============================================================================
 
@@ -111,7 +118,7 @@ const ApiClient = {
     },
 
     // =========================================================================
-    // COLETA DADOS - v3.7 CORRIGIDO
+    // ✅ v3.9: COLETA DADOS COM LÓGICA CORRETA
     // =========================================================================
 
     collectWizardData() {
@@ -170,7 +177,7 @@ const ApiClient = {
             console.log('📦 Módulo:', modulo);
 
             // =================================================================
-            // ✅ v3.7: Auto-gera CdFuncao
+            // Auto-gera CdFuncao
             // =================================================================
             let cdFuncao = document.getElementById('cdFuncao')?.value || '';
 
@@ -180,7 +187,7 @@ const ApiClient = {
             }
 
             // =================================================================
-            // ✅ v3.7: Mapeia ícones
+            // Mapeia ícones
             // =================================================================
             const iconMap = {
                 'SEG': 'fas fa-shield-alt',
@@ -202,7 +209,7 @@ const ApiClient = {
             console.log('🎨 Ícone:', icon);
 
             // =================================================================
-            // ✅ v3.7: Auto-preenche FormFields
+            // ✅ v3.9: Auto-preenche FormFields COM LÓGICA CORRETA
             // =================================================================
             let finalFormFields = formFields;
 
@@ -215,18 +222,30 @@ const ApiClient = {
                     .filter(prop => {
                         const name = (prop.name || '').toLowerCase();
 
-                        // Exclui auditoria
-                        const isAudit = name.includes('datacriacao') ||
-                            name.includes('usuariocriacao') ||
-                            name.includes('dataatualizacao') ||
-                            name.includes('usuarioatualizacao') ||
-                            name === 'dtcriacao' ||
-                            name === 'dtatualizacao';
+                        // 1. Exclui campos de auditoria
+                        const isAudit = this._isAuditField(name);
+                        if (isAudit) {
+                            console.log(`   ❌ Excluído (auditoria): ${prop.name}`);
+                            return false;
+                        }
 
-                        // Exclui ID auto-gerada
-                        const isAutoId = name === 'id' && (prop.isIdentity || prop.isGuid);
+                        // 2. Respeita form.showOnCreate do JSON v4.3
+                        if (prop.form) {
+                            if (prop.form.show === false || prop.form.showOnCreate === false) {
+                                console.log(`   ❌ Excluído (form config): ${prop.name}`);
+                                return false;
+                            }
+                        }
 
-                        return !isAudit && !isAutoId;
+                        // 3. Exclui campos ReadOnly (não editáveis)
+                        if (prop.isReadOnly) {
+                            console.log(`   ❌ Excluído (isReadOnly): ${prop.name}`);
+                            return false;
+                        }
+
+                        // 4. MANTÉM campos editáveis
+                        console.log(`   ✅ Incluído: ${prop.name} (editável)`);
+                        return true;
                     })
                     .map((prop, idx) => {
                         const propType = (prop.type || 'string').toLowerCase();
@@ -243,7 +262,11 @@ const ApiClient = {
                             required: prop.required || false,
                             placeholder: '',
                             helpText: prop.description || '',
-                            maxLength: prop.maxLength || null
+                            maxLength: prop.maxLength || null,
+
+                            // Preserva configurações do JSON v4.3
+                            isReadOnly: prop.isReadOnly || false,
+                            disabled: prop.form?.disabled || prop.isReadOnly || false
                         };
                     });
 
@@ -251,7 +274,7 @@ const ApiClient = {
             }
 
             // =================================================================
-            // ✅ v3.7: collectGridColumns
+            // collectGridColumns
             // =================================================================
             const gridColumns = this.collectGridColumns();
 
@@ -293,7 +316,9 @@ const ApiClient = {
                     placeholder: f.placeholder || '',
                     helpText: f.helpText || '',
                     mask: f.mask || null,
-                    maxLength: f.maxLength ? parseInt(f.maxLength, 10) : null
+                    maxLength: f.maxLength ? parseInt(f.maxLength, 10) : null,
+                    disabled: f.disabled || false,
+                    isReadOnly: f.isReadOnly || false
                 }))
             };
 
@@ -305,7 +330,7 @@ const ApiClient = {
     },
 
     // =========================================================================
-    // ✅ collectGridColumns
+    // collectGridColumns
     // =========================================================================
 
     collectGridColumns() {
@@ -335,11 +360,13 @@ const ApiClient = {
 
             return properties
                 .filter(prop => {
+                    // Respeita list.show do JSON v4.3
+                    if (prop.list && prop.list.show === false) {
+                        return false;
+                    }
+
                     const name = (prop.name || '').toLowerCase();
-                    const isAudit = name.includes('datacriacao') ||
-                        name.includes('usuariocriacao') ||
-                        name.includes('dataatualizacao') ||
-                        name.includes('usuarioatualizacao');
+                    const isAudit = this._isAuditField(name);
                     return !isAudit;
                 })
                 .slice(0, 8)
@@ -367,6 +394,20 @@ const ApiClient = {
     // =========================================================================
     // HELPERS PRIVADOS (com _)
     // =========================================================================
+
+    _isAuditField(name) {
+        if (!name) return false;
+        const normalized = name.toLowerCase();
+
+        const auditKeywords = [
+            'datacriacao', 'usuariocriacao', 'dataatualizacao', 'usuarioatualizacao',
+            'dtcriacao', 'dtatualizacao', 'idsaas', 'id_saas',
+            'createdat', 'updatedat', 'createdby', 'updatedby',
+            'tenantid', 'rowversion', 'timestamp'
+        ];
+
+        return auditKeywords.some(keyword => normalized.includes(keyword));
+    },
 
     _formatDisplayName(name) {
         if (!name) return name;
@@ -533,3 +574,5 @@ const ApiClient = {
 };
 
 window.ApiClient = ApiClient;
+
+console.log('✅ ApiClient v3.9 carregado - LÓGICA CORRETA (Form: apenas editáveis / Grid: tudo exceto auditoria)');

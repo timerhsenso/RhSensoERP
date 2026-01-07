@@ -1,21 +1,19 @@
 /**
  * =============================================================================
- * FORM DESIGNER MODULE v4.0 - SELECT2 AJAX SUPPORT
+ * FORM DESIGNER MODULE v4.2 - LÓGICA CORRETA
  * Designer visual de formulários com drag & drop, tabs, layout e Select2
  * =============================================================================
+ * CHANGELOG v4.2:
+ * - 🎯 CORREÇÃO: getEditableProperties() com lógica CORRETA
+ *   • GRID: Mostra TODOS os campos (inclusive Id, isReadOnly) - EXCETO auditoria
+ *   • FORM: Mostra apenas campos EDITÁVEIS - EXCLUI: PK auto (form.showOnCreate=false), isReadOnly, auditoria
+ * - Respeita form.show e form.showOnCreate do JSON v4.3
+ * - Logging detalhado para debug
+ * 
  * CHANGELOG v4.0:
  * - ✨ SUPORTE COMPLETO A SELECT2 AJAX
  * - ✅ Checkbox "Usar Select2 AJAX" para campos select
  * - ✅ Campos: Endpoint (API), Campo de Valor, Campo de Texto
- * - ✅ Propriedades renomeadas: selectEndpoint, selectValueField, selectTextField
- * - ✅ Validação e preview visual de Select2
- * - ✅ Compatibilidade total com backend WizardRequest.cs
- * 
- * CHANGELOG v2.1:
- * - Adicionado botão "Adicionar Todos" para campos editáveis
- * - Exclusão automática de campos de auditoria (IdSaas, DtCriacao, etc.)
- * - Corrigido bug de duplicação ao arrastar campos
- * - Botão "Limpar Formulário" mais confiável
  * =============================================================================
  */
 
@@ -30,7 +28,7 @@ const FormDesigner = {
         'datacriacao', 'dtcriacao', 'createdat', 'dtinclusao', 'datainclusao',
         'dt_criacao', 'data_criacao', 'dt_inclusao', 'data_inclusao',
         // Data de alteração
-        'dataalteracao', 'dtalteracao', 'updatedat', 'modifiedat', 'dtaicalizacao',
+        'dataalteracao', 'dtalteracao', 'updatedat', 'modifiedat', 'dtatualizacao',
         'dt_alteracao', 'data_alteracao', 'dt_atualizacao', 'data_atualizacao',
         // Usuário de criação
         'usuariocriacao', 'criadopor', 'createdby', 'idusuariocriacao',
@@ -57,7 +55,7 @@ const FormDesigner = {
     // INICIALIZAÇÃO
     // =========================================================================
     init() {
-        console.log('🎨 Form Designer v4.0 initialized (SELECT2 AJAX SUPPORT)');
+        console.log('🎨 Form Designer v4.2 initialized (LÓGICA CORRETA)');
 
         const savedLayout = localStorage.getItem('formLayoutConfig');
         if (savedLayout) {
@@ -81,23 +79,49 @@ const FormDesigner = {
     },
 
     // =========================================================================
-    // FILTRA PROPRIEDADES EDITÁVEIS (remove PK, Identity, Auditoria)
+    // ✅ v4.2: FILTRA PROPRIEDADES EDITÁVEIS (LÓGICA CORRETA)
+    // GRID: Mostra TUDO (exceto auditoria)
+    // FORM: Mostra apenas EDITÁVEIS (exclui PK auto, isReadOnly, auditoria)
     // =========================================================================
     getEditableProperties(entity) {
         if (!entity || !entity.properties) return [];
 
-        return entity.properties.filter(prop => {
-            // Exclui PK
-            if (prop.isPrimaryKey || prop.IsPrimaryKey) return false;
+        console.log('🔍 FormDesigner.getEditableProperties - Total de props:', entity.properties.length);
 
-            // Exclui Identity (geralmente é a PK)
-            if (prop.isIdentity || prop.IsIdentity) return false;
+        const filtered = entity.properties.filter(prop => {
+            // 1. Respeita form.show e form.showOnCreate do JSON v4.3
+            if (prop.form) {
+                if (prop.form.show === false || prop.form.showOnCreate === false) {
+                    console.log(`   ❌ Excluído (form config): ${prop.name}`);
+                    return false;
+                }
+            }
 
-            // Exclui campos de auditoria
-            if (this.isAuditField(prop.name)) return false;
+            // 2. Exclui campos de auditoria (preenchimento automático)
+            if (this.isAuditField(prop.name)) {
+                console.log(`   ❌ Excluído (auditoria): ${prop.name}`);
+                return false;
+            }
 
+            // 3. Exclui se excludeFromDto === true
+            if (prop.excludeFromDto) {
+                console.log(`   ❌ Excluído (excludeFromDto): ${prop.name}`);
+                return false;
+            }
+
+            // 4. Exclui campos ReadOnly (não editáveis - preenchimento automático/sistema)
+            if (prop.isReadOnly) {
+                console.log(`   ❌ Excluído (isReadOnly): ${prop.name}`);
+                return false;
+            }
+
+            // 5. MANTÉM campos editáveis
+            console.log(`   ✅ Incluído: ${prop.name} (editável)`);
             return true;
         });
+
+        console.log(`✅ Propriedades editáveis: ${filtered.length} de ${entity.properties.length}`);
+        return filtered;
     },
 
     // =========================================================================
@@ -232,7 +256,7 @@ const FormDesigner = {
     },
 
     // =========================================================================
-    // PALETA DE CAMPOS (com exclusão de auditoria)
+    // PALETA DE CAMPOS
     // =========================================================================
     renderPalette() {
         const entity = Store.get('entity');
@@ -240,14 +264,14 @@ const FormDesigner = {
 
         if (!palette || !entity) return;
 
-        // Filtra campos editáveis (exclui PK, Identity, Auditoria)
+        // Filtra campos editáveis
         const editableProps = this.getEditableProperties(entity);
         const formFields = Store.get('formFields') || [];
         const addedFieldNames = formFields.map(f => f.name.toLowerCase());
 
         // Conta campos
         const totalProps = entity.properties?.length || 0;
-        const auditCount = totalProps - editableProps.length;
+        const excludedCount = totalProps - editableProps.length;
         const availableCount = editableProps.filter(p => !addedFieldNames.includes(p.name.toLowerCase())).length;
 
         palette.innerHTML = `
@@ -266,15 +290,16 @@ const FormDesigner = {
             </div>
             
             <!-- Info sobre campos excluídos -->
-            ${auditCount > 0 ? `
+            ${excludedCount > 0 ? `
                 <div class="palette-info" style="font-size: 11px; color: #666; padding: 8px; background: #fff3cd; border-radius: 4px; margin-bottom: 10px;">
-                    ℹ️ ${auditCount} campo(s) de auditoria ocultados automaticamente
+                    ℹ️ ${excludedCount} campo(s) excluídos (PK auto/isReadOnly/auditoria)
                 </div>
             ` : ''}
             
             <!-- Lista de campos disponíveis -->
             ${editableProps.map(prop => {
             const isAdded = addedFieldNames.includes(prop.name.toLowerCase());
+
             return `
                     <div class="draggable-field ${isAdded ? 'field-added' : ''}" 
                          draggable="${isAdded ? 'false' : 'true'}" 
@@ -339,7 +364,7 @@ const FormDesigner = {
                 mask: '',
                 helpText: '',
 
-                // ⭐ v4.0: Select2 AJAX properties
+                // ⭐ Select2 AJAX properties
                 isSelect2Ajax: false,
                 selectEndpoint: '',
                 selectApiRoute: '',
@@ -637,7 +662,7 @@ const FormDesigner = {
     },
 
     // =========================================================================
-    // ADICIONA CAMPO (com verificação robusta de duplicação)
+    // ADICIONA CAMPO
     // =========================================================================
     addField(propData, targetTab = null) {
         // FORÇA atualização do Store para garantir dados frescos
@@ -681,7 +706,7 @@ const FormDesigner = {
             mask: '',
             helpText: '',
 
-            // ⭐ v4.0: Select2 AJAX properties
+            // ⭐ Select2 AJAX properties
             isSelect2Ajax: hasLookup,
             selectEndpoint: hasLookup ? (propData.lookup.endpoint || '') : '',
             selectApiRoute: hasLookup ? (propData.lookup.endpoint || '') : '',
@@ -746,7 +771,6 @@ const FormDesigner = {
                 return `<div class="preview-textarea">${Utils.escapeHtml(placeholder)}</div>`;
 
             case 'select':
-                // ⭐ v4.0: Preview diferente para Select2 AJAX
                 const selectIcon = field.isSelect2Ajax ? '🔍' : '▼';
                 const selectClass = field.isSelect2Ajax ? 'preview-select-ajax' : 'preview-select';
                 return `
@@ -920,7 +944,7 @@ const FormDesigner = {
                 </div>
             </div>
 
-            <!-- ⭐ v4.0: Configuração de Select2 AJAX -->
+            <!-- ⭐ Configuração de Select2 AJAX -->
             <div id="selectConfig" class="config-section" style="display: ${field.inputType === 'select' ? 'block' : 'none'}">
                 <h4>🔗 Configuração do Select</h4>
                 
@@ -1115,7 +1139,7 @@ const FormDesigner = {
     },
 
     // =========================================================================
-    // ⭐ v4.0: TOGGLE SELECT2 AJAX
+    // ⭐ TOGGLE SELECT2 AJAX
     // =========================================================================
     toggleSelect2Ajax(enabled) {
         const selectedField = Store.get('selectedField');
@@ -1245,4 +1269,4 @@ const FormDesigner = {
 App.registerModule('FormDesigner', FormDesigner);
 window.FormDesigner = FormDesigner;
 
-console.log('✅ FormDesigner v4.0 carregado com suporte SELECT2 AJAX');
+console.log('✅ FormDesigner v4.2 carregado - LÓGICA CORRETA (Form: apenas editáveis / Grid: tudo exceto auditoria)');
