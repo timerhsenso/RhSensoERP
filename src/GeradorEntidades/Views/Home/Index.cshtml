@@ -15,599 +15,625 @@
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
     <link href="~/css/generator-studio.css" rel="stylesheet" />
 
-    
+
 
 </head>
 <body>
 
-<div class="container py-5">
-    <div class="text-center mb-5">
-        <h1 class="display-6 fw-bold text-primary"><i class="fas fa-magic me-2"></i>Gerador Frontend Enterprise</h1>
-        <p class="text-muted">Gere controllers, views e services diretamente para seu projeto</p>
-    </div>
+    <div class="container py-5">
+        <div class="text-center mb-5">
+            <h1 class="display-6 fw-bold text-primary"><i class="fas fa-magic me-2"></i>Gerador Frontend Enterprise</h1>
+            <p class="text-muted">Gere controllers, views e services diretamente para seu projeto</p>
+        </div>
 
-    <!-- STEPPER -->
+        <!-- STEPPER -->
 
-    <div class="steps-container">
-        <div class="step-item active" id="step1-indicator" data-label="Seleção">1</div>
-        <div class="step-item" id="step2-indicator" data-label="Análise">2</div>
-        <div class="step-item" id="step3-indicator" data-label="Listagem">3</div>
-        <div class="step-item" id="step4-indicator" data-label="Formulário">4</div>
-        <div class="step-item" id="step5-indicator" data-label="Geração">5</div>
-    </div>
+        <div class="steps-container">
+            <div class="step-item active" id="step1-indicator" data-label="Seleção">1</div>
+            <div class="step-item" id="step2-indicator" data-label="Análise">2</div>
+            <div class="step-item" id="step3-indicator" data-label="Listagem">3</div>
+            <div class="step-item" id="step4-indicator" data-label="Formulário">4</div>
+            <div class="step-item" id="step5-indicator" data-label="Geração">5</div>
+        </div>
 
-    <!-- STEP 1: SELECTION -->
-    <div class="card" id="step1">
-        <div class="card-header"><i class="fas fa-search me-2"></i>Passo 1: Selecionar Entidade</div>
-        <div class="card-body">
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <label class="form-label">Módulo</label>
-                    <select class="form-select" id="slcModule" onchange="loadEntities()">
-                        <option value="">Selecione um módulo...</option>
-                        @foreach (var module in Model)
-                        {
-                            <option value="@module.Name">@module.DisplayName (@module.EntityCount)</option>
-                        }
-                    </select>
+        <!-- STEP 1: SELECTION -->
+        <div class="card" id="step1">
+            <div class="card-header"><i class="fas fa-search me-2"></i>Passo 1: Selecionar Entidade</div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Módulo</label>
+                        <select class="form-select" id="slcModule" onchange="loadEntities()">
+                            <option value="">Selecione um módulo...</option>
+                            @foreach (var module in Model)
+                            {
+                                <option value="@module.Name">@module.DisplayName (@module.EntityCount)</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Entidade</label>
+                        <select class="form-select" id="slcEntity" disabled>
+                            <option value="">Aguardando seleção do módulo...</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="col-md-6">
-                    <label class="form-label">Entidade</label>
-                    <select class="form-select" id="slcEntity" disabled>
-                        <option value="">Aguardando seleção do módulo...</option>
-                    </select>
+
+                <div class="d-flex justify-content-end mt-4">
+                    <button class="btn btn-primary" id="btnGoToStep2" onclick="goToStep2()" disabled>
+                        Carregar Metadados <i class="fas fa-arrow-right ms-2"></i>
+                    </button>
                 </div>
             </div>
-            
-            <div class="d-flex justify-content-end mt-4">
-                <button class="btn btn-primary" id="btnGoToStep2" onclick="goToStep2()" disabled>
-                    Carregar Metadados <i class="fas fa-arrow-right ms-2"></i>
+        </div>
+
+        <!-- STEP 2: ANALYSIS & COMPARISON -->
+        <div class="card d-none" id="step2">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-microscope me-2"></i>Passo 2: Análise e Comparação</span>
+                <button class="btn btn-sm btn-outline-light" onclick="goToStep1()">
+                    <i class="fas fa-arrow-left me-1"></i> Voltar
                 </button>
             </div>
-        </div>
-    </div>
+            <div class="card-body">
+                <div class="row">
+                    <!-- LEFT: INFO & JSON -->
+                    <div class="col-md-5">
+                        <h6 class="text-primary mb-3">Metadados da API (JSON)</h6>
+                        <div class="mb-3">
+                            <label class="form-label small text-muted">Entidade</label>
+                            <input type="text" class="form-control form-control-sm" id="txtEntityName" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small text-muted">Rota API</label>
+                            <input type="text" class="form-control form-control-sm" id="txtApiRoute" readonly>
+                        </div>
 
-    <!-- STEP 2: ANALYSIS & COMPARISON -->
-    <div class="card d-none" id="step2">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <span><i class="fas fa-microscope me-2"></i>Passo 2: Análise e Comparação</span>
-            <button class="btn btn-sm btn-outline-light" onclick="goToStep1()">
-                <i class="fas fa-arrow-left me-1"></i> Voltar
-            </button>
-        </div>
-        <div class="card-body">
-            <div class="row">
-                <!-- LEFT: INFO & JSON -->
-                <div class="col-md-5">
-                    <h6 class="text-primary mb-3">Metadados da API (JSON)</h6>
-                    <div class="mb-3">
-                        <label class="form-label small text-muted">Entidade</label>
-                        <input type="text" class="form-control form-control-sm" id="txtEntityName" readonly>
+                        <textarea id="jsonPreview" class="form-control json-viewer mb-3" readonly></textarea>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label small text-muted">Rota API</label>
-                        <input type="text" class="form-control form-control-sm" id="txtApiRoute" readonly>
+
+                    <!-- RIGHT: COMPARISON RESULTS -->
+                    <div class="col-md-7">
+                        <h6 class="text-primary mb-3">Comparação com Banco de Dados</h6>
+
+                        <div id="comparisonLoader" class="text-center py-5">
+                            <div class="spinner-border text-primary" role="status"></div>
+                            <p class="mt-2 text-muted">Comparando com estrutura do banco...</p>
+                        </div>
+
+                        <div id="comparisonResult" class="d-none">
+                            <!-- STATUS ALERT -->
+                            <div id="statusAlert" class="alert alert-success d-flex align-items-center mb-3">
+                                <i class="fas fa-check-circle fs-4 me-3"></i>
+                                <div>
+                                    <strong id="statusTitle">Sucesso!</strong>
+                                    <div id="statusMsg" class="small">A estrutura da API corresponde ao Banco de Dados.</div>
+                                </div>
+                            </div>
+
+                            <!-- MISMATCH TABLE -->
+                            <div id="mismatchContainer" class="d-none">
+                                <table class="table table-dark table-sm table-bordered comparison-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Propriedade/Coluna</th>
+                                            <th>API (JSON)</th>
+                                            <th>Banco (SQL)</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="mismatchBody">
+                                        <!-- Rows injected via JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- MISSING COLUMNS -->
+                            <div id="missingContainer" class="d-none mt-3">
+                                <h6 class="text-warning small"><i class="fas fa-exclamation-triangle me-1"></i> Colunas não encontradas no Banco:</h6>
+                                <ul id="missingList" class="text-danger small"></ul>
+                            </div>
+                        </div>
                     </div>
-                    
-                    <textarea id="jsonPreview" class="form-control json-viewer mb-3" readonly></textarea>
                 </div>
 
-                <!-- RIGHT: COMPARISON RESULTS -->
-                <div class="col-md-7">
-                    <h6 class="text-primary mb-3">Comparação com Banco de Dados</h6>
-                    
-                    <div id="comparisonLoader" class="text-center py-5">
-                        <div class="spinner-border text-primary" role="status"></div>
-                        <p class="mt-2 text-muted">Comparando com estrutura do banco...</p>
-                    </div>
+                <div class="d-flex justify-content-end mt-4">
+                    <button class="btn btn-primary" id="btnGoToStep3" onclick="goToStep3()">
+                        Validar e Prosseguir <i class="fas fa-arrow-right ms-2"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
 
-                    <div id="comparisonResult" class="d-none">
-                        <!-- STATUS ALERT -->
-                        <div id="statusAlert" class="alert alert-success d-flex align-items-center mb-3">
-                            <i class="fas fa-check-circle fs-4 me-3"></i>
-                            <div>
-                                <strong id="statusTitle">Sucesso!</strong>
-                                <div id="statusMsg" class="small">A estrutura da API corresponde ao Banco de Dados.</div>
+        <!-- STEP 3: GRID CONFIGURATION -->
+        <div class="card d-none" id="step3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-table me-2"></i>Passo 3: Configuração da Listagem</span>
+                <button class="btn btn-sm btn-outline-light" onclick="goToStep2()">
+                    <i class="fas fa-arrow-left me-1"></i> Voltar
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Configure as colunas que aparecerão na listagem (Grid). Arraste para reordenar.
+                </div>
+
+                <!-- Containers para o módulo grid-config.js -->
+                <div id="gridGeneralOptions" class="mb-4"></div>
+                <div id="columnConfig"></div>
+                <div id="filterConfig" class="mt-4"></div>
+
+                <div class="d-flex justify-content-end mt-4">
+                    <button class="btn btn-primary" onclick="goToStep4()">
+                        Configurar Formulário <i class="fas fa-arrow-right ms-2"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 4: FORM DESIGNER -->
+        <div class="card d-none" id="step4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-paint-brush me-2"></i>Passo 4: Designer de Formulário</span>
+                <button class="btn btn-sm btn-outline-light" onclick="goToStep3()">
+                    <i class="fas fa-arrow-left me-1"></i> Voltar
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Arraste os campos da paleta para o canvas para montar o formulário.
+                </div>
+
+                <!-- Containers para o módulo form-designer.js -->
+                <div id="layoutOptions" class="mb-3"></div>
+
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="card bg-dark border-secondary">
+                            <div class="card-header py-2 small">Campos Disponíveis</div>
+                            <div class="card-body p-2" id="fieldsPalette" style="max-height: 500px; overflow-y: auto;">
+                                <!-- Paleta preenchida via JS -->
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-9">
+                        <div class="canvas-container bg-light text-dark p-3 rounded" id="formCanvas" style="min-height: 400px; border: 2px dashed #ccc;">
+                            <div class="text-center text-muted py-5">
+                                <h4>Arraste os campos aqui</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Configuração do Campo Selecionado -->
+                <div id="fieldConfigPanel" class="mt-4 p-3 border border-secondary rounded bg-dark d-none">
+                    <h6 class="text-primary border-bottom border-secondary pb-2">Configuração do Campo</h6>
+                    <div id="fieldConfigContent"></div>
+                </div>
+
+                <div class="d-flex justify-content-end mt-4">
+                    <button class="btn btn-primary" onclick="goToStep5()">
+                        Ir para Geração <i class="fas fa-arrow-right ms-2"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- STEP 5: GENERATE (Old Step 3) -->
+        <div class="card d-none" id="step5">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-cogs me-2"></i>Passo 5: Geração de Código</span>
+                <button class="btn btn-sm btn-outline-light" onclick="goToStep4()">
+                    <i class="fas fa-arrow-left me-1"></i> Voltar
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <h6 class="text-primary">Arquivos a Gerar</h6>
+                        <div class="list-group">
+                            <label class="list-group-item bg-dark text-light border-secondary">
+                                <input class="form-check-input me-2" type="checkbox" id="chkWebController" checked>
+                                Web Controller
+                            </label>
+                            <label class="list-group-item bg-dark text-light border-secondary">
+                                <input class="form-check-input me-2" type="checkbox" id="chkWebModels" checked>
+                                Web ViewModels (DTOs)
+                            </label>
+                            <label class="list-group-item bg-dark text-light border-secondary">
+                                <input class="form-check-input me-2" type="checkbox" id="chkWebServices" checked>
+                                API Service Client
+                            </label>
+                            <label class="list-group-item bg-dark text-light border-secondary">
+                                <input class="form-check-input me-2" type="checkbox" id="chkView" checked>
+                                Razor View (Index/Form)
+                            </label>
+                            <label class="list-group-item bg-dark text-light border-secondary">
+                                <input class="form-check-input me-2" type="checkbox" id="chkJs" checked>
+                                JavaScript File
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-primary">Configurações Adicionais</h6>
+
+                        <!-- Resumo Automático (Previsão) -->
+                        <div class="card bg-dark border-secondary mb-3">
+                            <div class="card-body py-2 px-3 small">
+                                <ul class="list-unstyled mb-0" id="configSummary">
+                                    <li><i class="fas fa-table me-2"></i> Grid: <span id="summaryGridCount">Auto</span> colunas</li>
+                                    <li><i class="fas fa-align-justify me-2"></i> Form: <span id="summaryFormCount">Auto</span> campos</li>
+                                </ul>
                             </div>
                         </div>
 
-                        <!-- MISMATCH TABLE -->
-                        <div id="mismatchContainer" class="d-none">
-                             <table class="table table-dark table-sm table-bordered comparison-table">
-                                <thead>
-                                    <tr>
-                                        <th>Propriedade/Coluna</th>
-                                        <th>API (JSON)</th>
-                                        <th>Banco (SQL)</th>
-                                        <th>Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="mismatchBody">
-                                    <!-- Rows injected via JS -->
-                                </tbody>
-                             </table>
+                        <div class="mb-3">
+                            <label class="form-label">CdFuncao (Opcional)</label>
+                            <input type="text" class="form-control" id="txtCdFuncaoOverride" placeholder="Ex: CAP_COLABORADORESDOCS">
+                            <small class="text-muted">Deixe em branco para usar o do manifesto</small>
                         </div>
-
-                         <!-- MISSING COLUMNS -->
-                        <div id="missingContainer" class="d-none mt-3">
-                             <h6 class="text-warning small"><i class="fas fa-exclamation-triangle me-1"></i> Colunas não encontradas no Banco:</h6>
-                             <ul id="missingList" class="text-danger small"></ul>
+                        <div class="mb-3">
+                            <label class="form-label">DisplayName (Opcional)</label>
+                            <input type="text" class="form-control" id="txtDisplayNameOverride" placeholder="Ex: Cadastro de Documentos">
+                        </div>
+                        <div class="alert alert-info border-info">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Os arquivos serão gerados diretamente em: <br>
+                            <code>C:\ProjetosAspNet\RhSensoERP\src\</code>
                         </div>
                     </div>
                 </div>
-            </div>
 
-             <div class="d-flex justify-content-end mt-4">
-                <button class="btn btn-primary" id="btnGoToStep3" onclick="goToStep3()">
-                    Validar e Prosseguir <i class="fas fa-arrow-right ms-2"></i>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- STEP 3: GRID CONFIGURATION -->
-    <div class="card d-none" id="step3">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <span><i class="fas fa-table me-2"></i>Passo 3: Configuração da Listagem</span>
-            <button class="btn btn-sm btn-outline-light" onclick="goToStep2()">
-                <i class="fas fa-arrow-left me-1"></i> Voltar
-            </button>
-        </div>
-        <div class="card-body">
-            <div class="alert alert-info">
-                <i class="fas fa-info-circle me-1"></i>
-                Configure as colunas que aparecerão na listagem (Grid). Arraste para reordenar.
-            </div>
-
-            <!-- Containers para o módulo grid-config.js -->
-            <div id="gridGeneralOptions" class="mb-4"></div>
-            <div id="columnConfig"></div>
-            <div id="filterConfig" class="mt-4"></div>
-
-            <div class="d-flex justify-content-end mt-4">
-                <button class="btn btn-primary" onclick="goToStep4()">
-                    Configurar Formulário <i class="fas fa-arrow-right ms-2"></i>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- STEP 4: FORM DESIGNER -->
-    <div class="card d-none" id="step4">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <span><i class="fas fa-paint-brush me-2"></i>Passo 4: Designer de Formulário</span>
-            <button class="btn btn-sm btn-outline-light" onclick="goToStep3()">
-                <i class="fas fa-arrow-left me-1"></i> Voltar
-            </button>
-        </div>
-        <div class="card-body">
-            <div class="alert alert-info">
-                <i class="fas fa-info-circle me-1"></i>
-                Arraste os campos da paleta para o canvas para montar o formulário.
-            </div>
-
-            <!-- Containers para o módulo form-designer.js -->
-            <div id="layoutOptions" class="mb-3"></div>
-
-            <div class="row">
-                <div class="col-md-3">
-                    <div class="card bg-dark border-secondary">
-                        <div class="card-header py-2 small">Campos Disponíveis</div>
-                        <div class="card-body p-2" id="fieldsPalette" style="max-height: 500px; overflow-y: auto;">
-                            <!-- Paleta preenchida via JS -->
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-9">
-                    <div class="canvas-container bg-light text-dark p-3 rounded" id="formCanvas" style="min-height: 400px; border: 2px dashed #ccc;">
-                        <div class="text-center text-muted py-5">
-                            <h4>Arraste os campos aqui</h4>
-                        </div>
-                    </div>
+                <div class="d-flex justify-content-center mt-5">
+                    <button class="btn btn-success btn-lg px-5" id="btnGenerate" onclick="generateFiles()">
+                        <i class="fas fa-rocket me-2"></i> Gerar Arquivos no Projeto
+                    </button>
                 </div>
             </div>
-
-            <!-- Configuração do Campo Selecionado -->
-            <div id="fieldConfigPanel" class="mt-4 p-3 border border-secondary rounded bg-dark d-none">
-                <h6 class="text-primary border-bottom border-secondary pb-2">Configuração do Campo</h6>
-                <div id="fieldConfigContent"></div>
-            </div>
-
-            <div class="d-flex justify-content-end mt-4">
-                <button class="btn btn-primary" onclick="goToStep5()">
-                    Ir para Geração <i class="fas fa-arrow-right ms-2"></i>
-                </button>
-            </div>
         </div>
     </div>
-    <!-- STEP 5: GENERATE (Old Step 3) -->
-    <div class="card d-none" id="step5">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <span><i class="fas fa-cogs me-2"></i>Passo 5: Geração de Código</span>
-            <button class="btn btn-sm btn-outline-light" onclick="goToStep4()">
-                <i class="fas fa-arrow-left me-1"></i> Voltar
-            </button>
-        </div>
-         <div class="card-body">
-            <div class="row g-4">
-                <div class="col-md-6">
-                    <h6 class="text-primary">Arquivos a Gerar</h6>
-                    <div class="list-group">
-                         <label class="list-group-item bg-dark text-light border-secondary">
-                            <input class="form-check-input me-2" type="checkbox" id="chkWebController" checked>
-                            Web Controller
-                        </label>
-                        <label class="list-group-item bg-dark text-light border-secondary">
-                            <input class="form-check-input me-2" type="checkbox" id="chkWebModels" checked>
-                            Web ViewModels (DTOs)
-                        </label>
-                         <label class="list-group-item bg-dark text-light border-secondary">
-                            <input class="form-check-input me-2" type="checkbox" id="chkWebServices" checked>
-                            API Service Client
-                        </label>
-                        <label class="list-group-item bg-dark text-light border-secondary">
-                            <input class="form-check-input me-2" type="checkbox" id="chkView" checked>
-                            Razor View (Index/Form)
-                        </label>
-                        <label class="list-group-item bg-dark text-light border-secondary">
-                            <input class="form-check-input me-2" type="checkbox" id="chkJs" checked>
-                            JavaScript File
-                        </label>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                     <h6 class="text-primary">Configurações Adicionais</h6>
-                     
-                     <!-- Resumo Automático (Previsão) -->
-                     <div class="card bg-dark border-secondary mb-3">
-                        <div class="card-body py-2 px-3 small">
-                            <ul class="list-unstyled mb-0" id="configSummary">
-                                <li><i class="fas fa-table me-2"></i> Grid: <span id="summaryGridCount">Auto</span> colunas</li>
-                                <li><i class="fas fa-align-justify me-2"></i> Form: <span id="summaryFormCount">Auto</span> campos</li>
-                            </ul>
-                        </div>
-                     </div>
-
-                     <div class="mb-3">
-                        <label class="form-label">CdFuncao (Opcional)</label>
-                        <input type="text" class="form-control" id="txtCdFuncaoOverride" placeholder="Ex: CAP_COLABORADORESDOCS">
-                        <small class="text-muted">Deixe em branco para usar o do manifesto</small>
-                     </div>
-                     <div class="mb-3">
-                        <label class="form-label">DisplayName (Opcional)</label>
-                        <input type="text" class="form-control" id="txtDisplayNameOverride" placeholder="Ex: Cadastro de Documentos">
-                     </div>
-                     <div class="alert alert-info border-info">
-                         <i class="fas fa-info-circle me-1"></i>
-                         Os arquivos serão gerados diretamente em: <br>
-                         <code>C:\ProjetosAspNet\RhSensoERP\src\</code>
-                     </div>
-                </div>
-            </div>
-
-            <div class="d-flex justify-content-center mt-5">
-                <button class="btn btn-success btn-lg px-5" id="btnGenerate" onclick="generateFiles()">
-                    <i class="fas fa-rocket me-2"></i> Gerar Arquivos no Projeto
-                </button>
-            </div>
-         </div>
-    </div>
-</div>
 
     </div>
-    
+
     <!-- Scripts do Gerador -->
     <script src="~/js/generator/app.js"></script>
     <script src="~/js/generator/modules/grid-config.js"></script>
     <script src="~/js/generator/modules/form-designer.js"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-<script>
-    let currentEntity = null;
+    <script>
+        let currentEntity = null;
 
-    // =========================================================================
-    // STEP 1: SELECTION
-    // =========================================================================
-    async function loadEntities() {
-        const module = document.getElementById('slcModule').value;
-        const slcEntity = document.getElementById('slcEntity');
-        const btnNext = document.getElementById('btnGoToStep2');
-        
-        slcEntity.innerHTML = '<option value="">Carregando...</option>';
-        slcEntity.disabled = true;
-        btnNext.disabled = true;
+        // =========================================================================
+        // STEP 1: SELECTION
+        // =========================================================================
+        async function loadEntities() {
+            const module = document.getElementById('slcModule').value;
+            const slcEntity = document.getElementById('slcEntity');
+            const btnNext = document.getElementById('btnGoToStep2');
 
-        if (!module) {
-            slcEntity.innerHTML = '<option value="">Aguardando seleção do módulo...</option>';
-            return;
-        }
+            slcEntity.innerHTML = '<option value="">Carregando...</option>';
+            slcEntity.disabled = true;
+            btnNext.disabled = true;
 
-        try {
-            const response = await fetch('/Manifest/GetEntities?module=' + module);
-            const entities = await response.json();
-            
-            slcEntity.innerHTML = '<option value="">Selecione uma entidade...</option>';
-            entities.forEach(e => {
-                const opt = document.createElement('option');
-                opt.value = e.entityName;
-                opt.textContent = `${e.displayName} (${e.entityName})`;
-                slcEntity.appendChild(opt);
-            });
-            
-            slcEntity.disabled = false;
-        } catch (error) {
-            console.error(error);
-            slcEntity.innerHTML = '<option value="">Erro ao carregar</option>';
-        }
-    }
+            if (!module) {
+                slcEntity.innerHTML = '<option value="">Aguardando seleção do módulo...</option>';
+                return;
+            }
 
-    document.getElementById('slcEntity').addEventListener('change', function() {
-        document.getElementById('btnGoToStep2').disabled = !this.value;
-    });
+            try {
+                const response = await fetch('/Manifest/GetEntities?module=' + module);
+                const entities = await response.json();
 
-    function goToStep2() {
-        const entityName = document.getElementById('slcEntity').value;
-        if(!entityName) return;
-        
-        showStep(2);
-        loadEntityAnalysis(entityName);
-    }
-
-    // =========================================================================
-    // STEP 2: ANALYSIS
-    // =========================================================================
-    async function loadEntityAnalysis(entityName) {
-        // Reset UI
-        document.getElementById('comparisonLoader').classList.remove('d-none');
-        document.getElementById('comparisonResult').classList.add('d-none');
-        document.getElementById('jsonPreview').value = 'Carregando...';
-        
-        try {
-            // 1. Get Details for JSON View
-            const resEntity = await fetch('/Manifest/GetEntity?name=' + entityName);
-            currentEntity = await resEntity.json();
-            
-            document.getElementById('txtEntityName').value = currentEntity.entityName;
-            document.getElementById('txtApiRoute').value = currentEntity.route;
-            document.getElementById('jsonPreview').value = JSON.stringify(currentEntity, null, 2);
-
-            // 2. Perform Comparison
-            const resCompare = await fetch('/Manifest/CompareEntity', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ entityName: entityName })
-            });
-
-            const comparison = await resCompare.json();
-            renderComparison(comparison);
-
-        } catch (error) {
-            console.error(error);
-            Swal.fire('Erro', 'Falha ao analisar entidade: ' + error.message, 'error');
-        } finally {
-            document.getElementById('comparisonLoader').classList.add('d-none');
-            document.getElementById('comparisonResult').classList.remove('d-none');
-        }
-    }
-
-    function renderComparison(data) {
-        const alert = document.getElementById('statusAlert');
-        const title = document.getElementById('statusTitle');
-        const msg = document.getElementById('statusMsg');
-        const mismatchContainer = document.getElementById('mismatchContainer');
-        const mismatchBody = document.getElementById('mismatchBody');
-        const missingContainer = document.getElementById('missingContainer');
-        const missingList = document.getElementById('missingList');
-
-        mismatchBody.innerHTML = '';
-        missingList.innerHTML = '';
-        mismatchContainer.classList.add('d-none');
-        missingContainer.classList.add('d-none');
-
-        if (!data.tableExists) {
-            alert.className = 'alert alert-danger d-flex align-items-center mb-3';
-            title.textContent = 'Erro Crítico!';
-            msg.textContent = `A tabela '${data.tableName}' não existe no banco de dados.`;
-            return;
-        }
-
-        const isMatch = (data.mismatches || []).length === 0 && (data.missingColumns || []).length === 0;
-
-        if (isMatch) {
-            alert.className = 'alert alert-success d-flex align-items-center mb-3';
-            title.textContent = 'Tudo Certo!';
-            msg.textContent = 'A estrutura da API corresponde perfeitamente ao Banco de Dados.';
-        } else {
-            alert.className = 'alert alert-warning d-flex align-items-center mb-3';
-            title.textContent = 'Atenção!';
-            msg.textContent = 'Existem divergências entre a API e o Banco de Dados.';
-            
-            // Render Mismatches
-            if (data.mismatches && data.mismatches.length > 0) {
-                mismatchContainer.classList.remove('d-none');
-                data.mismatches.forEach(m => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td>${m.propertyName} / ${m.columnName}</td>
-                        <td class="text-info">${m.apiType}</td>
-                        <td class="text-warning">${m.dbType}</td>
-                        <td class="text-danger"><i class="fas fa-times me-1"></i> Tipo Diferente</td>
-                    `;
-                    mismatchBody.appendChild(tr);
+                slcEntity.innerHTML = '<option value="">Selecione uma entidade...</option>';
+                entities.forEach(e => {
+                    const opt = document.createElement('option');
+                    opt.value = e.entityName;
+                    opt.textContent = `${e.displayName} (${e.entityName})`;
+                    slcEntity.appendChild(opt);
                 });
-            }
 
-            // Render Missing
-            if (data.missingColumns && data.missingColumns.length > 0) {
-                missingContainer.classList.remove('d-none');
-                data.missingColumns.forEach(c => {
-                    const li = document.createElement('li');
-                    li.textContent = `Coluna '${c}' existe na API mas não no Banco.`;
-                    missingList.appendChild(li);
-                });
+                slcEntity.disabled = false;
+            } catch (error) {
+                console.error(error);
+                slcEntity.innerHTML = '<option value="">Erro ao carregar</option>';
             }
         }
-    }
 
-    // =========================================================================
-    // STEP 3: GRID CONFIGURATION (New)
-    // =========================================================================
-    function goToStep3() {
-        if (!currentEntity) return;
-        
-        // 1. Initialize Store
-        Store.set('entity', currentEntity);
-        
-        // 2. Initialize Grid Module
-        // Reset only if switching entities (App.js handles state, but let's be safe)
-        if (GridConfig.config._entityName !== currentEntity.entityName) {
-            GridConfig.config.columns = []; // Force rebuild
-        }
-        
-        showStep(3);
-        GridConfig.render();
-    }
-
-    // =========================================================================
-    // STEP 4: FORM DESIGNER (New)
-    // =========================================================================
-    function goToStep4() {
-        showStep(4);
-        FormDesigner.render();
-    }
-
-    // =========================================================================
-    // STEP 5: GENERATION (Old Step 3)
-    // =========================================================================
-    function goToStep5() {
-        showStep(5);
-        updateSummary();
-    }
-
-    function updateSummary() {
-        const gridCols = GridConfig.getVisibleColumns().length;
-        const formFields = (Store.get('formFields') || []).length;
-        
-        document.getElementById('summaryGridCount').textContent = gridCols;
-        document.getElementById('summaryFormCount').textContent = formFields;
-    }
-
-    async function generateFiles() {
-        const btn = document.getElementById('btnGenerate');
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Gerando...';
-
-        // 1. Basic Config
-        const request = {
-            entityName: currentEntity.entityName,
-            cdFuncao: document.getElementById('txtCdFuncaoOverride').value,
-            displayName: document.getElementById('txtDisplayNameOverride').value,
-            gerarWebController: document.getElementById('chkWebController').checked,
-            gerarWebModels: document.getElementById('chkWebModels').checked,
-            gerarWebServices: document.getElementById('chkWebServices').checked,
-            gerarView: document.getElementById('chkView').checked,
-            gerarJavaScript: document.getElementById('chkJs').checked,
-            
-            // 2. Advanced Config (Mapped)
-            // Map Grid Columns
-            GridColumns: GridConfig.config.columns.map(c => ({
-                Nome: c.name,
-                Visible: c.visible,
-                Title: c.headerText,
-                Order: 0, // Not explicitly tracked in simple list, backend can infer or we could add index
-                Format: c.format || 'text',
-                Width: c.width,
-                Align: c.align,
-                Sortable: c.sortable
-            })),
-            
-            // Map Form Fields
-            FormFields: (Store.get('formFields') || []).map((f, idx) => ({
-                Nome: f.name,
-                Visible: true,
-                Order: idx, // Use array index as order
-                Label: f.label,
-                InputType: f.inputType,
-                ColSize: parseInt(f.colSize?.replace('col-md-', '') || '6'),
-                Required: f.required,
-                Placeholder: f.placeholder,
-                HelpText: f.helpText,
-                Mask: f.mask,
-                Tab: f.tab,
-                Group: f.group,
-                
-                // Select2 Ajax
-                IsSelect2Ajax: f.isSelect2Ajax || false,
-                SelectApiRoute: f.selectApiRoute || f.selectEndpoint, // Adapter fallback
-                SelectEndpoint: f.selectEndpoint,
-                SelectValueField: f.selectValueField,
-                SelectTextField: f.selectTextField
-            })),
-            
-            // Map Form Layout
-            FormLayout: {
-                Columns: FormDesigner.layoutConfig.columns,
-                UseTabs: FormDesigner.layoutConfig.useTabs,
-                Tabs: FormDesigner.layoutConfig.tabs
-            }
-        };
-
-        try {
-            const response = await fetch('/Manifest/GenerateToDisk', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(request)
-            });
-
-            const result = await response.json();
-
-            if (response.ok) {
-                Swal.fire({
-                    title: 'Gerado com Sucesso!',
-                    text: result.message,
-                    icon: 'success',
-                    confirmButtonText: 'Concluir'
-                }).then(() => {
-                    // Optional: Don't reload immediately to allow user to see result
-                    // location.reload(); 
-                    // Reset to step 1
-                    goToStep1();
-                });
-            } else {
-                throw new Error(result.error || 'Erro desconhecido');
-            }
-        } catch (error) {
-            Swal.fire('Erro', error.message, 'error');
-        } finally {
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-rocket me-2"></i> Gerar Arquivos no Projeto';
-        }
-    }
-
-    // UTILS
-    function showStep(stepNumber) {
-        // Hide all cards
-        for(let i=1; i<=5; i++) {
-            const el = document.getElementById(`step${i}`);
-            if(el) el.classList.add('d-none');
-        }
-
-        // Show target
-        const target = document.getElementById(`step${stepNumber}`);
-        if(target) target.classList.remove('d-none');
-
-        // Update indicators
-        document.querySelectorAll('.step-item').forEach((el, index) => {
-            el.classList.remove('active', 'completed');
-            if (index + 1 === stepNumber) el.classList.add('active');
-            if (index + 1 < stepNumber) el.classList.add('completed');
+        document.getElementById('slcEntity').addEventListener('change', function() {
+            document.getElementById('btnGoToStep2').disabled = !this.value;
         });
-    }
 
-    function goToStep1() { showStep(1); }
-</script>
+        function goToStep2() {
+            const entityName = document.getElementById('slcEntity').value;
+            if(!entityName) return;
+
+            showStep(2);
+            loadEntityAnalysis(entityName);
+        }
+
+        // =========================================================================
+        // STEP 2: ANALYSIS
+        // =========================================================================
+        async function loadEntityAnalysis(entityName) {
+            // Reset UI
+            document.getElementById('comparisonLoader').classList.remove('d-none');
+            document.getElementById('comparisonResult').classList.add('d-none');
+            document.getElementById('jsonPreview').value = 'Carregando...';
+
+            try {
+                // 1. Get Details for JSON View
+                const resEntity = await fetch('/Manifest/GetEntity?name=' + entityName);
+                currentEntity = await resEntity.json();
+
+                document.getElementById('txtEntityName').value = currentEntity.entityName;
+                document.getElementById('txtApiRoute').value = currentEntity.route;
+                document.getElementById('jsonPreview').value = JSON.stringify(currentEntity, null, 2);
+
+                // 2. Perform Comparison
+                const resCompare = await fetch('/Manifest/CompareEntity', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ entityName: entityName })
+                });
+
+                const comparison = await resCompare.json();
+                renderComparison(comparison);
+
+            } catch (error) {
+                console.error(error);
+                Swal.fire('Erro', 'Falha ao analisar entidade: ' + error.message, 'error');
+            } finally {
+                document.getElementById('comparisonLoader').classList.add('d-none');
+                document.getElementById('comparisonResult').classList.remove('d-none');
+            }
+        }
+
+        function renderComparison(data) {
+            const alert = document.getElementById('statusAlert');
+            const title = document.getElementById('statusTitle');
+            const msg = document.getElementById('statusMsg');
+            const mismatchContainer = document.getElementById('mismatchContainer');
+            const mismatchBody = document.getElementById('mismatchBody');
+            const missingContainer = document.getElementById('missingContainer');
+            const missingList = document.getElementById('missingList');
+
+            mismatchBody.innerHTML = '';
+            missingList.innerHTML = '';
+            mismatchContainer.classList.add('d-none');
+            missingContainer.classList.add('d-none');
+
+            if (!data.tableExists) {
+                alert.className = 'alert alert-danger d-flex align-items-center mb-3';
+                title.textContent = 'Erro Crítico!';
+                msg.textContent = `A tabela '${data.tableName}' não existe no banco de dados.`;
+                return;
+            }
+
+            const isMatch = (data.mismatches || []).length === 0 && (data.missingColumns || []).length === 0;
+
+            if (isMatch) {
+                alert.className = 'alert alert-success d-flex align-items-center mb-3';
+                title.textContent = 'Tudo Certo!';
+                msg.textContent = 'A estrutura da API corresponde perfeitamente ao Banco de Dados.';
+            } else {
+                alert.className = 'alert alert-warning d-flex align-items-center mb-3';
+                title.textContent = 'Atenção!';
+                msg.textContent = 'Existem divergências entre a API e o Banco de Dados.';
+
+                // Render Mismatches
+                if (data.mismatches && data.mismatches.length > 0) {
+                    mismatchContainer.classList.remove('d-none');
+                    data.mismatches.forEach(m => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${m.propertyName} / ${m.columnName}</td>
+                            <td class="text-info">${m.apiType}</td>
+                            <td class="text-warning">${m.dbType}</td>
+                            <td class="text-danger"><i class="fas fa-times me-1"></i> Tipo Diferente</td>
+                        `;
+                        mismatchBody.appendChild(tr);
+                    });
+                }
+
+                // Render Missing
+                if (data.missingColumns && data.missingColumns.length > 0) {
+                    missingContainer.classList.remove('d-none');
+                    data.missingColumns.forEach(c => {
+                        const li = document.createElement('li');
+                        li.textContent = `Coluna '${c}' existe na API mas não no Banco.`;
+                        missingList.appendChild(li);
+                    });
+                }
+            }
+        }
+
+        // =========================================================================
+        // STEP 3: GRID CONFIGURATION (New)
+        // =========================================================================
+        function goToStep3() {
+            if (!currentEntity) return;
+
+            // 1. Initialize Store
+            Store.set('entity', currentEntity);
+
+            // 2. Initialize Grid Module
+            // Reset only if switching entities (App.js handles state, but let's be safe)
+            if (GridConfig.config._entityName !== currentEntity.entityName) {
+                GridConfig.config.columns = []; // Force rebuild
+            }
+
+            showStep(3);
+            GridConfig.render();
+        }
+
+        // =========================================================================
+        // STEP 4: FORM DESIGNER (New)
+        // =========================================================================
+        function goToStep4() {
+            // ✅ CORREÇÃO v4.6: GARANTIR entidade no Store ANTES de renderizar
+            if (!currentEntity) {
+                console.error('❌ Erro: currentEntity não existe!');
+                Swal.fire('Erro', 'Nenhuma entidade selecionada', 'error');
+                return;
+            }
+
+            // 1. Setar entidade no Store (pode ter sido perdida ao recarregar página)
+            Store.set('entity', currentEntity);
+            console.log('✅ Entidade setada no Store:', currentEntity.entityName);
+
+            // 2. Mudar para step 4
+            showStep(4);
+
+            // 3. Renderizar FormDesigner após DOM estar pronto
+            setTimeout(() => {
+                if (typeof FormDesigner !== 'undefined') {
+                    FormDesigner.render();
+                    console.log('✅ FormDesigner renderizado automaticamente');
+
+                    // Debug: Verificar quantos campos foram renderizados
+                    const paletteCount = document.querySelectorAll('.draggable-field:not(.field-added)').length;
+                    const canvasCount = document.querySelectorAll('.dropped-field').length;
+                    console.log(`📊 Paleta: ${paletteCount} campos | Canvas: ${canvasCount} campos`);
+                } else {
+                    console.error('❌ FormDesigner não está definido!');
+                }
+            }, 100);
+        }
+
+        // =========================================================================
+        // STEP 5: GENERATION (Old Step 3)
+        // =========================================================================
+        function goToStep5() {
+            showStep(5);
+            updateSummary();
+        }
+
+        function updateSummary() {
+            const gridCols = GridConfig.getVisibleColumns().length;
+            const formFields = (Store.get('formFields') || []).length;
+
+            document.getElementById('summaryGridCount').textContent = gridCols;
+            document.getElementById('summaryFormCount').textContent = formFields;
+        }
+
+        async function generateFiles() {
+            const btn = document.getElementById('btnGenerate');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Gerando...';
+
+            // 1. Basic Config
+            const request = {
+                entityName: currentEntity.entityName,
+                cdFuncao: document.getElementById('txtCdFuncaoOverride').value,
+                displayName: document.getElementById('txtDisplayNameOverride').value,
+                gerarWebController: document.getElementById('chkWebController').checked,
+                gerarWebModels: document.getElementById('chkWebModels').checked,
+                gerarWebServices: document.getElementById('chkWebServices').checked,
+                gerarView: document.getElementById('chkView').checked,
+                gerarJavaScript: document.getElementById('chkJs').checked,
+
+                // 2. Advanced Config (Mapped)
+                // Map Grid Columns
+                GridColumns: GridConfig.config.columns.map(c => ({
+                    Nome: c.name,
+                    Visible: c.visible,
+                    Title: c.headerText,
+                    Order: 0, // Not explicitly tracked in simple list, backend can infer or we could add index
+                    Format: c.format || 'text',
+                    Width: c.width,
+                    Align: c.align,
+                    Sortable: c.sortable
+                })),
+
+                // Map Form Fields
+                FormFields: (Store.get('formFields') || []).map((f, idx) => ({
+                    Nome: f.name,
+                    Visible: true,
+                    Order: idx, // Use array index as order
+                    Label: f.label,
+                    InputType: f.inputType,
+                    ColSize: parseInt(f.colSize?.replace('col-md-', '') || '6'),
+                    Required: f.required,
+                    Placeholder: f.placeholder,
+                    HelpText: f.helpText,
+                    Mask: f.mask,
+                    Tab: f.tab,
+                    Group: f.group,
+
+                    // Select2 Ajax
+                    IsSelect2Ajax: f.isSelect2Ajax || false,
+                    SelectApiRoute: f.selectApiRoute || f.selectEndpoint, // Adapter fallback
+                    SelectEndpoint: f.selectEndpoint,
+                    SelectValueField: f.selectValueField,
+                    SelectTextField: f.selectTextField
+                })),
+
+                // Map Form Layout
+                FormLayout: {
+                    Columns: FormDesigner.layoutConfig.columns,
+                    UseTabs: FormDesigner.layoutConfig.useTabs,
+                    Tabs: FormDesigner.layoutConfig.tabs
+                }
+            };
+
+            try {
+                const response = await fetch('/Manifest/GenerateToDisk', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(request)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    Swal.fire({
+                        title: 'Gerado com Sucesso!',
+                        text: result.message,
+                        icon: 'success',
+                        confirmButtonText: 'Concluir'
+                    }).then(() => {
+                        // Optional: Don't reload immediately to allow user to see result
+                        // location.reload();
+                        // Reset to step 1
+                        goToStep1();
+                    });
+                } else {
+                    throw new Error(result.error || 'Erro desconhecido');
+                }
+            } catch (error) {
+                Swal.fire('Erro', error.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-rocket me-2"></i> Gerar Arquivos no Projeto';
+            }
+        }
+
+        // UTILS
+        function showStep(stepNumber) {
+            // Hide all cards
+            for(let i=1; i<=5; i++) {
+                const el = document.getElementById(`step${i}`);
+                if(el) el.classList.add('d-none');
+            }
+
+            // Show target
+            const target = document.getElementById(`step${stepNumber}`);
+            if(target) target.classList.remove('d-none');
+
+            // Update indicators
+            document.querySelectorAll('.step-item').forEach((el, index) => {
+                el.classList.remove('active', 'completed');
+                if (index + 1 === stepNumber) el.classList.add('active');
+                if (index + 1 < stepNumber) el.classList.add('completed');
+            });
+        }
+
+        function goToStep1() { showStep(1); }
+    </script>
 
 </body>
 </html>

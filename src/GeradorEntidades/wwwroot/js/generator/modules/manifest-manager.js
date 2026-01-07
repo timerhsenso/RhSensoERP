@@ -1,12 +1,14 @@
 /**
  * =============================================================================
- * MANIFEST MODULE v2.1
+ * MANIFEST MODULE v2.2 - CORREÇÃO CAMPOS DE NAVEGAÇÃO
  * Integração com Manifest Backend (Módulos → Entidades)
  * =============================================================================
  * Arquivo: wwwroot/js/generator/modules/manifest-manager.js
  * Projeto: GeradorEntidades / RhSensoERP
  * =============================================================================
  * CHANGELOG:
+ * v2.2 - 🔧 CORREÇÃO: Preserva campos isReadOnly, list, form, filter, lookup do JSON v4.3
+ *      - Campos de navegação (isReadOnly: true) agora aparecem na grid
  * v2.1 - Corrigido normalizeEntity para incluir route, cdFuncao, cdSistema, etc
  *      - Adicionado registro do módulo no final (App.registerModule)
  *      - Adicionado preview da rota da API
@@ -71,7 +73,7 @@ const ManifestManager = {
     // INICIALIZAÇÃO
     // =========================================================================
     init() {
-        console.log('📡 Manifest Manager v2.1 initialized');
+        console.log('📡 Manifest Manager v2.2 initialized');
     },
 
     render() {
@@ -387,7 +389,7 @@ const ManifestManager = {
             return;
         }
 
-        // v2.1: Normaliza mantendo TODAS as propriedades importantes
+        // v2.2: Normaliza preservando TODOS os campos do JSON v4.3
         const normalized = this.normalizeEntity(this.selectedEntity);
 
         // Debug: mostra o que foi normalizado
@@ -396,6 +398,7 @@ const ManifestManager = {
         console.log('🛤️ Route:', normalized.route);
         console.log('📋 CdFuncao:', normalized.cdFuncao);
         console.log('🏢 CdSistema:', normalized.cdSistema);
+        console.log('📊 Total de propriedades:', normalized.properties.length);
 
         const jsonInput = document.getElementById('jsonInput');
         if (jsonInput) {
@@ -440,12 +443,11 @@ const ManifestManager = {
     },
 
     // =========================================================================
-    // v2.1 CORRIGIDO: NORMALIZA ENTIDADE MANTENDO TODAS AS PROPRIEDADES
+    // v2.2 🔧 CORRIGIDO: PRESERVA TODOS OS CAMPOS DO JSON v4.3
     // =========================================================================
     normalizeEntity(entity) {
         const props = entity.properties || entity.Properties || entity.columns || entity.Columns || [];
 
-        // v2.1: Retorna TODAS as propriedades importantes, não só algumas!
         return {
             // Identificação
             entityName: entity.entityName || entity.EntityName || entity.name || entity.Name,
@@ -458,7 +460,7 @@ const ManifestManager = {
             moduleName: entity.moduleName || entity.ModuleName || '',
             moduleDisplayName: entity.moduleDisplayName || entity.ModuleDisplayName || '',
 
-            // ⭐ CRÍTICO: Rota da API (era ignorada antes!)
+            // Rota da API
             route: entity.route || entity.Route || entity.apiRoute || entity.ApiRoute || '',
 
             // Permissões
@@ -476,22 +478,67 @@ const ManifestManager = {
             primaryKeyType: entity.primaryKeyType || entity.PrimaryKeyType || 'int',
             primaryKeyIsIdentity: entity.primaryKeyIsIdentity ?? entity.PrimaryKeyIsIdentity ?? true,
 
-            // Propriedades
-            properties: props.map(prop => ({
-                name: prop.name || prop.Name,
-                type: this.normalizeType(prop.type || prop.Type || prop.clrType || prop.ClrType),
-                displayName: prop.displayName || prop.DisplayName || prop.name || prop.Name,
-                columnName: prop.columnName || prop.ColumnName || prop.name || prop.Name,
-                inputType: prop.inputType || prop.InputType || 'text',
-                isNullable: prop.isNullable ?? prop.IsNullable ?? prop.nullable ?? prop.Nullable ?? true,
-                isPrimaryKey: prop.isPrimaryKey || prop.IsPrimaryKey || false,
-                isRequired: prop.isRequired ?? prop.IsRequired ?? !(prop.isNullable ?? true),
-                isIdentity: prop.isIdentity || prop.IsIdentity || false,
-                isForeignKey: prop.isForeignKey || prop.IsForeignKey || false,
-                foreignKeyEntity: prop.foreignKeyEntity || prop.ForeignKeyEntity || null,
-                maxLength: prop.maxLength || prop.MaxLength || null,
-                lookup: prop.lookup || prop.Lookup || null
-            })),
+            // 🔧 PROPRIEDADES - PRESERVA TODOS OS CAMPOS DO v4.3
+            properties: props.map(prop => {
+                const normalized = {
+                    // Campos básicos
+                    name: prop.name || prop.Name,
+                    type: this.normalizeType(prop.type || prop.Type || prop.clrType || prop.ClrType),
+                    displayName: prop.displayName || prop.DisplayName || prop.name || prop.Name,
+                    columnName: prop.columnName || prop.ColumnName || prop.name || prop.Name,
+                    inputType: prop.inputType || prop.InputType || 'text',
+                    isNullable: prop.isNullable ?? prop.IsNullable ?? prop.nullable ?? prop.Nullable ?? true,
+                    isPrimaryKey: prop.isPrimaryKey || prop.IsPrimaryKey || false,
+                    isRequired: prop.isRequired ?? prop.IsRequired ?? !(prop.isNullable ?? true),
+                    isIdentity: prop.isIdentity || prop.IsIdentity || false,
+                    isForeignKey: prop.isForeignKey || prop.IsForeignKey || false,
+                    foreignKeyEntity: prop.foreignKeyEntity || prop.ForeignKeyEntity || null,
+                    maxLength: prop.maxLength || prop.MaxLength || null,
+
+                    // 🔧 CAMPOS CRÍTICOS DO v4.3 (eram ignorados antes!)
+                    isReadOnly: prop.isReadOnly ?? prop.IsReadOnly ?? false,
+                    excludeFromDto: prop.excludeFromDto ?? prop.ExcludeFromDto ?? false,
+
+                    // 🔧 CONFIGURAÇÕES COMPLETAS DO v4.3
+                    list: prop.list || prop.List || null,
+                    form: prop.form || prop.Form || null,
+                    filter: prop.filter || prop.Filter || null,
+                    lookup: prop.lookup || prop.Lookup || null
+                };
+
+                // Se não tem configurações v4.3, cria defaults básicos
+                if (!normalized.list) {
+                    normalized.list = {
+                        show: !normalized.isPrimaryKey,
+                        order: 0,
+                        sortable: true,
+                        filterable: normalized.type.toLowerCase() === 'string',
+                        format: this.getDefaultFormat(normalized.type),
+                        align: this.getDefaultAlign(normalized.type)
+                    };
+                }
+
+                if (!normalized.form) {
+                    normalized.form = {
+                        show: !normalized.isPrimaryKey,
+                        showOnCreate: !normalized.isPrimaryKey,
+                        showOnEdit: !normalized.isPrimaryKey,
+                        inputType: normalized.inputType,
+                        disabled: normalized.isReadOnly,
+                        colSize: 6
+                    };
+                }
+
+                if (!normalized.filter) {
+                    normalized.filter = {
+                        show: normalized.type.toLowerCase() === 'string',
+                        filterType: this.getFilterType(normalized.type),
+                        defaultOperator: normalized.type.toLowerCase() === 'string' ? 'contains' : 'equals'
+                    };
+                }
+
+                return normalized;
+            }),
 
             // Navegações (se existir)
             navigations: (entity.navigations || entity.Navigations || []).map(nav => ({
@@ -504,6 +551,9 @@ const ManifestManager = {
         };
     },
 
+    // =========================================================================
+    // 🔧 HELPERS ADICIONADOS/ATUALIZADOS
+    // =========================================================================
     normalizeType(type) {
         if (!type) return 'string';
 
@@ -512,11 +562,45 @@ const ManifestManager = {
         if (typeStr.includes('int32') || typeStr.includes('int64') || typeStr === 'int' || typeStr === 'long') return 'int';
         if (typeStr.includes('decimal') || typeStr.includes('double') || typeStr.includes('float')) return 'decimal';
         if (typeStr.includes('bool')) return 'bool';
-        if (typeStr.includes('datetime') || typeStr.includes('date')) return 'datetime';
-        if (typeStr.includes('guid')) return 'guid';
+        if (typeStr.includes('datetime')) return 'DateTime';
+        if (typeStr.includes('dateonly')) return 'DateOnly';
+        if (typeStr.includes('date')) return 'date';
+        if (typeStr.includes('guid')) return 'Guid';
         if (typeStr.includes('byte[]')) return 'byte[]';
 
         return 'string';
+    },
+
+    getDefaultFormat(type) {
+        const formatMap = {
+            'datetime': 'datetime',
+            'DateTime': 'datetime',
+            'date': 'date',
+            'DateOnly': 'date',
+            'decimal': 'number',
+            'bool': 'boolean',
+            'boolean': 'boolean'
+        };
+        return formatMap[type] || 'text';
+    },
+
+    getDefaultAlign(type) {
+        const alignMap = {
+            'int': 'right',
+            'long': 'right',
+            'decimal': 'right',
+            'float': 'right',
+            'double': 'right'
+        };
+        return alignMap[type?.toLowerCase()] || 'left';
+    },
+
+    getFilterType(type) {
+        const typeStr = type?.toLowerCase() || '';
+        if (typeStr.includes('int') || typeStr.includes('decimal')) return 'number';
+        if (typeStr.includes('date')) return 'date';
+        if (typeStr.includes('bool')) return 'boolean';
+        return 'text';
     },
 
     // =========================================================================
@@ -601,7 +685,7 @@ const ManifestManager = {
 
     exportProject() {
         const project = {
-            version: '2.1',
+            version: '2.2',
             exportedAt: new Date().toISOString(),
             entity: Store.get('entity'),
             gridConfig: App.modules.GridConfig?.config,
@@ -706,4 +790,4 @@ const ManifestManager = {
 App.registerModule('ManifestManager', ManifestManager);
 window.ManifestManager = ManifestManager;
 
-console.log('✅ ManifestManager v2.1 carregado e registrado');
+console.log('✅ ManifestManager v2.2 carregado e registrado');

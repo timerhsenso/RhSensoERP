@@ -1,8 +1,11 @@
 /**
  * =============================================================================
- * GRID CONFIG MODULE v1.1
+ * GRID CONFIG MODULE v1.2
  * Configuração avançada de colunas, filtros e exportação
  * =============================================================================
+ * CHANGELOG v1.2:
+ * - 🔧 CORREÇÃO: Respeita prop.list.show do JSON v4.3
+ * - Campos de navegação (isReadOnly: true) agora aparecem corretamente
  * CHANGELOG v1.1:
  * - Exclusão automática de campos de auditoria (IdSaas, DtCriacao, etc.)
  * - Botões "Selecionar Todas" e "Desmarcar Todas"
@@ -51,7 +54,7 @@ const GridConfig = {
     // INICIALIZAÇÃO
     // =========================================================================
     init() {
-        console.log('📊 Grid Config v1.1 initialized');
+        console.log('📊 Grid Config v1.2 initialized');
 
         const saved = localStorage.getItem('gridConfig');
         if (saved) {
@@ -76,13 +79,23 @@ const GridConfig = {
 
     // =========================================================================
     // FILTRA PROPRIEDADES PARA GRID (exclui auditoria mas mantém PK)
+    // v1.2: Respeita list.show do JSON v4.3
     // =========================================================================
     getGridProperties(entity) {
         if (!entity || !entity.properties) return [];
 
         return entity.properties.filter(prop => {
-            // Exclui campos de auditoria
-            if (this.isAuditField(prop.name)) return false;
+            // 1. Se tem list.show: false explícito, não inclui
+            if (prop.list && prop.list.show === false) {
+                return false;
+            }
+
+            // 2. Exclui campos de auditoria
+            if (this.isAuditField(prop.name)) {
+                return false;
+            }
+
+            // 3. Inclui todos os outros (inclusive isReadOnly: true)
             return true;
         });
     },
@@ -193,14 +206,16 @@ const GridConfig = {
             const totalProps = entity.properties?.length || 0;
             this.config._auditFieldsCount = totalProps - gridProps.length;
 
+            // 🔧 v1.2: Usa configurações do JSON v4.3 (list, form, filter)
             this.config.columns = gridProps.map(prop => ({
                 name: prop.name,
-                visible: !prop.isPrimaryKey && !prop.IsPrimaryKey, // PK não visível por padrão
-                sortable: true,
-                searchable: (prop.type || '').toLowerCase() === 'string',
-                format: this.getDefaultFormat(prop.type),
-                width: '',
-                align: this.getDefaultAlign(prop.type),
+                // 🔧 CORREÇÃO: Respeita list.show do JSON v4.3
+                visible: prop.list?.show ?? (!prop.isPrimaryKey && !prop.IsPrimaryKey),
+                sortable: prop.list?.sortable ?? true,
+                searchable: prop.list?.filterable ?? ((prop.type || '').toLowerCase() === 'string'),
+                format: prop.list?.format || this.getDefaultFormat(prop.type),
+                width: prop.list?.width || '',
+                align: prop.list?.align || this.getDefaultAlign(prop.type),
                 headerText: prop.displayName || prop.name
             }));
             this.save();
@@ -489,7 +504,9 @@ const GridConfig = {
     getDefaultFormat(type) {
         const formatMap = {
             'datetime': 'datetime',
+            'DateTime': 'datetime',
             'date': 'date',
+            'DateOnly': 'date',
             'decimal': 'currency',
             'bool': 'boolean',
             'boolean': 'boolean'
@@ -521,4 +538,4 @@ const GridConfig = {
 App.registerModule('GridConfig', GridConfig);
 window.GridConfig = GridConfig;
 
-console.log('✅ GridConfig v1.1 carregado');
+console.log('✅ GridConfig v1.2 carregado');

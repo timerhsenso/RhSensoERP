@@ -1,5 +1,5 @@
 ﻿// =============================================================================
-// GERADOR FULL-STACK v3.1 - MANIFEST CONTROLLER
+// GERADOR FULL-STACK v3.2 - MANIFEST CONTROLLER
 // Controller para gerar frontend a partir do manifesto do backend
 // =============================================================================
 
@@ -8,6 +8,7 @@ using GeradorEntidades.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.IO.Compression;
 using System.Text;
+using System.Text.Json;
 
 namespace GeradorEntidades.Controllers;
 
@@ -96,37 +97,114 @@ public class ManifestController : Controller
     }
 
     /// <summary>
-    /// Obtém detalhes completos de uma entidade.
-    /// GET: /Manifest/GetEntityDetails?entityName=NomeEntidade
+    /// Obtém detalhes completos de uma entidade com metadata da API.
+    /// GET: /Manifest/GetEntity?name=NomeEntidade
+    /// v3.2: Extrai route de endpoints.baseUrl do JSON v4.3
     /// </summary>
     [HttpGet]
-    public async Task<IActionResult> GetEntityDetails([FromQuery] string entityName)
+    public async Task<IActionResult> GetEntity([FromQuery] string name)
     {
         try
         {
-            _logger.LogInformation("🔍 Carregando detalhes da entidade: {Entity}", entityName);
+            _logger.LogInformation("🔍 Carregando entidade: {Entity}", name);
 
-            if (string.IsNullOrEmpty(entityName))
+            if (string.IsNullOrEmpty(name))
             {
-                return BadRequest(new { error = "Parâmetro 'entityName' é obrigatório" });
+                return BadRequest(new { error = "Parâmetro 'name' é obrigatório" });
             }
 
-            var entity = await _manifestService.GetEntityAsync(entityName);
+            var entity = await _manifestService.GetEntityAsync(name);
 
             if (entity == null)
             {
-                _logger.LogWarning("⚠️ Entidade '{Entity}' não encontrada", entityName);
-                return NotFound(new { error = $"Entidade '{entityName}' não encontrada" });
+                _logger.LogWarning("⚠️ Entidade '{Entity}' não encontrada", name);
+                return NotFound(new { error = $"Entidade '{name}' não encontrada" });
             }
 
-            _logger.LogInformation("✅ Entidade {Entity} carregada com {Props} propriedades",
-                entityName, entity.Properties.Count);
+            _logger.LogInformation("✅ Item do manifesto encontrado: {Entity}", entity.EntityName);
 
+            // ===================================================================
+            // 🔧 v3.2: EXTRAI ROUTE DO METADATA JSON (endpoints.baseUrl)
+            // ===================================================================
+            string? routeToUse = entity.Route;
+
+            // Se route vazio, tenta gerar automaticamente
+            if (string.IsNullOrEmpty(routeToUse) && !string.IsNullOrEmpty(entity.ModuleName))
+            {
+                routeToUse = $"/api/{entity.ModuleName}/{entity.EntityName}";
+                _logger.LogWarning("⚠️ Route gerado automaticamente: {Route}", routeToUse);
+            }
+
+            // Tenta buscar o JSON completo no endpoint de metadata da API
+            if (!string.IsNullOrEmpty(routeToUse))
+            {
+                var metadataJson = await _manifestService.GetMetadataAsync(routeToUse);
+
+                if (!string.IsNullOrEmpty(metadataJson))
+                {
+                    _logger.LogInformation("✅ Metadata carregado com sucesso da API: {Route}/metadata", routeToUse);
+
+                    // 🔧 EXTRAI endpoints.baseUrl do JSON v4.3 e injeta como "route"
+                    try
+                    {
+                        var jsonDoc = JsonDocument.Parse(metadataJson);
+                        var root = jsonDoc.RootElement;
+
+                        // Verifica se tem endpoints.baseUrl
+                        if (root.TryGetProperty("endpoints", out var endpoints) &&
+                            endpoints.TryGetProperty("baseUrl", out var baseUrl))
+                        {
+                            var extractedRoute = baseUrl.GetString();
+
+                            if (!string.IsNullOrEmpty(extractedRoute))
+                            {
+                                _logger.LogInformation("✅ Route extraído de endpoints.baseUrl: {Route}", extractedRoute);
+
+                                // Injeta "route" no JSON
+                                var options = new JsonSerializerOptions
+                                {
+                                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                                    WriteIndented = false
+                                };
+
+                                using var memoryStream = new MemoryStream();
+                                using (var writer = new Utf8JsonWriter(memoryStream))
+                                {
+                                    writer.WriteStartObject();
+
+                                    // Adiciona "route" no início
+                                    writer.WriteString("route", extractedRoute);
+
+                                    // Copia todas as propriedades originais
+                                    foreach (var property in root.EnumerateObject())
+                                    {
+                                        property.WriteTo(writer);
+                                    }
+
+                                    writer.WriteEndObject();
+                                }
+
+                                var modifiedJson = Encoding.UTF8.GetString(memoryStream.ToArray());
+                                return Content(modifiedJson, "application/json");
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "⚠️ Não foi possível extrair route de endpoints.baseUrl, retornando JSON original");
+                    }
+
+                    // Se não conseguiu extrair, retorna o JSON original
+                    return Content(metadataJson, "application/json");
+                }
+            }
+
+            _logger.LogWarning("⚠️ Metadata não disponível, retornando dados básicos do manifesto");
             return Json(entity);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "❌ Erro ao obter entidade {Entity}", entityName);
+            _logger.LogError(ex, "❌ Erro ao obter entidade {Entity}", name);
             return StatusCode(500, new { error = ex.Message });
         }
     }
@@ -200,55 +278,6 @@ public class ManifestController : Controller
         catch (Exception ex)
         {
             _logger.LogError(ex, "Erro ao comparar entidade {Entity}", request.EntityName);
-            return StatusCode(500, new { error = ex.Message });
-        }
-    }
-
-    /// <summary>
-    /// Obtém detalhes de uma entidade (compatibilidade com JavaScript).
-    /// GET: /Manifest/GetEntity?name=NomeEntidade
-    /// </summary>
-    [HttpGet]
-    public async Task<IActionResult> GetEntity([FromQuery] string name)
-    {
-        try
-        {
-            _logger.LogInformation("🔍 Carregando entidade: {Entity}", name);
-
-            if (string.IsNullOrEmpty(name))
-            {
-                return BadRequest(new { error = "Parâmetro 'name' é obrigatório" });
-            }
-
-            var entity = await _manifestService.GetEntityAsync(name);
-
-            if (entity == null)
-            {
-                _logger.LogWarning("⚠️ Entidade '{Entity}' não encontrada", name);
-                return NotFound(new { error = $"Entidade '{name}' não encontrada" });
-            }
-
-            _logger.LogInformation("✅ Item do manifesto encontrado: {Entity}", entity.EntityName);
-
-            // -----------------------------------------------------------------
-            // NOVO: Tenta buscar o JSON completo no endpoint de metadata da API
-            // -----------------------------------------------------------------
-            if (!string.IsNullOrEmpty(entity.Route))
-            {
-                var metadataJson = await _manifestService.GetMetadataAsync(entity.Route);
-                if (!string.IsNullOrEmpty(metadataJson))
-                {
-                    _logger.LogInformation("✅ Metadata carregado com sucesso da API: {Route}/metadata", entity.Route);
-                    return Content(metadataJson, "application/json");
-                }
-            }
-
-            _logger.LogWarning("⚠️ Metadata não disponível, retornando dados básicos do manifesto");
-            return Json(entity);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "❌ Erro ao obter entidade {Entity}", name);
             return StatusCode(500, new { error = ex.Message });
         }
     }
