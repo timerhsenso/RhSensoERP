@@ -1,30 +1,19 @@
 /**
  * =============================================================================
- * GRID CONFIG MODULE v1.8 FINAL
+ * GRID CONFIG MODULE v1.9 CORRIGIDO
  * Configuração avançada de colunas, filtros e exportação
  * =============================================================================
+ * CHANGELOG v1.9 CORRIGIDO:
+ * - ✅ TODOS os confirm() substituídos por Swal.fire()
+ * - ✅ TODOS os alert() substituídos por Swal.fire()
+ * - ✅ Campo "Largura" corrigido: 10px → 100px
+ * - 🎨 Modais SweetAlert2 em: removeColumn, reloadAllColumns, removeSelectedColumns
+ * 
  * CHANGELOG v1.8 FINAL:
  * - ✅ NOVO: Clicar na linha toggle checkbox (marcar/desmarcar)
  * - ✅ NOVO: Campos de auditoria bloqueados (checkbox disabled + sem botão 🗑️)
  * - 🎨 Visual diferenciado para campos de auditoria (opacity + cursor not-allowed)
  * - 🔧 handleColumnClick() - Toggle checkbox ao clicar na linha
- * 
- * CHANGELOG v1.7 FINAL:
- * - ✅ ADICIONADO: Botão "🗑️ Excluir Selecionados" (remove todas marcadas)
- * - ✅ Confirmação mostra quantas e quais colunas serão excluídas
- * - ✅ Contador alterado de "visíveis" para "marcadas"
- * 
- * CHANGELOG v1.6 FINAL:
- * - ✅ ADICIONADO: Botão "🗑️ Excluir" em cada linha de coluna
- * - ✅ ADICIONADO: Botão "🔄 Recarregar Todas" para resetar colunas
- * - 🎨 UI/UX: Botões bonitos com ícones e cores
- * - 🔧 removeColumn(idx) - Remove coluna da lista (não afeta geração)
- * - 🔧 reloadAllColumns() - Recarrega todas as colunas da entidade
- * - 🔧 removeSelectedColumns() - Remove todas as colunas marcadas
- * 
- * CHANGELOG v1.5 FIXED:
- * - 🔧 REMOVIDO: Scroll na lista de colunas
- * - ✅ CORRIGIDO: Todas as colunas visíveis sem container com altura fixa
  * =============================================================================
  */
 
@@ -63,14 +52,14 @@ const GridConfig = {
         filters: [],
         _entityName: null,
         _auditFieldsCount: 0,
-        _configVersion: 1.8 // ✅ v1.8 - Click na linha + Auditoria bloqueada
+        _configVersion: 1.9 // ✅ v1.9 - Todos os modais SweetAlert2
     },
 
     // =========================================================================
     // INICIALIZAÇÃO
     // =========================================================================
     init() {
-        console.log('📊 Grid Config v1.8 FINAL initialized (click na linha + auditoria bloqueada)');
+        console.log('📊 Grid Config v1.9 CORRIGIDO initialized (todos os modais SweetAlert2)');
 
         const saved = localStorage.getItem('gridConfig');
         if (saved) {
@@ -195,7 +184,7 @@ const GridConfig = {
     },
 
     // =========================================================================
-    // CONFIGURAÇÃO DE COLUNAS - v1.6 FINAL: COM BOTÕES DE EXCLUIR/RECARREGAR
+    // CONFIGURAÇÃO DE COLUNAS
     // =========================================================================
     renderColumnConfig() {
         const entity = Store.get('entity');
@@ -264,7 +253,7 @@ const GridConfig = {
                 </div>
             ` : ''}
             
-            <!-- ✅ v1.7: Botões de ação com EXCLUIR SELECIONADOS -->
+            <!-- Botões de ação -->
             <div style="margin-bottom: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
                 <button class="btn btn-small btn-primary" onclick="GridConfig.selectAllColumns(true)"
                         ${visibleCount === totalColumns ? 'disabled' : ''}>
@@ -314,49 +303,91 @@ const GridConfig = {
     },
 
     // =========================================================================
-    // ✅ v1.6 NOVO: REMOVER COLUNA DA LISTA
+    // ✅ v1.9: REMOVER COLUNA DA LISTA (SweetAlert2)
     // =========================================================================
     removeColumn(idx) {
-        const columnName = this.config.columns[idx].name;
+        const col = this.config.columns[idx];
+        const columnName = col.name;
 
-        if (confirm(`Remover a coluna "${columnName}" da lista?\n\n(Não afetará a geração, apenas limpa a interface)`)) {
-            this.config.columns.splice(idx, 1);
-            this.save();
-            this.renderColumnConfig();
+        Swal.fire({
+            title: 'Remover Coluna?',
+            html: `Deseja remover a coluna <strong>"${columnName}"</strong> da lista?<br><small class="text-muted">(Não afetará a geração, apenas limpa a interface)</small>`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: '<i class="fas fa-check me-2"></i>Sim, Remover',
+            cancelButtonText: '<i class="fas fa-times me-2"></i>Cancelar',
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#6c757d',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                this.config.columns.splice(idx, 1);
+                this.save();
+                this.renderColumnConfig();
 
-            if (typeof App !== 'undefined' && App.showToast) {
-                App.showToast(`🗑️ Coluna "${columnName}" removida da lista`, 'info');
+                Swal.fire({
+                    title: 'Removido!',
+                    text: `Coluna "${columnName}" removida da lista.`,
+                    icon: 'success',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
             }
-        }
+        });
     },
 
     // =========================================================================
-    // ✅ v1.6 NOVO: RECARREGAR TODAS AS COLUNAS
+    // ✅ v1.9: RECARREGAR TODAS AS COLUNAS (SweetAlert2)
     // =========================================================================
     reloadAllColumns() {
-        if (confirm('Recarregar todas as colunas da entidade?\n\nIsso irá resetar suas configurações de colunas.')) {
-            const entity = Store.get('entity');
-            if (!entity) {
-                alert('❌ Nenhuma entidade carregada no Store!');
-                return;
+        Swal.fire({
+            title: 'Recarregar Colunas?',
+            html: `
+                <p>Deseja recarregar todas as colunas da entidade?</p>
+                <small class="text-muted">⚠️ Isso irá <strong>resetar</strong> suas configurações de colunas.</small>
+            `,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: '<i class="fas fa-sync me-2"></i>Sim, Recarregar',
+            cancelButtonText: '<i class="fas fa-times me-2"></i>Cancelar',
+            confirmButtonColor: '#0099cc',
+            cancelButtonColor: '#6c757d',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const entity = Store.get('entity');
+
+                if (!entity) {
+                    Swal.fire({
+                        title: 'Erro!',
+                        text: 'Nenhuma entidade carregada no Store!',
+                        icon: 'error',
+                        confirmButtonColor: '#ef4444'
+                    });
+                    return;
+                }
+
+                // Forçar reload limpando o array
+                this.config.columns = [];
+                this.config._entityName = null;
+                this.save();
+
+                // Re-renderizar (irá recriar as colunas)
+                this.renderColumnConfig();
+
+                Swal.fire({
+                    title: 'Recarregado!',
+                    text: 'Todas as colunas foram recarregadas com sucesso!',
+                    icon: 'success',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
             }
-
-            // Forçar reload limpando o array
-            this.config.columns = [];
-            this.config._entityName = null;
-            this.save();
-
-            // Re-renderizar (irá recriar as colunas)
-            this.renderColumnConfig();
-
-            if (typeof App !== 'undefined' && App.showToast) {
-                App.showToast('🔄 Todas as colunas recarregadas com sucesso!', 'success');
-            }
-        }
+        });
     },
 
     // =========================================================================
-    // ✅ v1.7 NOVO: EXCLUIR TODAS AS COLUNAS SELECIONADAS
+    // ✅ v1.9: EXCLUIR TODAS AS COLUNAS SELECIONADAS (SweetAlert2)
     // =========================================================================
     removeSelectedColumns() {
         // Contar quantas colunas estão marcadas
@@ -364,34 +395,60 @@ const GridConfig = {
         const selectedCount = selectedColumns.length;
 
         if (selectedCount === 0) {
-            alert('❌ Nenhuma coluna marcada para excluir!');
+            Swal.fire({
+                title: 'Atenção!',
+                text: 'Nenhuma coluna marcada para excluir!',
+                icon: 'warning',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#0099cc'
+            });
             return;
         }
 
         // Listar nomes das colunas que serão excluídas
-        const columnNames = selectedColumns.map(c => c.name).join(', ');
         const previewNames = selectedCount > 5
             ? selectedColumns.slice(0, 5).map(c => c.name).join(', ') + ` e mais ${selectedCount - 5}...`
-            : columnNames;
+            : selectedColumns.map(c => c.name).join(', ');
 
         // Confirmar com o usuário
-        const confirmMessage = `Excluir ${selectedCount} coluna${selectedCount > 1 ? 's' : ''} marcada${selectedCount > 1 ? 's' : ''}?\n\n${previewNames}\n\n⚠️ Não afetará a geração, apenas limpa a interface.`;
+        Swal.fire({
+            title: 'Excluir Selecionados?',
+            html: `
+                <p>Deseja excluir <strong>${selectedCount} coluna${selectedCount > 1 ? 's' : ''} marcada${selectedCount > 1 ? 's' : ''}</strong>?</p>
+                <div style="background: #f8f9fa; padding: 12px; border-radius: 8px; margin: 16px 0; max-height: 150px; overflow-y: auto;">
+                    <strong style="color: #0099cc;">Colunas:</strong><br>
+                    <small style="color: #666;">${previewNames}</small>
+                </div>
+                <small class="text-muted">⚠️ Não afetará a geração, apenas limpa a interface.</small>
+            `,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: '<i class="fas fa-trash me-2"></i>Sim, Excluir Todas',
+            cancelButtonText: '<i class="fas fa-times me-2"></i>Cancelar',
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#6c757d',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Remover todas as colunas marcadas (manter apenas as desmarcadas)
+                this.config.columns = this.config.columns.filter(c => c.visible !== true && c.Visible !== true);
 
-        if (confirm(confirmMessage)) {
-            // Remover todas as colunas marcadas (manter apenas as desmarcadas)
-            this.config.columns = this.config.columns.filter(c => c.visible !== true && c.Visible !== true);
+                this.save();
+                this.renderColumnConfig();
 
-            this.save();
-            this.renderColumnConfig();
-
-            if (typeof App !== 'undefined' && App.showToast) {
-                App.showToast(`🗑️ ${selectedCount} coluna${selectedCount > 1 ? 's' : ''} removida${selectedCount > 1 ? 's' : ''} da lista`, 'success');
+                Swal.fire({
+                    title: 'Removidas!',
+                    text: `${selectedCount} coluna${selectedCount > 1 ? 's' : ''} removida${selectedCount > 1 ? 's' : ''} da lista.`,
+                    icon: 'success',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
             }
-        }
+        });
     },
 
     // =========================================================================
-    // RENDERIZA ITEM DE COLUNA - v1.8: CLICK NA LINHA + AUDITORIA BLOQUEADA
+    // RENDERIZA ITEM DE COLUNA
     // =========================================================================
     renderColumnItem(col, idx) {
         // ✅ v1.8: Campos de auditoria são bloqueados (não pode marcar nem excluir)
@@ -445,6 +502,7 @@ const GridConfig = {
 
                     <input type="text" value="${col.width || ''}" placeholder="Largura" 
                            class="col-width-input" title="Ex: 100px, 15%"
+                           style="width: 100px !important; max-width: 100px !important; min-width: 80px !important;"
                            onchange="GridConfig.updateColumn(${idx}, 'width', this.value)">
 
                     <label title="Ordenável">
@@ -454,7 +512,7 @@ const GridConfig = {
                     </label>
                 </div>
                 
-                <!-- ✅ v1.8: Botão de Excluir (APENAS se NÃO for auditoria) -->
+                <!-- Botão de Excluir (APENAS se NÃO for auditoria) -->
                 ${!isAuditLocked ? `
                 <button class="btn-delete-column" onclick="GridConfig.removeColumn(${idx}); event.stopPropagation();" 
                         title="Excluir esta coluna da lista">
@@ -466,7 +524,7 @@ const GridConfig = {
     },
 
     // =========================================================================
-    // ✅ v1.8 NOVO: CLICK NA LINHA PARA TOGGLE CHECKBOX
+    // CLICK NA LINHA PARA TOGGLE CHECKBOX
     // =========================================================================
     handleColumnClick(event, idx, isAuditLocked) {
         // Não fazer nada se for campo de auditoria
@@ -726,4 +784,4 @@ if (typeof App !== 'undefined') {
 }
 window.GridConfig = GridConfig;
 
-console.log('✅ GridConfig v1.8 FINAL carregado (click na linha + auditoria bloqueada)');
+console.log('✅ GridConfig v1.9 CORRIGIDO carregado (todos os modais SweetAlert2 + campo Largura 100px)');

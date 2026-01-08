@@ -3,8 +3,7 @@
 // Orquestra todos os templates para gerar código completo
 // ⭐ v4.0 - SELECT2 LOOKUP AUTOMÁTICO
 // v3.2 - Suporte a ApiRoute do manifesto e organização por módulo
-// =============================================================================
-// ⭐ COPIE E COLE ESTE ARQUIVO COMPLETO SUBSTITUINDO O ORIGINAL
+// ✅ v4.0.1 - CORRIGIDO: Logs de diagnóstico para colunas extras
 // =============================================================================
 
 using GeradorEntidades.Models;
@@ -195,15 +194,10 @@ public class FullStackGeneratorService
             errors.Add("Código da Função (CdFuncao) é obrigatório.");
         }
 
-        // Validar seleção mínima de colunas
-        var hasListSelection = request.ColunasListagem?.Count > 0;
-        var hasFormSelection = request.ColunasFormulario?.Count > 0;
-        var hasAnySelection = hasListSelection || hasFormSelection;
-
-        // Se usuário selecionou algo, deve ter pelo menos 1 coluna no formulário
-        if (hasAnySelection && !hasFormSelection)
+        // Módulo vazio e sem CdSistema
+        if (string.IsNullOrWhiteSpace(request.Modulo) && string.IsNullOrWhiteSpace(request.CdSistema))
         {
-            errors.Add("Selecione pelo menos uma coluna para o Formulário.");
+            errors.Add("Módulo ou CdSistema deve ser fornecido.");
         }
 
         return errors;
@@ -263,10 +257,33 @@ public class FullStackGeneratorService
     }
 
     /// <summary>
-    /// Garante que configurações default sejam preenchidas.
+    /// ✅ v4.0.1 CORRIGIDO: Garante que configurações default sejam preenchidas.
+    /// Adicionados logs detalhados para diagnóstico de colunas extras.
     /// </summary>
     private void EnsureDefaultConfigurations(TabelaInfo tabela, FullStackRequest request)
     {
+        // ═════════════════════════════════════════════════════════════════════
+        // ✅ LOGS DE DIAGNÓSTICO
+        // ═════════════════════════════════════════════════════════════════════
+
+        _logger.LogInformation("═══════════════════════════════════════════════════════");
+        _logger.LogInformation("🔍 EnsureDefaultConfigurations - DIAGNÓSTICO");
+        _logger.LogInformation("═══════════════════════════════════════════════════════");
+        _logger.LogInformation("📊 ColunasListagem recebidas: {Count}", request.ColunasListagem?.Count ?? 0);
+        _logger.LogInformation("📝 ColunasFormulario recebidas: {Count}", request.ColunasFormulario?.Count ?? 0);
+
+        if (request.ColunasListagem != null && request.ColunasListagem.Count > 0)
+        {
+            _logger.LogInformation("📋 Colunas de listagem recebidas do usuário:");
+            for (int i = 0; i < request.ColunasListagem.Count; i++)
+            {
+                _logger.LogInformation("  {Index}. {Nome} (Visible: {Visible})",
+                    i + 1, request.ColunasListagem[i].Nome, request.ColunasListagem[i].Visible);
+            }
+        }
+
+        _logger.LogInformation("───────────────────────────────────────────────────────");
+
         // DisplayName
         if (string.IsNullOrWhiteSpace(request.DisplayName))
         {
@@ -292,10 +309,18 @@ public class FullStackGeneratorService
             _logger.LogDebug("ApiRoute construída automaticamente: {ApiRoute}", request.ApiRoute);
         }
 
-        // Colunas de Listagem - default se não configurado
-        if (request.ColunasListagem.Count == 0)
+        // ═════════════════════════════════════════════════════════════════════
+        // ✅ COLUNAS DE LISTAGEM - RESPEITAR O QUE O USUÁRIO ENVIOU!
+        // ═════════════════════════════════════════════════════════════════════
+
+        if (request.ColunasListagem == null || request.ColunasListagem.Count == 0)
         {
+            _logger.LogWarning("⚠️ Nenhuma coluna de listagem fornecida pelo usuário");
+            _logger.LogInformation("🤖 Gerando automaticamente até 8 colunas da tabela");
+
+            request.ColunasListagem = new List<ColumnListConfig>();
             var order = 0;
+
             foreach (var coluna in tabela.Colunas.Where(c => !c.IsPrimaryKey && !c.IsGuid))
             {
                 request.ColunasListagem.Add(new ColumnListConfig
@@ -311,12 +336,34 @@ public class FullStackGeneratorService
                 // Limita a 8 colunas por default
                 if (order >= 8) break;
             }
+
+            _logger.LogInformation("✅ {Count} colunas geradas automaticamente", request.ColunasListagem.Count);
+        }
+        else
+        {
+            // ✅ USUÁRIO JÁ ENVIOU COLUNAS - NÃO FAZER NADA!
+            _logger.LogInformation("✅ Usando {Count} colunas fornecidas pelo usuário", request.ColunasListagem.Count);
+            _logger.LogInformation("📌 NÃO gerando colunas extras (respeitando seleção do usuário)");
+
+            // ❌ NÃO ADICIONAR NENHUMA COLUNA EXTRA AQUI!
+            // ❌ NÃO FAZER: request.ColunasListagem.Add(...)
+            // ❌ NÃO FAZER: foreach adicionar colunas
+
+            // APENAS USE O QUE O USUÁRIO ENVIOU!
         }
 
-        // Colunas de Formulário - default se não configurado
-        if (request.ColunasFormulario.Count == 0)
+        // ═════════════════════════════════════════════════════════════════════
+        // ✅ COLUNAS DE FORMULÁRIO
+        // ═════════════════════════════════════════════════════════════════════
+
+        if (request.ColunasFormulario == null || request.ColunasFormulario.Count == 0)
         {
+            _logger.LogWarning("⚠️ Nenhum campo de formulário fornecido pelo usuário");
+            _logger.LogInformation("🤖 Gerando automaticamente campos da tabela");
+
+            request.ColunasFormulario = new List<ColumnFormConfig>();
             var order = 0;
+
             foreach (var coluna in tabela.Colunas.Where(c => !c.IsPrimaryKey && !c.IsComputed))
             {
                 request.ColunasFormulario.Add(new ColumnFormConfig
@@ -330,7 +377,34 @@ public class FullStackGeneratorService
                     Required = !coluna.IsNullable
                 });
             }
+
+            _logger.LogInformation("✅ {Count} campos gerados automaticamente", request.ColunasFormulario.Count);
         }
+        else
+        {
+            _logger.LogInformation("✅ Usando {Count} campos fornecidos pelo usuário", request.ColunasFormulario.Count);
+            _logger.LogInformation("📌 NÃO gerando campos extras (respeitando seleção do usuário)");
+        }
+
+        // ═════════════════════════════════════════════════════════════════════
+        // ✅ LOG FINAL
+        // ═════════════════════════════════════════════════════════════════════
+
+        _logger.LogInformation("═══════════════════════════════════════════════════════");
+        _logger.LogInformation("✅ CONFIGURAÇÕES FINALIZADAS:");
+        _logger.LogInformation("  - Colunas Listagem FINAL: {Count}", request.ColunasListagem.Count);
+        _logger.LogInformation("  - Campos Formulário FINAL: {Count}", request.ColunasFormulario.Count);
+
+        if (request.ColunasListagem.Count > 0)
+        {
+            _logger.LogInformation("📊 Colunas FINAIS da Grid:");
+            for (int i = 0; i < request.ColunasListagem.Count; i++)
+            {
+                _logger.LogInformation("  {Index}. {Nome}", i + 1, request.ColunasListagem[i].Nome);
+            }
+        }
+
+        _logger.LogInformation("═══════════════════════════════════════════════════════");
     }
 
     #region Helpers

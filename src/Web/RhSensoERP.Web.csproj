@@ -26,7 +26,6 @@
 
   <ItemGroup>
     <Folder Include="logs\" />
-    <Folder Include="Views\ControleAcessoPortaria\CapColaboradoresFornecedor\" />
   </ItemGroup>
 
   <PropertyGroup>

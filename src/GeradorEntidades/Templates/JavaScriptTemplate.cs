@@ -718,11 +718,14 @@ $(document).ready(function () {{
         // Ex: FornecedorRazaoSocial, TipoSanguineoDescricao, UfSigla
         // =====================================================================
 
-        foreach (var nav in entity.NavigationProperties)
+        if (!hasListConfig)
         {
-            var navNameCamel = char.ToLower(nav.Name[0]) + nav.Name.Substring(1);
+            // ✅ Modo automático: adiciona todas as navegações
+            foreach (var nav in entity.NavigationProperties)
+            {
+                var navNameCamel = char.ToLower(nav.Name[0]) + nav.Name.Substring(1);
 
-            sb.AppendLine($@"        // ✅ {nav.DisplayName} (Navegação)
+                sb.AppendLine($@"        // ✅ {nav.DisplayName} (Navegação)
         {{
             data: '{navNameCamel}',
             name: '{navNameCamel}',
@@ -733,7 +736,10 @@ $(document).ready(function () {{
                 return data !== undefined && data !== null ? data : '';
             }}
         }},");
+            }
         }
+        // ✅ Se hasListConfig == true: RESPEITA seleção do usuário (NÃO adiciona extras)
+
 
         // =====================================================================
         // COLUNA DE AÇÕES
