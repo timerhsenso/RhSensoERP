@@ -2,23 +2,23 @@
 // ARQUIVO GERADO POR GeradorFullStack v4.0
 // Entity: CapColaboradoresFornecedor
 // Module: ControleAcessoPortaria
-// Data: 2026-01-07 21:15:52
+// Data: 2026-01-07 23:28:07
 // =============================================================================
 using System.ComponentModel.DataAnnotations;
 
 namespace RhSensoERP.Web.Models.ControleAcessoPortaria.CapColaboradoresFornecedor;
 
 /// <summary>
-/// Request para criação de Cadastro de Terceiros.
+/// Request para criação de CapColaboradoresFornecedor [v4.3].
 /// Compatível com backend: CreateCapColaboradoresFornecedorRequest
 /// </summary>
 public class CreateCapColaboradoresFornecedorRequest
 {
     /// <summary>
-    /// Fornecedor
+    /// ID Fornecedor
     /// </summary>
-    [Display(Name = "Fornecedor")]
-    [Required(ErrorMessage = "Fornecedor é obrigatório")]
+    [Display(Name = "ID Fornecedor")]
+    [Required(ErrorMessage = "ID Fornecedor é obrigatório")]
     public int IdFornecedor { get; set; }
 
     /// <summary>
@@ -65,10 +65,10 @@ public class CreateCapColaboradoresFornecedorRequest
     public DateOnly? DataNascimento { get; set; }
 
     /// <summary>
-    /// Genero
+    /// Gênero
     /// </summary>
-    [Display(Name = "Genero")]
-    [StringLength(20, ErrorMessage = "Genero deve ter no máximo {1} caracteres")]
+    [Display(Name = "Gênero")]
+    [StringLength(20, ErrorMessage = "Gênero deve ter no máximo {1} caracteres")]
     public string Genero { get; set; } = string.Empty;
 
     /// <summary>
@@ -79,23 +79,23 @@ public class CreateCapColaboradoresFornecedorRequest
     public string EstadoCivil { get; set; } = string.Empty;
 
     /// <summary>
-    /// Tipo Sanguineo
+    /// ID Tipo Sanguíneo
     /// </summary>
-    [Display(Name = "Tipo Sanguineo")]
+    [Display(Name = "ID Tipo Sanguíneo")]
     public int? IdTipoSanguineo { get; set; }
 
     /// <summary>
-    /// Endereco
+    /// Endereço
     /// </summary>
-    [Display(Name = "Endereco")]
-    [StringLength(500, ErrorMessage = "Endereco deve ter no máximo {1} caracteres")]
+    [Display(Name = "Endereço")]
+    [StringLength(500, ErrorMessage = "Endereço deve ter no máximo {1} caracteres")]
     public string Endereco { get; set; } = string.Empty;
 
     /// <summary>
-    /// Numero
+    /// Número
     /// </summary>
-    [Display(Name = "Numero")]
-    [StringLength(20, ErrorMessage = "Numero deve ter no máximo {1} caracteres")]
+    [Display(Name = "Número")]
+    [StringLength(20, ErrorMessage = "Número deve ter no máximo {1} caracteres")]
     public string Numero { get; set; } = string.Empty;
 
     /// <summary>
@@ -120,29 +120,29 @@ public class CreateCapColaboradoresFornecedorRequest
     public string Cidade { get; set; } = string.Empty;
 
     /// <summary>
-    /// Uf
+    /// ID UF
     /// </summary>
-    [Display(Name = "Uf")]
+    [Display(Name = "ID UF")]
     public int? IdUf { get; set; }
 
     /// <summary>
-    /// Cep
+    /// CEP
     /// </summary>
-    [Display(Name = "Cep")]
-    [StringLength(10, ErrorMessage = "Cep deve ter no máximo {1} caracteres")]
+    [Display(Name = "CEP")]
+    [StringLength(10, ErrorMessage = "CEP deve ter no máximo {1} caracteres")]
     public string Cep { get; set; } = string.Empty;
 
     /// <summary>
-    /// Data Admissao
+    /// Data Admissão
     /// </summary>
-    [Display(Name = "Data Admissao")]
-    [Required(ErrorMessage = "Data Admissao é obrigatório")]
+    [Display(Name = "Data Admissão")]
+    [Required(ErrorMessage = "Data Admissão é obrigatório")]
     public DateOnly DataAdmissao { get; set; }
 
     /// <summary>
-    /// Data Demissao
+    /// Data Demissão
     /// </summary>
-    [Display(Name = "Data Demissao")]
+    [Display(Name = "Data Demissão")]
     public DateOnly? DataDemissao { get; set; }
 
     /// <summary>

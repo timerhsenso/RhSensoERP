@@ -3,7 +3,7 @@
 // Entity: CapVisitantes
 // Module: ControleAcessoPortaria
 // ApiRoute: api/gestaoterceirosprestadores/capvisitantes
-// Data: 2026-01-07 21:13:40
+// Data: 2026-01-07 23:44:38
 // AUTO-REGISTRO: Compatível com AddCrudToolServicesAutomatically()
 // =============================================================================
 using System.Text;
@@ -15,7 +15,7 @@ using RhSensoERP.Web.Services.Base;
 namespace RhSensoERP.Web.Services.ControleAcessoPortaria.CapVisitantes;
 
 /// <summary>
-/// Serviço de API para Cadastro de Visitantes.
+/// Serviço de API para CapVisitantes [v4.3].
 /// Herda implementação base de BaseApiService.
 /// v6.1: CORRIGIDO - Lookup usa 'term' para Select2.
 /// v6.0: Adiciona implementações Select2 Lookup automáticas.

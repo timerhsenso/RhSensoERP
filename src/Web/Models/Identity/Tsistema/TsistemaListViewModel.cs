@@ -1,25 +1,25 @@
-// =============================================================================
-// ARQUIVO GERADO POR GeradorFullStack v3.8
+﻿// =============================================================================
+// ARQUIVO GERADO POR GeradorFullStack v4.0
 // Entity: Tsistema
-// Module: Seguranca
-// Data: 2025-12-30 17:48:37
+// Module: Identity
+// Data: 2026-01-07 22:17:31
 // =============================================================================
 using RhSensoERP.Web.Models.Base;
 
-namespace RhSensoERP.Web.Models.Seguranca.Tsistema;
+namespace RhSensoERP.Web.Models.Identity.Tsistema;
 
 /// <summary>
 /// ViewModel para listagem de Tabela de Sistemas.
-/// Herda de BaseListViewModel que ja contem permissoes e configuracoes de DataTables.
+/// Herda de BaseListViewModel que já contém permissões e configurações de DataTables.
 /// </summary>
 public class TsistemaListViewModel : BaseListViewModel
 {
     public TsistemaListViewModel()
     {
-        // Inicializa propriedades padrao
+        // Inicializa propriedades padrão
         InitializeDefaults("Tsistema", "Tabela de Sistemas");
         
-        // Configuracoes especificas
+        // Configurações específicas
         PageTitle = "Tabela de Sistemas";
         PageIcon = "fas fa-table";
         CdFuncao = "SEG_FM_TSISTEMA";

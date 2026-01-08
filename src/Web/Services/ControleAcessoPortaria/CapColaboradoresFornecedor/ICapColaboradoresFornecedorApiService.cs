@@ -2,7 +2,7 @@
 // ARQUIVO GERADO POR GeradorFullStack v6.1
 // Entity: CapColaboradoresFornecedor
 // Module: ControleAcessoPortaria
-// Data: 2026-01-07 21:15:52
+// Data: 2026-01-07 23:28:07
 // AUTO-REGISTRO: Compatível com AddCrudToolServicesAutomatically()
 // =============================================================================
 using RhSensoERP.Web.Models.ControleAcessoPortaria.CapColaboradoresFornecedor;
@@ -12,7 +12,7 @@ using RhSensoERP.Web.Services.Base;
 namespace RhSensoERP.Web.Services.ControleAcessoPortaria.CapColaboradoresFornecedor;
 
 /// <summary>
-/// Interface do serviço de API para Cadastro de Terceiros.
+/// Interface do serviço de API para CapColaboradoresFornecedor [v4.3].
 /// Herda de IApiService (já implementado por BaseApiService) e IBatchDeleteService.
 /// v6.1: CORRIGIDO - Lookup usa 'term' para Select2.
 /// v6.0: Adiciona métodos Select2 Lookup automáticos.

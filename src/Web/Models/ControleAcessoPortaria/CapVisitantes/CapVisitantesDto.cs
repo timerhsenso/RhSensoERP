@@ -2,13 +2,13 @@
 // ARQUIVO GERADO POR GeradorFullStack v4.0
 // Entity: CapVisitantes
 // Module: ControleAcessoPortaria
-// Data: 2026-01-07 21:13:40
+// Data: 2026-01-07 23:44:38
 // =============================================================================
 
 namespace RhSensoERP.Web.Models.ControleAcessoPortaria.CapVisitantes;
 
 /// <summary>
-/// DTO de leitura para Cadastro de Visitantes.
+/// DTO de leitura para CapVisitantes [v4.3].
 /// Compatível com backend: RhSensoERP.Modules.ControleAcessoPortaria.Application.DTOs.CapVisitantesDto
 /// </summary>
 public class CapVisitantesDto

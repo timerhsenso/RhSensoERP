@@ -2,7 +2,7 @@
 // ARQUIVO GERADO POR GeradorFullStack v6.1
 // Entity: CapVisitantes
 // Module: ControleAcessoPortaria
-// Data: 2026-01-07 21:13:40
+// Data: 2026-01-07 23:44:38
 // AUTO-REGISTRO: Compatível com AddCrudToolServicesAutomatically()
 // =============================================================================
 using RhSensoERP.Web.Models.ControleAcessoPortaria.CapVisitantes;
@@ -12,7 +12,7 @@ using RhSensoERP.Web.Services.Base;
 namespace RhSensoERP.Web.Services.ControleAcessoPortaria.CapVisitantes;
 
 /// <summary>
-/// Interface do serviço de API para Cadastro de Visitantes.
+/// Interface do serviço de API para CapVisitantes [v4.3].
 /// Herda de IApiService (já implementado por BaseApiService) e IBatchDeleteService.
 /// v6.1: CORRIGIDO - Lookup usa 'term' para Select2.
 /// v6.0: Adiciona métodos Select2 Lookup automáticos.

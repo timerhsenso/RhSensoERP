@@ -2,7 +2,7 @@
 // ARQUIVO GERADO POR GeradorFullStack v4.0
 // Entity: CapColaboradoresFornecedor
 // Module: ControleAcessoPortaria
-// Data: 2026-01-07 21:15:52
+// Data: 2026-01-07 23:28:07
 // =============================================================================
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -19,14 +19,14 @@ namespace RhSensoERP.Web.Controllers.ControleAcessoPortaria;
 // =============================================================================
 [MenuItem(
     Module = MenuModule.ControleAcessoPortaria,
-    DisplayName = "Cadastro de Terceiros",
+    DisplayName = "CapColaboradoresFornecedor [v4.3]",
     Icon = "fas fa-table",
     Order = 10,
     CdFuncao = "SEG_FM_TSISTEMA"
 )]
 
 /// <summary>
-/// Controller para gerenciamento de Cadastro de Terceiros.
+/// Controller para gerenciamento de CapColaboradoresFornecedor [v4.3].
 /// Herda toda a funcionalidade CRUD de BaseCrudController.
 /// </summary>
 [Authorize]

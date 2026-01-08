@@ -1,12 +1,12 @@
 ﻿/**
  * ============================================================================
- * CADASTRO DE TERCEIROS - JavaScript com Checkbox e Toggle Ativo
+ * CAPCOLABORADORESFORNECEDOR [V4.3] - JavaScript com Checkbox e Toggle Ativo
  * ============================================================================
  * Arquivo: wwwroot/js/controleacessoportaria/capcolaboradoresfornecedor/capcolaboradoresfornecedor.js
  * Módulo: ControleAcessoPortaria
  * Versão: 4.4 (SELECT2 100% CORRIGIDO)
  * Gerado por: GeradorFullStack v4.4
- * Data: 2026-01-07 21:15:52
+ * Data: 2026-01-07 23:28:07
  * 
  * Changelog v4.4:
  *   ✅ CORRIGIDO: Select2 agora usa data-select2-url (não data-endpoint)
@@ -29,7 +29,7 @@
  *   ✅ Toggle Switch dinâmico para campo Ativo (rate limit 500ms)
  *   ✅ Exclusão múltipla com contador
  * 
- * Implementação específica do CRUD de Cadastro de Terceiros.
+ * Implementação específica do CRUD de CapColaboradoresFornecedor [v4.3].
  * Estende a classe CrudBase com customizações necessárias.
  * ============================================================================
  */
@@ -197,6 +197,21 @@ class CapColaboradoresFornecedorCrud extends CrudBase {
         cleanData.Rg = formData.rg || formData.Rg || '';
         cleanData.Email = formData.email || formData.Email || '';
         cleanData.Telefone = formData.telefone || formData.Telefone || '';
+        cleanData.Genero = formData.genero || formData.Genero || '';
+        cleanData.EstadoCivil = formData.estadoCivil || formData.EstadoCivil || '';
+        cleanData.Endereco = formData.endereco || formData.Endereco || '';
+        cleanData.Numero = formData.numero || formData.Numero || '';
+        cleanData.Complemento = formData.complemento || formData.Complemento || '';
+        cleanData.Bairro = formData.bairro || formData.Bairro || '';
+        cleanData.Cidade = formData.cidade || formData.Cidade || '';
+        cleanData.Cep = formData.cep || formData.Cep || '';
+        cleanData.Cargo = formData.cargo || formData.Cargo || '';
+
+
+        // Integer required fields - PascalCase
+        cleanData.IdFornecedor = parseInt(formData.idFornecedor || formData.IdFornecedor || 0, 10);
+        cleanData.IdTipoSanguineo = parseInt(formData.idTipoSanguineo || formData.IdTipoSanguineo || 0, 10);
+        cleanData.IdUf = parseInt(formData.idUf || formData.IdUf || 0, 10);
 
 
         // Boolean fields - PascalCase
@@ -290,11 +305,41 @@ $(document).ready(function () {
                 return `<input type="checkbox" class="form-check-input row-select dt-checkboxes" value="${id}" data-id="${id}" />`;
             }
         },
+        // ID
+        {
+            data: 'id',
+            name: 'Id',
+            title: 'ID',
+            orderable: true,
+            render: function (data, type, row) {
+                return data !== undefined && data !== null ? data : '';
+            }
+        },
         // Nome
         {
             data: 'nome',
             name: 'Nome',
             title: 'Nome',
+            orderable: true,
+            render: function (data, type, row) {
+                return data !== undefined && data !== null ? data : '';
+            }
+        },
+        // CPF
+        {
+            data: 'cpf',
+            name: 'Cpf',
+            title: 'CPF',
+            orderable: true,
+            render: function (data, type, row) {
+                return data !== undefined && data !== null ? data : '';
+            }
+        },
+        // RG
+        {
+            data: 'rg',
+            name: 'Rg',
+            title: 'RG',
             orderable: true,
             render: function (data, type, row) {
                 return data !== undefined && data !== null ? data : '';
@@ -320,29 +365,24 @@ $(document).ready(function () {
                 return data !== undefined && data !== null ? data : '';
             }
         },
-        // Ativo
+        // Data Nascimento
         {
-            data: 'ativo',
-            name: 'Ativo',
-            title: 'Ativo',
+            data: 'dataNascimento',
+            name: 'DataNascimento',
+            title: 'Data Nascimento',
             orderable: true,
-            width: '80px',
-            className: 'text-center',
             render: function (data, type, row) {
-                if (type === 'display') {
-                    const checked = data ? 'checked' : '';
-                    const id = getCleanId(row, 'id');
-                    return `
-                        <div class="form-check form-switch">
-                            <input class="form-check-input toggle-ativo" 
-                                   type="checkbox" 
-                                   ${checked}
-                                   data-id="${id}"
-                                   data-current="${data}"
-                                   title="Clique para ${data ? 'desativar' : 'ativar'}">
-                        </div>`;
-                }
-                return data;
+                return data !== undefined && data !== null ? data : '';
+            }
+        },
+        // Gênero
+        {
+            data: 'genero',
+            name: 'Genero',
+            title: 'Gênero',
+            orderable: true,
+            render: function (data, type, row) {
+                return data !== undefined && data !== null ? data : '';
             }
         },
         // ✅ Fornecedor (Navegação)
@@ -416,8 +456,8 @@ $(document).ready(function () {
     const crud = new CapColaboradoresFornecedorCrud({
         controllerName: 'CapColaboradoresFornecedor',
         apiRoute: '/api/gestaoterceirosprestadores/capcolaboradoresfornecedor',
-        entityName: 'Cadastro de Terceiros',
-        entityNamePlural: 'Cadastro de Terceiross',
+        entityName: 'CapColaboradoresFornecedor [v4.3]',
+        entityNamePlural: 'CapColaboradoresFornecedor [v4.3]s',
         idField: 'id',
         tableSelector: '#tableCrud',
         columns: columns,  // ✅ CORRIGIDO: era "dataTableColumns"

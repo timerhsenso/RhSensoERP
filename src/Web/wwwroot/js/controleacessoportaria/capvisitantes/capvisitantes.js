@@ -1,12 +1,12 @@
 ﻿/**
  * ============================================================================
- * CADASTRO DE VISITANTES - JavaScript com Checkbox e Toggle Ativo
+ * CAPVISITANTES [V4.3] - JavaScript com Checkbox e Toggle Ativo
  * ============================================================================
  * Arquivo: wwwroot/js/controleacessoportaria/capvisitantes/capvisitantes.js
  * Módulo: ControleAcessoPortaria
  * Versão: 4.4 (SELECT2 100% CORRIGIDO)
  * Gerado por: GeradorFullStack v4.4
- * Data: 2026-01-07 21:13:40
+ * Data: 2026-01-07 23:44:38
  * 
  * Changelog v4.4:
  *   ✅ CORRIGIDO: Select2 agora usa data-select2-url (não data-endpoint)
@@ -29,7 +29,7 @@
  *   ✅ Toggle Switch dinâmico para campo Ativo (rate limit 500ms)
  *   ✅ Exclusão múltipla com contador
  * 
- * Implementação específica do CRUD de Cadastro de Visitantes.
+ * Implementação específica do CRUD de CapVisitantes [v4.3].
  * Estende a classe CrudBase com customizações necessárias.
  * ============================================================================
  */
@@ -316,21 +316,21 @@ $(document).ready(function () {
                 return data !== undefined && data !== null ? data : '';
             }
         },
-        // E-mail
-        {
-            data: 'email',
-            name: 'Email',
-            title: 'E-mail',
-            orderable: true,
-            render: function (data, type, row) {
-                return data !== undefined && data !== null ? data : '';
-            }
-        },
         // Telefone
         {
             data: 'telefone',
             name: 'Telefone',
             title: 'Telefone',
+            orderable: true,
+            render: function (data, type, row) {
+                return data !== undefined && data !== null ? data : '';
+            }
+        },
+        // E-mail
+        {
+            data: 'email',
+            name: 'Email',
+            title: 'E-mail',
             orderable: true,
             render: function (data, type, row) {
                 return data !== undefined && data !== null ? data : '';
@@ -399,8 +399,8 @@ $(document).ready(function () {
     const crud = new CapVisitantesCrud({
         controllerName: 'CapVisitantes',
         apiRoute: '/api/gestaoterceirosprestadores/capvisitantes',
-        entityName: 'Cadastro de Visitantes',
-        entityNamePlural: 'Cadastro de Visitantess',
+        entityName: 'CapVisitantes [v4.3]',
+        entityNamePlural: 'CapVisitantes [v4.3]s',
         idField: 'id',
         tableSelector: '#tableCrud',
         columns: columns,  // ✅ CORRIGIDO: era "dataTableColumns"

@@ -2,14 +2,14 @@
 // ARQUIVO GERADO POR GeradorFullStack v4.0
 // Entity: CapVisitantes
 // Module: ControleAcessoPortaria
-// Data: 2026-01-07 21:13:40
+// Data: 2026-01-07 23:44:38
 // =============================================================================
 using RhSensoERP.Web.Models.Base;
 
 namespace RhSensoERP.Web.Models.ControleAcessoPortaria.CapVisitantes;
 
 /// <summary>
-/// ViewModel para listagem de Cadastro de Visitantes.
+/// ViewModel para listagem de CapVisitantes [v4.3].
 /// Herda de BaseListViewModel que já contém permissões e configurações de DataTables.
 /// </summary>
 public class CapVisitantesListViewModel : BaseListViewModel
@@ -17,10 +17,10 @@ public class CapVisitantesListViewModel : BaseListViewModel
     public CapVisitantesListViewModel()
     {
         // Inicializa propriedades padrão
-        InitializeDefaults("CapVisitantes", "Cadastro de Visitantes");
+        InitializeDefaults("CapVisitantes", "CapVisitantes [v4.3]");
         
         // Configurações específicas
-        PageTitle = "Cadastro de Visitantes";
+        PageTitle = "CapVisitantes [v4.3]";
         PageIcon = "fas fa-table";
         CdFuncao = "SEG_FM_TSISTEMA";
     }

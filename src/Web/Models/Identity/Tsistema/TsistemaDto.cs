@@ -1,25 +1,25 @@
-// =============================================================================
-// ARQUIVO GERADO POR GeradorFullStack v3.8
+﻿// =============================================================================
+// ARQUIVO GERADO POR GeradorFullStack v4.0
 // Entity: Tsistema
-// Module: Seguranca
-// Data: 2025-12-30 17:48:37
+// Module: Identity
+// Data: 2026-01-07 22:17:31
 // =============================================================================
 
-namespace RhSensoERP.Web.Models.Seguranca.Tsistema;
+namespace RhSensoERP.Web.Models.Identity.Tsistema;
 
 /// <summary>
 /// DTO de leitura para Tabela de Sistemas.
-/// Compativel com backend: RhSensoERP.Modules.Seguranca.Application.DTOs.TsistemaDto
+/// Compatível com backend: RhSensoERP.Modules.Identity.Application.DTOs.TsistemaDto
 /// </summary>
 public class TsistemaDto
 {
     /// <summary>
-    /// CdsiStema
+    /// Cdsi Stema
     /// </summary>
     public string CdsiStema { get; set; } = string.Empty;
 
     /// <summary>
-    /// DcsiStema
+    /// Dcsi Stema
     /// </summary>
     public string DcsiStema { get; set; } = string.Empty;
 }

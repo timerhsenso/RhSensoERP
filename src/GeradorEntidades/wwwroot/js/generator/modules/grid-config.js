@@ -1,16 +1,30 @@
 /**
  * =============================================================================
- * GRID CONFIG MODULE v1.5 FIXED
+ * GRID CONFIG MODULE v1.8 FINAL
  * Configuração avançada de colunas, filtros e exportação
  * =============================================================================
+ * CHANGELOG v1.8 FINAL:
+ * - ✅ NOVO: Clicar na linha toggle checkbox (marcar/desmarcar)
+ * - ✅ NOVO: Campos de auditoria bloqueados (checkbox disabled + sem botão 🗑️)
+ * - 🎨 Visual diferenciado para campos de auditoria (opacity + cursor not-allowed)
+ * - 🔧 handleColumnClick() - Toggle checkbox ao clicar na linha
+ * 
+ * CHANGELOG v1.7 FINAL:
+ * - ✅ ADICIONADO: Botão "🗑️ Excluir Selecionados" (remove todas marcadas)
+ * - ✅ Confirmação mostra quantas e quais colunas serão excluídas
+ * - ✅ Contador alterado de "visíveis" para "marcadas"
+ * 
+ * CHANGELOG v1.6 FINAL:
+ * - ✅ ADICIONADO: Botão "🗑️ Excluir" em cada linha de coluna
+ * - ✅ ADICIONADO: Botão "🔄 Recarregar Todas" para resetar colunas
+ * - 🎨 UI/UX: Botões bonitos com ícones e cores
+ * - 🔧 removeColumn(idx) - Remove coluna da lista (não afeta geração)
+ * - 🔧 reloadAllColumns() - Recarrega todas as colunas da entidade
+ * - 🔧 removeSelectedColumns() - Remove todas as colunas marcadas
+ * 
  * CHANGELOG v1.5 FIXED:
  * - 🔧 REMOVIDO: Scroll na lista de colunas
  * - ✅ CORRIGIDO: Todas as colunas visíveis sem container com altura fixa
- * - 📐 Layout: Lista completa sem overflow
- * =============================================================================
- * CHANGELOG v1.4:
- * - 🔧 CORREÇÃO: Mostra TODOS os campos (incluindo Auditoria) para o usuário escolher
- * - Campos audit e PK vêm desmarcados por padrão (exceto se JSON mandar diferente)
  * =============================================================================
  */
 
@@ -49,14 +63,14 @@ const GridConfig = {
         filters: [],
         _entityName: null,
         _auditFieldsCount: 0,
-        _configVersion: 1.5 // ✅ v1.5 - Sem scroll
+        _configVersion: 1.8 // ✅ v1.8 - Click na linha + Auditoria bloqueada
     },
 
     // =========================================================================
     // INICIALIZAÇÃO
     // =========================================================================
     init() {
-        console.log('📊 Grid Config v1.5 FIXED initialized (sem scroll)');
+        console.log('📊 Grid Config v1.8 FINAL initialized (click na linha + auditoria bloqueada)');
 
         const saved = localStorage.getItem('gridConfig');
         if (saved) {
@@ -64,7 +78,7 @@ const GridConfig = {
                 const parsed = JSON.parse(saved);
                 // Cache bust if version is different
                 if (parsed._configVersion !== this.config._configVersion) {
-                    console.log('⚠️ Old config detected. Clearing cache to apply new column rules.');
+                    console.log('⚠️ Old config detected. Clearing cache to apply new features.');
                     localStorage.removeItem('gridConfig');
                 } else {
                     this.config = { ...this.config, ...parsed };
@@ -88,7 +102,6 @@ const GridConfig = {
 
     // =========================================================================
     // OBTER PROPRIEDADES PARA GRID
-    // v1.4: Retorna TODAS as colunas (inclusive Auditoria) para o usuário decidir
     // =========================================================================
     getGridProperties(entity) {
         if (!entity || !entity.properties) return [];
@@ -182,7 +195,7 @@ const GridConfig = {
     },
 
     // =========================================================================
-    // CONFIGURAÇÃO DE COLUNAS - v1.5 FIXED: SEM SCROLL
+    // CONFIGURAÇÃO DE COLUNAS - v1.6 FINAL: COM BOTÕES DE EXCLUIR/RECARREGAR
     // =========================================================================
     renderColumnConfig() {
         const entity = Store.get('entity');
@@ -196,7 +209,7 @@ const GridConfig = {
         if (this.config.columns.length === 0 || savedEntityName !== currentEntityName) {
             this.config._entityName = currentEntityName;
 
-            // v1.4: Pega TODAS as propriedades
+            // Pega TODAS as propriedades
             const gridProps = this.getGridProperties(entity);
 
             // Mapeia colunas
@@ -216,9 +229,9 @@ const GridConfig = {
 
                 return {
                     name: prop.name,
-                    Name: prop.name, // ✅ PascalCase para backend
+                    Name: prop.name,
                     visible: isVisible,
-                    Visible: isVisible, // ✅ PascalCase para backend
+                    Visible: isVisible,
                     sortable: prop.list?.sortable ?? true,
                     Sortable: prop.list?.sortable ?? true,
                     searchable: prop.list?.filterable ?? ((prop.type || '').toLowerCase() === 'string'),
@@ -229,9 +242,9 @@ const GridConfig = {
                     align: prop.list?.align || this.getDefaultAlign(prop.type),
                     Align: prop.list?.align || this.getDefaultAlign(prop.type),
                     headerText: prop.displayName || prop.name,
-                    Title: prop.displayName || prop.name, // ✅ PascalCase
+                    Title: prop.displayName || prop.name,
                     Order: this.config.columns.length,
-                    isAudit: isAudit // Flag para UI
+                    isAudit: isAudit
                 };
             });
             this.save();
@@ -251,8 +264,8 @@ const GridConfig = {
                 </div>
             ` : ''}
             
-            <!-- Botões de ação -->
-            <div style="margin-bottom: 15px; display: flex; gap: 10px;">
+            <!-- ✅ v1.7: Botões de ação com EXCLUIR SELECIONADOS -->
+            <div style="margin-bottom: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
                 <button class="btn btn-small btn-primary" onclick="GridConfig.selectAllColumns(true)"
                         ${visibleCount === totalColumns ? 'disabled' : ''}>
                     ✅ Selecionar Todas
@@ -261,12 +274,21 @@ const GridConfig = {
                         ${visibleCount === 0 ? 'disabled' : ''}>
                     ❌ Desmarcar Todas
                 </button>
-                <span style="margin-left: auto; color: #666; font-size: 12px;">
-                    ${visibleCount} de ${totalColumns} visíveis
+                <button class="btn btn-small btn-delete-selected" onclick="GridConfig.removeSelectedColumns()" 
+                        title="Excluir todas as colunas marcadas da lista"
+                        ${visibleCount === 0 ? 'disabled' : ''}>
+                    🗑️ Excluir Selecionados
+                </button>
+                <button class="btn btn-small btn-reload" onclick="GridConfig.reloadAllColumns()" 
+                        title="Recarregar todas as colunas da entidade">
+                    🔄 Recarregar Todas
+                </button>
+                <span style="margin-left: auto; color: #666; font-size: 12px; align-self: center;">
+                    ${visibleCount} de ${totalColumns} marcadas
                 </span>
             </div>
             
-            <!-- ✅ v1.5 FIXED: DIV SEM SCROLL - Altura automática -->
+            <!-- Lista de colunas SEM SCROLL -->
             <div class="column-list-no-scroll" id="columnList">
                 ${this.config.columns.map((col, idx) => this.renderColumnItem(col, idx)).join('')}
             </div>
@@ -281,7 +303,7 @@ const GridConfig = {
     selectAllColumns(visible) {
         this.config.columns.forEach(col => {
             col.visible = visible;
-            col.Visible = visible; // ✅ PascalCase
+            col.Visible = visible;
         });
         this.save();
         this.renderColumnConfig();
@@ -292,22 +314,114 @@ const GridConfig = {
     },
 
     // =========================================================================
-    // RENDERIZA ITEM DE COLUNA
+    // ✅ v1.6 NOVO: REMOVER COLUNA DA LISTA
+    // =========================================================================
+    removeColumn(idx) {
+        const columnName = this.config.columns[idx].name;
+
+        if (confirm(`Remover a coluna "${columnName}" da lista?\n\n(Não afetará a geração, apenas limpa a interface)`)) {
+            this.config.columns.splice(idx, 1);
+            this.save();
+            this.renderColumnConfig();
+
+            if (typeof App !== 'undefined' && App.showToast) {
+                App.showToast(`🗑️ Coluna "${columnName}" removida da lista`, 'info');
+            }
+        }
+    },
+
+    // =========================================================================
+    // ✅ v1.6 NOVO: RECARREGAR TODAS AS COLUNAS
+    // =========================================================================
+    reloadAllColumns() {
+        if (confirm('Recarregar todas as colunas da entidade?\n\nIsso irá resetar suas configurações de colunas.')) {
+            const entity = Store.get('entity');
+            if (!entity) {
+                alert('❌ Nenhuma entidade carregada no Store!');
+                return;
+            }
+
+            // Forçar reload limpando o array
+            this.config.columns = [];
+            this.config._entityName = null;
+            this.save();
+
+            // Re-renderizar (irá recriar as colunas)
+            this.renderColumnConfig();
+
+            if (typeof App !== 'undefined' && App.showToast) {
+                App.showToast('🔄 Todas as colunas recarregadas com sucesso!', 'success');
+            }
+        }
+    },
+
+    // =========================================================================
+    // ✅ v1.7 NOVO: EXCLUIR TODAS AS COLUNAS SELECIONADAS
+    // =========================================================================
+    removeSelectedColumns() {
+        // Contar quantas colunas estão marcadas
+        const selectedColumns = this.config.columns.filter(c => c.visible === true || c.Visible === true);
+        const selectedCount = selectedColumns.length;
+
+        if (selectedCount === 0) {
+            alert('❌ Nenhuma coluna marcada para excluir!');
+            return;
+        }
+
+        // Listar nomes das colunas que serão excluídas
+        const columnNames = selectedColumns.map(c => c.name).join(', ');
+        const previewNames = selectedCount > 5
+            ? selectedColumns.slice(0, 5).map(c => c.name).join(', ') + ` e mais ${selectedCount - 5}...`
+            : columnNames;
+
+        // Confirmar com o usuário
+        const confirmMessage = `Excluir ${selectedCount} coluna${selectedCount > 1 ? 's' : ''} marcada${selectedCount > 1 ? 's' : ''}?\n\n${previewNames}\n\n⚠️ Não afetará a geração, apenas limpa a interface.`;
+
+        if (confirm(confirmMessage)) {
+            // Remover todas as colunas marcadas (manter apenas as desmarcadas)
+            this.config.columns = this.config.columns.filter(c => c.visible !== true && c.Visible !== true);
+
+            this.save();
+            this.renderColumnConfig();
+
+            if (typeof App !== 'undefined' && App.showToast) {
+                App.showToast(`🗑️ ${selectedCount} coluna${selectedCount > 1 ? 's' : ''} removida${selectedCount > 1 ? 's' : ''} da lista`, 'success');
+            }
+        }
+    },
+
+    // =========================================================================
+    // RENDERIZA ITEM DE COLUNA - v1.8: CLICK NA LINHA + AUDITORIA BLOQUEADA
     // =========================================================================
     renderColumnItem(col, idx) {
+        // ✅ v1.8: Campos de auditoria são bloqueados (não pode marcar nem excluir)
+        const isAuditLocked = col.isAudit === true;
+        const disabledAttr = isAuditLocked ? 'disabled' : '';
+        const auditClass = isAuditLocked ? 'column-item-audit' : '';
+
         return `
-            <div class="column-item" data-index="${idx}" draggable="true">
-                <div class="column-drag-handle">☰</div>
+            <div class="column-item ${auditClass}" data-index="${idx}" draggable="true"
+                 onclick="GridConfig.handleColumnClick(event, ${idx}, ${isAuditLocked})">
+                <!-- Drag Handle -->
+                <div class="column-drag-handle" title="Arrastar para reordenar">☰</div>
+                
+                <!-- Checkbox -->
                 <div class="column-checkbox">
                     <input type="checkbox" ${col.visible ? 'checked' : ''} 
+                           ${disabledAttr}
                            onchange="GridConfig.updateColumn(${idx}, 'visible', this.checked)"
-                           title="Visível na Grid">
+                           onclick="event.stopPropagation()"
+                           title="${isAuditLocked ? 'Campo de auditoria (bloqueado)' : 'Visível na Grid'}">
                 </div>
+                
+                <!-- Nome da Coluna -->
                 <div class="column-name">
                     <strong>${Utils.escapeHtml(col.name)}</strong>
                     ${col.isAudit ? '<span class="badge badge-warning" style="font-size: 9px; margin-left: 5px;">AUDIT</span>' : ''}
                 </div>
-                <div class="column-options">
+                
+                <!-- Opções -->
+                <div class="column-options" onclick="event.stopPropagation()">
                     <input type="text" value="${Utils.escapeAttr(col.headerText)}" 
                            placeholder="Título" class="col-header-input"
                            onchange="GridConfig.updateColumn(${idx}, 'headerText', this.value)">
@@ -339,8 +453,48 @@ const GridConfig = {
                         Sort
                     </label>
                 </div>
+                
+                <!-- ✅ v1.8: Botão de Excluir (APENAS se NÃO for auditoria) -->
+                ${!isAuditLocked ? `
+                <button class="btn-delete-column" onclick="GridConfig.removeColumn(${idx}); event.stopPropagation();" 
+                        title="Excluir esta coluna da lista">
+                    🗑️
+                </button>
+                ` : ''}
             </div>
         `;
+    },
+
+    // =========================================================================
+    // ✅ v1.8 NOVO: CLICK NA LINHA PARA TOGGLE CHECKBOX
+    // =========================================================================
+    handleColumnClick(event, idx, isAuditLocked) {
+        // Não fazer nada se for campo de auditoria
+        if (isAuditLocked) {
+            return;
+        }
+
+        // Não fazer nada se clicou em um elemento interativo
+        const target = event.target;
+        const isInteractive = target.tagName === 'INPUT' ||
+            target.tagName === 'SELECT' ||
+            target.tagName === 'BUTTON' ||
+            target.closest('.column-options') ||
+            target.closest('.btn-delete-column') ||
+            target.closest('.column-drag-handle');
+
+        if (isInteractive) {
+            return;
+        }
+
+        // Toggle do checkbox
+        const col = this.config.columns[idx];
+        const newValue = !col.visible;
+
+        this.updateColumn(idx, 'visible', newValue);
+
+        // Re-renderizar para atualizar o checkbox visualmente
+        this.renderColumnConfig();
     },
 
     // =========================================================================
@@ -408,7 +562,6 @@ const GridConfig = {
         const container = document.getElementById('filterConfig');
         if (!container || !entity) return;
 
-        // Filtra propriedades (exclui auditoria)
         const gridProps = this.getGridProperties(entity);
 
         container.innerHTML = `
@@ -522,7 +675,7 @@ const GridConfig = {
     updateColumn(idx, property, value) {
         this.config.columns[idx][property] = value;
 
-        // ✅ Atualizar também a versão PascalCase
+        // Atualizar também a versão PascalCase
         const pascalProp = property.charAt(0).toUpperCase() + property.slice(1);
         this.config.columns[idx][pascalProp] = value;
 
@@ -573,4 +726,4 @@ if (typeof App !== 'undefined') {
 }
 window.GridConfig = GridConfig;
 
-console.log('✅ GridConfig v1.5 FIXED carregado (sem scroll na lista de colunas)');
+console.log('✅ GridConfig v1.8 FINAL carregado (click na linha + auditoria bloqueada)');
