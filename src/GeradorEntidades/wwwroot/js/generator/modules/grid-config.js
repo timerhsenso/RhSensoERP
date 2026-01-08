@@ -1,15 +1,16 @@
 /**
  * =============================================================================
- * GRID CONFIG MODULE v1.2
+ * GRID CONFIG MODULE v1.5 FIXED
  * Configuração avançada de colunas, filtros e exportação
  * =============================================================================
- * CHANGELOG v1.2:
- * - 🔧 CORREÇÃO: Respeita prop.list.show do JSON v4.3
- * - Campos de navegação (isReadOnly: true) agora aparecem corretamente
- * CHANGELOG v1.1:
- * - Exclusão automática de campos de auditoria (IdSaas, DtCriacao, etc.)
- * - Botões "Selecionar Todas" e "Desmarcar Todas"
- * - Info sobre campos excluídos
+ * CHANGELOG v1.5 FIXED:
+ * - 🔧 REMOVIDO: Scroll na lista de colunas
+ * - ✅ CORRIGIDO: Todas as colunas visíveis sem container com altura fixa
+ * - 📐 Layout: Lista completa sem overflow
+ * =============================================================================
+ * CHANGELOG v1.4:
+ * - 🔧 CORREÇÃO: Mostra TODOS os campos (incluindo Auditoria) para o usuário escolher
+ * - Campos audit e PK vêm desmarcados por padrão (exceto se JSON mandar diferente)
  * =============================================================================
  */
 
@@ -24,7 +25,7 @@ const GridConfig = {
         'datacriacao', 'dtcriacao', 'createdat', 'dtinclusao', 'datainclusao',
         'dt_criacao', 'data_criacao', 'dt_inclusao', 'data_inclusao',
         // Data de alteração
-        'dataalteracao', 'dtalteracao', 'updatedat', 'modifiedat', 'dtaicalizacao',
+        'dataalteracao', 'dtalteracao', 'updatedat', 'modifiedat', 'dtatualizacao',
         'dt_alteracao', 'data_alteracao', 'dt_atualizacao', 'data_atualizacao',
         // Usuário de criação
         'usuariocriacao', 'criadopor', 'createdby', 'idusuariocriacao',
@@ -47,19 +48,27 @@ const GridConfig = {
         columns: [],
         filters: [],
         _entityName: null,
-        _auditFieldsCount: 0
+        _auditFieldsCount: 0,
+        _configVersion: 1.5 // ✅ v1.5 - Sem scroll
     },
 
     // =========================================================================
     // INICIALIZAÇÃO
     // =========================================================================
     init() {
-        console.log('📊 Grid Config v1.2 initialized');
+        console.log('📊 Grid Config v1.5 FIXED initialized (sem scroll)');
 
         const saved = localStorage.getItem('gridConfig');
         if (saved) {
             try {
-                this.config = { ...this.config, ...JSON.parse(saved) };
+                const parsed = JSON.parse(saved);
+                // Cache bust if version is different
+                if (parsed._configVersion !== this.config._configVersion) {
+                    console.log('⚠️ Old config detected. Clearing cache to apply new column rules.');
+                    localStorage.removeItem('gridConfig');
+                } else {
+                    this.config = { ...this.config, ...parsed };
+                }
             } catch (e) { }
         }
     },
@@ -78,26 +87,12 @@ const GridConfig = {
     },
 
     // =========================================================================
-    // FILTRA PROPRIEDADES PARA GRID (exclui auditoria mas mantém PK)
-    // v1.2: Respeita list.show do JSON v4.3
+    // OBTER PROPRIEDADES PARA GRID
+    // v1.4: Retorna TODAS as colunas (inclusive Auditoria) para o usuário decidir
     // =========================================================================
     getGridProperties(entity) {
         if (!entity || !entity.properties) return [];
-
-        return entity.properties.filter(prop => {
-            // 1. Se tem list.show: false explícito, não inclui
-            if (prop.list && prop.list.show === false) {
-                return false;
-            }
-
-            // 2. Exclui campos de auditoria
-            if (this.isAuditField(prop.name)) {
-                return false;
-            }
-
-            // 3. Inclui todos os outros (inclusive isReadOnly: true)
-            return true;
-        });
+        return entity.properties;
     },
 
     // =========================================================================
@@ -187,7 +182,7 @@ const GridConfig = {
     },
 
     // =========================================================================
-    // CONFIGURAÇÃO DE COLUNAS
+    // CONFIGURAÇÃO DE COLUNAS - v1.5 FIXED: SEM SCROLL
     // =========================================================================
     renderColumnConfig() {
         const entity = Store.get('entity');
@@ -201,23 +196,44 @@ const GridConfig = {
         if (this.config.columns.length === 0 || savedEntityName !== currentEntityName) {
             this.config._entityName = currentEntityName;
 
-            // Filtra propriedades (exclui auditoria)
+            // v1.4: Pega TODAS as propriedades
             const gridProps = this.getGridProperties(entity);
-            const totalProps = entity.properties?.length || 0;
-            this.config._auditFieldsCount = totalProps - gridProps.length;
 
-            // 🔧 v1.2: Usa configurações do JSON v4.3 (list, form, filter)
-            this.config.columns = gridProps.map(prop => ({
-                name: prop.name,
-                // 🔧 CORREÇÃO: Respeita list.show do JSON v4.3
-                visible: prop.list?.show ?? (!prop.isPrimaryKey && !prop.IsPrimaryKey),
-                sortable: prop.list?.sortable ?? true,
-                searchable: prop.list?.filterable ?? ((prop.type || '').toLowerCase() === 'string'),
-                format: prop.list?.format || this.getDefaultFormat(prop.type),
-                width: prop.list?.width || '',
-                align: prop.list?.align || this.getDefaultAlign(prop.type),
-                headerText: prop.displayName || prop.name
-            }));
+            // Mapeia colunas
+            this.config.columns = gridProps.map(prop => {
+                const isAudit = this.isAuditField(prop.name);
+                const isPk = prop.isPrimaryKey || prop.IsPrimaryKey;
+
+                // Visibilidade Default:
+                // 1. JSON (list.show) vence
+                // 2. PK e Audit escondidos por padrão
+                let isVisible = true;
+                if (prop.list && prop.list.show !== undefined) {
+                    isVisible = prop.list.show;
+                } else {
+                    if (isPk || isAudit) isVisible = false;
+                }
+
+                return {
+                    name: prop.name,
+                    Name: prop.name, // ✅ PascalCase para backend
+                    visible: isVisible,
+                    Visible: isVisible, // ✅ PascalCase para backend
+                    sortable: prop.list?.sortable ?? true,
+                    Sortable: prop.list?.sortable ?? true,
+                    searchable: prop.list?.filterable ?? ((prop.type || '').toLowerCase() === 'string'),
+                    format: prop.list?.format || this.getDefaultFormat(prop.type),
+                    Format: prop.list?.format || this.getDefaultFormat(prop.type),
+                    width: prop.list?.width || '',
+                    Width: prop.list?.width || '',
+                    align: prop.list?.align || this.getDefaultAlign(prop.type),
+                    Align: prop.list?.align || this.getDefaultAlign(prop.type),
+                    headerText: prop.displayName || prop.name,
+                    Title: prop.displayName || prop.name, // ✅ PascalCase
+                    Order: this.config.columns.length,
+                    isAudit: isAudit // Flag para UI
+                };
+            });
             this.save();
         }
 
@@ -228,10 +244,10 @@ const GridConfig = {
             <h4>📋 Configuração de Colunas</h4>
             <p class="text-muted">Arraste para reordenar. Configure cada coluna individualmente.</p>
             
-            <!-- Info sobre campos excluídos -->
-            ${this.config._auditFieldsCount > 0 ? `
-                <div style="font-size: 12px; color: #666; padding: 8px; background: #fff3cd; border-radius: 4px; margin-bottom: 15px;">
-                    ℹ️ ${this.config._auditFieldsCount} campo(s) de auditoria ocultados automaticamente
+            <!-- Info sobre campos ocultos por padrão -->
+            ${this.config.columns.some(c => c.isAudit) ? `
+                <div style="font-size: 12px; color: #666; padding: 8px; background: #e0f2fe; border-radius: 4px; margin-bottom: 15px; border: 1px solid #bae6fd;">
+                    ℹ️ Campos de auditoria/sistema foram incluídos mas estão desmarcados por padrão.
                 </div>
             ` : ''}
             
@@ -250,7 +266,8 @@ const GridConfig = {
                 </span>
             </div>
             
-            <div class="column-list" id="columnList">
+            <!-- ✅ v1.5 FIXED: DIV SEM SCROLL - Altura automática -->
+            <div class="column-list-no-scroll" id="columnList">
                 ${this.config.columns.map((col, idx) => this.renderColumnItem(col, idx)).join('')}
             </div>
         `;
@@ -264,10 +281,14 @@ const GridConfig = {
     selectAllColumns(visible) {
         this.config.columns.forEach(col => {
             col.visible = visible;
+            col.Visible = visible; // ✅ PascalCase
         });
         this.save();
         this.renderColumnConfig();
-        App.showToast(visible ? '✅ Todas as colunas selecionadas' : '❌ Todas as colunas desmarcadas', 'success');
+
+        if (typeof App !== 'undefined' && App.showToast) {
+            App.showToast(visible ? '✅ Todas as colunas selecionadas' : '❌ Todas as colunas desmarcadas', 'success');
+        }
     },
 
     // =========================================================================
@@ -284,6 +305,7 @@ const GridConfig = {
                 </div>
                 <div class="column-name">
                     <strong>${Utils.escapeHtml(col.name)}</strong>
+                    ${col.isAudit ? '<span class="badge badge-warning" style="font-size: 9px; margin-left: 5px;">AUDIT</span>' : ''}
                 </div>
                 <div class="column-options">
                     <input type="text" value="${Utils.escapeAttr(col.headerText)}" 
@@ -368,6 +390,12 @@ const GridConfig = {
             newOrder.push(this.config.columns[idx]);
         });
         this.config.columns = newOrder;
+
+        // Atualizar Order (índice)
+        this.config.columns.forEach((col, idx) => {
+            col.Order = idx;
+        });
+
         this.save();
         this.renderColumnConfig();
     },
@@ -493,6 +521,11 @@ const GridConfig = {
 
     updateColumn(idx, property, value) {
         this.config.columns[idx][property] = value;
+
+        // ✅ Atualizar também a versão PascalCase
+        const pascalProp = property.charAt(0).toUpperCase() + property.slice(1);
+        this.config.columns[idx][pascalProp] = value;
+
         this.save();
 
         // Re-renderiza para atualizar contagem
@@ -535,7 +568,9 @@ const GridConfig = {
 };
 
 // Registra módulo
-App.registerModule('GridConfig', GridConfig);
+if (typeof App !== 'undefined') {
+    App.registerModule('GridConfig', GridConfig);
+}
 window.GridConfig = GridConfig;
 
-console.log('✅ GridConfig v1.2 carregado');
+console.log('✅ GridConfig v1.5 FIXED carregado (sem scroll na lista de colunas)');

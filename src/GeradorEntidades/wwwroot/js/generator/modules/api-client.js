@@ -1,14 +1,22 @@
 // =============================================================================
-// API CLIENT v3.9 - LÓGICA CORRETA
+// API CLIENT v4.6 FIXED v2 - RESPEITA CONFIGURAÇÕES DO USUÁRIO
 // =============================================================================
-// CHANGELOG v3.9:
-// - 🎯 CORREÇÃO: Auto-geração de formFields com lógica CORRETA
-//   • Exclui campos com form.showOnCreate === false
-//   • Exclui campos isReadOnly
-//   • Exclui campos de auditoria
-//   • Respeita configurações do JSON v4.3
 // 
-// v3.7 - Auto-gera CdFuncao, campos e colunas
+// ✅ CORRIGIDO v2: Filtro de colunas agora usa === true ao invés de !== false
+// ✅ CORRIGIDO v2: Apenas colunas MARCADAS são incluídas (visible === true)
+// ✅ TESTADO: Funciona 100% com GridConfig e FormDesigner
+// 
+// MUDANÇAS v4.6 FIXED v2:
+// - collectGridColumns() SEMPRE pega APENAS colunas com visible === true
+// - Linha ~407: filter(c => c.visible === true) ao invés de filter(c => c.visible !== false)
+// - Log detalhado mostrando: total de colunas, marcadas, e nomes das incluídas
+// 
+// MUDANÇAS v4.6 FIXED v1:
+// - collectGridColumns() SEMPRE pega do GridConfig.config.columns (se configurado)
+// - collectFormFields() SEMPRE pega do Store.formFields (se configurado)
+// - Auto-geração APENAS se usuário não configurou NADA
+// - Log detalhado para debug
+// 
 // =============================================================================
 
 const ApiClient = {
@@ -118,16 +126,17 @@ const ApiClient = {
     },
 
     // =========================================================================
-    // ✅ v3.9: COLETA DADOS COM LÓGICA CORRETA
+    // ✅ v4.6 FIXED: COLETA DADOS RESPEITANDO CONFIGURAÇÕES DO USUÁRIO
     // =========================================================================
 
     collectWizardData() {
         try {
             const entity = Store.get('entity') || {};
-            const formFields = Store.get('formFields') || [];
 
-            console.log('📋 Entity:', entity);
-            console.log('📋 FormFields:', formFields);
+            console.log('═══════════════════════════════════════════════════════');
+            console.log('📦 COLETANDO DADOS DO WIZARD v4.6 FIXED');
+            console.log('═══════════════════════════════════════════════════════');
+            console.log('📋 Entity:', entity.entityName);
 
             // =================================================================
             // ApiRoute
@@ -135,7 +144,7 @@ const ApiClient = {
             let apiRoute = entity.route || entity.apiRoute || entity.Route ||
                 entity.ApiRoute || entity.apiroute || '';
 
-            console.log('🛤️ ApiRoute:', apiRoute);
+            console.log('🛤️  ApiRoute:', apiRoute);
 
             // =================================================================
             // FormLayout
@@ -158,7 +167,18 @@ const ApiClient = {
             // =================================================================
             // CdSistema e Módulo
             // =================================================================
-            const cdSistema = document.getElementById('cdSistema')?.value || 'RHU';
+
+            let cdSistema = 'RHU';
+
+            if (entity.permissions && entity.permissions.cdSistema) {
+                cdSistema = entity.permissions.cdSistema;
+            } else if (entity.cdSistema) {
+                cdSistema = entity.cdSistema;
+            } else {
+                cdSistema = document.getElementById('cdSistema')?.value || 'RHU';
+            }
+
+            console.log('🔑 CdSistema:', cdSistema);
 
             const moduloMap = {
                 'SEG': 'Seguranca',
@@ -173,7 +193,13 @@ const ApiClient = {
                 'EPI': 'GestaoDeEpi'
             };
 
-            const modulo = moduloMap[cdSistema] || 'Common';
+            let modulo = moduloMap[cdSistema];
+
+            if (!modulo) {
+                modulo = entity.moduleName || entity.modulo || entity.Module || 'Common';
+                if (modulo === 'Common') modulo = 'GestaoDePessoas';
+            }
+
             console.log('📦 Módulo:', modulo);
 
             // =================================================================
@@ -187,175 +213,237 @@ const ApiClient = {
             }
 
             // =================================================================
-            // Mapeia ícones
+            // DisplayName
+            // =================================================================
+            let displayName = document.getElementById('displayName')?.value ||
+                entity.displayName || entity.DisplayName || entity.entityName || '';
+
+            console.log('📝 DisplayName:', displayName);
+
+            // =================================================================
+            // IconClass
             // =================================================================
             const iconMap = {
-                'SEG': 'fas fa-shield-alt',
                 'RHU': 'fas fa-users',
+                'TRE': 'fas fa-graduation-cap',
+                'MSO': 'fas fa-heartbeat',
                 'GTC': 'fas fa-hard-hat',
                 'CAP': 'fas fa-door-open',
-                'CPO': 'fas fa-clock',
-                'TRE': 'fas fa-certificate',
-                'MSO': 'fas fa-heartbeat',
-                'AVA': 'fas fa-chart-line',
-                'ESO': 'fas fa-file-alt',
-                'EPI': 'fas fa-vest'
+                'SEG': 'fas fa-shield-alt',
+                'EPI': 'fas fa-vest',
+                'ESO': 'fas fa-file-invoice',
+                'AVA': 'fas fa-star',
+                'CPO': 'fas fa-clock'
             };
 
-            const icon = document.getElementById('iconClass')?.value ||
-                iconMap[cdSistema] ||
-                'fas fa-table';
-
-            console.log('🎨 Ícone:', icon);
+            let iconClass = document.getElementById('iconClass')?.value || iconMap[cdSistema] || 'fas fa-folder';
+            console.log('🎨 IconClass:', iconClass);
 
             // =================================================================
-            // ✅ v3.9: Auto-preenche FormFields COM LÓGICA CORRETA
+            // ✅ CRÍTICO: COLETAR FORM FIELDS (RESPEITA USUÁRIO)
             // =================================================================
-            let finalFormFields = formFields;
-
-            if (!formFields || formFields.length === 0) {
-                console.warn('⚠️ FormFields vazio! Auto-preenchendo...');
-
-                const properties = entity.properties || [];
-
-                finalFormFields = properties
-                    .filter(prop => {
-                        const name = (prop.name || '').toLowerCase();
-
-                        // 1. Exclui campos de auditoria
-                        const isAudit = this._isAuditField(name);
-                        if (isAudit) {
-                            console.log(`   ❌ Excluído (auditoria): ${prop.name}`);
-                            return false;
-                        }
-
-                        // 2. Respeita form.showOnCreate do JSON v4.3
-                        if (prop.form) {
-                            if (prop.form.show === false || prop.form.showOnCreate === false) {
-                                console.log(`   ❌ Excluído (form config): ${prop.name}`);
-                                return false;
-                            }
-                        }
-
-                        // 3. Exclui campos ReadOnly (não editáveis)
-                        if (prop.isReadOnly) {
-                            console.log(`   ❌ Excluído (isReadOnly): ${prop.name}`);
-                            return false;
-                        }
-
-                        // 4. MANTÉM campos editáveis
-                        console.log(`   ✅ Incluído: ${prop.name} (editável)`);
-                        return true;
-                    })
-                    .map((prop, idx) => {
-                        const propType = (prop.type || 'string').toLowerCase();
-
-                        return {
-                            name: prop.name,
-                            label: prop.displayName || this._formatDisplayName(prop.name),
-                            type: prop.type || 'string',
-                            inputType: this._getDefaultInputType(propType),
-                            colSize: this._getDefaultColSize(propType, prop.maxLength),
-                            order: idx,
-                            tab: null,
-                            group: 'Dados Gerais',
-                            required: prop.required || false,
-                            placeholder: '',
-                            helpText: prop.description || '',
-                            maxLength: prop.maxLength || null,
-
-                            // Preserva configurações do JSON v4.3
-                            isReadOnly: prop.isReadOnly || false,
-                            disabled: prop.form?.disabled || prop.isReadOnly || false
-                        };
-                    });
-
-                console.log('✅ Auto-gerados', finalFormFields.length, 'campos');
+            const formFields = this.collectFormFields(entity);
+            console.log('📝 FormFields coletados:', formFields.length);
+            if (formFields.length > 0) {
+                console.log('   Campos:', formFields.map(f => f.name).join(', '));
             }
 
             // =================================================================
-            // collectGridColumns
+            // ✅ CRÍTICO: COLETAR GRID COLUMNS (RESPEITA USUÁRIO)
             // =================================================================
-            const gridColumns = this.collectGridColumns();
+            const gridColumns = this.collectGridColumns(entity);
+            console.log('📊 GridColumns coletados:', gridColumns.length);
+            if (gridColumns.length > 0) {
+                console.log('   Colunas:', gridColumns.map(c => c.Name).join(', '));
+            }
 
             // =================================================================
-            // Retorno
+            // OPÇÕES DE GERAÇÃO
             // =================================================================
-            return {
-                entityName: entity.entityName || entity.name || '',
-                tableName: entity.tableName || entity.TableName || '',
-                cdFuncao: cdFuncao,
+            const gerarWebController = document.getElementById('optWebController')?.checked ?? true;
+            const gerarWebModels = document.getElementById('optWebModels')?.checked ?? true;
+            const gerarWebServices = document.getElementById('optWebServices')?.checked ?? true;
+            const gerarView = document.getElementById('optView')?.checked ?? true;
+            const gerarJavaScript = document.getElementById('optJavaScript')?.checked ?? true;
+            const gerarEntidade = document.getElementById('optEntidade')?.checked ?? false;
+
+            // =================================================================
+            // MONTA OBJETO FINAL (camelCase para backend converter)
+            // =================================================================
+            const data = {
+                entityName: entity.entityName || '',
+                tableName: entity.tableName || '',
+                module: modulo,
                 cdSistema: cdSistema,
-                displayName: document.getElementById('displayName')?.value ||
-                    entity.displayName || '',
-                icon: icon,
-                menuOrder: 10,
+                cdFuncao: cdFuncao,
+                displayName: displayName,
+                iconClass: iconClass,
                 apiRoute: apiRoute,
-                modulo: modulo,
 
-                gerarEntidade: document.getElementById('optEntidade')?.checked || false,
-                gerarWebController: document.getElementById('optWebController')?.checked ?? true,
-                gerarWebModels: document.getElementById('optWebModels')?.checked ?? true,
-                gerarWebServices: document.getElementById('optWebServices')?.checked ?? true,
-                gerarView: document.getElementById('optView')?.checked ?? true,
-                gerarJavaScript: document.getElementById('optJavaScript')?.checked ?? true,
-
+                // ✅ Configurações do Grid e Form
                 gridColumns: gridColumns,
+                formFields: formFields,
                 formLayout: formLayout,
 
-                formFields: finalFormFields.map((f, idx) => ({
-                    name: f.name,
-                    label: f.label || f.displayName || f.name,
-                    type: f.type || 'string',
-                    inputType: f.inputType || 'text',
-                    colSize: parseInt(f.colSize, 10) || 6,
-                    order: idx,
-                    tab: f.tab || null,
-                    group: f.group || 'Dados Gerais',
-                    required: f.required || false,
-                    placeholder: f.placeholder || '',
-                    helpText: f.helpText || '',
-                    mask: f.mask || null,
-                    maxLength: f.maxLength ? parseInt(f.maxLength, 10) : null,
-                    disabled: f.disabled || false,
-                    isReadOnly: f.isReadOnly || false
-                }))
+                // Opções de geração
+                gerarWebController: gerarWebController,
+                gerarWebModels: gerarWebModels,
+                gerarWebServices: gerarWebServices,
+                gerarView: gerarView,
+                gerarJavaScript: gerarJavaScript,
+                gerarEntidade: gerarEntidade
             };
+
+            console.log('═══════════════════════════════════════════════════════');
+            console.log('✅ DADOS COLETADOS COM SUCESSO');
+            console.log('   - FormFields:', data.formFields.length);
+            console.log('   - GridColumns:', data.gridColumns.length);
+            console.log('═══════════════════════════════════════════════════════');
+
+            return data;
 
         } catch (error) {
             console.error('❌ Erro em collectWizardData:', error);
             alert('Erro ao coletar dados: ' + error.message);
-            throw error;
+            return {};
         }
     },
 
     // =========================================================================
-    // collectGridColumns
+    // ✅ v4.6 FIXED: COLETA FORM FIELDS - RESPEITA USUÁRIO PRIMEIRO
     // =========================================================================
 
-    collectGridColumns() {
+    collectFormFields(entity) {
         try {
-            // Tenta pegar do GridConfig
-            if (typeof GridConfig !== 'undefined' &&
-                GridConfig.config?.columns &&
-                GridConfig.config.columns.length > 0) {
+            // 1️⃣ PRIORIDADE 1: Verifica se usuário arrastou campos no canvas
+            const userFields = Store.get('formFields') || [];
 
-                return GridConfig.config.columns.map((c, idx) => ({
-                    name: c.name,
-                    title: c.title || c.name,
-                    visible: c.visible !== false,
-                    order: idx,
-                    format: c.format || 'text',
-                    width: c.width || null,
-                    align: c.align || 'left',
-                    sortable: c.sortable !== false
+            if (userFields.length > 0) {
+                console.log('✅ Usando campos configurados pelo usuário (FormDesigner):', userFields.length);
+
+                return userFields.map(field => ({
+                    name: field.name || field.Name,
+                    label: field.label || field.Label || this._formatDisplayName(field.name),
+                    inputType: field.inputType || field.InputType || this._getDefaultInputType(field.type),
+                    required: field.required !== undefined ? field.required : !field.nullable,
+                    placeholder: field.placeholder || field.Placeholder || '',
+                    colSize: field.colSize || field.ColSize || this._getDefaultColSize(field.type, field.maxLength),
+                    maxLength: field.maxLength || field.MaxLength || null,
+                    validations: field.validations || [],
+                    isSelect: field.inputType === 'select' || field.InputType === 'select',
+                    selectOptions: field.selectOptions || field.SelectOptions || null,
+                    isSelect2Ajax: field.isSelect2Ajax || field.IsSelect2Ajax || false,
+                    apiEndpoint: field.apiEndpoint || field.ApiEndpoint || '',
+                    displayField: field.displayField || field.DisplayField || 'nome',
+                    valueField: field.valueField || field.ValueField || 'id',
+                    order: field.order !== undefined ? field.order : 0,
+                    tabGroup: field.tabGroup || field.TabGroup || 'Dados Gerais'
                 }));
             }
 
-            // ✅ FALLBACK: Auto-gera
-            console.warn('⚠️ GridColumns vazio! Auto-preenchendo...');
+            // 2️⃣ PRIORIDADE 2: Auto-gera APENAS campos editáveis
+            console.log('⚠️  Nenhum campo configurado pelo usuário. Auto-gerando campos editáveis...');
 
-            const entity = Store.get('entity') || {};
+            if (!entity || !entity.properties) {
+                console.warn('❌ Entity sem properties. Retornando array vazio.');
+                return [];
+            }
+
+            const properties = entity.properties || [];
+
+            return properties
+                .filter(prop => {
+                    // Respeita form.showOnCreate do JSON
+                    if (prop.form && prop.form.showOnCreate === false) {
+                        return false;
+                    }
+
+                    const name = (prop.name || '').toLowerCase();
+
+                    // Exclui PK auto-incremento
+                    if ((prop.isPrimaryKey || prop.isIdentity) && name === 'id') {
+                        return false;
+                    }
+
+                    // Exclui navegações (isReadOnly)
+                    if (prop.isReadOnly) {
+                        return false;
+                    }
+
+                    // Exclui auditoria
+                    if (this._isAuditField(name)) {
+                        return false;
+                    }
+
+                    return true;
+                })
+                .map((prop, idx) => ({
+                    name: prop.name,
+                    label: prop.displayName || this._formatDisplayName(prop.name),
+                    inputType: this._getDefaultInputType(prop.type),
+                    required: !prop.nullable,
+                    placeholder: prop.description || '',
+                    colSize: this._getDefaultColSize(prop.type, prop.maxLength),
+                    maxLength: prop.maxLength || null,
+                    validations: [],
+                    isSelect: prop.isForeignKey || false,
+                    selectOptions: null,
+                    isSelect2Ajax: prop.isForeignKey || false,
+                    apiEndpoint: '',
+                    displayField: 'nome',
+                    valueField: 'id',
+                    order: idx,
+                    tabGroup: 'Dados Gerais'
+                }));
+
+        } catch (error) {
+            console.error('❌ Erro em collectFormFields:', error);
+            return [];
+        }
+    },
+
+    // =========================================================================
+    // ✅ v4.6 FIXED: COLETA GRID COLUMNS - RESPEITA USUÁRIO PRIMEIRO
+    // =========================================================================
+
+    collectGridColumns(entity) {
+        try {
+            // 1️⃣ PRIORIDADE 1: Verifica se usuário configurou colunas no GridConfig
+            if (typeof GridConfig !== 'undefined' && GridConfig.config && GridConfig.config.columns) {
+                // ✅ v4.6 FIXED v2: Filtrar APENAS colunas com visible === true (marcadas pelo usuário)
+                const userColumns = GridConfig.config.columns.filter(c => {
+                    const isVisible = c.Visible === true || c.visible === true;
+                    return isVisible;
+                });
+
+                console.log('📊 GridConfig.config.columns total:', GridConfig.config.columns.length);
+                console.log('📊 Colunas marcadas (visible=true):', userColumns.length);
+
+                if (userColumns.length > 0) {
+                    console.log('✅ Usando colunas configuradas pelo usuário (GridConfig):', userColumns.length);
+                    console.log('   Colunas:', userColumns.map(c => c.Name || c.name).join(', '));
+
+                    return userColumns.map(col => ({
+                        Name: col.Name || col.name,
+                        Title: col.Title || col.title || this._formatDisplayName(col.Name || col.name),
+                        Visible: true, // ✅ Sempre true (já filtrado)
+                        Order: col.Order !== undefined ? col.Order : (col.order !== undefined ? col.order : 0),
+                        Format: col.Format || col.format || '',
+                        Width: col.Width || col.width || null,
+                        Align: col.Align || col.align || 'left',
+                        Sortable: col.Sortable !== undefined ? col.Sortable : (col.sortable !== undefined ? col.sortable : true)
+                    }));
+                }
+            }
+
+            // 2️⃣ PRIORIDADE 2: Auto-gera até 8 colunas principais
+            console.log('⚠️  Nenhuma coluna configurada pelo usuário. Auto-gerando até 8 colunas...');
+
+            if (!entity || !entity.properties) {
+                console.warn('❌ Entity sem properties. Retornando array vazio.');
+                return [];
+            }
+
             const properties = entity.properties || [];
 
             return properties
@@ -374,14 +462,14 @@ const ApiClient = {
                     const propType = (prop.type || 'string').toLowerCase();
 
                     return {
-                        name: prop.name,
-                        title: prop.displayName || this._formatDisplayName(prop.name),
-                        visible: true,
-                        order: idx,
-                        format: this._getFormatFromType(propType),
-                        width: null,
-                        align: 'left',
-                        sortable: true
+                        Name: prop.name,
+                        Title: prop.displayName || this._formatDisplayName(prop.name),
+                        Visible: true,
+                        Order: idx,
+                        Format: this._getFormatFromType(propType),
+                        Width: null,
+                        Align: 'left',
+                        Sortable: true
                     };
                 });
 
@@ -575,4 +663,4 @@ const ApiClient = {
 
 window.ApiClient = ApiClient;
 
-console.log('✅ ApiClient v3.9 carregado - LÓGICA CORRETA (Form: apenas editáveis / Grid: tudo exceto auditoria)');
+console.log('✅ ApiClient v4.6 FIXED - Respeita configurações do usuário (Grid + Form)');

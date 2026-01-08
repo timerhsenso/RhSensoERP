@@ -18,15 +18,18 @@ public class GeneratorApiController : ControllerBase
 {
     private readonly FullStackGeneratorService _generatorService;
     private readonly ManifestService _manifestService;
+    private readonly IConfiguration _configuration;
     private readonly ILogger<GeneratorApiController> _logger;
 
     public GeneratorApiController(
         FullStackGeneratorService generatorService,
         ManifestService manifestService,
+        IConfiguration configuration,
         ILogger<GeneratorApiController> logger)
     {
         _generatorService = generatorService;
         _manifestService = manifestService;
+        _configuration = configuration;
         _logger = logger;
     }
 
@@ -100,6 +103,86 @@ public class GeneratorApiController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Erro ao gerar código para {Entity}", request.EntityName);
+            return StatusCode(500, new WizardResponse
+            {
+                Success = false,
+                Error = $"Erro interno: {ex.Message}"
+            });
+        }
+    }
+
+    // =========================================================================
+    // POST /api/generator/generate-to-disk
+    // =========================================================================
+
+    [HttpPost("generate-to-disk")]
+    public async Task<IActionResult> GenerateToDisk([FromBody] WizardRequest request)
+    {
+        try
+        {
+            _logger.LogInformation("Gerando código no disco para {Entity}", request.EntityName);
+
+            // 1. Get Params
+            var outputPath = _configuration["GenerationSettings:OutputPath"];
+            if (string.IsNullOrEmpty(outputPath))
+                return BadRequest(new WizardResponse { Success = false, Error = "OutputPath não configurado no appsettings.json" });
+
+            // Validação
+            if (string.IsNullOrWhiteSpace(request.EntityName))
+                return BadRequest(new WizardResponse { Success = false, Error = "Nome da entidade é obrigatório." });
+
+            if (string.IsNullOrWhiteSpace(request.CdFuncao))
+                return BadRequest(new WizardResponse { Success = false, Error = "CdFuncao é obrigatório." });
+
+            // Busca entidade do manifesto ou cria do request
+            TabelaInfo tabela;
+            var manifestEntity = await _manifestService.GetEntityAsync(request.EntityName);
+
+            if (manifestEntity != null)
+                tabela = _manifestService.ConvertToTabelaInfo(manifestEntity);
+            else
+                tabela = CreateTabelaInfoFromRequest(request);
+
+            // Converte e gera
+            var fullStackRequest = request.ToFullStackRequest();
+            var result = _generatorService.Generate(tabela, fullStackRequest);
+
+            if (!result.Success)
+                return BadRequest(new WizardResponse { Success = false, Error = result.Error });
+
+            // 4. Write to Disk
+            var savedFiles = new List<string>();
+            foreach (var file in result.AllFiles)
+            {
+                var fullPath = Path.Combine(outputPath, file.RelativePath);
+
+                var dir = Path.GetDirectoryName(fullPath);
+                if (dir != null && !Directory.Exists(dir))
+                    Directory.CreateDirectory(dir);
+
+                await System.IO.File.WriteAllTextAsync(fullPath, file.Content, System.Text.Encoding.UTF8);
+                savedFiles.Add(fullPath);
+            }
+
+            // Resposta
+            var response = new WizardResponse
+            {
+                Success = true,
+                Warnings = result.Warnings ?? new List<string>(),
+                Files = result.AllFiles.Select(f => new WizardGeneratedFile
+                {
+                    FileName = f.FileName,
+                    RelativePath = f.RelativePath,
+                    FileType = f.FileType
+                }).ToList()
+            };
+
+            _logger.LogInformation("Geração executada no disco: {FileCount} arquivos em {OutputPath}", savedFiles.Count, outputPath);
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao gerar código no disco para {Entity}", request.EntityName);
             return StatusCode(500, new WizardResponse
             {
                 Success = false,

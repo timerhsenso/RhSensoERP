@@ -164,9 +164,14 @@ public class ManifestService
     /// Obtém a entidade completa, tentando buscar metadados detalhados da API
     /// caso a propriedade Route esteja disponível.
     /// </summary>
+    /// <summary>
+    /// Obtém a entidade completa, tentando buscar metadados detalhados da API
+    /// caso a propriedade Route esteja disponível.
+    /// v3.3: Implementa Merge Seguro (Prioriza Tipos do Manifesto se Metadata vier como string genérica)
+    /// </summary>
     public async Task<EntityManifestItem?> GetEntityWithMetadataAsync(string entityName)
     {
-        // 1. Busca do manifesto (cache)
+        // 1. Busca do manifesto (cache) - FONTE CONFIÁVEL
         var entity = await GetEntityAsync(entityName);
         if (entity == null) return null;
 
@@ -178,29 +183,71 @@ public class ManifestService
             {
                 try
                 {
-                    // Deserializa e combina
-                    var detailedEntity = JsonSerializer.Deserialize<EntityManifestItem>(json, new JsonSerializerOptions
+                    // Deserializa o metadata (que pode estar bugado com tudo "string")
+                    var metadataEntity = JsonSerializer.Deserialize<EntityManifestItem>(json, new JsonSerializerOptions
                     {
                         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
                         PropertyNameCaseInsensitive = true
                     });
 
-                    if (detailedEntity != null)
+                    if (metadataEntity != null)
                     {
-                        // Preserva campos que podem não vir no metadata ou garantir integridade
-                        detailedEntity.ModuleName = !string.IsNullOrEmpty(detailedEntity.ModuleName) ? detailedEntity.ModuleName : entity.ModuleName;
-                        detailedEntity.ModuleDisplayName = !string.IsNullOrEmpty(detailedEntity.ModuleDisplayName) ? detailedEntity.ModuleDisplayName : entity.ModuleDisplayName;
+                        // =====================================================================
+                        // ⭐ MERGE SEGURO: Preserva a integridade dos tipos do Manifesto
+                        // =====================================================================
                         
-                        return detailedEntity;
+                        // 1. Preserva dados do Módulo (que não vêm no metadata)
+                        metadataEntity.ModuleName = !string.IsNullOrEmpty(metadataEntity.ModuleName) 
+                            ? metadataEntity.ModuleName 
+                            : entity.ModuleName;
+                            
+                        metadataEntity.ModuleDisplayName = !string.IsNullOrEmpty(metadataEntity.ModuleDisplayName) 
+                            ? metadataEntity.ModuleDisplayName 
+                            : entity.ModuleDisplayName;
+
+                        // 2. CORREÇÃO DE TIPOS: Se o manifesto tem tipos ricos (int, bool, DateTime)
+                        // e o metadata trouxe tudo como "string", PRESERVA O MANIFESTO.
+                        foreach (var metaProp in metadataEntity.Properties)
+                        {
+                            var originalProp = entity.Properties.FirstOrDefault(p => 
+                                p.Name.Equals(metaProp.Name, StringComparison.OrdinalIgnoreCase));
+
+                            if (originalProp != null)
+                            {
+                                // Se metadata diz "string", mas manifesto diz algo mais específico (int, date, bool)...
+                                // ... OU se metadata perdeu info de Nullable
+                                if ((metaProp.Type == "string" && originalProp.Type != "string") ||
+                                    (metaProp.Type == "string" && originalProp.IsNullable))
+                                {
+                                    _logger.LogWarning("⚠️ Corrigindo tipo da propriedade '{Prop}': Metadata='{bad}', Manifesto='{good}'", 
+                                        metaProp.Name, metaProp.Type, originalProp.Type);
+                                    
+                                    metaProp.Type = originalProp.Type;
+                                    metaProp.IsNullable = originalProp.IsNullable;
+                                    metaProp.IsPrimaryKey = originalProp.IsPrimaryKey;
+                                    metaProp.MaxLength = originalProp.MaxLength;
+                                }
+                            }
+                        }
+
+                        // 3. Garante que Navigations do manifesto sejam preservadas se o metadata não as tiver
+                        if (metadataEntity.Navigations.Count == 0 && entity.Navigations.Count > 0)
+                        {
+                            metadataEntity.Navigations = entity.Navigations;
+                        }
+
+                        // Sucesso: Retorna o metadata enriquecido/corrigido
+                        return metadataEntity;
                     }
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Erro ao deserializar metadata detalhado para {Entity}", entityName);
+                    _logger.LogError(ex, "Erro ao deserializar metadata detalhado para {Entity}. Usando manifesto original.", entityName);
                 }
             }
         }
 
+        // Fallback: Retorna manifesto original
         return entity;
     }
 

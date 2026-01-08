@@ -1,19 +1,36 @@
 /**
  * =============================================================================
- * FORM DESIGNER MODULE v4.2 - LÓGICA CORRETA
+ * FORM DESIGNER MODULE v4.3 - LÓGICA FINAL CORRETA
  * Designer visual de formulários com drag & drop, tabs, layout e Select2
  * =============================================================================
+ * 
+ * ⭐ REGRA DEFINITIVA:
+ * 
+ * GRID (GridConfig):
+ *   ✅ Mostra TODAS as colunas (inclusive Id, isReadOnly, navegações)
+ *   ❌ Exclui apenas: auditoria (CreatedAtUtc, etc.)
+ * 
+ * FORM (FormDesigner):
+ *   ✅ Mostra apenas campos EDITÁVEIS
+ *   ❌ Exclui: auditoria, isReadOnly, form.showOnCreate=false
+ * 
+ * EXEMPLO:
+ *   • FornecedorRazaoSocial (isReadOnly):
+ *     ✅ Aparece na GRID (para visualização)
+ *     ❌ NÃO aparece no FORM (não é editável)
+ *   
+ *   • IdFornecedor (FK editável):
+ *     ✅ Aparece no FORM (select dropdown)
+ *     ✅ Pode ou não aparecer na GRID (depende de list.show)
+ * 
+ * =============================================================================
+ * CHANGELOG v4.3:
+ * - 🎯 LÓGICA FINAL: FORM exclui isReadOnly, GRID mantém
+ * - Documentação clara das regras
+ * 
  * CHANGELOG v4.2:
- * - 🎯 CORREÇÃO: getEditableProperties() com lógica CORRETA
- *   • GRID: Mostra TODOS os campos (inclusive Id, isReadOnly) - EXCETO auditoria
- *   • FORM: Mostra apenas campos EDITÁVEIS - EXCLUI: PK auto (form.showOnCreate=false), isReadOnly, auditoria
  * - Respeita form.show e form.showOnCreate do JSON v4.3
  * - Logging detalhado para debug
- * 
- * CHANGELOG v4.0:
- * - ✨ SUPORTE COMPLETO A SELECT2 AJAX
- * - ✅ Checkbox "Usar Select2 AJAX" para campos select
- * - ✅ Campos: Endpoint (API), Campo de Valor, Campo de Texto
  * =============================================================================
  */
 
@@ -55,7 +72,7 @@ const FormDesigner = {
     // INICIALIZAÇÃO
     // =========================================================================
     init() {
-        console.log('🎨 Form Designer v4.2 initialized (LÓGICA CORRETA)');
+        console.log('🎨 Form Designer v4.3 initialized (FORM: apenas editáveis | GRID: tudo)');
 
         const savedLayout = localStorage.getItem('formLayoutConfig');
         if (savedLayout) {
@@ -109,18 +126,18 @@ const FormDesigner = {
                 return false;
             }
 
-            // 4. Exclui campos ReadOnly (não editáveis - preenchimento automático/sistema)
+            // 4. ⭐ EXCLUI isReadOnly (apenas para FORM - navegações não são editáveis)
             if (prop.isReadOnly) {
                 console.log(`   ❌ Excluído (isReadOnly): ${prop.name}`);
                 return false;
             }
 
-            // 5. MANTÉM campos editáveis
+            // 5. MANTÉM apenas campos editáveis
             console.log(`   ✅ Incluído: ${prop.name} (editável)`);
             return true;
         });
 
-        console.log(`✅ Propriedades editáveis: ${filtered.length} de ${entity.properties.length}`);
+        console.log(`✅ Propriedades editáveis FORM: ${filtered.length} de ${entity.properties.length}`);
         return filtered;
     },
 
@@ -292,7 +309,10 @@ const FormDesigner = {
             <!-- Info sobre campos excluídos -->
             ${excludedCount > 0 ? `
                 <div class="palette-info" style="font-size: 11px; color: #666; padding: 8px; background: #fff3cd; border-radius: 4px; margin-bottom: 10px;">
-                    ℹ️ ${excludedCount} campo(s) excluídos (PK auto/isReadOnly/auditoria)
+                    ℹ️ ${excludedCount} campo(s) excluídos:<br>
+                    • PK auto (form.showOnCreate=false)<br>
+                    • isReadOnly (navegações - aparecem na GRID)<br>
+                    • Auditoria
                 </div>
             ` : ''}
             
@@ -1269,4 +1289,4 @@ const FormDesigner = {
 App.registerModule('FormDesigner', FormDesigner);
 window.FormDesigner = FormDesigner;
 
-console.log('✅ FormDesigner v4.2 carregado - LÓGICA CORRETA (Form: apenas editáveis / Grid: tudo exceto auditoria)');
+console.log('✅ FormDesigner v4.3 - GRID mostra tudo | FORM apenas editáveis (sem isReadOnly)');
