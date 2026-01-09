@@ -1,6 +1,9 @@
 // =============================================================================
-// GERADOR FULL-STACK v4.4 - JAVASCRIPT TEMPLATE (SELECT2 100% CORRIGIDO)
+// GERADOR FULL-STACK v5.1 - JAVASCRIPT TEMPLATE (NAVEGAÇÕES COM ORDENAÇÃO)
 // Baseado em RhSensoERP.CrudTool v2.5
+// ⭐ v5.1 - CORRIGIDO: Navegações agora respeitam Order configurado pelo usuário
+//      - ✅ CORRIGIDO: Unifica colunas normais + navegações antes de ordenar
+//      - ✅ CORRIGIDO: Ordena TUDO junto pelo campo Order
 // ⭐ v4.4 - CORRIGIDO: Select2 agora usa data-select2-url (não data-endpoint)
 //      - ✅ CORRIGIDO: Validação de resposta da API
 //      - ✅ CORRIGIDO: Pré-carregamento de labels funcional
@@ -25,6 +28,7 @@ namespace GeradorEntidades.Templates;
 
 /// <summary>
 /// Gera JavaScript que estende a classe CrudBase existente.
+/// v5.1: CORRIGIDO - Navegações agora respeitam Order configurado.
 /// v4.4: CORRIGIDO - Select2 agora funciona 100%
 /// v4.2: Corrige parâmetros para compatibilidade com CrudBase.
 /// v4.1: Adiciona checkbox "Selecionar Todos" e Toggle Switch para campo Ativo.
@@ -58,13 +62,18 @@ public static class JavaScriptTemplate
 
         var content = $@"/**
  * ============================================================================
- * {entity.DisplayName.ToUpper()} - JavaScript com Checkbox e Toggle Ativo
+ * {entity.DisplayName.ToUpper()} - JavaScript com Ordenação de Navegações
  * ============================================================================
  * Arquivo: wwwroot/js/{modulePathLower}/{entity.NameLower}/{entity.NameLower}.js
  * Módulo: {entity.Module}
- * Versão: 4.4 (SELECT2 100% CORRIGIDO)
- * Gerado por: GeradorFullStack v4.4
+ * Versão: 5.1 (NAVEGAÇÕES COM ORDENAÇÃO CORRETA)
+ * Gerado por: GeradorFullStack v5.1
  * Data: {DateTime.Now:yyyy-MM-dd HH:mm:ss}
+ * 
+ * Changelog v5.1:
+ *   ✅ CORRIGIDO: Navegações agora respeitam Order configurado pelo usuário
+ *   ✅ CORRIGIDO: Colunas normais + navegações unificadas e ordenadas juntas
+ *   ✅ CORRIGIDO: Order = 0 agora coloca coluna na primeira posição
  * 
  * Changelog v4.4:
  *   ✅ CORRIGIDO: Select2 agora usa data-select2-url (não data-endpoint)
@@ -287,7 +296,7 @@ $(document).ready(function () {{
     }}
 
     // =========================================================================
-    // ✅ v4.2: CONFIGURAÇÃO DAS COLUNAS (CORRIGIDO)
+    // ✅ v5.1: CONFIGURAÇÃO DAS COLUNAS (COM ORDENAÇÃO DE NAVEGAÇÕES)
     // =========================================================================
 
     const columns = [
@@ -544,10 +553,8 @@ $(document).ready(function () {{
     }
 
     /// <summary>
-    /// Gera colunas do DataTable automaticamente.
-    /// v4.3: Geração inteligente baseada em heurísticas (não usa Grid.Show).
-    /// v4.2: Corrige classes CSS e idField lowercase.
-    /// v4.1: Adiciona coluna de checkbox e toggle para Ativo.
+    /// ✅ v5.1 FINAL: Gera colunas do DataTable com ordenação unificada.
+    /// Unifica colunas normais + navegações e ordena tudo junto pelo Order.
     /// </summary>
     private static string GenerateColumns(EntityConfig entity)
     {
@@ -575,62 +582,86 @@ $(document).ready(function () {{
         }},");
 
         // =====================================================================
-        // v4.4: COLUNAS VISÍVEIS (RESPEITA SELEÇÃO DO USUÁRIO)
+        // ✅ v5.1: UNIFICA COLUNAS NORMAIS + NAVEGAÇÕES E ORDENA TUDO JUNTO
         // =====================================================================
 
-        List<PropertyConfig> visibleProps;
-
-        // Verifica se existe alguma configuração de listagem definida pelo usuário
         var hasListConfig = entity.Properties.Any(p => p.List != null);
+
+        // Coleta colunas normais
+        List<PropertyConfig> visibleProps;
 
         if (hasListConfig)
         {
-            // ✅ MODO 1: Usa configuração explícita do usuário (Grid.Show)
             visibleProps = entity.Properties
                 .Where(p => p.List?.Show == true)
-                .OrderBy(p => p.List!.Order)
-                // Se o order for igual (0), ordena pelo nome
-                .ThenBy(p => p.Name)
                 .ToList();
         }
         else
         {
-            // ✅ MODO 2: Fallback (Heurística Inteligente v4.3)
-            // Gera colunas automaticamente baseado em tipos e form
             visibleProps = entity.Properties
-                .Where(p => !p.IsPrimaryKey || (entity.PrimaryKey?.IsIdentity == false)) // Exclui PKs auto
-                .Where(p => !IsAuditField(p)) // Exclui auditoria
-                .Where(p => p.Form?.Show != false) // Inclui se estiver no formulário
-                .Where(p => p.IsString || p.IsInt || p.IsLong || p.IsBool || p.IsDecimal || p.IsDateTime) // Tipos comuns
-                .OrderBy(p => p.Name) // Ordem alfabética
+                .Where(p => !p.IsPrimaryKey || (entity.PrimaryKey?.IsIdentity == false))
+                .Where(p => !IsAuditField(p))
+                .Where(p => p.Form?.Show != false)
+                .Where(p => p.IsString || p.IsInt || p.IsLong || p.IsBool || p.IsDecimal || p.IsDateTime)
+                .OrderBy(p => p.Name)
                 .ToList();
 
-            // Limita a 10 colunas (mantém performance do DataTables)
             if (visibleProps.Count > 10)
-            {
                 visibleProps = visibleProps.Take(10).ToList();
-            }
 
-            // GARANTIA MÍNIMA - Se mesmo assim não tiver colunas, pega as 3 primeiras não-PK
             if (!visibleProps.Any())
-            {
-                visibleProps = entity.Properties
-                    .Where(p => !p.IsPrimaryKey)
-                    .Take(3)
-                    .ToList();
-            }
+                visibleProps = entity.Properties.Where(p => !p.IsPrimaryKey).Take(3).ToList();
         }
 
+        // ✅ v5.1: Cria lista unificada (normais + navegações)
+        var allColumns = new List<(string Type, int Order, string Name, object Data)>();
+
+        // Adiciona colunas normais
         foreach (var prop in visibleProps)
         {
-            var propNameCamel = char.ToLower(prop.Name[0]) + prop.Name.Substring(1);
-            var displayName = prop.DisplayName ?? prop.Name;
+            var order = hasListConfig && prop.List != null ? prop.List.Order : 999;
+            allColumns.Add(("Property", order, prop.Name, prop));
+        }
 
-            // Campo Ativo vira Toggle Switch
-            if (prop.Name.Equals("Ativo", StringComparison.OrdinalIgnoreCase) ||
-                prop.Name.Equals("IsAtivo", StringComparison.OrdinalIgnoreCase))
+        // Adiciona navegações (com Order via reflexão para compatibilidade)
+        foreach (var nav in entity.NavigationProperties)
+        {
+            var order = 999; // Padrão: final da lista
+
+            // Tenta pegar Order via reflexão (caso Passos 1 e 2 tenham sido aplicados)
+            var orderProperty = nav.GetType().GetProperty("Order");
+            if (orderProperty != null)
             {
-                sb.AppendLine($@"        // {displayName}
+                var orderValue = orderProperty.GetValue(nav);
+                if (orderValue != null)
+                {
+                    order = (int)orderValue;
+                }
+            }
+
+            allColumns.Add(("Navigation", order, nav.Name, nav));
+        }
+
+        // ✅ v5.1: Ordena TUDO junto pelo Order, depois pelo Name
+        allColumns = allColumns
+            .OrderBy(c => c.Order)
+            .ThenBy(c => c.Name)
+            .ToList();
+
+        // ✅ v5.1: Gera colunas na ordem correta
+        foreach (var column in allColumns)
+        {
+            if (column.Type == "Property")
+            {
+                var prop = (PropertyConfig)column.Data;
+                var propNameCamel = char.ToLower(prop.Name[0]) + prop.Name.Substring(1);
+                var displayName = prop.DisplayName ?? prop.Name;
+
+                // Campo Ativo vira Toggle Switch
+                if (prop.Name.Equals("Ativo", StringComparison.OrdinalIgnoreCase) ||
+                    prop.Name.Equals("IsAtivo", StringComparison.OrdinalIgnoreCase))
+                {
+                    sb.AppendLine($@"        // {displayName} (Order: {column.Order})
         {{
             data: '{propNameCamel}',
             name: '{prop.Name}',
@@ -655,11 +686,11 @@ $(document).ready(function () {{
                 return data;
             }}
         }},");
-            }
-            // Boolean comum vira badge
-            else if (prop.IsBool)
-            {
-                sb.AppendLine($@"        // {displayName}
+                }
+                // Boolean comum vira badge
+                else if (prop.IsBool)
+                {
+                    sb.AppendLine($@"        // {displayName} (Order: {column.Order})
         {{
             data: '{propNameCamel}',
             name: '{prop.Name}',
@@ -675,11 +706,11 @@ $(document).ready(function () {{
                 return data;
             }}
         }},");
-            }
-            // DateTime
-            else if (prop.IsDateTime)
-            {
-                sb.AppendLine($@"        // {displayName}
+                }
+                // DateTime
+                else if (prop.IsDateTime)
+                {
+                    sb.AppendLine($@"        // {displayName} (Order: {column.Order})
         {{
             data: '{propNameCamel}',
             name: '{prop.Name}',
@@ -693,11 +724,11 @@ $(document).ready(function () {{
                 return data || '';
             }}
         }},");
-            }
-            // Outros campos
-            else
-            {
-                sb.AppendLine($@"        // {displayName}
+                }
+                // Outros campos
+                else
+                {
+                    sb.AppendLine($@"        // {displayName} (Order: {column.Order})
         {{
             data: '{propNameCamel}',
             name: '{prop.Name}',
@@ -707,30 +738,19 @@ $(document).ready(function () {{
                 return data !== undefined && data !== null ? data : '';
             }}
         }},");
+                }
             }
-        }
-
-
-        // =====================================================================
-        // ✅ v4.5: COLUNAS DE NAVEGAÇÃO (CAMPOS DE ENTIDADES RELACIONADAS)
-        // =====================================================================
-        // Gera colunas automaticamente para propriedades de navegação
-        // Ex: FornecedorRazaoSocial, TipoSanguineoDescricao, UfSigla
-        // =====================================================================
-
-        if (!hasListConfig)
-        {
-            // ✅ Modo automático: adiciona todas as navegações
-            foreach (var nav in entity.NavigationProperties)
+            else if (column.Type == "Navigation")
             {
+                var nav = (NavigationPropertyConfig)column.Data;
                 var navNameCamel = char.ToLower(nav.Name[0]) + nav.Name.Substring(1);
 
-                sb.AppendLine($@"        // ✅ {nav.DisplayName} (Navegação)
+                sb.AppendLine($@"        // ✅ {nav.DisplayName} (Navegação - Order: {column.Order})
         {{
             data: '{navNameCamel}',
             name: '{navNameCamel}',
             title: '{nav.DisplayName}',
-            orderable: false,  // Campos de navegação não permitem ordenação
+            orderable: false,
             searchable: false,
             render: function (data, type, row) {{
                 return data !== undefined && data !== null ? data : '';
@@ -738,8 +758,6 @@ $(document).ready(function () {{
         }},");
             }
         }
-        // ✅ Se hasListConfig == true: RESPEITA seleção do usuário (NÃO adiciona extras)
-
 
         // =====================================================================
         // COLUNA DE AÇÕES

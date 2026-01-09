@@ -733,6 +733,10 @@ public class NavigationPropertyConfig
     /// Entidade destino (ex: "Fornecedor", "TipoSanguineo")
     /// </summary>
     public string TargetEntity { get; set; } = string.Empty;
+
+    // ✅ v5.1: Adiciona Order para controlar posição na grid
+    public int Order { get; set; } = 999;  // ← ADICIONE ESTA LINHA
+
 }
 
 #endregion
@@ -1048,6 +1052,7 @@ public class EntityConfig
             });
         }
 
+
         // =========================================================================
         // ✅ v4.1: Popula NavigationProperties baseado nas ForeignKeys da tabela
         // =========================================================================
@@ -1060,6 +1065,82 @@ public class EntityConfig
             .GroupBy(fk => fk.ChaveUnica)
             .Select(g => g.First())
             .ToList();
+
+
+
+
+
+
+        // ============ LOGS DE DEBUG v4.8 ============
+        Console.WriteLine("═══════════════════════════════════════════════════════");
+        Console.WriteLine("🔍 EntityConfig.FromTabela - DEBUG NavigationProperties");
+        Console.WriteLine("═══════════════════════════════════════════════════════");
+        Console.WriteLine($"🔍 hasListSelection = {hasListSelection}");
+        Console.WriteLine($"🔍 request.ColunasListagem.Count = {request.ColunasListagem.Count}");
+        Console.WriteLine("📋 Colunas de listagem recebidas:");
+        foreach (var col in request.ColunasListagem)
+        {
+            Console.WriteLine($"  - {col.Nome} (Visible: {col.Visible})");
+        }
+        Console.WriteLine("───────────────────────────────────────────────────────");
+        Console.WriteLine($"🔍 fksUnicas.Count = {fksUnicas.Count}");
+        Console.WriteLine("📋 ForeignKeys detectadas:");
+
+        foreach (var fk in fksUnicas)
+        {
+            var fkConfig = request.ConfiguracoesFk?
+                .FirstOrDefault(c => c.ColunaOrigem.Equals(fk.ColunaOrigem, StringComparison.OrdinalIgnoreCase));
+
+            if (fkConfig?.Ignorar == true)
+            {
+                Console.WriteLine($"  FK: {fk.ColunaOrigem} → IGNORADA (fkConfig.Ignorar)");
+                continue;
+            }
+
+            var navigationName = fkConfig?.NavigationName ?? fk.NavigationPropertyName;
+            var displayField = fkConfig?.DisplayColumn;
+
+            if (string.IsNullOrEmpty(displayField))
+            {
+                displayField = DetectDisplayField(fk.TabelaDestino);
+            }
+
+            var propertyName = $"{navigationName}{displayField}";
+
+            Console.WriteLine($"  FK: {fk.ColunaOrigem}");
+            Console.WriteLine($"    → Tabela destino: {fk.TabelaDestino}");
+            Console.WriteLine($"    → navigationName: {navigationName}");
+            Console.WriteLine($"    → displayField: {displayField}");
+            Console.WriteLine($"    → propertyName: {propertyName}");
+
+            if (hasListSelection)
+            {
+                var isSelected = request.ColunasListagem.Any(c =>
+                    c.Nome.Equals(propertyName, StringComparison.OrdinalIgnoreCase));
+
+                Console.WriteLine($"    → isSelected? {isSelected}");
+
+                if (!isSelected)
+                {
+                    Console.WriteLine($"    ❌ NÃO selecionada - será IGNORADA");
+                }
+                else
+                {
+                    Console.WriteLine($"    ✅ SELECIONADA - será ADICIONADA");
+                }
+            }
+            else
+            {
+                Console.WriteLine($"    ✅ Modo automático - será ADICIONADA");
+            }
+
+            Console.WriteLine();
+        }
+        Console.WriteLine("═══════════════════════════════════════════════════════");
+        // ============ FIM DOS LOGS DE DEBUG ============
+
+
+
 
         foreach (var fk in fksUnicas)
         {
@@ -1090,6 +1171,21 @@ public class EntityConfig
             // DisplayName para a coluna da grid (ex: "Fornecedor")
             var displayName = FormatDisplayName(navigationName);
 
+            // ✅ v4.9: APLICA O FILTRO (mesma lógica dos logs)
+            if (hasListSelection)
+            {
+                // Modo manual: verifica se foi selecionada
+                var isSelected = request.ColunasListagem.Any(c =>
+                    c.Nome.Equals(propertyName, StringComparison.OrdinalIgnoreCase));
+
+                if (!isSelected)
+                {
+                    // NÃO selecionada → PULA!
+                    continue;
+                }
+            }
+            // Se !hasListSelection (modo automático): adiciona todas
+            /*
             config.NavigationProperties.Add(new NavigationPropertyConfig
             {
                 Name = propertyName,
@@ -1099,11 +1195,32 @@ public class EntityConfig
                 ForeignKeyProperty = TabelaInfo.ToPascalCase(fk.ColunaOrigem),
                 TargetEntity = fk.EntidadeDestino
             });
+            */
+
+            // ✅ v5.1: Busca Order da configuração do usuário
+            var listConfig = request.ColunasListagem
+                .FirstOrDefault(c => c.Nome.Equals(propertyName, StringComparison.OrdinalIgnoreCase));
+
+           var navOrder = listConfig?.Order ?? 999;  // 999 = final da lista
+
+            config.NavigationProperties.Add(new NavigationPropertyConfig
+            {
+                Name = propertyName,
+                DisplayName = displayName,
+                NavigationName = navigationName,
+                DisplayField = displayField,
+                ForeignKeyProperty = TabelaInfo.ToPascalCase(fk.ColunaOrigem),
+                TargetEntity = fk.EntidadeDestino,
+                Order = navOrder  // ✅ v5.1: ADICIONA ORDER
+            });
+
         }
 
-        return config;
-    }
+        return config;  // ✅ LINHA ADICIONADA
+    }  // ✅ FECHA O MÉTODO FromTabela
 
+    /// <summary>
+    /// ✅ v4.1 NOVO: Detecta o campo de display provável de uma tabela relacionada.
     /// <summary>
     /// ✅ v4.1 NOVO: Detecta o campo de display provável de uma tabela relacionada.
     /// Usa heurísticas baseadas em padrões comuns de nomenclatura.
