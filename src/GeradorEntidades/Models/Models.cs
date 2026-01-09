@@ -955,13 +955,8 @@ public class EntityConfig
                     HelpText = formConfig.HelpText,
                     Disabled = formConfig.Disabled,
                     Rows = formConfig.Rows ?? 3,
-                    // =========================================================================
-                    // ⭐ v3.3 - Tab e Group do campo
-                    // =========================================================================
                     Tab = formConfig.Tab,
                     Group = formConfig.Group,
-
-                    // ⭐ v4.4 - Select Ajax Config
                     SelectEndpoint = formConfig.SelectEndpoint,
                     SelectValueField = formConfig.SelectValueField,
                     SelectTextField = formConfig.SelectTextField,
@@ -969,15 +964,14 @@ public class EntityConfig
                     SelectApiRoute = formConfig.SelectApiRoute
                 };
             }
-            // PKs string/char que não são Identity precisam aparecer no form (usuário digita)
             else if (formConfig == null && isPrimaryKey && !coluna.IsIdentity && !coluna.IsGuid && coluna.IsTexto)
             {
                 prop.Form = new FormConfig
                 {
                     Show = true,
-                    ShowOnCreate = true,  // Mostra ao criar (usuário digita o código)
-                    ShowOnEdit = false,   // Não mostra ao editar (PK não muda)
-                    Order = 0,            // Primeiro campo
+                    ShowOnCreate = true,
+                    ShowOnEdit = false,
+                    Order = 0,
                     InputType = "text",
                     ColSize = coluna.Tamanho <= 10 ? 4 : 6,
                     Disabled = false
@@ -985,7 +979,6 @@ public class EntityConfig
             }
             else if (formConfig == null && isFirstExecution && !isPrimaryKey && !coluna.IsComputed && !coluna.IsBinary && !isAudit)
             {
-                // ✅ v3.6: Default: mostrar campos editáveis (exceto auditoria)
                 prop.Form = new FormConfig
                 {
                     Show = true,
@@ -994,6 +987,57 @@ public class EntityConfig
                     ColSize = GetDefaultColSize(coluna)
                 };
             }
+
+            // =========================================================================
+            // ⭐ v4.5: MAPEIA LOOKUP DO FORMCONFIG (ADICIONAR AQUI!)
+            // =========================================================================
+            if (prop.Form != null &&
+                (prop.Form.IsSelect2Ajax || !string.IsNullOrEmpty(prop.Form.SelectEndpoint)))
+            {
+                var endpoint = prop.Form.SelectEndpoint ?? prop.Form.SelectApiRoute ?? "";
+
+                if (!string.IsNullOrEmpty(endpoint))
+                {
+                    prop.Lookup = new LookupConfig
+                    {
+                        Endpoint = endpoint,
+                        ValueField = prop.Form.SelectValueField ?? "id",
+                        TextField = prop.Form.SelectTextField ?? "nome",
+                        AllowSearch = true,
+                        AllowClear = true,
+                        MinSearchLength = 0,
+                        Multiple = false
+                    };
+
+                    Console.WriteLine($"✅ [LOOKUP] Mapeado: {prop.Name} → {endpoint}");
+                }
+            }
+
+            config.Properties.Add(prop);
+
+            //
+
+            // =========================================================================
+            // ⭐ v4.5: MAPEIA LOOKUP DO FORMCONFIG (vem do JSON PropertyMetadata)
+            // =========================================================================
+            if (formConfig != null &&
+                (!string.IsNullOrEmpty(formConfig.SelectEndpoint) || formConfig.IsSelect2Ajax))
+            {
+                prop.Lookup = new LookupConfig
+                {
+                    Endpoint = formConfig.SelectEndpoint ?? formConfig.SelectApiRoute ?? "",
+                    ValueField = formConfig.SelectValueField ?? "id",
+                    TextField = formConfig.SelectTextField ?? "nome",
+                    AllowSearch = true,
+                    AllowClear = true,
+                    MinSearchLength = 0,
+                    Multiple = false
+                };
+
+                Console.WriteLine($"✅ [LOOKUP] Campo {prop.Name} tem lookup: {prop.Lookup.Endpoint}");
+            }
+
+            //
 
             config.Properties.Add(prop);
 
@@ -1011,27 +1055,41 @@ public class EntityConfig
         // =========================================================================
         // ⭐ v6.0: Popula Select2Lookups baseado nas propriedades configuradas
         // =========================================================================
-        foreach (var prop in config.Properties.Where(p => p.Form != null && !string.IsNullOrEmpty(p.Form.SelectEndpoint)))
-        {
-            var endpoint = prop.Form.SelectEndpoint;
-            // Ex: /api/gestaoterceirosprestadores/capfornecedores
+        // =========================================================================
+        // ⭐ v6.1: Popula Select2Lookups a partir do campo "lookup" da PropertyConfig
+        // =========================================================================
+        Console.WriteLine($"🔍 [SELECT2] Buscando lookups em {config.Properties.Count} propriedades...");
 
-            // Tenta extrair o nome da entidade do endpoint ou da FK
-            var entityName = prop.ForeignKeyTable ?? "Unknown";
+        foreach (var prop in config.Properties.Where(p => p.Lookup != null && !string.IsNullOrEmpty(p.Lookup.Endpoint)))
+        {
+            var lookup = prop.Lookup!;
+
+            Console.WriteLine($"  ✅ Encontrado: {prop.Name} → {lookup.Endpoint}");
+
+            // Extrai nome da entidade do endpoint ou usa o módulo
+            var entityName = lookup.Route ?? prop.ForeignKeyTable ?? "Unknown";
+
             if (!string.IsNullOrEmpty(prop.ForeignKeyTable))
             {
                 entityName = TabelaInfo.ToPascalCase(prop.ForeignKeyTable);
             }
+            else if (!string.IsNullOrEmpty(lookup.Route))
+            {
+                entityName = TabelaInfo.ToPascalCase(lookup.Route);
+            }
             else
             {
-                // Fallback: extrai do endpoint (último segmento)
-                var segments = endpoint.Split('/', StringSplitOptions.RemoveEmptyEntries);
+                // Tenta extrair do endpoint (último segmento)
+                var segments = lookup.Endpoint.Split('/', StringSplitOptions.RemoveEmptyEntries);
                 if (segments.Length > 0)
                 {
-                    entityName = TabelaInfo.ToPascalCase(segments.Last());
-                    // Remove plural "es" ou "s" básico se possível (bem simplista)
-                    if (entityName.EndsWith("s")) entityName = entityName.TrimEnd('s');
-                    if (entityName.EndsWith("e")) entityName = entityName.TrimEnd('e'); // remove 'es' -> 'e' (errado), melhor deixar plural se não tiver FK info
+                    var lastSegment = segments.Last();
+                    // Remove "lookup" se for o último segmento
+                    if (lastSegment.Equals("lookup", StringComparison.OrdinalIgnoreCase) && segments.Length > 1)
+                    {
+                        lastSegment = segments[^2]; // Penúltimo segmento
+                    }
+                    entityName = TabelaInfo.ToPascalCase(lastSegment);
                 }
             }
 
@@ -1043,14 +1101,18 @@ public class EntityConfig
                 PropertyName = prop.Name,
                 EntityName = entityName,
                 DtoName = dtoName,
-                ApiRoute = endpoint,
-                ValueField = prop.Form.SelectValueField ?? "id",
-                TextField = prop.Form.SelectTextField ?? "nome",
+                ApiRoute = lookup.Endpoint,  // ✅ USA O ENDPOINT DO LOOKUP!
+                ValueField = lookup.ValueField,
+                TextField = lookup.TextField,
                 MethodName = methodName,
                 DisplayName = prop.DisplayName,
                 Label = prop.DisplayName
             });
+
+            Console.WriteLine($"    → Adicionado ao Select2Lookups: {entityName}LookupDto");
         }
+
+        Console.WriteLine($"✅ [SELECT2] Total de lookups configurados: {config.Select2Lookups.Count}");
 
 
         // =========================================================================
@@ -1384,6 +1446,73 @@ public class SelectLookupConfig
 }
 
 
+
+/// <summary>
+/// ⭐ v4.5 NOVO: Configuração de Lookup (Select2 Ajax) que vem do JSON PropertyMetadata
+/// </summary>
+public class LookupConfig
+{
+    /// <summary>
+    /// Endpoint da API para buscar opções (ex: "/api/administracaopessoal/ufs/lookup")
+    /// </summary>
+    public string Endpoint { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Campo do valor (ID) - padrão "id"
+    /// </summary>
+    public string ValueField { get; set; } = "id";
+
+    /// <summary>
+    /// Campo do texto de exibição - padrão "nome"
+    /// </summary>
+    public string TextField { get; set; } = "nome";
+
+    /// <summary>
+    /// Permite busca/autocomplete
+    /// </summary>
+    public bool AllowSearch { get; set; } = true;
+
+    /// <summary>
+    /// Permite limpar seleção
+    /// </summary>
+    public bool AllowClear { get; set; } = true;
+
+    /// <summary>
+    /// Campo pai (cascata)
+    /// </summary>
+    public string? DependsOn { get; set; }
+
+    /// <summary>
+    /// Parâmetro de filtro do pai
+    /// </summary>
+    public string? DependsOnParam { get; set; }
+
+    /// <summary>
+    /// Mínimo de caracteres para busca
+    /// </summary>
+    public int MinSearchLength { get; set; } = 0;
+
+    /// <summary>
+    /// Permite seleção múltipla
+    /// </summary>
+    public bool Multiple { get; set; } = false;
+
+    /// <summary>
+    /// Módulo da API (ex: "AdministracaoPessoal")
+    /// </summary>
+    public string? Module { get; set; }
+
+    /// <summary>
+    /// Route da entidade na API (ex: "ufs")
+    /// </summary>
+    public string? Route { get; set; }
+
+    /// <summary>
+    /// Campos adicionais a retornar
+    /// </summary>
+    public List<string>? AdditionalFields { get; set; }
+}
+
 // =============================================================================
 // ⭐ COPIE ESTE BLOCO E COLE NO FINAL DO SEU Models.cs (ANTES DO #endregion FINAL)
 
@@ -1420,6 +1549,10 @@ public class PropertyConfig
 
     public ListConfig? List { get; set; }
     public FormConfig? Form { get; set; }
+
+    // ⭐ v4.5 NOVO: Lookup do JSON PropertyMetadata
+    public LookupConfig? Lookup { get; set; }  // ← ADICIONE ESTA LINHA
+
 
     /// <summary>
     /// Gera declaração da propriedade C#.

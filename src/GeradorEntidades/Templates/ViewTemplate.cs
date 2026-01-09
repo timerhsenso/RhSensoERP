@@ -288,22 +288,53 @@ public static class ViewTemplate
         // =====================================================================
         // SELECT (Combobox) - v4.3 COM URLs RELATIVAS DA API
         // =====================================================================
+        // =====================================================================
+        // SELECT (Combobox) - v4.5 USA LOOKUP DA PROPERTYCONFIG
+        // =====================================================================
         if (inputType == "select")
         {
-            // ⭐ v4.2: AUTO-DETECÇÃO de Select2 AJAX
-            var isFkField = IsForeignKeyField(prop.Name);
-            var isSelect2Ajax = !string.IsNullOrEmpty(config.SelectEndpoint) ||
-                                !string.IsNullOrEmpty(config.SelectApiRoute) ||
-                                config.IsSelect2Ajax ||
-                                isFkField;
 
-            var select2Class = isSelect2Ajax ? "select2-ajax" : "form-select";
+            // ⭐ LOGS DE DIAGNÓSTICO
+            Console.WriteLine($"╔══════════════════════════════════════════════════════════");
+            Console.WriteLine($"║ 🔍 DEBUG SELECT: {prop.Name}");
+            Console.WriteLine($"╠══════════════════════════════════════════════════════════");
+            Console.WriteLine($"║ inputType: {inputType}");
+            Console.WriteLine($"║ prop.Lookup: {(prop.Lookup != null ? "NÃO NULL" : "NULL")}");
 
-            // ⭐ v4.3 MUDANÇA: URL do Select2 agora é RELATIVA (sem host)
-            // ⭐ v4.5 CORRIGIDO: Usa entity.Select2Lookups (do JSON) primeiro!
-            var select2Url = GetSelect2UrlFromLookups(prop.Name, entity, config);
-            var select2Attrs = isSelect2Ajax
-                ? $@" data-select2-url=""{select2Url}"" data-value-field=""{config.SelectValueField ?? "id"}"" data-text-field=""{config.SelectTextField ?? "nome"}"" style=""width: 100%"""
+            if (prop.Lookup != null)
+            {
+                Console.WriteLine($"║ prop.Lookup.Endpoint: '{prop.Lookup.Endpoint}'");
+                Console.WriteLine($"║ prop.Lookup.ValueField: '{prop.Lookup.ValueField}'");
+                Console.WriteLine($"║ prop.Lookup.TextField: '{prop.Lookup.TextField}'");
+            }
+
+            if (prop.Form != null)
+            {
+                Console.WriteLine($"║ prop.Form.SelectEndpoint: '{prop.Form.SelectEndpoint}'");
+                Console.WriteLine($"║ prop.Form.IsSelect2Ajax: {prop.Form.IsSelect2Ajax}");
+            }
+
+            Console.WriteLine($"╚══════════════════════════════════════════════════════════");
+
+            // Detecta Select2 Ajax
+            var hasLookup2 = prop.Lookup != null && !string.IsNullOrEmpty(prop.Lookup.Endpoint);
+
+            Console.WriteLine($"║ ➡️ hasLookup: {hasLookup2}");
+            Console.WriteLine($"╚══════════════════════════════════════════════════════════");
+            // ⭐ LOGS DE DIAGNÓSTICO FIM
+
+
+            // ⭐ v4.5: Detecta Select2 Ajax pelo campo "lookup" da PropertyConfig
+            var hasLookup = prop.Lookup != null && !string.IsNullOrEmpty(prop.Lookup.Endpoint);
+            var select2Class = hasLookup ? "select2-ajax" : "form-select";
+
+            // ⭐ v4.5: Usa diretamente o endpoint do prop.Lookup
+            var select2Url = hasLookup ? prop.Lookup!.Endpoint : "";
+            var valueField = hasLookup ? prop.Lookup!.ValueField : "id";
+            var textField = hasLookup ? prop.Lookup!.TextField : "nome";
+
+            var select2Attrs = hasLookup
+                ? $@" data-select2-url=""{select2Url}"" data-value-field=""{valueField}"" data-text-field=""{textField}"" style=""width: 100%"""
                 : "";
 
             return $@"                <div class=""col-md-{colSize} mb-3"">
@@ -376,8 +407,10 @@ public static class ViewTemplate
     /// ✅ v4.5 NOVO: Busca URL do Select2 em entity.Select2Lookups (vem do JSON).
     /// Isso garante que usa os endpoints corretos definidos no manifesto.
     /// </summary>
+    /*
     private static string GetSelect2UrlFromLookups(string propertyName, EntityConfig entity, FormConfig config)
     {
+        
         // ✅ PRIORIDADE 1: Busca em entity.Select2Lookups (endpoints do JSON/manifesto)
         var lookup = entity.Select2Lookups?.FirstOrDefault(l =>
             l.PropertyName.Equals(propertyName, StringComparison.OrdinalIgnoreCase));
@@ -396,7 +429,9 @@ public static class ViewTemplate
 
         // ✅ PRIORIDADE 3: Gera automaticamente (fallback)
         return GenerateSelect2ApiUrl(new PropertyConfig { Name = propertyName }, entity);
+      
     }
+      */
     private static string GenerateSelect2ApiUrl(PropertyConfig prop, EntityConfig entity)
     {
         // Extrai nome da entidade relacionada do campo
