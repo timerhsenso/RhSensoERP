@@ -301,6 +301,18 @@ public class FullStackGeneratorService
             if (string.IsNullOrWhiteSpace(request.ModuloRota))
                 request.ModuloRota = modulo.Rota;
         }
+        else
+        {
+            // ⚠️ CdSistema não encontrado na lista de módulos — aplica fallback
+            _logger.LogWarning(
+                "⚠️ CdSistema '{CdSistema}' não encontrado em ModuloConfig.GetModulos(). Módulo: '{Modulo}'. Aplicando fallback.",
+                request.CdSistema, request.Modulo);
+
+            if (string.IsNullOrWhiteSpace(request.Modulo))
+                request.Modulo = "Common";
+            if (string.IsNullOrWhiteSpace(request.ModuloRota))
+                request.ModuloRota = "common";
+        }
 
         // ApiRoute default se não fornecida
         if (string.IsNullOrWhiteSpace(request.ApiRoute))

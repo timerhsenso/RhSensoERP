@@ -51,11 +51,11 @@ public static class WebServicesTemplate
 // Data: {DateTime.Now:yyyy-MM-dd HH:mm:ss}
 // AUTO-REGISTRO: Compatível com AddCrudToolServicesAutomatically()
 // =============================================================================
-using RhSensoERP.Web.Models.{entity.Module}.{entity.Name};
+using RhSensoERP.Web.Models.{modulePath}.{entity.Name};
 using RhSensoERP.Web.Models.Common;
 using RhSensoERP.Web.Services.Base;
 
-namespace RhSensoERP.Web.Services.{entity.Module}.{entity.Name};
+namespace RhSensoERP.Web.Services.{modulePath}.{entity.Name};
 
 /// <summary>
 /// Interface do serviço de API para {entity.DisplayName}.
@@ -113,11 +113,11 @@ public interface I{entity.Name}ApiService
 // =============================================================================
 using System.Text;
 using System.Text.Json;
-using RhSensoERP.Web.Models.{entity.Module}.{entity.Name};
+using RhSensoERP.Web.Models.{modulePath}.{entity.Name};
 using RhSensoERP.Web.Models.Common;
 using RhSensoERP.Web.Services.Base;
 
-namespace RhSensoERP.Web.Services.{entity.Module}.{entity.Name};
+namespace RhSensoERP.Web.Services.{modulePath}.{entity.Name};
 
 /// <summary>
 /// Serviço de API para {entity.DisplayName}.

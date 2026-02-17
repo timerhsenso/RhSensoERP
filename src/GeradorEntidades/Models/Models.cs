@@ -1015,37 +1015,7 @@ public class EntityConfig
 
             config.Properties.Add(prop);
 
-            //
-
-            // =========================================================================
-            // ⭐ v4.5: MAPEIA LOOKUP DO FORMCONFIG (vem do JSON PropertyMetadata)
-            // =========================================================================
-            if (formConfig != null &&
-                (!string.IsNullOrEmpty(formConfig.SelectEndpoint) || formConfig.IsSelect2Ajax))
-            {
-                prop.Lookup = new LookupConfig
-                {
-                    Endpoint = formConfig.SelectEndpoint ?? formConfig.SelectApiRoute ?? "",
-                    ValueField = formConfig.SelectValueField ?? "id",
-                    TextField = formConfig.SelectTextField ?? "nome",
-                    AllowSearch = true,
-                    AllowClear = true,
-                    MinSearchLength = 0,
-                    Multiple = false
-                };
-
-                Console.WriteLine($"✅ [LOOKUP] Campo {prop.Name} tem lookup: {prop.Lookup.Endpoint}");
-            }
-
-            //
-
-            config.Properties.Add(prop);
-
             // Definir PrimaryKey (primeira encontrada, ou primeira definida pelo usuário)
-            if (isPrimaryKey && config.PrimaryKey == null)
-            {
-                config.PrimaryKey = prop;
-            }
             if (isPrimaryKey && config.PrimaryKey == null)
             {
                 config.PrimaryKey = prop;
@@ -1263,7 +1233,7 @@ public class EntityConfig
             var listConfig = request.ColunasListagem
                 .FirstOrDefault(c => c.Nome.Equals(propertyName, StringComparison.OrdinalIgnoreCase));
 
-           var navOrder = listConfig?.Order ?? 999;  // 999 = final da lista
+            var navOrder = listConfig?.Order ?? 999;  // 999 = final da lista
 
             config.NavigationProperties.Add(new NavigationPropertyConfig
             {

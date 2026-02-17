@@ -34,8 +34,8 @@ namespace RhSensoERP.Modules.TreinamentoDesenvolvimento.Core.Entities;
 [GenerateCrud(
     TableName = "tre_tipos_treinamento",
     DisplayName = "Tipos de Treinamento",
-    CdSistema = "SGT",
-    CdFuncao = "SGT_FM_TRETIPOSTREINAMENTO",
+    CdSistema = "TRE",
+    CdFuncao = "TRE_FM_TRETIPOSTREINAMENTO",
     IsLegacyTable = false,
     GenerateApiController = true
 )]

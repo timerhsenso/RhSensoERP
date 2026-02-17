@@ -26,6 +26,8 @@
 
   <ItemGroup>
     <Folder Include="logs\" />
+    <Folder Include="Models\TreinamentoDesenvolvimento\TreTiposTreinamento\" />
+    <Folder Include="Services\TreinamentoDesenvolvimento\TreTiposTreinamento\" />
   </ItemGroup>
 
   <PropertyGroup>

@@ -26,7 +26,7 @@ public static class WebControllerTemplate
     {
         var pkType = entity.PkTypeSimple;
         var modulePath = GetModulePath(entity.Module);
-        var menuModule = entity.Module;
+        var menuModule = string.IsNullOrEmpty(entity.Module) ? "Common" : entity.Module;
         var viewPath = $"Views/{modulePath}/{entity.Name}/Index.cshtml";
 
         // v3.7: Verifica se tem campo "Ativo"
