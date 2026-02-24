@@ -2,7 +2,7 @@
 // ARQUIVO GERADO POR GeradorFullStack v4.0
 // Entity: CapFornecedores
 // Module: Identity
-// Data: 2026-01-07 21:24:22
+// Data: 2026-02-17 11:32:58
 // =============================================================================
 
 namespace RhSensoERP.Web.Models.Identity.CapFornecedores;
@@ -14,7 +14,7 @@ namespace RhSensoERP.Web.Models.Identity.CapFornecedores;
 public class CapFornecedoresDto
 {
     /// <summary>
-    /// Id
+    /// ID
     /// </summary>
     public int Id { get; set; }
 
@@ -127,14 +127,4 @@ public class CapFornecedoresDto
     /// Updated By User Id
     /// </summary>
     public Guid? UpdatedByUserId { get; set; }
-
-    // =========================================================================
-    // PROPRIEDADES DE NAVEGAÇÃO (campos de entidades relacionadas)
-    // =========================================================================
-
-    /// <summary>
-    /// Campo 'Sigla' da navegação Uf.
-    /// </summary>
-    public string? UfSigla { get; set; }
-
 }

@@ -144,7 +144,31 @@ public class TreTiposTreinamento
     /// SQL: AplicavelA NVARCHAR(100) NULL
     /// </summary>
     [StringLength(100)]
-    [Column("AplicavelA")]
+    [Column("A  " +
+        "" +
+        "" +
+        "" +
+        "" +
+        "" +
+        "" +
+        "" +
+        "" +
+        "" +
+        "" +
+        "" +
+        "" +
+        "" +
+        "" +
+        "" +
+        "" +
+        "" +
+        "" +
+        "" +
+        "" +
+        "" +
+        "" +
+        "" +
+        "plicavelA")]
     [Display(Name = "Aplicável a")]
     public string? AplicavelA { get; set; }
 

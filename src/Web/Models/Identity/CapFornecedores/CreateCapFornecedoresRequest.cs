@@ -2,7 +2,7 @@
 // ARQUIVO GERADO POR GeradorFullStack v4.0
 // Entity: CapFornecedores
 // Module: Identity
-// Data: 2026-01-07 21:24:22
+// Data: 2026-02-17 11:32:58
 // =============================================================================
 using System.ComponentModel.DataAnnotations;
 
