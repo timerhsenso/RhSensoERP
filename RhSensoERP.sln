@@ -20,6 +20,9 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RhSensoERP.Identity", "src\Identity\RhSensoERP.Identity.csproj", "{D561A620-BF15-465A-B5E0-353552878EAB}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RhSensoERP.API", "src\API\RhSensoERP.API.csproj", "{ED3C3A3B-1AC9-47A9-BED6-B5F53C466B60}"
+	ProjectSection(ProjectDependencies) = postProject
+		{BABDAED3-1CAB-A4D7-3FD8-DE4513040B3A} = {BABDAED3-1CAB-A4D7-3FD8-DE4513040B3A}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RhSensoERP.Web", "src\Web\RhSensoERP.Web.csproj", "{46F7FBA2-1D08-48DE-9748-DCB682A33672}"
 EndProject
@@ -72,6 +75,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RhSensoERP.Modules.GestaoDocumental", "src\Modules\GestaoDocumental\RhSensoERP.Modules.GestaoDocumental.csproj", "{C77E5D9E-922F-CFBF-73AC-745B57BACEDD}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RhSensoERP.Modules.MultiTenant", "src\Modules\MultiTenant\RhSensoERP.Modules.MultiTenant.csproj", "{45D5F587-AB35-5249-7276-E0444DE73CDF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RhSensoERP.Modules.TabelasCompartilhadas", "src\Modules\TabelasCompartilhadas\RhSensoERP.Modules.TabelasCompartilhadas.csproj", "{BABDAED3-1CAB-A4D7-3FD8-DE4513040B3A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RhSensoERP.Modules.Seguranca", "src\Modules\Seguranca\RhSensoERP.Modules.Seguranca.csproj", "{977E7A65-FEFB-1E37-3D6D-BDBCCCD044BE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -203,6 +210,14 @@ Global
 		{45D5F587-AB35-5249-7276-E0444DE73CDF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{45D5F587-AB35-5249-7276-E0444DE73CDF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{45D5F587-AB35-5249-7276-E0444DE73CDF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BABDAED3-1CAB-A4D7-3FD8-DE4513040B3A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BABDAED3-1CAB-A4D7-3FD8-DE4513040B3A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BABDAED3-1CAB-A4D7-3FD8-DE4513040B3A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BABDAED3-1CAB-A4D7-3FD8-DE4513040B3A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{977E7A65-FEFB-1E37-3D6D-BDBCCCD044BE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{977E7A65-FEFB-1E37-3D6D-BDBCCCD044BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{977E7A65-FEFB-1E37-3D6D-BDBCCCD044BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{977E7A65-FEFB-1E37-3D6D-BDBCCCD044BE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -241,6 +256,8 @@ Global
 		{301B9D6B-896B-16E9-5E46-2E766B910910} = {6286E979-67F7-40B5-9083-EDB29E17EB14}
 		{C77E5D9E-922F-CFBF-73AC-745B57BACEDD} = {6286E979-67F7-40B5-9083-EDB29E17EB14}
 		{45D5F587-AB35-5249-7276-E0444DE73CDF} = {6286E979-67F7-40B5-9083-EDB29E17EB14}
+		{BABDAED3-1CAB-A4D7-3FD8-DE4513040B3A} = {6286E979-67F7-40B5-9083-EDB29E17EB14}
+		{977E7A65-FEFB-1E37-3D6D-BDBCCCD044BE} = {6286E979-67F7-40B5-9083-EDB29E17EB14}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {C21939A9-3AD0-4454-899F-30A4BBCE6FC5}

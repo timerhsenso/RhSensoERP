@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RhSensoERP.Identity.Core.Entities
+namespace RhSensoERP.Modules.TabelasCompartilhadas.Core.Entities
 {
     internal class Class1
     {

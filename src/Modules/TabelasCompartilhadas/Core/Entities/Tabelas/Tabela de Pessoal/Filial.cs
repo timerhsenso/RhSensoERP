@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using RhSensoERP.Shared.Core.Attributes;
 
-namespace RhSensoERP.Modules.AdministracaoPessoal.Core.Entities;
+namespace RhSensoERP.Modules.TabelasCompartilhadas.Core.Entities;
 
 /// <summary>
 /// Filial/Estabelecimento da empresa
@@ -356,15 +356,15 @@ public class Filial
     [Display(Name = "Município")]
     public Guid? IdMunicipioEndereco { get; set; }
 
-    [ForeignKey(nameof(IdMunicipioEndereco))]
-    public virtual Municipio? Municipio { get; set; }
+   // [ForeignKey(nameof(IdMunicipioEndereco))]
+   // public virtual Municipio? Municipio { get; set; }
 
     [Column("idsindicato")]
     [Display(Name = "Sindicato")]
     public Guid? IdSindicato { get; set; }
 
-    [ForeignKey(nameof(IdSindicato))]
-    public virtual Sindicato? Sindicato { get; set; }
+ //   [ForeignKey(nameof(IdSindicato))]
+ //   public virtual Sindicato? Sindicato { get; set; }
 
     // ═══════════════════════════════════════════════════════════════════
     // FKs para entidades de OUTRO MÓDULO (Esocial) ⚠️
@@ -409,6 +409,6 @@ public class Filial
     /// <summary>
     /// Colaboradores vinculados a esta filial
     /// </summary>
-    [InverseProperty(nameof(Colaborador.Filial))]
-    public virtual ICollection<Colaborador> Colaboradores { get; set; } = new List<Colaborador>();
+  //  [InverseProperty(nameof(Colaborador.Filial))]
+  //  public virtual ICollection<Colaborador> Colaboradores { get; set; } = new List<Colaborador>();
 }

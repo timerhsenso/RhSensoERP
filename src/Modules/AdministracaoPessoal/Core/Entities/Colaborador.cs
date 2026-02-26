@@ -656,14 +656,14 @@ public class Colaborador
     [ForeignKey(nameof(Idsindicato))]
     public virtual Sindicato? Sindicato { get; set; }
 
-    [ForeignKey(nameof(Idbancorecebimento))]
-    public virtual Banco? BancoRecebimento { get; set; }
+   // [ForeignKey(nameof(Idbancorecebimento))]
+    //public virtual Banco? BancoRecebimento { get; set; }
 
     [ForeignKey(nameof(Idagenciarecebimento))]
     public virtual AgenciaBancaria? AgenciaRecebimento { get; set; }
 
-    [ForeignKey(nameof(Idfilial))]
-    public virtual Filial? Filial { get; set; }
+ //   [ForeignKey(nameof(Idfilial))]
+ //   public virtual Filial? Filial { get; set; }
 
     [ForeignKey(nameof(Idmotivorescisao))]
     public virtual MotivoRescisao? MotivoRescisao { get; set; }

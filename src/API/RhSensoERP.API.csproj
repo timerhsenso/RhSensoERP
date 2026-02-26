@@ -90,7 +90,7 @@
 		<ProjectReference Include="..\Modules\SaudeSegurancaTrabalho\RhSensoERP.Modules.SaudeSegurancaTrabalho.csproj" />
 		<ProjectReference Include="..\Modules\TreinamentoDesenvolvimento\RhSensoERP.Modules.TreinamentoDesenvolvimento.csproj" />
 		<ProjectReference Include="..\Modules\ViagensDespesas\RhSensoERP.Modules.ViagensDespesas.csproj" />
-
+		<ProjectReference Include="..\Modules\TabelasCompartilhadas\RhSensoERP.Modules.TabelasCompartilhadas.csproj" />
 		<!-- Shared -->
 		<ProjectReference Include="..\Shared\Core\RhSensoERP.Shared.Core.csproj" />
 		<ProjectReference Include="..\Shared\Contracts\RhSensoERP.Shared.Contracts.csproj" />

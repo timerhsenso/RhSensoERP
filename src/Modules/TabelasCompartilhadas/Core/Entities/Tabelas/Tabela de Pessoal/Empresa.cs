@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using RhSensoERP.Shared.Core.Attributes;
 
-namespace RhSensoERP.Modules.AdministracaoPessoal.Core.Entities;
+namespace RhSensoERP.Modules.TabelasCompartilhadas.Core.Entities;
 
 /// <summary>
 /// Empresa/Empregador

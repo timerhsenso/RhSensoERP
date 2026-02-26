@@ -1,6 +1,7 @@
 // =============================================================================
 // GERADOR FULL-STACK v3.0 - PROGRAM
 // Aplicação ASP.NET Core para geração de código Full-Stack
+// ✅ v3.0.1 - CORRIGIDO: PropertyNameCaseInsensitive para deserialização JSON
 // =============================================================================
 
 using GeradorEntidades.Services;
@@ -17,6 +18,10 @@ builder.Services.AddControllersWithViews()
     {
         // Usar camelCase para compatibilidade com JavaScript
         options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+
+        // ✅ v3.0.1: Aceitar tanto camelCase quanto PascalCase na DESERIALIZAÇÃO
+        // Sem isso, [JsonPropertyName("moduleName")] não casa com "ModuleName" vindo do JS
+        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
     });
 
 // Serviços de Geração

@@ -1,12 +1,12 @@
 ﻿/**
  * ============================================================================
- * CADASTRO DE FONECEDORES - JavaScript com Ordenação de Navegações
+ * EMPRESA - JavaScript com Ordenação de Navegações
  * ============================================================================
- * Arquivo: wwwroot/js/identity/capfornecedores/capfornecedores.js
- * Módulo: Identity
+ * Arquivo: wwwroot/js/tabelascompartilhadas/temp1/temp1.js
+ * Módulo: TabelasCompartilhadas
  * Versão: 5.1 (NAVEGAÇÕES COM ORDENAÇÃO CORRETA)
  * Gerado por: GeradorFullStack v5.1
- * Data: 2026-02-17 11:32:58
+ * Data: 2026-02-25 19:38:48
  * 
  * Changelog v5.1:
  *   ✅ CORRIGIDO: Navegações agora respeitam Order configurado pelo usuário
@@ -34,12 +34,12 @@
  *   ✅ Toggle Switch dinâmico para campo Ativo (rate limit 500ms)
  *   ✅ Exclusão múltipla com contador
  * 
- * Implementação específica do CRUD de Cadastro de Fonecedores.
+ * Implementação específica do CRUD de Empresa.
  * Estende a classe CrudBase com customizações necessárias.
  * ============================================================================
  */
 
-class CapFornecedoresCrud extends CrudBase {
+class Temp1Crud extends CrudBase {
     constructor(config) {
         super(config);
         
@@ -70,12 +70,12 @@ class CapFornecedoresCrud extends CrudBase {
             $pkField.prop('readonly', false)
                     .prop('disabled', false)
                     .removeClass('bg-light');
-            console.log('✏️ [CapFornecedores] Campo PK habilitado para edição (criação)');
+            console.log('✏️ [Temp1] Campo PK habilitado para edição (criação)');
         } else {
             // Edição: campo readonly
             $pkField.prop('readonly', true)
                     .addClass('bg-light');
-            console.log('🔒 [CapFornecedores] Campo PK desabilitado (edição)');
+            console.log('🔒 [Temp1] Campo PK desabilitado (edição)');
         }
     }
 
@@ -164,7 +164,7 @@ class CapFornecedoresCrud extends CrudBase {
      * Remove campos de auditoria, converte tipos e valida campos obrigatórios.
      */
     beforeSubmit(formData, isEdit) {
-        console.log('📥 [CapFornecedores] Dados ANTES:', JSON.parse(JSON.stringify(formData)));
+        console.log('📥 [Temp1] Dados ANTES:', JSON.parse(JSON.stringify(formData)));
 
         // =====================================================================
         // ⭐ CRÍTICO: Remove campos de auditoria (backend preenche automaticamente)
@@ -197,31 +197,53 @@ class CapFornecedoresCrud extends CrudBase {
 
 
         // String fields - PascalCase
-        cleanData.RazaoSocial = formData.razaoSocial || formData.RazaoSocial || '';
-        cleanData.NomeFantasia = formData.nomeFantasia || formData.NomeFantasia || '';
-        cleanData.Cnpj = formData.cnpj || formData.Cnpj || '';
-        cleanData.Cpf = formData.cpf || formData.Cpf || '';
-        cleanData.Email = formData.email || formData.Email || '';
-        cleanData.Telefone = formData.telefone || formData.Telefone || '';
-        cleanData.Endereco = formData.endereco || formData.Endereco || '';
-        cleanData.Numero = formData.numero || formData.Numero || '';
-        cleanData.Complemento = formData.complemento || formData.Complemento || '';
-        cleanData.Bairro = formData.bairro || formData.Bairro || '';
-        cleanData.Cidade = formData.cidade || formData.Cidade || '';
-        cleanData.Cep = formData.cep || formData.Cep || '';
-        cleanData.Contato = formData.contato || formData.Contato || '';
-        cleanData.ContatoTelefone = formData.contatoTelefone || formData.ContatoTelefone || '';
-        cleanData.ContatoEmail = formData.contatoEmail || formData.ContatoEmail || '';
+        cleanData.Nmempresa = formData.nmempresa || formData.Nmempresa || '';
+        cleanData.Nmfantasia = formData.nmfantasia || formData.Nmfantasia || '';
+        cleanData.ChTpcche = formData.chTpcche || formData.ChTpcche || '';
+        cleanData.ChTpdarf = formData.chTpdarf || formData.ChTpdarf || '';
+        cleanData.ChTpgrps = formData.chTpgrps || formData.ChTpgrps || '';
+        cleanData.ChTptres = formData.chTptres || formData.ChTptres || '';
+        cleanData.Chbrwfunc = formData.chbrwfunc || formData.Chbrwfunc || '';
+        cleanData.Chtorc1 = formData.chtorc1 || formData.Chtorc1 || '';
+        cleanData.Chferias = formData.chferias || formData.Chferias || '';
+        cleanData.Nmarqlogo = formData.nmarqlogo || formData.Nmarqlogo || '';
+        cleanData.Nmarqlogocra = formData.nmarqlogocra || formData.Nmarqlogocra || '';
+        cleanData.Arquivologo = formData.arquivologo || formData.Arquivologo || '';
+        cleanData.Logo = formData.logo || formData.Logo || '';
+        cleanData.Arquivologocracha = formData.arquivologocracha || formData.Arquivologocracha || '';
+        cleanData.Logocracha = formData.logocracha || formData.Logocracha || '';
+        cleanData.Tpinscempregador = formData.tpinscempregador || formData.Tpinscempregador || '';
+        cleanData.Nrinscempregador = formData.nrinscempregador || formData.Nrinscempregador || '';
+        cleanData.Flativo = formData.flativo || formData.Flativo || '';
+        cleanData.Cnpjefr = formData.cnpjefr || formData.Cnpjefr || '';
+        cleanData.Indporte = formData.indporte || formData.Indporte || '';
+        cleanData.Nrcertificado = formData.nrcertificado || formData.Nrcertificado || '';
+        cleanData.NrprotreNovacao = formData.nrprotreNovacao || formData.NrprotreNovacao || '';
+        cleanData.Nrregett = formData.nrregett || formData.Nrregett || '';
+        cleanData.Paginadou = formData.paginadou || formData.Paginadou || '';
+        cleanData.Ideminlei = formData.ideminlei || formData.Ideminlei || '';
+        cleanData.ClasStrib = formData.clasStrib || formData.ClasStrib || '';
+        cleanData.NatjurIdica = formData.natjurIdica || formData.NatjurIdica || '';
 
 
         // Integer required fields - PascalCase
-        cleanData.IdUf = parseInt(formData.idUf || formData.IdUf || 0, 10);
+        cleanData.Cdempresa = parseInt(formData.cdempresa || formData.Cdempresa || 0, 10);
+        cleanData.Flfapesocial = parseInt(formData.flfapesocial || formData.Flfapesocial || 0, 10);
+        cleanData.IndacordoiseNmulta = parseInt(formData.indacordoiseNmulta || formData.IndacordoiseNmulta || 0, 10);
+        cleanData.InDconStrutora = parseInt(formData.inDconStrutora || formData.InDconStrutora || 0, 10);
+        cleanData.InDcooperativa = parseInt(formData.inDcooperativa || formData.InDcooperativa || 0, 10);
+        cleanData.Inddesfolha = parseInt(formData.inddesfolha || formData.Inddesfolha || 0, 10);
+        cleanData.IndoPccp = parseInt(formData.indoPccp || formData.IndoPccp || 0, 10);
+        cleanData.Indoptregeletronico = parseInt(formData.indoptregeletronico || formData.Indoptregeletronico || 0, 10);
 
 
-        // Boolean fields - PascalCase
-        cleanData.Ativo = formData.ativo === true || formData.Ativo === 'true' || false;
+        // DateTime fields - PascalCase
+        cleanData.Dtemissaocertificado = formData.dtemissaocertificado || formData.Dtemissaocertificado || null;
+        cleanData.Dtvenctocertificado = formData.dtvenctocertificado || formData.Dtvenctocertificado || null;
+        cleanData.DtprotreNovacao = formData.dtprotreNovacao || formData.DtprotreNovacao || null;
+        cleanData.Dtdou = formData.dtdou || formData.Dtdou || null;
 
-        console.log('📤 [CapFornecedores] Dados DEPOIS (PascalCase):', JSON.parse(JSON.stringify(cleanData)));
+        console.log('📤 [Temp1] Dados DEPOIS (PascalCase):', JSON.parse(JSON.stringify(cleanData)));
         return cleanData;
     }
 
@@ -229,7 +251,7 @@ class CapFornecedoresCrud extends CrudBase {
      * Customização após submeter.
      */
     afterSubmit(data, isEdit) {
-        console.log('✅ [CapFornecedores] Registro salvo:', data);
+        console.log('✅ [Temp1] Registro salvo:', data);
         
         // Atualiza a grid automaticamente
         if (this.dataTable) {
@@ -264,7 +286,7 @@ $(document).ready(function () {
         };
     }
 
-    console.log('🔐 [CapFornecedores] Permissões ativas:', window.crudPermissions);
+    console.log('🔐 [Temp1] Permissões ativas:', window.crudPermissions);
 
     // =========================================================================
     // FUNÇÃO AUXILIAR: Extrai ID com trim e validação
@@ -282,7 +304,7 @@ $(document).ready(function () {
 
         // Log para debug
         if (!id) {
-            console.warn('⚠️ [CapFornecedores] ID vazio para row:', row);
+            console.warn('⚠️ [Temp1] ID vazio para row:', row);
         }
 
         return id;
@@ -309,11 +331,11 @@ $(document).ready(function () {
                 return `<input type="checkbox" class="form-check-input row-select dt-checkboxes" value="${id}" data-id="${id}" />`;
             }
         },
-        // ID (Order: 0)
+        // Código (Order: 0)
         {
-            data: 'id',
-            name: 'Id',
-            title: 'ID',
+            data: 'cdempresa',
+            name: 'Cdempresa',
+            title: 'Código',
             orderable: true,
             render: function (data, type, row) {
                 return data !== undefined && data !== null ? data : '';
@@ -321,69 +343,19 @@ $(document).ready(function () {
         },
         // Razão Social (Order: 1)
         {
-            data: 'razaoSocial',
-            name: 'RazaoSocial',
+            data: 'nmempresa',
+            name: 'Nmempresa',
             title: 'Razão Social',
             orderable: true,
             render: function (data, type, row) {
                 return data !== undefined && data !== null ? data : '';
             }
         },
-        // Nome Fantasia (Order: 2)
+        // Ativo (Order: 2)
         {
-            data: 'nomeFantasia',
-            name: 'NomeFantasia',
-            title: 'Nome Fantasia',
-            orderable: true,
-            render: function (data, type, row) {
-                return data !== undefined && data !== null ? data : '';
-            }
-        },
-        // CNPJ (Order: 3)
-        {
-            data: 'cnpj',
-            name: 'Cnpj',
-            title: 'CNPJ',
-            orderable: true,
-            render: function (data, type, row) {
-                return data !== undefined && data !== null ? data : '';
-            }
-        },
-        // CPF (Order: 4)
-        {
-            data: 'cpf',
-            name: 'Cpf',
-            title: 'CPF',
-            orderable: true,
-            render: function (data, type, row) {
-                return data !== undefined && data !== null ? data : '';
-            }
-        },
-        // E-mail (Order: 5)
-        {
-            data: 'email',
-            name: 'Email',
-            title: 'E-mail',
-            orderable: true,
-            render: function (data, type, row) {
-                return data !== undefined && data !== null ? data : '';
-            }
-        },
-        // Telefone (Order: 6)
-        {
-            data: 'telefone',
-            name: 'Telefone',
-            title: 'Telefone',
-            orderable: true,
-            render: function (data, type, row) {
-                return data !== undefined && data !== null ? data : '';
-            }
-        },
-        // Endereço (Order: 7)
-        {
-            data: 'endereco',
-            name: 'Endereco',
-            title: 'Endereço',
+            data: 'flativo',
+            name: 'Flativo',
+            title: 'Ativo',
             orderable: true,
             render: function (data, type, row) {
                 return data !== undefined && data !== null ? data : '';
@@ -424,11 +396,11 @@ $(document).ready(function () {
     // ✅ v4.2: INSTANCIA O CRUD (CORRIGIDO: TODOS OS PARÂMETROS)
     // =========================================================================
 
-    const crud = new CapFornecedoresCrud({
-        controllerName: 'CapFornecedores',
-        apiRoute: '/api/gestaoterceirosprestadores/capfornecedores',
-        entityName: 'Cadastro de Fonecedores',
-        entityNamePlural: 'Cadastro de Fonecedoress',
+    const crud = new Temp1Crud({
+        controllerName: 'Temp1',
+        apiRoute: '/api/tabelascompartilhadas/empresa',
+        entityName: 'Empresa',
+        entityNamePlural: 'Empresas',
         idField: 'id',
         tableSelector: '#tableCrud',
         columns: columns,  // ✅ CORRIGIDO: era "dataTableColumns"
@@ -439,7 +411,7 @@ $(document).ready(function () {
             pdf: true,
             csv: true,
             print: true,
-            filename: 'CapFornecedores'
+            filename: 'Temp1'
         }
     });
 
@@ -468,88 +440,6 @@ $(document).ready(function () {
         crud.updateSelectedCount();
     });
 
-
-    // =========================================================================
-    // v4.1: HANDLER - TOGGLE SWITCH PARA CAMPO ATIVO (COM RATE LIMIT)
-    // =========================================================================
-
-    let toggleDebounceTimer = null;
-
-    $(document).on('change', '.toggle-ativo', function () {
-        const $toggle = $(this);
-        const id = $toggle.data('id');
-        const currentValue = $toggle.data('current');
-        const newValue = $toggle.prop('checked');
-
-        console.log(`🔄 [CapFornecedores] Toggle Ativo - ID: ${id}, Novo valor: ${newValue}`);
-
-        // Previne múltiplos cliques (Rate Limit - Debounce 500ms)
-        clearTimeout(toggleDebounceTimer);
-
-        // Desabilita temporariamente
-        $toggle.prop('disabled', true);
-
-        toggleDebounceTimer = setTimeout(function () {
-            $.ajax({
-                url: `/CapFornecedores/ToggleAtivo`,
-                type: 'POST',
-                headers: {
-                    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
-                },
-                data: JSON.stringify({
-                    Id: id,
-                    Ativo: newValue
-                }),
-                contentType: 'application/json',
-                success: function (response) {
-                    if (response.success) {
-                        console.log(`✅ [CapFornecedores] Toggle Ativo atualizado - ID: ${id}`);
-                        $toggle.data('current', newValue);
-                        
-                        // Usa SweetAlert se disponível, senão console
-                        if (typeof Swal !== 'undefined') {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Sucesso!',
-                                text: response.message || 'Status atualizado!',
-                                timer: 2000,
-                                showConfirmButton: false
-                            });
-                        }
-                    } else {
-                        // Reverte toggle em caso de erro
-                        $toggle.prop('checked', currentValue);
-                        console.error(`❌ [CapFornecedores] Erro ao atualizar Toggle Ativo:`, response);
-                        
-                        if (typeof Swal !== 'undefined') {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Erro!',
-                                text: response.message || 'Erro ao atualizar status'
-                            });
-                        }
-                    }
-                },
-                error: function (xhr) {
-                    // Reverte toggle em caso de erro
-                    $toggle.prop('checked', currentValue);
-                    console.error(`❌ [CapFornecedores] Erro AJAX Toggle Ativo:`, xhr);
-                    
-                    if (typeof Swal !== 'undefined') {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Erro!',
-                            text: 'Erro ao comunicar com servidor'
-                        });
-                    }
-                },
-                complete: function () {
-                    // Reabilita toggle
-                    $toggle.prop('disabled', false);
-                }
-            });
-        }, 500); // Rate Limit de 500ms
-    });
 
 
     // =========================================================================
@@ -646,5 +536,5 @@ $(document).ready(function () {
         initSelect2();
     });
 
-    console.log('✅ [CapFornecedores] JavaScript inicializado com sucesso!');
+    console.log('✅ [Temp1] JavaScript inicializado com sucesso!');
 });

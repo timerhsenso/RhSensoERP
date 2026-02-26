@@ -64,6 +64,6 @@ public class Municipio
     /// <summary>
     /// Filiais localizadas neste município
     /// </summary>
-    [InverseProperty(nameof(Filial.Municipio))]
-    public virtual ICollection<Filial> Filiais { get; set; } = new List<Filial>();
+  //  [InverseProperty(nameof(Filial.Municipio))]
+  //  public virtual ICollection<Filial> Filiais { get; set; } = new List<Filial>();
 }

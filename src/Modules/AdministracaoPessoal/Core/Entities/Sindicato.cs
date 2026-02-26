@@ -77,6 +77,6 @@ public class Sindicato
     /// <summary>
     /// Filiais vinculadas a este sindicato
     /// </summary>
-    [InverseProperty(nameof(Filial.Sindicato))]
-    public virtual ICollection<Filial> Filiais { get; set; } = new List<Filial>();
+  ////// [InverseProperty(nameof(Filial.Sindicato))]
+  /////  public virtual ICollection<Filial> Filiais { get; set; } = new List<Filial>();
 }

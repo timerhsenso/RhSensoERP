@@ -1,0 +1,362 @@
+﻿@model RhSensoERP.Web.Models.TabelasCompartilhadas.Temp1.Temp1ListViewModel
+@{
+    ViewData["Title"] = Model.PageTitle;
+    Layout = "_CrudLayout";
+    ViewData["EntityName"] = "Empresa";
+    ViewData["IconClass"] = "fas fa-table";
+}
+
+@* ============================================================================
+   Permissões injetadas para JavaScript (ANTES do script específico)
+   ============================================================================ *@
+<script>
+    window.crudPermissions = {
+        canCreate: @Model.CanCreate.ToString().ToLower(),
+        canEdit: @Model.CanEdit.ToString().ToLower(),
+        canDelete: @Model.CanDelete.ToString().ToLower(),
+        canView: @Model.CanView.ToString().ToLower(),
+        actions: "@Model.UserPermissions"
+    };
+    
+    @* v3.4: Configuração para Toggle Ativo *@
+    window.crudConfig = {
+        hasAtivoField: false,
+        entityName: "Temp1",
+        pkField: "Id"
+    };
+</script>
+
+@* ============================================================================
+   Tabela usando partial _CrudTable (toolbar + datatable)
+   ============================================================================ *@
+@await Html.PartialAsync("_CrudTable", Model)
+
+@* ============================================================================
+   Conteúdo do Modal (apenas campos do formulário)
+   O wrapper do modal está no _CrudLayout
+   ============================================================================ *@
+@section ModalContent {
+    <input type="hidden" id="Id" name="Id" />
+    <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="Cdempresa" class="form-label">
+                        Código <span class="text-danger">*</span>
+                    </label>
+                    <input type="number" class="form-control" id="Cdempresa" name="Cdempresa" 
+                           placeholder="" required  />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Nmempresa" class="form-label">
+                        Razão Social
+                    </label>
+                    <input type="text" class="form-control" id="Nmempresa" name="Nmempresa" 
+                           placeholder=""   maxlength="100" />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Nmfantasia" class="form-label">
+                        Nome Fantasia
+                    </label>
+                    <input type="text" class="form-control" id="Nmfantasia" name="Nmfantasia" 
+                           placeholder=""   maxlength="30" />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="ChTpcche" class="form-label">
+                        Tipo Cálculo Cheque
+                    </label>
+                    <input type="text" class="form-control" id="ChTpcche" name="ChTpcche" 
+                           placeholder=""   maxlength="2" />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="ChTpdarf" class="form-label">
+                        Tipo DARF
+                    </label>
+                    <input type="text" class="form-control" id="ChTpdarf" name="ChTpdarf" 
+                           placeholder=""   maxlength="2" />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="ChTpgrps" class="form-label">
+                        Tipo GRPS
+                    </label>
+                    <input type="text" class="form-control" id="ChTpgrps" name="ChTpgrps" 
+                           placeholder=""   maxlength="2" />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="ChTptres" class="form-label">
+                        Tipo Três
+                    </label>
+                    <input type="text" class="form-control" id="ChTptres" name="ChTptres" 
+                           placeholder=""   maxlength="2" />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Chbrwfunc" class="form-label">
+                        Browse Funcionário
+                    </label>
+                    <input type="text" class="form-control" id="Chbrwfunc" name="Chbrwfunc" 
+                           placeholder=""   maxlength="1" />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Chtorc1" class="form-label">
+                        Tipo Orçamento
+                    </label>
+                    <input type="text" class="form-control" id="Chtorc1" name="Chtorc1" 
+                           placeholder=""   maxlength="1" />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Chferias" class="form-label">
+                        Configuração Férias
+                    </label>
+                    <input type="text" class="form-control" id="Chferias" name="Chferias" 
+                           placeholder=""   maxlength="1" />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Nmarqlogo" class="form-label">
+                        Arquivo Logo
+                    </label>
+                    <input type="text" class="form-control" id="Nmarqlogo" name="Nmarqlogo" 
+                           placeholder=""   maxlength="80" />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Nmarqlogocra" class="form-label">
+                        Arquivo Logo Crachá
+                    </label>
+                    <input type="text" class="form-control" id="Nmarqlogocra" name="Nmarqlogocra" 
+                           placeholder=""   maxlength="80" />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Arquivologo" class="form-label">
+                        Arquivo Logo (Path)
+                    </label>
+                    <input type="text" class="form-control" id="Arquivologo" name="Arquivologo" 
+                           placeholder=""   maxlength="42" />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Logo" class="form-label">
+                        Logo (Base64)
+                    </label>
+                    <input type="text" class="form-control" id="Logo" name="Logo" 
+                           placeholder=""   />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Arquivologocracha" class="form-label">
+                        Arquivo Logo Crachá (Path)
+                    </label>
+                    <input type="text" class="form-control" id="Arquivologocracha" name="Arquivologocracha" 
+                           placeholder=""   maxlength="42" />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Logocracha" class="form-label">
+                        Logo Crachá (Base64)
+                    </label>
+                    <input type="text" class="form-control" id="Logocracha" name="Logocracha" 
+                           placeholder=""   />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Tpinscempregador" class="form-label">
+                        Tipo Inscrição Empregador
+                    </label>
+                    <input type="text" class="form-control" id="Tpinscempregador" name="Tpinscempregador" 
+                           placeholder=""   maxlength="1" />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Nrinscempregador" class="form-label">
+                        Nº Inscrição Empregador
+                    </label>
+                    <input type="text" class="form-control" id="Nrinscempregador" name="Nrinscempregador" 
+                           placeholder=""   maxlength="15" />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Flativo" class="form-label">
+                        Ativo
+                    </label>
+                    <input type="text" class="form-control" id="Flativo" name="Flativo" 
+                           placeholder=""   maxlength="1" />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Flfapesocial" class="form-label">
+                        Flag FAP eSocial
+                    </label>
+                    <input type="text" class="form-control" id="Flfapesocial" name="Flfapesocial" 
+                           placeholder=""   />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Cnpjefr" class="form-label">
+                        CNPJ EFR
+                    </label>
+                    <input type="text" class="form-control" id="Cnpjefr" name="Cnpjefr" 
+                           placeholder=""   maxlength="14" />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="IndacordoiseNmulta" class="form-label">
+                        Indicador Acordo Isenção Multa
+                    </label>
+                    <input type="text" class="form-control" id="IndacordoiseNmulta" name="IndacordoiseNmulta" 
+                           placeholder=""   />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="InDconStrutora" class="form-label">
+                        Indicador Construtora
+                    </label>
+                    <input type="text" class="form-control" id="InDconStrutora" name="InDconStrutora" 
+                           placeholder=""   />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="InDcooperativa" class="form-label">
+                        Indicador Cooperativa
+                    </label>
+                    <input type="text" class="form-control" id="InDcooperativa" name="InDcooperativa" 
+                           placeholder=""   />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Inddesfolha" class="form-label">
+                        Indicador Desoneração Folha
+                    </label>
+                    <input type="text" class="form-control" id="Inddesfolha" name="Inddesfolha" 
+                           placeholder=""   />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="IndoPccp" class="form-label">
+                        Indicador Opção CP
+                    </label>
+                    <input type="text" class="form-control" id="IndoPccp" name="IndoPccp" 
+                           placeholder=""   />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Indporte" class="form-label">
+                        Indicador Porte
+                    </label>
+                    <input type="text" class="form-control" id="Indporte" name="Indporte" 
+                           placeholder=""   maxlength="1" />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Indoptregeletronico" class="form-label">
+                        Indicador Opção Registro Eletrônico
+                    </label>
+                    <input type="text" class="form-control" id="Indoptregeletronico" name="Indoptregeletronico" 
+                           placeholder=""   />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Nrcertificado" class="form-label">
+                        Nº Certificado
+                    </label>
+                    <input type="text" class="form-control" id="Nrcertificado" name="Nrcertificado" 
+                           placeholder=""   maxlength="40" />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Dtemissaocertificado" class="form-label">
+                        Data Emissão Certificado
+                    </label>
+                    <input type="text" class="form-control" id="Dtemissaocertificado" name="Dtemissaocertificado" 
+                           placeholder=""   />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Dtvenctocertificado" class="form-label">
+                        Data Vencimento Certificado
+                    </label>
+                    <input type="text" class="form-control" id="Dtvenctocertificado" name="Dtvenctocertificado" 
+                           placeholder=""   />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="NrprotreNovacao" class="form-label">
+                        Nº Protocolo Renovação
+                    </label>
+                    <input type="text" class="form-control" id="NrprotreNovacao" name="NrprotreNovacao" 
+                           placeholder=""   maxlength="40" />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="DtprotreNovacao" class="form-label">
+                        Data Protocolo Renovação
+                    </label>
+                    <input type="text" class="form-control" id="DtprotreNovacao" name="DtprotreNovacao" 
+                           placeholder=""   />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Nrregett" class="form-label">
+                        Nº Registro ETT
+                    </label>
+                    <input type="text" class="form-control" id="Nrregett" name="Nrregett" 
+                           placeholder=""   maxlength="30" />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Dtdou" class="form-label">
+                        Data DOU
+                    </label>
+                    <input type="text" class="form-control" id="Dtdou" name="Dtdou" 
+                           placeholder=""   />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Paginadou" class="form-label">
+                        Página DOU
+                    </label>
+                    <input type="text" class="form-control" id="Paginadou" name="Paginadou" 
+                           placeholder=""   maxlength="5" />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Ideminlei" class="form-label">
+                        Identificação Lei
+                    </label>
+                    <input type="text" class="form-control" id="Ideminlei" name="Ideminlei" 
+                           placeholder=""   maxlength="70" />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="ClasStrib" class="form-label">
+                        Classificação Tributária
+                    </label>
+                    <input type="text" class="form-control" id="ClasStrib" name="ClasStrib" 
+                           placeholder=""   maxlength="2" />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="NatjurIdica" class="form-label">
+                        Natureza Jurídica
+                    </label>
+                    <input type="text" class="form-control" id="NatjurIdica" name="NatjurIdica" 
+                           placeholder=""   maxlength="4" />
+                    
+                </div>
+    </div>
+
+}
+
+@* ============================================================================
+   Script específico da entidade
+   ============================================================================ *@
+@section PageScripts {
+    <script src="~/js/tabelascompartilhadas/temp1/temp1.js" asp-append-version="true"></script>
+}

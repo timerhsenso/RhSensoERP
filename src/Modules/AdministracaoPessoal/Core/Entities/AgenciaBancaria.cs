@@ -62,8 +62,8 @@ public class AgenciaBancaria
     [Column("idbanco")]
     public Guid? Idbanco { get; set; }
 
-    [ForeignKey(nameof(Idbanco))]
-    public virtual Banco? Banco { get; set; }
+ //   [ForeignKey(nameof(Idbanco))]
+ //   public virtual Banco? Banco { get; set; }
 
     // ═══════════════════════════════════════════════════════════════════
     // Collections (lado inverso dos relacionamentos)

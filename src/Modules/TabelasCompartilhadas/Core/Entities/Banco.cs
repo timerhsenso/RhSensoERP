@@ -4,8 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using RhSensoERP.Shared.Core.Attributes;
 
-namespace RhSensoERP.Modules.AdministracaoPessoal.Core.Entities;
-
+namespace RhSensoERP.Modules.TabelasCompartilhadas.Core.Entities;
 /// <summary>
 /// Banco
 /// Tabela: tban1
@@ -42,12 +41,12 @@ public class Banco
     /// <summary>
     /// Agências deste banco
     /// </summary>
-    [InverseProperty(nameof(AgenciaBancaria.Banco))]
-    public virtual ICollection<AgenciaBancaria> Agencias { get; set; } = new List<AgenciaBancaria>();
+  //  [InverseProperty(nameof(AgenciaBancaria.Banco))]
+   // public virtual ICollection<AgenciaBancaria> Agencias { get; set; } = new List<AgenciaBancaria>();
 
     /// <summary>
     /// Colaboradores que recebem por este banco
     /// </summary>
-    [InverseProperty(nameof(Colaborador.BancoRecebimento))]
-    public virtual ICollection<Colaborador> Colaboradores { get; set; } = new List<Colaborador>();
+  //  [InverseProperty(nameof(Colaborador.BancoRecebimento))]
+  //  public virtual ICollection<Colaborador> Colaboradores { get; set; } = new List<Colaborador>();
 }

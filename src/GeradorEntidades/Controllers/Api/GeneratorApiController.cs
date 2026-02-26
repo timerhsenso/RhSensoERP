@@ -1,5 +1,6 @@
 // =============================================================================
 // GENERATOR API CONTROLLER - Recebe dados do Wizard e gera código
+// ✅ v4.7: CORRIGIDO - Usa ModuleName do manifesto (não depende só do JS)
 // =============================================================================
 
 using GeradorEntidades.Models;
@@ -80,6 +81,10 @@ public class GeneratorApiController : ControllerBase
 
             // Converte e gera
             var fullStackRequest = request.ToFullStackRequest();
+
+            // ✅ v4.7: SUPLEMENTA módulo do manifesto (mais confiável que o JS)
+            SupplementModuleFromManifest(fullStackRequest, manifestEntity);
+
             var result = _generatorService.Generate(tabela, fullStackRequest);
 
             // Resposta
@@ -145,6 +150,17 @@ public class GeneratorApiController : ControllerBase
 
             // Converte e gera
             var fullStackRequest = request.ToFullStackRequest();
+
+            // =====================================================================
+            // ✅ v4.7: SUPLEMENTA módulo do manifesto (mais confiável que o JS)
+            // O JS manda "Module" mas o C# espera "moduleName" → valor se perde.
+            // O manifestEntity JÁ tem o ModuleName correto → usa ele.
+            // =====================================================================
+            SupplementModuleFromManifest(fullStackRequest, manifestEntity);
+
+            _logger.LogInformation("📦 Módulo FINAL: '{Modulo}', ModuloRota: '{ModuloRota}', ApiRoute: '{ApiRoute}'",
+                fullStackRequest.Modulo, fullStackRequest.ModuloRota, fullStackRequest.ApiRoute);
+
             var result = _generatorService.Generate(tabela, fullStackRequest);
 
             if (!result.Success)
@@ -217,6 +233,10 @@ public class GeneratorApiController : ControllerBase
 
             // Gera
             var fullStackRequest = request.ToFullStackRequest();
+
+            // ✅ v4.7: SUPLEMENTA módulo do manifesto
+            SupplementModuleFromManifest(fullStackRequest, manifestEntity);
+
             var result = _generatorService.Generate(tabela, fullStackRequest);
 
             if (!result.Success)
@@ -242,6 +262,65 @@ public class GeneratorApiController : ControllerBase
         {
             _logger.LogError(ex, "Erro ao gerar ZIP");
             return StatusCode(500, $"Erro: {ex.Message}");
+        }
+    }
+
+    // =========================================================================
+    // ✅ v4.7 NOVO: Suplementa módulo do manifesto no FullStackRequest
+    // =========================================================================
+    // PROBLEMA RESOLVIDO:
+    //   O JS envia chave "module" (ou "moduleName"), que após convertToPascalCase
+    //   vira "Module" (ou "ModuleName"). Mas o C# espera [JsonPropertyName("moduleName")]
+    //   no WizardRequest.Modulo. "Module" ≠ "moduleName" → valor NUNCA chega.
+    //   
+    //   SOLUÇÃO: O manifestEntity JÁ foi buscado pelo EntityName e tem o ModuleName
+    //   correto. Usamos ele para preencher o que o JS não conseguiu passar.
+    // =========================================================================
+
+    private void SupplementModuleFromManifest(FullStackRequest fullStackRequest, EntityManifestItem? manifestEntity)
+    {
+        if (manifestEntity == null) return;
+
+        // Se Modulo está vazio (JS não conseguiu passar), usa o do manifesto
+        if (string.IsNullOrWhiteSpace(fullStackRequest.Modulo))
+        {
+            fullStackRequest.Modulo = manifestEntity.ModuleName;
+            _logger.LogInformation("✅ Modulo suplementado do manifesto: '{Modulo}'", manifestEntity.ModuleName);
+        }
+
+        // Se ModuloRota está vazio, extrai do Route do manifesto
+        if (string.IsNullOrWhiteSpace(fullStackRequest.ModuloRota) && !string.IsNullOrWhiteSpace(manifestEntity.Route))
+        {
+            var route = manifestEntity.Route.TrimStart('/');
+            var parts = route.Split('/', StringSplitOptions.RemoveEmptyEntries);
+            var startIndex = parts.Length > 0 && parts[0].Equals("api", StringComparison.OrdinalIgnoreCase) ? 1 : 0;
+
+            if (parts.Length > startIndex)
+            {
+                fullStackRequest.ModuloRota = parts[startIndex];
+                _logger.LogInformation("✅ ModuloRota suplementado do manifesto: '{ModuloRota}'", parts[startIndex]);
+            }
+        }
+
+        // Se ApiRoute está vazio, usa o do manifesto
+        if (string.IsNullOrWhiteSpace(fullStackRequest.ApiRoute) && !string.IsNullOrWhiteSpace(manifestEntity.Route))
+        {
+            fullStackRequest.ApiRoute = manifestEntity.Route;
+            _logger.LogInformation("✅ ApiRoute suplementado do manifesto: '{ApiRoute}'", manifestEntity.Route);
+        }
+
+        // Se CdFuncao está vazio, usa o do manifesto
+        if (string.IsNullOrWhiteSpace(fullStackRequest.CdFuncao) && !string.IsNullOrWhiteSpace(manifestEntity.CdFuncao))
+        {
+            fullStackRequest.CdFuncao = manifestEntity.CdFuncao;
+            _logger.LogInformation("✅ CdFuncao suplementado do manifesto: '{CdFuncao}'", manifestEntity.CdFuncao);
+        }
+
+        // Se DisplayName está vazio, usa o do manifesto
+        if (string.IsNullOrWhiteSpace(fullStackRequest.DisplayName) && !string.IsNullOrWhiteSpace(manifestEntity.DisplayName))
+        {
+            fullStackRequest.DisplayName = manifestEntity.DisplayName;
+            _logger.LogInformation("✅ DisplayName suplementado do manifesto: '{DisplayName}'", manifestEntity.DisplayName);
         }
     }
 

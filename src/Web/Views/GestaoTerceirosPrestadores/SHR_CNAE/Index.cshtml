@@ -1,0 +1,122 @@
+﻿@model RhSensoERP.Web.Models.GestaoTerceirosPrestadores.SHR_CNAE.SHR_CNAEListViewModel
+@{
+    ViewData["Title"] = Model.PageTitle;
+    Layout = "_CrudLayout";
+    ViewData["EntityName"] = "Tabela de CNAE";
+    ViewData["IconClass"] = "fas fa-table";
+}
+
+@* ============================================================================
+   Permissões injetadas para JavaScript (ANTES do script específico)
+   ============================================================================ *@
+<script>
+    window.crudPermissions = {
+        canCreate: @Model.CanCreate.ToString().ToLower(),
+        canEdit: @Model.CanEdit.ToString().ToLower(),
+        canDelete: @Model.CanDelete.ToString().ToLower(),
+        canView: @Model.CanView.ToString().ToLower(),
+        actions: "@Model.UserPermissions"
+    };
+    
+    @* v3.4: Configuração para Toggle Ativo *@
+    window.crudConfig = {
+        hasAtivoField: true,
+        entityName: "SHR_CNAE",
+        pkField: "Id"
+    };
+</script>
+
+@* ============================================================================
+   Tabela usando partial _CrudTable (toolbar + datatable)
+   ============================================================================ *@
+@await Html.PartialAsync("_CrudTable", Model)
+
+@* ============================================================================
+   Conteúdo do Modal (apenas campos do formulário)
+   O wrapper do modal está no _CrudLayout
+   ============================================================================ *@
+@section ModalContent {
+    <input type="hidden" id="Id" name="Id" />
+    <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="Codigo" class="form-label">
+                        Código CNAE <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" class="form-control" id="Codigo" name="Codigo" 
+                           placeholder="" required  maxlength="10" />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="CodigoLimpo" class="form-label">
+                        Código Limpo <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" class="form-control" id="CodigoLimpo" name="CodigoLimpo" 
+                           placeholder="" required  maxlength="7" />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Descricao" class="form-label">
+                        Descrição <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" class="form-control" id="Descricao" name="Descricao" 
+                           placeholder="" required  maxlength="300" />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Secao" class="form-label">
+                        Seção
+                    </label>
+                    <input type="text" class="form-control" id="Secao" name="Secao" 
+                           placeholder=""   maxlength="1" />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Divisao" class="form-label">
+                        Divisão
+                    </label>
+                    <input type="text" class="form-control" id="Divisao" name="Divisao" 
+                           placeholder=""   maxlength="2" />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Grupo" class="form-label">
+                        Grupo
+                    </label>
+                    <input type="text" class="form-control" id="Grupo" name="Grupo" 
+                           placeholder=""   maxlength="3" />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Classe" class="form-label">
+                        Classe
+                    </label>
+                    <input type="text" class="form-control" id="Classe" name="Classe" 
+                           placeholder=""   maxlength="5" />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="GrauRisco" class="form-label">
+                        Grau de Risco
+                    </label>
+                    <input type="text" class="form-control" id="GrauRisco" name="GrauRisco" 
+                           placeholder=""   />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="Ativo" name="Ativo" >
+                        <label class="form-check-label" for="Ativo">
+                            Ativo
+                        </label>
+                    </div>
+                </div>
+    </div>
+
+}
+
+@* ============================================================================
+   Script específico da entidade
+   ============================================================================ *@
+@section PageScripts {
+    <script src="~/js/gestaoterceirosprestadores/shr_cnae/shr_cnae.js" asp-append-version="true"></script>
+}

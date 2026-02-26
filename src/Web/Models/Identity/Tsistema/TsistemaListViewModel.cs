@@ -2,7 +2,7 @@
 // ARQUIVO GERADO POR GeradorFullStack v4.0
 // Entity: Tsistema
 // Module: Identity
-// Data: 2026-01-07 22:17:31
+// Data: 2026-02-25 22:41:05
 // =============================================================================
 using RhSensoERP.Web.Models.Base;
 

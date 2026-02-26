@@ -1,6 +1,7 @@
 // =============================================================================
 // WIZARD REQUEST v4.0 - SELECT2 AJAX SUPPORT
 // ✅ CORRIGIDO: moduleName (não "modulo")
+// ✅ v4.1: ModuloRota derivado automaticamente do ApiRoute
 // =============================================================================
 
 using System.Text.Json;
@@ -63,6 +64,12 @@ public class WizardRequest
 
     public FullStackRequest ToFullStackRequest()
     {
+        // =====================================================================
+        // ✅ v4.1: DERIVA ModuloRota DO ApiRoute (se disponível)
+        // Ex: "/api/gestaoterceirosprestadores/gtparea" → "gestaoterceirosprestadores"
+        // =====================================================================
+        var moduloRota = ExtractModuleRouteFromApiRoute(ApiRoute);
+
         var request = new FullStackRequest
         {
             CdFuncao = CdFuncao,
@@ -71,7 +78,8 @@ public class WizardRequest
             Icone = Icon,
             MenuOrder = MenuOrder,
             ApiRoute = ApiRoute,
-            Modulo = Modulo ?? string.Empty,  // ✅ GARANTIA
+            Modulo = Modulo ?? string.Empty,       // ✅ GARANTIA
+            ModuloRota = moduloRota,               // ✅ v4.1: AGORA PREENCHE!
             FormLayout = new FormLayoutConfig
             {
                 Columns = FormLayout.Columns,
@@ -130,6 +138,30 @@ public class WizardRequest
         }
 
         return request;
+    }
+
+    // =========================================================================
+    // ✅ v4.1 NOVO: Extrai rota do módulo a partir do ApiRoute
+    // Ex: "/api/gestaoterceirosprestadores/gtparea" → "gestaoterceirosprestadores"
+    // =========================================================================
+    private static string ExtractModuleRouteFromApiRoute(string? apiRoute)
+    {
+        if (string.IsNullOrWhiteSpace(apiRoute))
+            return string.Empty;
+
+        // Remove barra inicial: "/api/gestaoterceirosprestadores/gtparea" → "api/gestaoterceirosprestadores/gtparea"
+        var route = apiRoute.TrimStart('/');
+        var parts = route.Split('/', StringSplitOptions.RemoveEmptyEntries);
+
+        // Espera formato: api/{moduleRoute}/{entity}
+        if (parts.Length >= 2)
+        {
+            var startIndex = parts[0].Equals("api", StringComparison.OrdinalIgnoreCase) ? 1 : 0;
+            if (parts.Length > startIndex)
+                return parts[startIndex]; // Ex: "gestaoterceirosprestadores"
+        }
+
+        return string.Empty;
     }
 }
 

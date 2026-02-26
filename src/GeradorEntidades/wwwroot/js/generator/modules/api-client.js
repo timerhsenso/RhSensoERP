@@ -17,6 +17,9 @@
 // - Auto-geração APENAS se usuário não configurou NADA
 // - Log detalhado para debug
 // 
+// ✅ v4.7: CORRIGIDO moduleName - agora envia chave correta e prioriza JSON do manifesto
+// ✅ v4.7: CORRIGIDO displayName - pré-leitura do entity.displayName
+// 
 // =============================================================================
 
 const ApiClient = {
@@ -127,6 +130,7 @@ const ApiClient = {
 
     // =========================================================================
     // ✅ v4.6 FIXED: COLETA DADOS RESPEITANDO CONFIGURAÇÕES DO USUÁRIO
+    // ✅ v4.7: CORRIGIDO moduleName e displayName
     // =========================================================================
 
     collectWizardData() {
@@ -134,7 +138,7 @@ const ApiClient = {
             const entity = Store.get('entity') || {};
 
             console.log('═══════════════════════════════════════════════════════');
-            console.log('📦 COLETANDO DADOS DO WIZARD v4.6 FIXED');
+            console.log('📦 COLETANDO DADOS DO WIZARD v4.7');
             console.log('═══════════════════════════════════════════════════════');
             console.log('📋 Entity:', entity.entityName);
 
@@ -166,6 +170,7 @@ const ApiClient = {
 
             // =================================================================
             // CdSistema e Módulo
+            // ✅ v4.7: PRIORIDADE: entity.moduleName (JSON) > moduloMap > fallback
             // =================================================================
 
             let cdSistema = 'RHU';
@@ -193,14 +198,17 @@ const ApiClient = {
                 'EPI': 'GestaoDeEpi'
             };
 
-            let modulo = moduloMap[cdSistema];
+            // ✅ v4.7: PRIORIDADE 1 → moduleName do JSON (já vem correto do manifesto!)
+            // PRIORIDADE 2 → lookup por CdSistema (pode não casar com nome real da pasta)
+            // PRIORIDADE 3 → fallback
+            let modulo = entity.moduleName || entity.modulo || entity.Module || '';
 
             if (!modulo) {
-                modulo = entity.moduleName || entity.modulo || entity.Module || 'Common';
-                if (modulo === 'Common') modulo = 'GestaoDePessoas';
+                modulo = moduloMap[cdSistema] || 'Common';
+                console.log('📦 Módulo (via CdSistema lookup):', modulo);
+            } else {
+                console.log('📦 Módulo (do JSON manifesto):', modulo);
             }
-
-            console.log('📦 Módulo:', modulo);
 
             // =================================================================
             // Auto-gera CdFuncao
@@ -269,16 +277,18 @@ const ApiClient = {
 
             // =================================================================
             // MONTA OBJETO FINAL (camelCase para backend converter)
+            // ✅ v4.7: Chave corrigida de "module" para "moduleName"
+            // ✅ v4.7: Adicionado apiRoute no payload
             // =================================================================
             const data = {
                 entityName: entity.entityName || '',
                 tableName: entity.tableName || '',
-                module: modulo,
+                moduleName: modulo,                // ✅ v4.7: ERA "module" → AGORA "moduleName" (casa com [JsonPropertyName("moduleName")])
                 cdSistema: cdSistema,
                 cdFuncao: cdFuncao,
                 displayName: displayName,
                 iconClass: iconClass,
-                apiRoute: apiRoute,
+                apiRoute: apiRoute,                // ✅ v4.7: Garante envio do apiRoute
 
                 // ✅ Configurações do Grid e Form
                 gridColumns: gridColumns,
@@ -295,7 +305,11 @@ const ApiClient = {
             };
 
             console.log('═══════════════════════════════════════════════════════');
-            console.log('✅ DADOS COLETADOS COM SUCESSO');
+            console.log('✅ DADOS COLETADOS COM SUCESSO v4.7');
+            console.log('   - moduleName:', data.moduleName);
+            console.log('   - apiRoute:', data.apiRoute);
+            console.log('   - cdFuncao:', data.cdFuncao);
+            console.log('   - displayName:', data.displayName);
             console.log('   - FormFields:', data.formFields.length);
             console.log('   - GridColumns:', data.gridColumns.length);
             console.log('═══════════════════════════════════════════════════════');
@@ -663,4 +677,4 @@ const ApiClient = {
 
 window.ApiClient = ApiClient;
 
-console.log('✅ ApiClient v4.6 FIXED - Respeita configurações do usuário (Grid + Form)');
+console.log('✅ ApiClient v4.7 - moduleName corrigido + Respeita configurações do usuário (Grid + Form)');

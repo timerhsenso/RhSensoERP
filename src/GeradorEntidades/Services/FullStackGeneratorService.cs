@@ -4,6 +4,7 @@
 // ⭐ v4.0 - SELECT2 LOOKUP AUTOMÁTICO
 // v3.2 - Suporte a ApiRoute do manifesto e organização por módulo
 // ✅ v4.0.1 - CORRIGIDO: Logs de diagnóstico para colunas extras
+// ✅ v4.0.2 - CORRIGIDO: Prioridade Modulo/ModuloRota do JSON sobre CdSistema
 // =============================================================================
 
 using GeradorEntidades.Models;
@@ -257,8 +258,8 @@ public class FullStackGeneratorService
     }
 
     /// <summary>
-    /// ✅ v4.0.1 CORRIGIDO: Garante que configurações default sejam preenchidas.
-    /// Adicionados logs detalhados para diagnóstico de colunas extras.
+    /// ✅ v4.0.2 CORRIGIDO: Garante que configurações default sejam preenchidas.
+    /// PRIORIDADE MÓDULO: JSON (moduleName) > Lookup por CdSistema > Fallback "Common"
     /// </summary>
     private void EnsureDefaultConfigurations(TabelaInfo tabela, FullStackRequest request)
     {
@@ -267,8 +268,12 @@ public class FullStackGeneratorService
         // ═════════════════════════════════════════════════════════════════════
 
         _logger.LogInformation("═══════════════════════════════════════════════════════");
-        _logger.LogInformation("🔍 EnsureDefaultConfigurations - DIAGNÓSTICO");
+        _logger.LogInformation("🔍 EnsureDefaultConfigurations - DIAGNÓSTICO v4.0.2");
         _logger.LogInformation("═══════════════════════════════════════════════════════");
+        _logger.LogInformation("📊 Modulo recebido: '{Modulo}'", request.Modulo);
+        _logger.LogInformation("📊 ModuloRota recebido: '{ModuloRota}'", request.ModuloRota);
+        _logger.LogInformation("📊 ApiRoute recebida: '{ApiRoute}'", request.ApiRoute);
+        _logger.LogInformation("📊 CdSistema recebido: '{CdSistema}'", request.CdSistema);
         _logger.LogInformation("📊 ColunasListagem recebidas: {Count}", request.ColunasListagem?.Count ?? 0);
         _logger.LogInformation("📝 ColunasFormulario recebidas: {Count}", request.ColunasFormulario?.Count ?? 0);
 
@@ -290,28 +295,74 @@ public class FullStackGeneratorService
             request.DisplayName = FormatDisplayName(tabela.NomePascalCase);
         }
 
-        // Módulo
-        var modulo = ModuloConfig.GetModulos()
-            .FirstOrDefault(m => m.CdSistema.Equals(request.CdSistema, StringComparison.OrdinalIgnoreCase));
+        // ═════════════════════════════════════════════════════════════════════
+        // ✅ v4.0.2: MÓDULO - PRIORIDADE: JSON > Lookup por CdSistema > Fallback
+        // ═════════════════════════════════════════════════════════════════════
 
-        if (modulo != null)
+        if (!string.IsNullOrWhiteSpace(request.Modulo))
         {
-            if (string.IsNullOrWhiteSpace(request.Modulo))
-                request.Modulo = modulo.Nome;
+            // ─────────────────────────────────────────────────────────────────
+            // CASO 1: Módulo JÁ VEIO preenchido do JSON → RESPEITAR!
+            // ─────────────────────────────────────────────────────────────────
+            _logger.LogInformation("✅ Usando Modulo do JSON: '{Modulo}'", request.Modulo);
+
+            // Só preenche ModuloRota se estiver vazio
             if (string.IsNullOrWhiteSpace(request.ModuloRota))
-                request.ModuloRota = modulo.Rota;
+            {
+                // Tenta extrair do ApiRoute: "/api/gestaoterceirosprestadores/xxx" → "gestaoterceirosprestadores"
+                if (!string.IsNullOrWhiteSpace(request.ApiRoute))
+                {
+                    var route = request.ApiRoute.TrimStart('/');
+                    var parts = route.Split('/', StringSplitOptions.RemoveEmptyEntries);
+                    var startIndex = parts.Length > 0 && parts[0].Equals("api", StringComparison.OrdinalIgnoreCase) ? 1 : 0;
+
+                    if (parts.Length > startIndex)
+                    {
+                        request.ModuloRota = parts[startIndex];
+                        _logger.LogInformation("✅ ModuloRota derivado do ApiRoute: '{ModuloRota}'", request.ModuloRota);
+                    }
+                }
+
+                // Fallback: usa o Modulo em lowercase
+                if (string.IsNullOrWhiteSpace(request.ModuloRota))
+                {
+                    request.ModuloRota = request.Modulo.ToLowerInvariant();
+                    _logger.LogInformation("✅ ModuloRota derivado do Modulo (lowercase): '{ModuloRota}'", request.ModuloRota);
+                }
+            }
+            else
+            {
+                _logger.LogInformation("✅ Usando ModuloRota já preenchido: '{ModuloRota}'", request.ModuloRota);
+            }
         }
         else
         {
-            // ⚠️ CdSistema não encontrado na lista de módulos — aplica fallback
-            _logger.LogWarning(
-                "⚠️ CdSistema '{CdSistema}' não encontrado em ModuloConfig.GetModulos(). Módulo: '{Modulo}'. Aplicando fallback.",
-                request.CdSistema, request.Modulo);
+            // ─────────────────────────────────────────────────────────────────
+            // CASO 2: Módulo NÃO veio → tenta lookup por CdSistema
+            // ─────────────────────────────────────────────────────────────────
+            var modulo = ModuloConfig.GetModulos()
+                .FirstOrDefault(m => m.CdSistema.Equals(request.CdSistema, StringComparison.OrdinalIgnoreCase));
 
-            if (string.IsNullOrWhiteSpace(request.Modulo))
+            if (modulo != null)
+            {
+                request.Modulo = modulo.Nome;
+                if (string.IsNullOrWhiteSpace(request.ModuloRota))
+                    request.ModuloRota = modulo.Rota;
+
+                _logger.LogInformation("✅ Modulo encontrado por CdSistema '{CdSistema}': '{Nome}' → Rota: '{Rota}'",
+                    request.CdSistema, modulo.Nome, modulo.Rota);
+            }
+            else
+            {
+                // ⚠️ CdSistema não encontrado na lista de módulos — aplica fallback
+                _logger.LogWarning(
+                    "⚠️ CdSistema '{CdSistema}' não encontrado em ModuloConfig.GetModulos(). Aplicando fallback 'Common'.",
+                    request.CdSistema);
+
                 request.Modulo = "Common";
-            if (string.IsNullOrWhiteSpace(request.ModuloRota))
-                request.ModuloRota = "common";
+                if (string.IsNullOrWhiteSpace(request.ModuloRota))
+                    request.ModuloRota = "common";
+            }
         }
 
         // ApiRoute default se não fornecida
@@ -404,6 +455,9 @@ public class FullStackGeneratorService
 
         _logger.LogInformation("═══════════════════════════════════════════════════════");
         _logger.LogInformation("✅ CONFIGURAÇÕES FINALIZADAS:");
+        _logger.LogInformation("  - Modulo FINAL: '{Modulo}'", request.Modulo);
+        _logger.LogInformation("  - ModuloRota FINAL: '{ModuloRota}'", request.ModuloRota);
+        _logger.LogInformation("  - ApiRoute FINAL: '{ApiRoute}'", request.ApiRoute);
         _logger.LogInformation("  - Colunas Listagem FINAL: {Count}", request.ColunasListagem.Count);
         _logger.LogInformation("  - Campos Formulário FINAL: {Count}", request.ColunasFormulario.Count);
 
