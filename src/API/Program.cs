@@ -62,6 +62,7 @@ using RhSensoERP.Modules.SaudeSegurancaTrabalho;
 using RhSensoERP.Modules.TabelasCompartilhadas;
 using RhSensoERP.Modules.TreinamentoDesenvolvimento;
 using RhSensoERP.Modules.ViagensDespesas;
+using RhSensoERP.Modules.Seguranca;
 using RhSensoERP.Shared.Core.Abstractions;
 using RhSensoERP.Shared.Infrastructure;
 using RhSensoERP.Shared.Infrastructure.Services;
@@ -238,6 +239,10 @@ Log.Information("✅ Módulo MultiTenant registrado");
 builder.Services.AddTabelasCompartilhadasModule(builder.Configuration);
 Log.Information("✅ Módulo TabelasCompartilhadas registrado");
 
+// 5.19 Tabelas Compartilhadas (SHR_*)
+builder.Services.AddSegurancaModule(builder.Configuration);
+Log.Information("✅ Módulo Seguraca registrado");
+
 // ============================================================================
 // 🆕 5.18 REGISTRAR UNIQUE VALIDATION BEHAVIOR
 // ============================================================================
@@ -301,9 +306,11 @@ typeof(RhSensoERP.Modules.RecrutamentoSelecao.RecrutamentoSelecaoDependencyInjec
 // Módulo GestaoTalentosDesempenho
 typeof(RhSensoERP.Modules.GestaoTalentosDesempenho.GestaoTalentosDesempenhoDependencyInjection).Assembly,
 
-// Módulo TreinamentoDesenvolvimento  (como fica aqui???)
 // Módulo TabelasCompartilhadas
 typeof(RhSensoERP.Modules.TabelasCompartilhadas.TabelasCompartilhadasDependencyInjection).Assembly,
+
+// Módulo Seguraça
+typeof(RhSensoERP.Modules.Seguranca.SegurancaDependencyInjection).Assembly,
 
 // Módulo TreinamentoDesenvolvimento
 typeof(RhSensoERP.Modules.TreinamentoDesenvolvimento.TreinamentoDesenvolvimentoDependencyInjection).Assembly,

@@ -1,13 +1,14 @@
 // =============================================================================
-// RHSENSOERP GENERATOR v4.3 - ENTITY INFO EXTRACTOR
+// RHSENSOERP GENERATOR v4.7 - ENTITY INFO EXTRACTOR
 // =============================================================================
-// Versão: 4.3 - ADICIONADO: Suporte a [Unique] para validação automática
-// 
-// ✅ NOVIDADES v4.3:
-// 1. Detecta [Unique] e popula PropertyInfo.IsUnique
-// 2. Extrai UniqueScope, UniqueDisplayName, UniqueErrorMessage, UniqueAllowNull
-// 3. Mantém todas as correções da v4.2
-// 
+// Versão: 4.7 - ADICIONADO: Suporte a chave primária composta
+//
+// ✅ NOVIDADES v4.7:
+// 1. Detecta [PrimaryKey(nameof(Col1), nameof(Col2))] no nível da classe
+// 2. Popula HasCompositeKey, CompositeKeyProperties, CompositeKeyColumns, CompositeKeyTypes
+// 3. Fallback inteligente: NÃO assume "Id" quando não encontra PK
+// 4. Mantém todas as correções da v4.3 (Unique, Lookup, NavigationDisplay)
+//
 // =============================================================================
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -23,7 +24,7 @@ namespace RhSensoERP.Generators.Extractors;
 
 public static class EntityInfoExtractor
 {
-    private const string GENERATOR_VERSION = "v4.3";
+    private const string GENERATOR_VERSION = "v4.7";
 
     // =========================================================================
     // 📌 DICIONÁRIO DE MAPEAMENTOS (BRASIL)
@@ -84,11 +85,126 @@ public static class EntityInfoExtractor
 
         ExtractPropertiesAndNavigations(classSymbol, info);
 
+        // ✅ v4.7: Detecta [PrimaryKey] no nível da classe ANTES de IdentifyPrimaryKey
+        ExtractClassLevelPrimaryKey(classSymbol, info);
+
         IdentifyPrimaryKey(info);
         IdentifyAuditFields(info);
         CalculateApiRoute(info);
 
         return info;
+    }
+
+    // =========================================================================
+    // ✅ v4.7 NOVO: Detecta [PrimaryKey(nameof(Col1), nameof(Col2))] na classe
+    // =========================================================================
+    private static void ExtractClassLevelPrimaryKey(INamedTypeSymbol classSymbol, EntityInfo info)
+    {
+        // Procura [PrimaryKey] no nível da classe
+        var primaryKeyAttr = classSymbol.GetAttributes()
+            .FirstOrDefault(a => a.AttributeClass?.Name == "PrimaryKeyAttribute");
+
+        if (primaryKeyAttr == null)
+            return;
+
+        // [PrimaryKey(nameof(CdSistema), nameof(CdFuncao))]
+        // Os argumentos do construtor contêm os nomes das propriedades
+        var constructorArgs = primaryKeyAttr.ConstructorArguments;
+
+        if (constructorArgs.Length == 0)
+            return;
+
+        var keyPropertyNames = new List<string>();
+
+        // O primeiro argumento é sempre uma string (nome da primeira propriedade)
+        if (constructorArgs[0].Value is string firstKey)
+        {
+            keyPropertyNames.Add(firstKey);
+        }
+
+        // Se há mais argumentos, pode ser params string[] ou argumentos adicionais
+        if (constructorArgs.Length > 1)
+        {
+            // [PrimaryKey] usa: PrimaryKeyAttribute(string propertyName, params string[] additionalPropertyNames)
+            var additionalArgs = constructorArgs[1];
+
+            if (additionalArgs.Kind == TypedConstantKind.Array)
+            {
+                // params string[] - array de nomes adicionais
+                foreach (var item in additionalArgs.Values)
+                {
+                    if (item.Value is string additionalKey)
+                    {
+                        keyPropertyNames.Add(additionalKey);
+                    }
+                }
+            }
+            else if (additionalArgs.Value is string secondKey)
+            {
+                // Argumento individual
+                keyPropertyNames.Add(secondKey);
+
+                // Verifica se há mais argumentos
+                for (int i = 2; i < constructorArgs.Length; i++)
+                {
+                    if (constructorArgs[i].Value is string extraKey)
+                    {
+                        keyPropertyNames.Add(extraKey);
+                    }
+                }
+            }
+        }
+
+        if (keyPropertyNames.Count == 0)
+            return;
+
+        // Se tem 1 propriedade, é PK simples via [PrimaryKey]
+        if (keyPropertyNames.Count == 1)
+        {
+            var propName = keyPropertyNames[0];
+            var prop = info.Properties.FirstOrDefault(p => p.Name == propName);
+            if (prop != null)
+            {
+                prop.IsPrimaryKey = true;
+                info.PrimaryKeyProperty = prop.Name;
+                info.PrimaryKeyColumn = prop.ColumnName;
+                info.PrimaryKeyType = prop.Type;
+            }
+            return;
+        }
+
+        // ✅ PK COMPOSTA (2+ propriedades)
+        info.HasCompositeKey = true;
+        info.CompositeKeyProperties = new List<string>();
+        info.CompositeKeyColumns = new List<string>();
+        info.CompositeKeyTypes = new List<string>();
+
+        foreach (var propName in keyPropertyNames)
+        {
+            var prop = info.Properties.FirstOrDefault(p => p.Name == propName);
+            if (prop != null)
+            {
+                prop.IsPrimaryKey = true;
+                info.CompositeKeyProperties.Add(prop.Name);
+                info.CompositeKeyColumns.Add(prop.ColumnName);
+                info.CompositeKeyTypes.Add(prop.Type);
+            }
+            else
+            {
+                // Propriedade não encontrada (pode ser herdada ou erro)
+                info.CompositeKeyProperties.Add(propName);
+                info.CompositeKeyColumns.Add(propName.ToLowerInvariant());
+                info.CompositeKeyTypes.Add("string");
+            }
+        }
+
+        // Define PrimaryKeyProperty como a PRIMEIRA da composta (para compatibilidade)
+        if (info.CompositeKeyProperties.Count > 0)
+        {
+            info.PrimaryKeyProperty = info.CompositeKeyProperties[0];
+            info.PrimaryKeyColumn = info.CompositeKeyColumns[0];
+            info.PrimaryKeyType = info.CompositeKeyTypes[0];
+        }
     }
 
     // =========================================================================
@@ -514,10 +630,24 @@ public static class EntityInfoExtractor
         return result;
     }
 
+    // =========================================================================
+    // ✅ v4.7: IdentifyPrimaryKey CORRIGIDO - Suporta PK composta
+    // =========================================================================
     private static void IdentifyPrimaryKey(EntityInfo info)
     {
+        // Se já foi detectada PK composta via [PrimaryKey] na classe, não faz mais nada
+        if (info.HasCompositeKey)
+            return;
+
+        // Se já foi preenchida via ExtractClassLevelPrimaryKey (PK simples via [PrimaryKey])
+        if (!string.IsNullOrEmpty(info.PrimaryKeyProperty) &&
+            info.Properties.Any(p => p.Name == info.PrimaryKeyProperty && p.IsPrimaryKey))
+            return;
+
+        // Tenta via [Key] na propriedade
         var pkProp = info.Properties.FirstOrDefault(p => p.IsPrimaryKey);
 
+        // Fallback: convenção Id ou {EntityName}Id
         if (pkProp == null)
         {
             pkProp = info.Properties.FirstOrDefault(p =>
@@ -534,9 +664,26 @@ public static class EntityInfoExtractor
         }
         else
         {
-            info.PrimaryKeyProperty = "Id";
-            info.PrimaryKeyColumn = "Id";
-            info.PrimaryKeyType = "int";
+            // ✅ v4.7: NÃO assume "Id" cegamente.
+            // Se IsLegacyTable e não encontrou PK, usa a PRIMEIRA propriedade [Required]
+            if (info.IsLegacyTable)
+            {
+                var firstRequired = info.Properties.FirstOrDefault(p => p.IsRequired);
+                if (firstRequired != null)
+                {
+                    firstRequired.IsPrimaryKey = true;
+                    info.PrimaryKeyProperty = firstRequired.Name;
+                    info.PrimaryKeyColumn = firstRequired.ColumnName;
+                    info.PrimaryKeyType = firstRequired.Type;
+                }
+            }
+            else
+            {
+                // Entidade moderna sem PK detectada - fallback para Id (pode não existir)
+                info.PrimaryKeyProperty = "Id";
+                info.PrimaryKeyColumn = "Id";
+                info.PrimaryKeyType = "int";
+            }
         }
     }
 

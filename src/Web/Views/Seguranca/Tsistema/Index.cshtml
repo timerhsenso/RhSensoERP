@@ -1,0 +1,66 @@
+﻿@model RhSensoERP.Web.Models.Seguranca.Tsistema.TsistemaListViewModel
+@{
+    ViewData["Title"] = Model.PageTitle;
+    Layout = "_CrudLayout";
+    ViewData["EntityName"] = "Tabela de Sistemas";
+    ViewData["IconClass"] = "fas fa-table";
+}
+
+@* ============================================================================
+   Permissões injetadas para JavaScript (ANTES do script específico)
+   ============================================================================ *@
+<script>
+    window.crudPermissions = {
+        canCreate: @Model.CanCreate.ToString().ToLower(),
+        canEdit: @Model.CanEdit.ToString().ToLower(),
+        canDelete: @Model.CanDelete.ToString().ToLower(),
+        canView: @Model.CanView.ToString().ToLower(),
+        actions: "@Model.UserPermissions"
+    };
+    
+    @* v3.4: Configuração para Toggle Ativo *@
+    window.crudConfig = {
+        hasAtivoField: false,
+        entityName: "Tsistema",
+        pkField: "CdsiStema"
+    };
+</script>
+
+@* ============================================================================
+   Tabela usando partial _CrudTable (toolbar + datatable)
+   ============================================================================ *@
+@await Html.PartialAsync("_CrudTable", Model)
+
+@* ============================================================================
+   Conteúdo do Modal (apenas campos do formulário)
+   O wrapper do modal está no _CrudLayout
+   ============================================================================ *@
+@section ModalContent {
+    <input type="hidden" id="Id" name="Id" />
+    <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="CdsiStema" class="form-label">
+                        Cdsi Stema <span class="badge bg-primary">PK</span>
+                    </label>
+                    <input type="text" class="form-control" id="CdsiStema" name="CdsiStema" 
+                           placeholder=""   maxlength="10" />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="DcsiStema" class="form-label">
+                        Dcsi Stema <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" class="form-control" id="DcsiStema" name="DcsiStema" 
+                           placeholder="" required  maxlength="60" />
+                    
+                </div>
+    </div>
+
+}
+
+@* ============================================================================
+   Script específico da entidade
+   ============================================================================ *@
+@section PageScripts {
+    <script src="~/js/seguranca/tsistema/tsistema.js" asp-append-version="true"></script>
+}

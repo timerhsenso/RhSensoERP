@@ -1,8 +1,8 @@
 // =============================================================================
-// RHSENSOERP GENERATOR v3.6.2 - REPOSITORY TEMPLATE
+// RHSENSOERP GENERATOR v4.7 - REPOSITORY TEMPLATE
 // =============================================================================
 // Arquivo: src/Generators/Templates/RepositoryTemplate.cs
-// Versão: 3.6.2 - Corrigido using do DbContext
+// Versão: 4.7 - ADICIONADO: Suporte a chave primária composta
 // =============================================================================
 using RhSensoERP.Generators.Models;
 
@@ -18,8 +18,11 @@ public static class RepositoryTemplate
     /// </summary>
     public static string GenerateInterface(EntityInfo info)
     {
-        var pkType = info.PrimaryKeyType;
         var entityNs = $"{info.BaseNamespace}.Core.Entities";
+
+        // ✅ v4.7: Usa helpers para PK composta
+        var getByIdParams = info.PrimaryKeyParameterList;
+        var existsParams = info.PrimaryKeyParameterList;
 
         return $$"""
 {{info.FileHeader}}
@@ -43,7 +46,7 @@ public interface I{{info.EntityName}}Repository
     /// <summary>
     /// Busca por ID.
     /// </summary>
-    Task<{{info.EntityName}}?> GetByIdAsync({{pkType}} id, CancellationToken ct = default);
+    Task<{{info.EntityName}}?> GetByIdAsync({{getByIdParams}}, CancellationToken ct = default);
 
     /// <summary>
     /// Busca todos os registros.
@@ -68,7 +71,7 @@ public interface I{{info.EntityName}}Repository
     /// <summary>
     /// Verifica se existe um registro com o ID especificado.
     /// </summary>
-    Task<bool> ExistsAsync({{pkType}} id, CancellationToken ct = default);
+    Task<bool> ExistsAsync({{existsParams}}, CancellationToken ct = default);
 }
 """;
     }
@@ -78,9 +81,13 @@ public interface I{{info.EntityName}}Repository
     /// </summary>
     public static string GenerateImplementation(EntityInfo info)
     {
-        var pkType = info.PrimaryKeyType;
-        var pkProp = info.PrimaryKeyProperty;
         var entityNs = $"{info.BaseNamespace}.Core.Entities";
+
+        // ✅ v4.7: Usa helpers para PK composta
+        var getByIdParams = info.PrimaryKeyParameterList;
+        var findArgs = info.PrimaryKeyFindArgs;
+        var linqFilter = info.PrimaryKeyLinqFilter;
+        var logExpression = GenerateLogExpression(info, "entity");
 
         return $$"""
 {{info.FileHeader}}
@@ -118,10 +125,10 @@ public sealed class {{info.EntityName}}Repository : I{{info.EntityName}}Reposito
     }
 
     /// <inheritdoc/>
-    public async Task<{{info.EntityName}}?> GetByIdAsync({{pkType}} id, CancellationToken ct = default)
+    public async Task<{{info.EntityName}}?> GetByIdAsync({{getByIdParams}}, CancellationToken ct = default)
     {
         return await _context.Set<{{info.EntityName}}>()
-            .FirstOrDefaultAsync(e => e.{{pkProp}} == id, ct);
+            .FirstOrDefaultAsync(e => {{linqFilter}}, ct);
     }
 
     /// <inheritdoc/>
@@ -138,7 +145,7 @@ public sealed class {{info.EntityName}}Repository : I{{info.EntityName}}Reposito
         await _context.Set<{{info.EntityName}}>().AddAsync(entity, ct);
         await _context.SaveChangesAsync(ct);
 
-        _logger.LogDebug("{{info.DisplayName}} adicionado: {Id}", entity.{{pkProp}});
+        _logger.LogDebug("{{info.DisplayName}} adicionado: {Id}", {{logExpression}});
     }
 
     /// <inheritdoc/>
@@ -148,7 +155,7 @@ public sealed class {{info.EntityName}}Repository : I{{info.EntityName}}Reposito
         _context.Entry(entity).State = EntityState.Modified;
         await _context.SaveChangesAsync(ct);
 
-        _logger.LogDebug("{{info.DisplayName}} atualizado: {Id}", entity.{{pkProp}});
+        _logger.LogDebug("{{info.DisplayName}} atualizado: {Id}", {{logExpression}});
     }
 
     /// <inheritdoc/>
@@ -157,16 +164,30 @@ public sealed class {{info.EntityName}}Repository : I{{info.EntityName}}Reposito
         _context.Set<{{info.EntityName}}>().Remove(entity);
         await _context.SaveChangesAsync(ct);
 
-        _logger.LogDebug("{{info.DisplayName}} removido: {Id}", entity.{{pkProp}});
+        _logger.LogDebug("{{info.DisplayName}} removido: {Id}", {{logExpression}});
     }
 
     /// <inheritdoc/>
-    public async Task<bool> ExistsAsync({{pkType}} id, CancellationToken ct = default)
+    public async Task<bool> ExistsAsync({{getByIdParams}}, CancellationToken ct = default)
     {
         return await _context.Set<{{info.EntityName}}>()
-            .AnyAsync(e => e.{{pkProp}} == id, ct);
+            .AnyAsync(e => {{linqFilter}}, ct);
     }
 }
 """;
+    }
+
+    /// <summary>
+    /// Gera expressão de log para PK simples ou composta.
+    /// Simples: entity.Id | Composta: $"{entity.CdSistema}|{entity.CdFuncao}"
+    /// </summary>
+    private static string GenerateLogExpression(EntityInfo info, string entityVar)
+    {
+        if (!info.HasCompositeKey)
+            return $"{entityVar}.{info.PrimaryKeyProperty}";
+
+        var interpolations = info.CompositeKeyProperties
+            .Select(p => $"{{{entityVar}.{p}}}");
+        return "$\"" + string.Join("|", interpolations) + "\"";
     }
 }

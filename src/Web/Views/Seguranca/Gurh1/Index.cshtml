@@ -1,0 +1,74 @@
+﻿@model RhSensoERP.Web.Models.Seguranca.Gurh1.Gurh1ListViewModel
+@{
+    ViewData["Title"] = Model.PageTitle;
+    Layout = "_CrudLayout";
+    ViewData["EntityName"] = "Grupo de Usuários";
+    ViewData["IconClass"] = "fas fa-table";
+}
+
+@* ============================================================================
+   Permissões injetadas para JavaScript (ANTES do script específico)
+   ============================================================================ *@
+<script>
+    window.crudPermissions = {
+        canCreate: @Model.CanCreate.ToString().ToLower(),
+        canEdit: @Model.CanEdit.ToString().ToLower(),
+        canDelete: @Model.CanDelete.ToString().ToLower(),
+        canView: @Model.CanView.ToString().ToLower(),
+        actions: "@Model.UserPermissions"
+    };
+    
+    @* v3.4: Configuração para Toggle Ativo *@
+    window.crudConfig = {
+        hasAtivoField: false,
+        entityName: "Gurh1",
+        pkField: "CdsiStema"
+    };
+</script>
+
+@* ============================================================================
+   Tabela usando partial _CrudTable (toolbar + datatable)
+   ============================================================================ *@
+@await Html.PartialAsync("_CrudTable", Model)
+
+@* ============================================================================
+   Conteúdo do Modal (apenas campos do formulário)
+   O wrapper do modal está no _CrudLayout
+   ============================================================================ *@
+@section ModalContent {
+    <input type="hidden" id="Id" name="Id" />
+    <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="CdsiStema" class="form-label">
+                        Código de Sistema <span class="badge bg-primary">PK</span>
+                    </label>
+                    <input type="text" class="form-control" id="CdsiStema" name="CdsiStema" 
+                           placeholder=""   maxlength="10" />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Cdgruser" class="form-label">
+                        Código de Gr User <span class="badge bg-primary">PK</span>
+                    </label>
+                    <input type="text" class="form-control" id="Cdgruser" name="Cdgruser" 
+                           placeholder=""   maxlength="30" />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Dcgruser" class="form-label">
+                        Descrição de Gr User
+                    </label>
+                    <input type="text" class="form-control" id="Dcgruser" name="Dcgruser" 
+                           placeholder=""   maxlength="60" />
+                    
+                </div>
+    </div>
+
+}
+
+@* ============================================================================
+   Script específico da entidade
+   ============================================================================ *@
+@section PageScripts {
+    <script src="~/js/seguranca/gurh1/gurh1.js" asp-append-version="true"></script>
+}

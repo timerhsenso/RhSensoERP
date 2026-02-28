@@ -88,6 +88,7 @@
 		<ProjectReference Include="..\Modules\PortalColaborador\RhSensoERP.Modules.PortalColaborador.csproj" />
 		<ProjectReference Include="..\Modules\RecrutamentoSelecao\RhSensoERP.Modules.RecrutamentoSelecao.csproj" />
 		<ProjectReference Include="..\Modules\SaudeSegurancaTrabalho\RhSensoERP.Modules.SaudeSegurancaTrabalho.csproj" />
+		<ProjectReference Include="..\Modules\Seguranca\RhSensoERP.Modules.Seguranca.csproj" />
 		<ProjectReference Include="..\Modules\TreinamentoDesenvolvimento\RhSensoERP.Modules.TreinamentoDesenvolvimento.csproj" />
 		<ProjectReference Include="..\Modules\ViagensDespesas\RhSensoERP.Modules.ViagensDespesas.csproj" />
 		<ProjectReference Include="..\Modules\TabelasCompartilhadas\RhSensoERP.Modules.TabelasCompartilhadas.csproj" />

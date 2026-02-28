@@ -7,6 +7,9 @@ using Microsoft.EntityFrameworkCore;
 using RhSensoERP.Identity.Core.Entities;
 using RhSensoERP.Identity.Infrastructure.Persistence.Contexts;
 
+// ✅ MIGRAÇÃO: Tsistema agora pertence ao módulo Segurança
+using RhSensoERP.Modules.Seguranca.Core.Entities;
+
 namespace RhSensoERP.API.Controllers;
 
 /// <summary>
@@ -70,7 +73,7 @@ public class DiagnosticsController : ControllerBase
             var providerName = _db.Database.ProviderName;
 
             var totalUsuarios = await _db.Usuarios.CountAsync(ct);
-            var totalSistemas = await _db.Sistemas.CountAsync(ct);
+            var totalSistemas = await _db.Set<Tsistema>().CountAsync(ct); // ✅ CORRIGIDO
 
             return Ok(new
             {
@@ -135,7 +138,7 @@ public class DiagnosticsController : ControllerBase
 
             // 3️⃣ Query complexa (JOIN) - REMOVIDO para evitar erro de colunas
             _logger.LogInformation("3️⃣ Executando query complexa...");
-            var sistemas = await _db.Sistemas
+            var sistemas = await _db.Set<Tsistema>() // ✅ CORRIGIDO
                 .AsNoTracking()
                 .Take(5)
                 .ToListAsync(ct);
@@ -303,12 +306,12 @@ public class DiagnosticsController : ControllerBase
 
             // 2️⃣ UPDATE
             _logger.LogInformation("2️⃣ Testando UPDATE...");
-            var usuario = await _db.Usuarios
+            var usuarioAdmin = await _db.Usuarios
                 .FirstOrDefaultAsync(u => u.CdUsuario == "ADMIN", ct);
 
-            if (usuario != null)
+            if (usuarioAdmin != null)
             {
-                usuario.UpdatedAt = DateTime.UtcNow;
+                usuarioAdmin.UpdatedAt = DateTime.UtcNow;
                 await _db.SaveChangesAsync(ct);
                 _logger.LogInformation("✅ UPDATE realizado");
             }

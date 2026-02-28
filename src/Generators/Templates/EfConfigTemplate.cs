@@ -1,5 +1,7 @@
 // =============================================================================
-// RHSENSOERP GENERATOR v4.2 - EF CONFIG TEMPLATE
+// RHSENSOERP GENERATOR v4.7 - EF CONFIG TEMPLATE
+// =============================================================================
+// v4.7: ADICIONADO - Suporte a chave primária composta no HasKey
 // =============================================================================
 using RhSensoERP.Generators.Models;
 using System.Collections.Generic;
@@ -17,6 +19,9 @@ public static class EfConfigTemplate
         var uniqueIndexes = GenerateUniqueIndexes(info);
         var relationshipConfigs = GenerateRelationshipConfigurations(info);
         var additionalUsings = GenerateAdditionalUsings(info);
+
+        // ✅ v4.7: HasKey com suporte a PK composta
+        var hasKeyExpression = GenerateHasKeyExpression(info);
 
         return $$"""
 {{info.FileHeader}}
@@ -44,7 +49,7 @@ public sealed class {{info.EntityName}}Configuration : IEntityTypeConfiguration<
         // =====================================================================
         // Chave primária
         // =====================================================================
-        builder.HasKey(e => e.{{info.PrimaryKeyProperty}});
+        {{hasKeyExpression}}
 
         // =====================================================================
         // Propriedades
@@ -63,6 +68,22 @@ public sealed class {{info.EntityName}}Configuration : IEntityTypeConfiguration<
     }
 }
 """;
+    }
+
+    /// <summary>
+    /// ✅ v4.7: Gera HasKey para PK simples ou composta.
+    /// Simples: builder.HasKey(e => e.Id);
+    /// Composta: builder.HasKey(e => new { e.CdSistema, e.CdFuncao });
+    /// </summary>
+    private static string GenerateHasKeyExpression(EntityInfo info)
+    {
+        if (!info.HasCompositeKey)
+        {
+            return $"builder.HasKey(e => e.{info.PrimaryKeyProperty});";
+        }
+
+        var keyProps = string.Join(", ", info.CompositeKeyProperties.Select(p => $"e.{p}"));
+        return $"builder.HasKey(e => new {{ {keyProps} }});";
     }
 
     private static string GeneratePropertyConfigurations(EntityInfo info)
@@ -101,9 +122,6 @@ public sealed class {{info.EntityName}}Configuration : IEntityTypeConfiguration<
             : "        // Configurações de propriedades usam convenções padrão";
     }
 
-    // =========================================================================
-    // ✅ CORRIGIDO: GenerateUniqueIndexes (sem chaves duplas problemáticas)
-    // =========================================================================
     private static string GenerateUniqueIndexes(EntityInfo info)
     {
         var uniqueProps = info.Properties
@@ -125,12 +143,10 @@ public sealed class {{info.EntityName}}Configuration : IEntityTypeConfiguration<
                 ? $"\n            .HasFilter(\"{columnName} IS NOT NULL\")"
                 : "";
 
-            // ✅ CORRIGIDO: Construção da string sem problemas de raw literal
             if (prop.UniqueScope == "Tenant" && info.Properties.Any(p => p.Name == "TenantId"))
             {
                 indexName = $"UX_{info.EntityName}_Tenant_{prop.Name}";
 
-                // ✅ Usa interpolação simples ao invés de raw literal aninhado
                 var indexDef = $"builder.HasIndex(e => new {{ e.TenantId, e.{prop.Name} }}, \"{indexName}\")";
 
                 var config = $"""
@@ -194,8 +210,6 @@ public sealed class {{info.EntityName}}Configuration : IEntityTypeConfiguration<
                 config = $"""
         // Relacionamento: {info.EntityName} -> {nav.TargetEntity}
         // ⚠️ ATENÇÃO: FK não encontrada na entidade.
-        // Se usar shadow property, configure manualmente no DbContext.
-        // Caso contrário, adicione a propriedade FK na entidade.
         builder.Ignore(e => e.{nav.Name});
 """;
             }

@@ -1,12 +1,16 @@
 // =============================================================================
 // src/Identity/Infrastructure/Repositories/PermissaoRepository.cs
+// ✅ CORRIGIDO: UserGroup → UsuarioGrupo (usrh1)
+// ✅ CORRIGIDO: GrupoFuncao → HabilitacaoGrupo (hbrh1) - que contém CdAcoes
 // =============================================================================
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RhSensoERP.Identity.Application.DTOs.Permissoes;
-using RhSensoERP.Identity.Core.Entities;
 using RhSensoERP.Identity.Infrastructure.Persistence.Contexts;
+
+// ✅ Entidades do módulo Segurança
+using RhSensoERP.Modules.Seguranca.Core.Entities;
 
 namespace RhSensoERP.Identity.Infrastructure.Repositories;
 
@@ -49,8 +53,9 @@ public sealed class PermissaoRepository : IPermissaoRepository
     {
         // ================================================================
         // PASSO 1: Buscar grupos do usuário
+        // ✅ CORRIGIDO: UsuarioGrupo (usrh1) em vez de UserGroup
         // ================================================================
-        var grupos = _db.Set<UserGroup>().AsNoTracking()
+        var grupos = _db.Set<UsuarioGrupo>().AsNoTracking()
             .Where(ug => ug.CdUsuario == cdUsuario);
 
         if (!string.IsNullOrWhiteSpace(cdSistema))
@@ -59,23 +64,25 @@ public sealed class PermissaoRepository : IPermissaoRepository
         }
 
         // ================================================================
-        // PASSO 2: Join com permissões e funções (traduzível para SQL)
+        // PASSO 2: Join com habilitações e funções (traduzível para SQL)
+        // ✅ CORRIGIDO: HabilitacaoGrupo (hbrh1) em vez de GrupoFuncao
+        //    hbrh1 contém CdAcoes (ações IAEC habilitadas)
         // ================================================================
         var queryFuncoes =
             from ug in grupos
-            join gf in _db.Set<GrupoFuncao>().AsNoTracking()
+            join hg in _db.Set<HabilitacaoGrupo>().AsNoTracking()
                 on new { ug.CdSistema, ug.CdGrUser }
-                equals new { CdSistema = gf.CdSistema!, gf.CdGrUser }
-            join f in _db.Funcoes.AsNoTracking()
-                on new { gf.CdSistema, gf.CdFuncao }
+                equals new { CdSistema = hg.CdSistema!, hg.CdGrUser }
+            join f in _db.Set<Funcao>().AsNoTracking()
+                on new { hg.CdSistema, hg.CdFuncao }
                 equals new { f.CdSistema, f.CdFuncao }
             select new
             {
-                gf.CdSistema,
-                gf.CdFuncao,
+                hg.CdSistema,
+                hg.CdFuncao,
                 f.DcFuncao,
                 f.DcModulo,
-                gf.CdAcoes
+                hg.CdAcoes
             };
 
         var funcoes = await queryFuncoes
@@ -155,10 +162,6 @@ public sealed class PermissaoRepository : IPermissaoRepository
     }
 
     /// <inheritdoc />
-    /// <remarks>
-    /// Usa SQL raw para compatibilidade com tabela legada hbrh1 
-    /// que não possui campos de auditoria (CreatedAt, UpdatedAt, etc.)
-    /// </remarks>
     public async Task<TogglePermissaoResponse> TogglePermissaoAsync(
         string cdUsuario,
         string cdSistema,
@@ -171,7 +174,6 @@ public sealed class PermissaoRepository : IPermissaoRepository
         {
             // ================================================================
             // PASSO 1: Buscar grupo e CdAcoes usando SQL raw
-            // (evita mapeamento de campos de auditoria inexistentes)
             // ================================================================
             var selectSql = @"
                 SELECT TOP 1 
@@ -233,7 +235,6 @@ public sealed class PermissaoRepository : IPermissaoRepository
                 }
             }
 
-            // Verifica se encontrou
             if (string.IsNullOrEmpty(cdGrUser))
             {
                 _logger.LogWarning(
@@ -255,14 +256,12 @@ public sealed class PermissaoRepository : IPermissaoRepository
 
             if (enabled)
             {
-                // Adicionar ação se não existir
                 if (!cdAcoesAtual.Contains(acaoUpper))
                 {
                     novasAcoes = OrdenarAcoes(cdAcoesAtual + acaoUpper);
                 }
                 else
                 {
-                    // Já está habilitado
                     return new TogglePermissaoResponse
                     {
                         Success = true,
@@ -274,14 +273,12 @@ public sealed class PermissaoRepository : IPermissaoRepository
             }
             else
             {
-                // Remover ação
                 if (cdAcoesAtual.Contains(acaoUpper))
                 {
                     novasAcoes = cdAcoesAtual.Replace(acaoUpper.ToString(), string.Empty);
                 }
                 else
                 {
-                    // Já está desabilitado
                     return new TogglePermissaoResponse
                     {
                         Success = true,
@@ -293,7 +290,7 @@ public sealed class PermissaoRepository : IPermissaoRepository
             }
 
             // ================================================================
-            // PASSO 3: Atualizar no banco usando SQL raw
+            // PASSO 3: Atualizar no banco
             // ================================================================
             var updateSql = @"
                 UPDATE hbrh1 
@@ -314,7 +311,7 @@ public sealed class PermissaoRepository : IPermissaoRepository
 
                 var paramSistemaUpd = updateCommand.CreateParameter();
                 paramSistemaUpd.ParameterName = "@cdSistema";
-                paramSistemaUpd.Value = cdSistemaDb!; // Usar valor exato do banco
+                paramSistemaUpd.Value = cdSistemaDb!;
                 updateCommand.Parameters.Add(paramSistemaUpd);
 
                 var paramGrUser = updateCommand.CreateParameter();
@@ -324,7 +321,7 @@ public sealed class PermissaoRepository : IPermissaoRepository
 
                 var paramFuncaoUpd = updateCommand.CreateParameter();
                 paramFuncaoUpd.ParameterName = "@cdFuncao";
-                paramFuncaoUpd.Value = cdFuncaoDb!; // Usar valor exato do banco
+                paramFuncaoUpd.Value = cdFuncaoDb!;
                 updateCommand.Parameters.Add(paramFuncaoUpd);
 
                 var rowsAffected = await updateCommand.ExecuteNonQueryAsync(ct);
@@ -371,18 +368,12 @@ public sealed class PermissaoRepository : IPermissaoRepository
 
     #region Métodos Auxiliares
 
-    /// <summary>
-    /// Ordena as ações no padrão IAEC
-    /// </summary>
     private static string OrdenarAcoes(string acoes)
     {
         const string ordem = "IAEC";
         return string.Concat(ordem.Where(c => acoes.Contains(c)));
     }
 
-    /// <summary>
-    /// Retorna a descrição da ação
-    /// </summary>
     private static string GetDescricaoAcao(char acao) => acao switch
     {
         'I' => "Incluir",

@@ -1,14 +1,21 @@
 // =============================================================================
-// RHSENSOERP GENERATOR v3.1 - CRUD SOURCE GENERATOR
+// RHSENSOERP GENERATOR v3.2 - CRUD SOURCE GENERATOR
 // =============================================================================
 // Arquivo: src/Generators/Generators/CrudGenerator.cs
-// Versão: 3.1 - Com suporte a MetadataProvider para UI dinâmica
+// Versão: 3.2 - FIX: Proteção contra ArgumentNullException + Diagnósticos
+//
+// ✅ CORREÇÕES v3.2:
+// 1. SafeAddSource() com null-check antes de AddSource
+// 2. Try-catch por entidade (uma entidade com erro NÃO aborta as outras)
+// 3. ReportDiagnostic para identificar qual template falhou
+// 4. Mantém toda funcionalidade da v3.1
 // =============================================================================
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using RhSensoERP.Generators.Extractors;
 using RhSensoERP.Generators.Models;
 using RhSensoERP.Generators.Templates;
+using System;
 using System.Linq;
 
 namespace RhSensoERP.Generators.Generators;
@@ -20,6 +27,25 @@ namespace RhSensoERP.Generators.Generators;
 [Generator]
 public class CrudGenerator : IIncrementalGenerator
 {
+    // =========================================================================
+    // ✅ v3.2: Descriptors para diagnóstico de erros no Generator
+    // =========================================================================
+    private static readonly DiagnosticDescriptor TemplateNullWarning = new(
+        id: "RHGEN001",
+        title: "Template retornou null",
+        messageFormat: "O template '{0}' retornou null para a entidade '{1}'. O arquivo '{2}' não será gerado.",
+        category: "RhSensoERP.Generators",
+        DiagnosticSeverity.Warning,
+        isEnabledByDefault: true);
+
+    private static readonly DiagnosticDescriptor GeneratorExceptionError = new(
+        id: "RHGEN002",
+        title: "Exceção no Generator",
+        messageFormat: "Exceção ao gerar código para '{0}': {1}",
+        category: "RhSensoERP.Generators",
+        DiagnosticSeverity.Warning,
+        isEnabledByDefault: true);
+
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         // Pipeline - Filtra classes com o atributo [GenerateCrud]
@@ -33,7 +59,20 @@ public class CrudGenerator : IIncrementalGenerator
         context.RegisterSourceOutput(entityProvider, static (ctx, info) =>
         {
             if (info == null) return;
-            GenerateAllFiles(ctx, info);
+
+            // ✅ v3.2: Try-catch por entidade para não abortar o Generator inteiro
+            try
+            {
+                GenerateAllFiles(ctx, info);
+            }
+            catch (Exception ex)
+            {
+                ctx.ReportDiagnostic(Diagnostic.Create(
+                    GeneratorExceptionError,
+                    Location.None,
+                    info.EntityName,
+                    $"{ex.GetType().Name}: {ex.Message}"));
+            }
         });
     }
 
@@ -44,6 +83,30 @@ public class CrudGenerator : IIncrementalGenerator
     {
         return node is ClassDeclarationSyntax classDeclaration &&
                classDeclaration.AttributeLists.Count > 0;
+    }
+
+    // =========================================================================
+    // ✅ v3.2: Helper seguro - NUNCA deixa null chegar ao AddSource
+    // =========================================================================
+    private static void SafeAddSource(
+        SourceProductionContext context,
+        string hintName,
+        string? sourceCode,
+        string templateName,
+        string entityName)
+    {
+        if (string.IsNullOrWhiteSpace(sourceCode))
+        {
+            context.ReportDiagnostic(Diagnostic.Create(
+                TemplateNullWarning,
+                Location.None,
+                templateName,
+                entityName,
+                hintName));
+            return;
+        }
+
+        context.AddSource(hintName, sourceCode);
     }
 
     /// <summary>
@@ -57,16 +120,19 @@ public class CrudGenerator : IIncrementalGenerator
         if (info.GenerateDto)
         {
             var dtoCode = DtoTemplate.GenerateDto(info);
-            context.AddSource($"{info.EntityName}Dto.g.cs", dtoCode);
+            SafeAddSource(context, $"{info.EntityName}Dto.g.cs", dtoCode,
+                "DtoTemplate.GenerateDto", info.EntityName);
         }
 
         if (info.GenerateRequests)
         {
             var createRequestCode = DtoTemplate.GenerateCreateRequest(info);
-            context.AddSource($"Create{info.EntityName}Request.g.cs", createRequestCode);
+            SafeAddSource(context, $"Create{info.EntityName}Request.g.cs", createRequestCode,
+                "DtoTemplate.GenerateCreateRequest", info.EntityName);
 
             var updateRequestCode = DtoTemplate.GenerateUpdateRequest(info);
-            context.AddSource($"Update{info.EntityName}Request.g.cs", updateRequestCode);
+            SafeAddSource(context, $"Update{info.EntityName}Request.g.cs", updateRequestCode,
+                "DtoTemplate.GenerateUpdateRequest", info.EntityName);
         }
 
         // =====================================================================
@@ -75,21 +141,25 @@ public class CrudGenerator : IIncrementalGenerator
         if (info.GenerateCommands)
         {
             var createCommandCode = CommandsTemplate.GenerateCreateCommand(info);
-            context.AddSource($"Create{info.EntityName}Command.g.cs", createCommandCode);
+            SafeAddSource(context, $"Create{info.EntityName}Command.g.cs", createCommandCode,
+                "CommandsTemplate.GenerateCreateCommand", info.EntityName);
 
             var updateCommandCode = CommandsTemplate.GenerateUpdateCommand(info);
-            context.AddSource($"Update{info.EntityName}Command.g.cs", updateCommandCode);
+            SafeAddSource(context, $"Update{info.EntityName}Command.g.cs", updateCommandCode,
+                "CommandsTemplate.GenerateUpdateCommand", info.EntityName);
 
             var deleteCommandCode = CommandsTemplate.GenerateDeleteCommand(info);
-            context.AddSource($"Delete{info.EntityName}Command.g.cs", deleteCommandCode);
+            SafeAddSource(context, $"Delete{info.EntityName}Command.g.cs", deleteCommandCode,
+                "CommandsTemplate.GenerateDeleteCommand", info.EntityName);
 
             if (info.SupportsBatchDelete)
             {
                 var batchDeleteCode = CommandsTemplate.GenerateBatchDeleteCommand(info);
-                context.AddSource($"Delete{info.PluralName}Command.g.cs", batchDeleteCode);
+                SafeAddSource(context, $"Delete{info.PluralName}Command.g.cs", batchDeleteCode,
+                    "CommandsTemplate.GenerateBatchDeleteCommand", info.EntityName);
             }
 
-            // ✅ v4.3: Toggle Ativo Command (Gera se tiver campo Ativo)
+            // ✅ v4.3: Toggle Ativo Command
             var hasAtivoField = info.Properties.Any(p =>
                 p.Name.Equals("Ativo", StringComparison.OrdinalIgnoreCase) ||
                 p.Name.Equals("IsAtivo", StringComparison.OrdinalIgnoreCase) ||
@@ -99,7 +169,8 @@ public class CrudGenerator : IIncrementalGenerator
             if (hasAtivoField)
             {
                 var toggleCommandCode = ToggleAtivoCommandTemplate.GenerateCommand(info);
-                context.AddSource($"Toggle{info.EntityName}AtivoCommand.g.cs", toggleCommandCode);
+                SafeAddSource(context, $"Toggle{info.EntityName}AtivoCommand.g.cs", toggleCommandCode,
+                    "ToggleAtivoCommandTemplate.GenerateCommand", info.EntityName);
             }
         }
 
@@ -109,10 +180,12 @@ public class CrudGenerator : IIncrementalGenerator
         if (info.GenerateQueries)
         {
             var getByIdQueryCode = QueriesTemplate.GenerateGetByIdQuery(info);
-            context.AddSource($"GetBy{info.EntityName}IdQuery.g.cs", getByIdQueryCode);
+            SafeAddSource(context, $"GetBy{info.EntityName}IdQuery.g.cs", getByIdQueryCode,
+                "QueriesTemplate.GenerateGetByIdQuery", info.EntityName);
 
             var getPagedQueryCode = QueriesTemplate.GenerateGetPagedQuery(info);
-            context.AddSource($"Get{info.PluralName}PagedQuery.g.cs", getPagedQueryCode);
+            SafeAddSource(context, $"Get{info.PluralName}PagedQuery.g.cs", getPagedQueryCode,
+                "QueriesTemplate.GenerateGetPagedQuery", info.EntityName);
         }
 
         // =====================================================================
@@ -121,10 +194,12 @@ public class CrudGenerator : IIncrementalGenerator
         if (info.GenerateValidators)
         {
             var createValidatorCode = ValidatorsTemplate.GenerateCreateValidator(info);
-            context.AddSource($"Create{info.EntityName}RequestValidator.g.cs", createValidatorCode);
+            SafeAddSource(context, $"Create{info.EntityName}RequestValidator.g.cs", createValidatorCode,
+                "ValidatorsTemplate.GenerateCreateValidator", info.EntityName);
 
             var updateValidatorCode = ValidatorsTemplate.GenerateUpdateValidator(info);
-            context.AddSource($"Update{info.EntityName}RequestValidator.g.cs", updateValidatorCode);
+            SafeAddSource(context, $"Update{info.EntityName}RequestValidator.g.cs", updateValidatorCode,
+                "ValidatorsTemplate.GenerateUpdateValidator", info.EntityName);
         }
 
         // =====================================================================
@@ -133,10 +208,12 @@ public class CrudGenerator : IIncrementalGenerator
         if (info.GenerateRepository)
         {
             var repoInterfaceCode = RepositoryTemplate.GenerateInterface(info);
-            context.AddSource($"I{info.EntityName}Repository.g.cs", repoInterfaceCode);
+            SafeAddSource(context, $"I{info.EntityName}Repository.g.cs", repoInterfaceCode,
+                "RepositoryTemplate.GenerateInterface", info.EntityName);
 
             var repoImplCode = RepositoryTemplate.GenerateImplementation(info);
-            context.AddSource($"{info.EntityName}Repository.g.cs", repoImplCode);
+            SafeAddSource(context, $"{info.EntityName}Repository.g.cs", repoImplCode,
+                "RepositoryTemplate.GenerateImplementation", info.EntityName);
         }
 
         // =====================================================================
@@ -145,7 +222,8 @@ public class CrudGenerator : IIncrementalGenerator
         if (info.GenerateMapper)
         {
             var mapperCode = MapperTemplate.GenerateProfile(info);
-            context.AddSource($"{info.EntityName}Profile.g.cs", mapperCode);
+            SafeAddSource(context, $"{info.EntityName}Profile.g.cs", mapperCode,
+                "MapperTemplate.GenerateProfile", info.EntityName);
         }
 
         // =====================================================================
@@ -154,16 +232,18 @@ public class CrudGenerator : IIncrementalGenerator
         if (info.GenerateEfConfig)
         {
             var efConfigCode = EfConfigTemplate.GenerateConfig(info);
-            context.AddSource($"{info.EntityName}Configuration.g.cs", efConfigCode);
+            SafeAddSource(context, $"{info.EntityName}Configuration.g.cs", efConfigCode,
+                "EfConfigTemplate.GenerateConfig", info.EntityName);
         }
 
         // =====================================================================
-        // BACKEND - MetadataProvider (NOVO v3.1)
+        // BACKEND - MetadataProvider (v3.1)
         // =====================================================================
         if (info.GenerateMetadata)
         {
             var metadataCode = MetadataTemplate.GenerateMetadataProvider(info);
-            context.AddSource($"{info.EntityName}MetadataProvider.g.cs", metadataCode);
+            SafeAddSource(context, $"{info.EntityName}MetadataProvider.g.cs", metadataCode,
+                "MetadataTemplate.GenerateMetadataProvider", info.EntityName);
         }
 
         // =====================================================================
@@ -172,7 +252,8 @@ public class CrudGenerator : IIncrementalGenerator
         if (info.GenerateApiController)
         {
             var apiControllerCode = ApiControllerTemplate.GenerateController(info);
-            context.AddSource($"{info.PluralName}Controller.Api.g.cs", apiControllerCode);
+            SafeAddSource(context, $"{info.PluralName}Controller.Api.g.cs", apiControllerCode,
+                "ApiControllerTemplate.GenerateController", info.EntityName);
         }
 
         // =====================================================================
@@ -181,7 +262,8 @@ public class CrudGenerator : IIncrementalGenerator
         if (info.GenerateWebController)
         {
             var webControllerCode = WebControllerTemplate.GenerateController(info);
-            context.AddSource($"{info.PluralName}Controller.Web.g.cs", webControllerCode);
+            SafeAddSource(context, $"{info.PluralName}Controller.Web.g.cs", webControllerCode,
+                "WebControllerTemplate.GenerateController", info.EntityName);
         }
 
         // =====================================================================
@@ -190,16 +272,20 @@ public class CrudGenerator : IIncrementalGenerator
         if (info.GenerateWebModels)
         {
             var webDtoCode = WebModelsTemplate.GenerateDto(info);
-            context.AddSource($"{info.EntityName}Dto.Web.g.cs", webDtoCode);
+            SafeAddSource(context, $"{info.EntityName}Dto.Web.g.cs", webDtoCode,
+                "WebModelsTemplate.GenerateDto", info.EntityName);
 
             var webCreateDtoCode = WebModelsTemplate.GenerateCreateDto(info);
-            context.AddSource($"Create{info.EntityName}Dto.Web.g.cs", webCreateDtoCode);
+            SafeAddSource(context, $"Create{info.EntityName}Dto.Web.g.cs", webCreateDtoCode,
+                "WebModelsTemplate.GenerateCreateDto", info.EntityName);
 
             var webUpdateDtoCode = WebModelsTemplate.GenerateUpdateDto(info);
-            context.AddSource($"Update{info.EntityName}Dto.Web.g.cs", webUpdateDtoCode);
+            SafeAddSource(context, $"Update{info.EntityName}Dto.Web.g.cs", webUpdateDtoCode,
+                "WebModelsTemplate.GenerateUpdateDto", info.EntityName);
 
             var webViewModelCode = WebModelsTemplate.GenerateListViewModel(info);
-            context.AddSource($"{info.PluralName}ListViewModel.g.cs", webViewModelCode);
+            SafeAddSource(context, $"{info.PluralName}ListViewModel.g.cs", webViewModelCode,
+                "WebModelsTemplate.GenerateListViewModel", info.EntityName);
         }
 
         // =====================================================================
@@ -208,10 +294,12 @@ public class CrudGenerator : IIncrementalGenerator
         if (info.GenerateWebServices)
         {
             var serviceInterfaceCode = WebServicesTemplate.GenerateInterface(info);
-            context.AddSource($"I{info.EntityName}ApiService.g.cs", serviceInterfaceCode);
+            SafeAddSource(context, $"I{info.EntityName}ApiService.g.cs", serviceInterfaceCode,
+                "WebServicesTemplate.GenerateInterface", info.EntityName);
 
             var serviceImplCode = WebServicesTemplate.GenerateImplementation(info);
-            context.AddSource($"{info.EntityName}ApiService.g.cs", serviceImplCode);
+            SafeAddSource(context, $"{info.EntityName}ApiService.g.cs", serviceImplCode,
+                "WebServicesTemplate.GenerateImplementation", info.EntityName);
         }
     }
 }

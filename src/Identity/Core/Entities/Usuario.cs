@@ -1,15 +1,19 @@
 ﻿// ============================================================================
-//  RhSensoERP.Identity.Domain.Entities.Usuario
+//  RhSensoERP.Identity.Core.Entities.Usuario
 //  Tabela: dbo.tuse1
 //  Autor: Carlos Eduardo
 //  Data: 06/11/2025
 //  Descrição: Entidade de usuários do sistema, compatível com a tabela real.
+//
+//  ✅ MIGRAÇÃO: UserGroup agora pertence ao módulo Segurança.
+//     A navegação UserGroups é mantida aqui para uso nos serviços de login.
 // ============================================================================
 
-using RhSensoERP.Shared.Core.Primitives;
 using System;
 using System.Collections.Generic;
-using RhSensoERP.Shared.Core.Attributes;
+
+// ✅ NOVO: Referência ao UserGroup do módulo Segurança
+using RhSensoERP.Modules.Seguranca.Core.Entities;
 
 namespace RhSensoERP.Identity.Core.Entities
 {
@@ -109,6 +113,10 @@ namespace RhSensoERP.Identity.Core.Entities
         //  Relacionamentos
         // =======================
 
-        public virtual ICollection<UserGroup> UserGroups { get; set; } = new List<UserGroup>();
+        /// <summary>
+        /// Grupos do usuário (entidade do módulo Segurança).
+        /// Relacionamento configurado no IdentityDbContext.OnModelCreating.
+        /// </summary>
+        public virtual ICollection<UsuarioGrupo> UsuarioGrupos { get; set; } = new List<UsuarioGrupo>();
     }
 }

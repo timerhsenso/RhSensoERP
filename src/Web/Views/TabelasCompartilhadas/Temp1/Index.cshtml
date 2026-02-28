@@ -3,7 +3,8 @@
     ViewData["Title"] = Model.PageTitle;
     Layout = "_CrudLayout";
     ViewData["EntityName"] = "Empresa";
-    ViewData["IconClass"] = "fas fa-table";
+    ViewData["IconClass"] = "fas fa-building";
+    ViewData["ModalSize"] = "modal-xl"; @* Solicita modal grande no layout *@
 }
 
 @* ============================================================================
@@ -17,14 +18,107 @@
         canView: @Model.CanView.ToString().ToLower(),
         actions: "@Model.UserPermissions"
     };
-    
-    @* v3.4: Configuração para Toggle Ativo *@
+
     window.crudConfig = {
-        hasAtivoField: false,
+        hasAtivoField: true,
+        ativoFieldName: "Flativo",
         entityName: "Temp1",
         pkField: "Id"
     };
 </script>
+
+@* ============================================================================
+   CSS específico para formulário com abas
+   ============================================================================ *@
+@section PageStyles {
+    <style>
+        /* ── Abas do modal ─────────────────────────────────────── */
+        #modalTabs .nav-link {
+            color: #6c757d;
+            font-size: 0.82rem;
+            font-weight: 500;
+            padding: 0.5rem 0.85rem;
+            border: none;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s ease;
+        }
+        #modalTabs .nav-link:hover {
+            color: #495057;
+            border-bottom-color: #dee2e6;
+        }
+        #modalTabs .nav-link.active {
+            color: #007bff;
+            border-bottom-color: #007bff;
+            background: transparent;
+        }
+        #modalTabs .nav-link i {
+            margin-right: 4px;
+            font-size: 0.78rem;
+        }
+
+        /* ── Seções dentro das abas ────────────────────────────── */
+        .form-section {
+            background: #f8f9fa;
+            border-radius: 6px;
+            padding: 1rem 1.15rem 0.5rem;
+            margin-bottom: 1rem;
+            border: 1px solid #e9ecef;
+        }
+        .form-section-title {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.4rem;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .form-section-title i {
+            margin-right: 5px;
+            color: #007bff;
+        }
+
+        /* ── Campos ────────────────────────────────────────────── */
+        .form-label {
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+        .form-control, .form-select {
+            font-size: 0.85rem;
+        }
+        .form-text {
+            font-size: 0.72rem;
+        }
+
+        /* ── Switch toggle ─────────────────────────────────────── */
+        .form-check-input[type="checkbox"] {
+            width: 2.5em;
+            height: 1.25em;
+        }
+        .switch-label {
+            font-size: 0.82rem;
+            margin-left: 0.5rem;
+        }
+
+        /* ── Indicador de aba com erro ─────────────────────────── */
+        .nav-link.has-error {
+            color: #dc3545 !important;
+        }
+        .nav-link.has-error::after {
+            content: '●';
+            margin-left: 4px;
+            font-size: 0.5rem;
+            vertical-align: super;
+        }
+
+        /* ── Tab content padding ───────────────────────────────── */
+        .tab-content {
+            padding-top: 1rem;
+        }
+    </style>
+}
 
 @* ============================================================================
    Tabela usando partial _CrudTable (toolbar + datatable)
@@ -32,326 +126,463 @@
 @await Html.PartialAsync("_CrudTable", Model)
 
 @* ============================================================================
-   Conteúdo do Modal (apenas campos do formulário)
-   O wrapper do modal está no _CrudLayout
+   Conteúdo do Modal — Organizado com Nav Tabs
    ============================================================================ *@
 @section ModalContent {
     <input type="hidden" id="Id" name="Id" />
-    <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label for="Cdempresa" class="form-label">
-                        Código <span class="text-danger">*</span>
-                    </label>
-                    <input type="number" class="form-control" id="Cdempresa" name="Cdempresa" 
-                           placeholder="" required  />
-                    
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="Nmempresa" class="form-label">
-                        Razão Social
-                    </label>
-                    <input type="text" class="form-control" id="Nmempresa" name="Nmempresa" 
-                           placeholder=""   maxlength="100" />
-                    
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="Nmfantasia" class="form-label">
-                        Nome Fantasia
-                    </label>
-                    <input type="text" class="form-control" id="Nmfantasia" name="Nmfantasia" 
-                           placeholder=""   maxlength="30" />
-                    
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="ChTpcche" class="form-label">
-                        Tipo Cálculo Cheque
-                    </label>
-                    <input type="text" class="form-control" id="ChTpcche" name="ChTpcche" 
-                           placeholder=""   maxlength="2" />
-                    
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="ChTpdarf" class="form-label">
-                        Tipo DARF
-                    </label>
-                    <input type="text" class="form-control" id="ChTpdarf" name="ChTpdarf" 
-                           placeholder=""   maxlength="2" />
-                    
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="ChTpgrps" class="form-label">
-                        Tipo GRPS
-                    </label>
-                    <input type="text" class="form-control" id="ChTpgrps" name="ChTpgrps" 
-                           placeholder=""   maxlength="2" />
-                    
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="ChTptres" class="form-label">
-                        Tipo Três
-                    </label>
-                    <input type="text" class="form-control" id="ChTptres" name="ChTptres" 
-                           placeholder=""   maxlength="2" />
-                    
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="Chbrwfunc" class="form-label">
-                        Browse Funcionário
-                    </label>
-                    <input type="text" class="form-control" id="Chbrwfunc" name="Chbrwfunc" 
-                           placeholder=""   maxlength="1" />
-                    
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="Chtorc1" class="form-label">
-                        Tipo Orçamento
-                    </label>
-                    <input type="text" class="form-control" id="Chtorc1" name="Chtorc1" 
-                           placeholder=""   maxlength="1" />
-                    
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="Chferias" class="form-label">
-                        Configuração Férias
-                    </label>
-                    <input type="text" class="form-control" id="Chferias" name="Chferias" 
-                           placeholder=""   maxlength="1" />
-                    
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="Nmarqlogo" class="form-label">
-                        Arquivo Logo
-                    </label>
-                    <input type="text" class="form-control" id="Nmarqlogo" name="Nmarqlogo" 
-                           placeholder=""   maxlength="80" />
-                    
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="Nmarqlogocra" class="form-label">
-                        Arquivo Logo Crachá
-                    </label>
-                    <input type="text" class="form-control" id="Nmarqlogocra" name="Nmarqlogocra" 
-                           placeholder=""   maxlength="80" />
-                    
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="Arquivologo" class="form-label">
-                        Arquivo Logo (Path)
-                    </label>
-                    <input type="text" class="form-control" id="Arquivologo" name="Arquivologo" 
-                           placeholder=""   maxlength="42" />
-                    
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="Logo" class="form-label">
-                        Logo (Base64)
-                    </label>
-                    <input type="text" class="form-control" id="Logo" name="Logo" 
-                           placeholder=""   />
-                    
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="Arquivologocracha" class="form-label">
-                        Arquivo Logo Crachá (Path)
-                    </label>
-                    <input type="text" class="form-control" id="Arquivologocracha" name="Arquivologocracha" 
-                           placeholder=""   maxlength="42" />
-                    
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="Logocracha" class="form-label">
-                        Logo Crachá (Base64)
-                    </label>
-                    <input type="text" class="form-control" id="Logocracha" name="Logocracha" 
-                           placeholder=""   />
-                    
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="Tpinscempregador" class="form-label">
-                        Tipo Inscrição Empregador
-                    </label>
-                    <input type="text" class="form-control" id="Tpinscempregador" name="Tpinscempregador" 
-                           placeholder=""   maxlength="1" />
-                    
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="Nrinscempregador" class="form-label">
-                        Nº Inscrição Empregador
-                    </label>
-                    <input type="text" class="form-control" id="Nrinscempregador" name="Nrinscempregador" 
-                           placeholder=""   maxlength="15" />
-                    
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="Flativo" class="form-label">
-                        Ativo
-                    </label>
-                    <input type="text" class="form-control" id="Flativo" name="Flativo" 
-                           placeholder=""   maxlength="1" />
-                    
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="Flfapesocial" class="form-label">
-                        Flag FAP eSocial
-                    </label>
-                    <input type="text" class="form-control" id="Flfapesocial" name="Flfapesocial" 
-                           placeholder=""   />
-                    
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="Cnpjefr" class="form-label">
-                        CNPJ EFR
-                    </label>
-                    <input type="text" class="form-control" id="Cnpjefr" name="Cnpjefr" 
-                           placeholder=""   maxlength="14" />
-                    
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="IndacordoiseNmulta" class="form-label">
-                        Indicador Acordo Isenção Multa
-                    </label>
-                    <input type="text" class="form-control" id="IndacordoiseNmulta" name="IndacordoiseNmulta" 
-                           placeholder=""   />
-                    
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="InDconStrutora" class="form-label">
-                        Indicador Construtora
-                    </label>
-                    <input type="text" class="form-control" id="InDconStrutora" name="InDconStrutora" 
-                           placeholder=""   />
-                    
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="InDcooperativa" class="form-label">
-                        Indicador Cooperativa
-                    </label>
-                    <input type="text" class="form-control" id="InDcooperativa" name="InDcooperativa" 
-                           placeholder=""   />
-                    
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="Inddesfolha" class="form-label">
-                        Indicador Desoneração Folha
-                    </label>
-                    <input type="text" class="form-control" id="Inddesfolha" name="Inddesfolha" 
-                           placeholder=""   />
-                    
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="IndoPccp" class="form-label">
-                        Indicador Opção CP
-                    </label>
-                    <input type="text" class="form-control" id="IndoPccp" name="IndoPccp" 
-                           placeholder=""   />
-                    
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="Indporte" class="form-label">
-                        Indicador Porte
-                    </label>
-                    <input type="text" class="form-control" id="Indporte" name="Indporte" 
-                           placeholder=""   maxlength="1" />
-                    
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="Indoptregeletronico" class="form-label">
-                        Indicador Opção Registro Eletrônico
-                    </label>
-                    <input type="text" class="form-control" id="Indoptregeletronico" name="Indoptregeletronico" 
-                           placeholder=""   />
-                    
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="Nrcertificado" class="form-label">
-                        Nº Certificado
-                    </label>
-                    <input type="text" class="form-control" id="Nrcertificado" name="Nrcertificado" 
-                           placeholder=""   maxlength="40" />
-                    
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="Dtemissaocertificado" class="form-label">
-                        Data Emissão Certificado
-                    </label>
-                    <input type="text" class="form-control" id="Dtemissaocertificado" name="Dtemissaocertificado" 
-                           placeholder=""   />
-                    
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="Dtvenctocertificado" class="form-label">
-                        Data Vencimento Certificado
-                    </label>
-                    <input type="text" class="form-control" id="Dtvenctocertificado" name="Dtvenctocertificado" 
-                           placeholder=""   />
-                    
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="NrprotreNovacao" class="form-label">
-                        Nº Protocolo Renovação
-                    </label>
-                    <input type="text" class="form-control" id="NrprotreNovacao" name="NrprotreNovacao" 
-                           placeholder=""   maxlength="40" />
-                    
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="DtprotreNovacao" class="form-label">
-                        Data Protocolo Renovação
-                    </label>
-                    <input type="text" class="form-control" id="DtprotreNovacao" name="DtprotreNovacao" 
-                           placeholder=""   />
-                    
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="Nrregett" class="form-label">
-                        Nº Registro ETT
-                    </label>
-                    <input type="text" class="form-control" id="Nrregett" name="Nrregett" 
-                           placeholder=""   maxlength="30" />
-                    
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="Dtdou" class="form-label">
-                        Data DOU
-                    </label>
-                    <input type="text" class="form-control" id="Dtdou" name="Dtdou" 
-                           placeholder=""   />
-                    
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="Paginadou" class="form-label">
-                        Página DOU
-                    </label>
-                    <input type="text" class="form-control" id="Paginadou" name="Paginadou" 
-                           placeholder=""   maxlength="5" />
-                    
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="Ideminlei" class="form-label">
-                        Identificação Lei
-                    </label>
-                    <input type="text" class="form-control" id="Ideminlei" name="Ideminlei" 
-                           placeholder=""   maxlength="70" />
-                    
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="ClasStrib" class="form-label">
-                        Classificação Tributária
-                    </label>
-                    <input type="text" class="form-control" id="ClasStrib" name="ClasStrib" 
-                           placeholder=""   maxlength="2" />
-                    
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="NatjurIdica" class="form-label">
-                        Natureza Jurídica
-                    </label>
-                    <input type="text" class="form-control" id="NatjurIdica" name="NatjurIdica" 
-                           placeholder=""   maxlength="4" />
-                    
-                </div>
-    </div>
 
+    @* ── Navegação por abas ──────────────────────────────────────────────── *@
+    <ul class="nav nav-tabs" id="modalTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="tab-principal" data-bs-toggle="tab"
+                    data-bs-target="#pane-principal" type="button" role="tab">
+                <i class="fas fa-building"></i> Principal
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tab-fiscal" data-bs-toggle="tab"
+                    data-bs-target="#pane-fiscal" type="button" role="tab">
+                <i class="fas fa-file-invoice"></i> Fiscal / eSocial
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tab-indicadores" data-bs-toggle="tab"
+                    data-bs-target="#pane-indicadores" type="button" role="tab">
+                <i class="fas fa-sliders-h"></i> Indicadores
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tab-certificado" data-bs-toggle="tab"
+                    data-bs-target="#pane-certificado" type="button" role="tab">
+                <i class="fas fa-certificate"></i> Certificado / ETT
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tab-logos" data-bs-toggle="tab"
+                    data-bs-target="#pane-logos" type="button" role="tab">
+                <i class="fas fa-image"></i> Logos
+            </button>
+        </li>
+    </ul>
+
+    @* ── Conteúdo das abas ───────────────────────────────────────────────── *@
+    <div class="tab-content" id="modalTabContent">
+
+        @* ═══════════════════════════════════════════════════════════════════
+           ABA 1 — DADOS PRINCIPAIS
+           ═══════════════════════════════════════════════════════════════════ *@
+        <div class="tab-pane fade show active" id="pane-principal" role="tabpanel">
+
+            @* ── Identificação ── *@
+            <div class="form-section">
+                <div class="form-section-title">
+                    <i class="fas fa-id-card"></i> Identificação
+                </div>
+                <div class="row">
+                    <div class="col-md-2 mb-3">
+                        <label for="Cdempresa" class="form-label">
+                            Código <span class="text-danger">*</span>
+                        </label>
+                        <input type="number" class="form-control" id="Cdempresa" name="Cdempresa"
+                               placeholder="Ex: 1" required />
+                    </div>
+                    <div class="col-md-5 mb-3">
+                        <label for="Nmempresa" class="form-label">Razão Social</label>
+                        <input type="text" class="form-control" id="Nmempresa" name="Nmempresa"
+                               placeholder="Razão social completa" maxlength="100" />
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="Nmfantasia" class="form-label">Nome Fantasia</label>
+                        <input type="text" class="form-control" id="Nmfantasia" name="Nmfantasia"
+                               placeholder="Nome fantasia" maxlength="30" />
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <label for="Flativo" class="form-label">Situação</label>
+                        <select class="form-select" id="Flativo" name="Flativo">
+                            <option value="S">Ativo</option>
+                            <option value="N">Inativo</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            @* ── Configurações do Sistema ── *@
+            <div class="form-section">
+                <div class="form-section-title">
+                    <i class="fas fa-cogs"></i> Configurações do Sistema
+                </div>
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <label for="ChTpcche" class="form-label">Tipo Cálculo Cheque</label>
+                        <input type="text" class="form-control" id="ChTpcche" name="ChTpcche"
+                               maxlength="2" placeholder="Ex: 01" />
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="ChTpdarf" class="form-label">Tipo DARF</label>
+                        <input type="text" class="form-control" id="ChTpdarf" name="ChTpdarf"
+                               maxlength="2" placeholder="Ex: 01" />
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="ChTpgrps" class="form-label">Tipo GRPS</label>
+                        <input type="text" class="form-control" id="ChTpgrps" name="ChTpgrps"
+                               maxlength="2" placeholder="Ex: 01" />
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="ChTptres" class="form-label">Tipo Três</label>
+                        <input type="text" class="form-control" id="ChTptres" name="ChTptres"
+                               maxlength="2" placeholder="Ex: 01" />
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="Chbrwfunc" class="form-label">Browse Funcionário</label>
+                        <select class="form-select" id="Chbrwfunc" name="Chbrwfunc">
+                            <option value="">Selecione...</option>
+                            <option value="S">Sim</option>
+                            <option value="N">Não</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="Chtorc1" class="form-label">Tipo Orçamento</label>
+                        <input type="text" class="form-control" id="Chtorc1" name="Chtorc1"
+                               maxlength="1" />
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="Chferias" class="form-label">Config. Férias</label>
+                        <input type="text" class="form-control" id="Chferias" name="Chferias"
+                               maxlength="1" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @* ═══════════════════════════════════════════════════════════════════
+           ABA 2 — FISCAL / eSOCIAL
+           ═══════════════════════════════════════════════════════════════════ *@
+        <div class="tab-pane fade" id="pane-fiscal" role="tabpanel">
+
+            @* ── Inscrição e Classificação ── *@
+            <div class="form-section">
+                <div class="form-section-title">
+                    <i class="fas fa-landmark"></i> Inscrição e Classificação
+                </div>
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <label for="Tpinscempregador" class="form-label">Tipo Inscrição</label>
+                        <select class="form-select" id="Tpinscempregador" name="Tpinscempregador">
+                            <option value="">Selecione...</option>
+                            <option value="1">1 - CNPJ</option>
+                            <option value="2">2 - CPF</option>
+                            <option value="3">3 - CAEPF</option>
+                            <option value="4">4 - CNO</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="Nrinscempregador" class="form-label">Nº Inscrição Empregador</label>
+                        <input type="text" class="form-control mask-cnpj" id="Nrinscempregador"
+                               name="Nrinscempregador" maxlength="15"
+                               placeholder="00.000.000/0000-00" />
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="ClasStrib" class="form-label">Classif. Tributária</label>
+                        <input type="text" class="form-control" id="ClasStrib" name="ClasStrib"
+                               maxlength="2" placeholder="Ex: 01" />
+                        <small class="form-text text-muted">Tabela 8 do eSocial</small>
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <label for="NatjurIdica" class="form-label">Nat. Jurídica</label>
+                        <input type="text" class="form-control" id="NatjurIdica" name="NatjurIdica"
+                               maxlength="4" placeholder="Ex: 2062" />
+                    </div>
+                </div>
+            </div>
+
+            @* ── eSocial ── *@
+            <div class="form-section">
+                <div class="form-section-title">
+                    <i class="fas fa-cloud-upload-alt"></i> eSocial
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="Cnpjefr" class="form-label">CNPJ EFR</label>
+                        <input type="text" class="form-control mask-cnpj" id="Cnpjefr" name="Cnpjefr"
+                               maxlength="14" placeholder="00.000.000/0000-00" />
+                        <small class="form-text text-muted">Ente Federativo Responsável</small>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="Flfapesocial" class="form-label">FAP eSocial</label>
+                        <select class="form-select" id="Flfapesocial" name="Flfapesocial">
+                            <option value="">Selecione...</option>
+                            <option value="1">Sim</option>
+                            <option value="0">Não</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="Ideminlei" class="form-label">Identificação Lei</label>
+                        <input type="text" class="form-control" id="Ideminlei" name="Ideminlei"
+                               maxlength="70" placeholder="Nº da lei municipal" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @* ═══════════════════════════════════════════════════════════════════
+           ABA 3 — INDICADORES
+           ═══════════════════════════════════════════════════════════════════ *@
+        <div class="tab-pane fade" id="pane-indicadores" role="tabpanel">
+
+            <div class="form-section">
+                <div class="form-section-title">
+                    <i class="fas fa-toggle-on"></i> Indicadores eSocial / Empresa
+                </div>
+
+                @* ── Layout em grid de switches ── *@
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="d-flex align-items-center p-2 bg-white rounded border">
+                            <div class="form-check form-switch mb-0">
+                                <input class="form-check-input" type="checkbox"
+                                       id="sw_IndacordoiseNmulta" role="switch" />
+                                <input type="hidden" id="IndacordoiseNmulta" name="IndacordoiseNmulta" value="0" />
+                            </div>
+                            <div class="ms-2">
+                                <span class="switch-label">Acordo Isenção Multa</span>
+                                <br /><small class="form-text text-muted">Indicador de acordo para isenção de multa</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="d-flex align-items-center p-2 bg-white rounded border">
+                            <div class="form-check form-switch mb-0">
+                                <input class="form-check-input" type="checkbox"
+                                       id="sw_InDconStrutora" role="switch" />
+                                <input type="hidden" id="InDconStrutora" name="InDconStrutora" value="0" />
+                            </div>
+                            <div class="ms-2">
+                                <span class="switch-label">Construtora</span>
+                                <br /><small class="form-text text-muted">Empresa é construtora</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="d-flex align-items-center p-2 bg-white rounded border">
+                            <div class="form-check form-switch mb-0">
+                                <input class="form-check-input" type="checkbox"
+                                       id="sw_InDcooperativa" role="switch" />
+                                <input type="hidden" id="InDcooperativa" name="InDcooperativa" value="0" />
+                            </div>
+                            <div class="ms-2">
+                                <span class="switch-label">Cooperativa</span>
+                                <br /><small class="form-text text-muted">Empresa é cooperativa</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="d-flex align-items-center p-2 bg-white rounded border">
+                            <div class="form-check form-switch mb-0">
+                                <input class="form-check-input" type="checkbox"
+                                       id="sw_Inddesfolha" role="switch" />
+                                <input type="hidden" id="Inddesfolha" name="Inddesfolha" value="0" />
+                            </div>
+                            <div class="ms-2">
+                                <span class="switch-label">Desoneração da Folha</span>
+                                <br /><small class="form-text text-muted">Empresa optante pela desoneração</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="d-flex align-items-center p-2 bg-white rounded border">
+                            <div class="form-check form-switch mb-0">
+                                <input class="form-check-input" type="checkbox"
+                                       id="sw_IndoPccp" role="switch" />
+                                <input type="hidden" id="IndoPccp" name="IndoPccp" value="0" />
+                            </div>
+                            <div class="ms-2">
+                                <span class="switch-label">Opção CP</span>
+                                <br /><small class="form-text text-muted">Indicador de opção de contribuição previdenciária</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="d-flex align-items-center p-2 bg-white rounded border">
+                            <div class="form-check form-switch mb-0">
+                                <input class="form-check-input" type="checkbox"
+                                       id="sw_Indoptregeletronico" role="switch" />
+                                <input type="hidden" id="Indoptregeletronico" name="Indoptregeletronico" value="0" />
+                            </div>
+                            <div class="ms-2">
+                                <span class="switch-label">Registro Eletrônico</span>
+                                <br /><small class="form-text text-muted">Opção por registro eletrônico de ponto</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                @* ── Campo de porte (não é booleano) ── *@
+                <div class="row mt-2">
+                    <div class="col-md-4 mb-3">
+                        <label for="Indporte" class="form-label">Porte da Empresa</label>
+                        <select class="form-select" id="Indporte" name="Indporte">
+                            <option value="">Selecione...</option>
+                            <option value="0">Não informado</option>
+                            <option value="1">Micro Empresa</option>
+                            <option value="2">Empresa Pequeno Porte</option>
+                            <option value="3">Demais</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @* ═══════════════════════════════════════════════════════════════════
+           ABA 4 — CERTIFICADO DIGITAL / ETT
+           ═══════════════════════════════════════════════════════════════════ *@
+        <div class="tab-pane fade" id="pane-certificado" role="tabpanel">
+
+            @* ── Certificado Digital ── *@
+            <div class="form-section">
+                <div class="form-section-title">
+                    <i class="fas fa-key"></i> Certificado Digital
+                </div>
+                <div class="row">
+                    <div class="col-md-5 mb-3">
+                        <label for="Nrcertificado" class="form-label">Nº Certificado</label>
+                        <input type="text" class="form-control" id="Nrcertificado" name="Nrcertificado"
+                               maxlength="40" />
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="Dtemissaocertificado" class="form-label">Data Emissão</label>
+                        <input type="date" class="form-control" id="Dtemissaocertificado"
+                               name="Dtemissaocertificado" />
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="Dtvenctocertificado" class="form-label">Data Vencimento</label>
+                        <input type="date" class="form-control" id="Dtvenctocertificado"
+                               name="Dtvenctocertificado" />
+                    </div>
+                </div>
+            </div>
+
+            @* ── Renovação ── *@
+            <div class="form-section">
+                <div class="form-section-title">
+                    <i class="fas fa-sync-alt"></i> Renovação
+                </div>
+                <div class="row">
+                    <div class="col-md-5 mb-3">
+                        <label for="NrprotreNovacao" class="form-label">Nº Protocolo Renovação</label>
+                        <input type="text" class="form-control" id="NrprotreNovacao" name="NrprotreNovacao"
+                               maxlength="40" />
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="DtprotreNovacao" class="form-label">Data Protocolo</label>
+                        <input type="date" class="form-control" id="DtprotreNovacao"
+                               name="DtprotreNovacao" />
+                    </div>
+                </div>
+            </div>
+
+            @* ── ETT / DOU ── *@
+            <div class="form-section">
+                <div class="form-section-title">
+                    <i class="fas fa-file-alt"></i> ETT / Diário Oficial
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="Nrregett" class="form-label">Nº Registro ETT</label>
+                        <input type="text" class="form-control" id="Nrregett" name="Nrregett"
+                               maxlength="30" />
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="Dtdou" class="form-label">Data DOU</label>
+                        <input type="date" class="form-control" id="Dtdou" name="Dtdou" />
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <label for="Paginadou" class="form-label">Página DOU</label>
+                        <input type="text" class="form-control" id="Paginadou" name="Paginadou"
+                               maxlength="5" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @* ═══════════════════════════════════════════════════════════════════
+           ABA 5 — LOGOS
+           ═══════════════════════════════════════════════════════════════════ *@
+        <div class="tab-pane fade" id="pane-logos" role="tabpanel">
+
+            @* ── Logo Principal ── *@
+            <div class="form-section">
+                <div class="form-section-title">
+                    <i class="fas fa-image"></i> Logo Principal
+                </div>
+                <div class="row align-items-center">
+                    <div class="col-md-2 text-center mb-3">
+                        <div id="preview-logo" class="border rounded bg-white d-flex align-items-center justify-content-center"
+                             style="width:100px; height:100px; overflow:hidden;">
+                            <i class="fas fa-image fa-2x text-muted" id="placeholder-logo"></i>
+                            <img id="img-logo" src="" class="img-fluid d-none"
+                                 style="max-height:100px;" alt="Logo" />
+                        </div>
+                    </div>
+                    <div class="col-md-10">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="Nmarqlogo" class="form-label">Nome do Arquivo</label>
+                                <input type="text" class="form-control" id="Nmarqlogo" name="Nmarqlogo"
+                                       maxlength="80" placeholder="logo_empresa.png" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="Arquivologo" class="form-label">Caminho</label>
+                                <input type="text" class="form-control" id="Arquivologo" name="Arquivologo"
+                                       maxlength="42" placeholder="/logos/" />
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label for="Logo" class="form-label">Logo (Base64)</label>
+                                <textarea class="form-control" id="Logo" name="Logo" rows="2"
+                                      placeholder="Conteúdo base64 da imagem..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @* ── Logo Crachá ── *@
+            <div class="form-section">
+                <div class="form-section-title">
+                    <i class="fas fa-id-badge"></i> Logo Crachá
+                </div>
+                <div class="row align-items-center">
+                    <div class="col-md-2 text-center mb-3">
+                        <div id="preview-logo-cracha" class="border rounded bg-white d-flex align-items-center justify-content-center"
+                             style="width:100px; height:100px; overflow:hidden;">
+                            <i class="fas fa-id-badge fa-2x text-muted" id="placeholder-logo-cracha"></i>
+                            <img id="img-logo-cracha" src="" class="img-fluid d-none"
+                                 style="max-height:100px;" alt="Logo Crachá" />
+                        </div>
+                    </div>
+                    <div class="col-md-10">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="Nmarqlogocra" class="form-label">Nome do Arquivo</label>
+                                <input type="text" class="form-control" id="Nmarqlogocra" name="Nmarqlogocra"
+                                       maxlength="80" placeholder="logo_cracha.png" />
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="Arquivologocracha" class="form-label">Caminho</label>
+                                <input type="text" class="form-control" id="Arquivologocracha" name="Arquivologocracha"
+                                       maxlength="42" placeholder="/logos/" />
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label for="Logocracha" class="form-label">Logo Crachá (Base64)</label>
+                                <textarea class="form-control" id="Logocracha" name="Logocracha" rows="2"
+                                      placeholder="Conteúdo base64 da imagem..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div> @* /tab-content *@
 }
 
 @* ============================================================================
@@ -359,4 +590,56 @@
    ============================================================================ *@
 @section PageScripts {
     <script src="~/js/tabelascompartilhadas/temp1/temp1.js" asp-append-version="true"></script>
+
+    @* ── Script para switches (indicadores) ── *@
+    <script>
+        $(function () {
+            // Mapeamento switch ↔ hidden field
+            const switchMap = {
+                'sw_IndacordoiseNmulta': 'IndacordoiseNmulta',
+                'sw_InDconStrutora': 'InDconStrutora',
+                'sw_InDcooperativa': 'InDcooperativa',
+                'sw_Inddesfolha': 'Inddesfolha',
+                'sw_IndoPccp': 'IndoPccp',
+                'sw_Indoptregeletronico': 'Indoptregeletronico'
+            };
+
+            // Quando o switch muda, atualiza o hidden
+            Object.entries(switchMap).forEach(([swId, hiddenId]) => {
+                $(`#${swId}`).on('change', function () {
+                    $(`#${hiddenId}`).val(this.checked ? '1' : '0');
+                });
+            });
+
+            // Ao popular o form (edição), setar os switches a partir dos hiddens
+            $(document).on('crud:formPopulated', function () {
+                Object.entries(switchMap).forEach(([swId, hiddenId]) => {
+                    const val = $(`#${hiddenId}`).val();
+                    $(`#${swId}`).prop('checked', val === '1' || val === 'S' || val === 'true');
+                });
+
+                // Preview logos se tiver base64
+                updateLogoPreview('Logo', 'img-logo', 'placeholder-logo');
+                updateLogoPreview('Logocracha', 'img-logo-cracha', 'placeholder-logo-cracha');
+            });
+
+            // Ao abrir modal para novo registro, resetar para aba principal
+            $(document).on('crud:formReset', function () {
+                $('#modalTabs button:first').tab('show');
+            });
+
+            // Preview de logo
+            function updateLogoPreview(fieldId, imgId, placeholderId) {
+                const base64 = $(`#${fieldId}`).val();
+                if (base64 && base64.length > 10) {
+                    const src = base64.startsWith('data:') ? base64 : `data:image/png;base64,${base64}`;
+                    $(`#${imgId}`).attr('src', src).removeClass('d-none');
+                    $(`#${placeholderId}`).addClass('d-none');
+                } else {
+                    $(`#${imgId}`).addClass('d-none').attr('src', '');
+                    $(`#${placeholderId}`).removeClass('d-none');
+                }
+            }
+        });
+    </script>
 }

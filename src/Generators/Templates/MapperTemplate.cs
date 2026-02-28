@@ -1,6 +1,7 @@
 // =============================================================================
-// RHSENSOERP GENERATOR v4.6.1 - MAPPER TEMPLATE
+// RHSENSOERP GENERATOR v4.7 - MAPPER TEMPLATE
 // =============================================================================
+// v4.7: ADICIONADO - Suporte a PK composta (ignora todas as colunas da PK)
 // v4.6.1: CORRIGIDO - Null-check explícito em navegações
 // v4.6: ADICIONADO - Mapeamento automático de navegações
 // =============================================================================
@@ -26,7 +27,7 @@ public static class MapperTemplate
         var createIgnores = GenerateCreateIgnores(info);
         var updateIgnores = GenerateUpdateIgnores(info);
 
-        // ✅ v4.6 NOVO: Gera mapeamento de navegações
+        // ✅ v4.6: Gera mapeamento de navegações
         var navigationMappings = GenerateNavigationMappings(info);
 
         return $$"""
@@ -64,13 +65,9 @@ public sealed class {{info.EntityName}}Profile : Profile
     }
 
     // =========================================================================
-    // ✅ v4.6.1 CORRIGIDO: MAPEAMENTO DE NAVEGAÇÕES
+    // ✅ v4.6.1: MAPEAMENTO DE NAVEGAÇÕES
     // =========================================================================
 
-    /// <summary>
-    /// Gera mapeamentos de navegações.
-    /// v4.6.1: Usa null-check explícito em vez de null-forgiving operator
-    /// </summary>
     private static string GenerateNavigationMappings(EntityInfo info)
     {
         var navProps = info.Navigations
@@ -89,7 +86,6 @@ public sealed class {{info.EntityName}}Profile : Profile
             var navName = nav.Name;
             var displayProp = nav.DisplayProperty;
 
-            // ✅ v4.6.1: Usa null-check explícito em vez de null-forgiving operator
             lines.Add($"            .ForMember(dest => dest.{dtoProp}, opt => opt.MapFrom(src => src.{navName} != null ? src.{navName}.{displayProp} : null))");
         }
 
@@ -98,13 +94,22 @@ public sealed class {{info.EntityName}}Profile : Profile
 
     /// <summary>
     /// Gera ignores para CreateRequest.
+    /// v4.7: Ignora TODAS as colunas de PK composta.
     /// </summary>
     private static string GenerateCreateIgnores(EntityInfo info)
     {
         var ignores = new List<string>();
 
-        // Ignora PK
-        ignores.Add($"            .ForMember(dest => dest.{info.PrimaryKeyProperty}, opt => opt.Ignore())");
+        // ✅ v4.7: Ignora PK(s)
+        if (info.HasCompositeKey)
+        {
+            // PK composta: NÃO ignora as PKs no Create (elas precisam ser informadas!)
+            // Apenas ignora se for auto-gerada (Identity), o que não é o caso de PK composta
+        }
+        else
+        {
+            ignores.Add($"            .ForMember(dest => dest.{info.PrimaryKeyProperty}, opt => opt.Ignore())");
+        }
 
         // Ignora TenantId (se não for legada)
         if (!info.IsLegacyTable)
@@ -141,13 +146,24 @@ public sealed class {{info.EntityName}}Profile : Profile
 
     /// <summary>
     /// Gera ignores para UpdateRequest.
+    /// v4.7: Ignora TODAS as colunas de PK composta.
     /// </summary>
     private static string GenerateUpdateIgnores(EntityInfo info)
     {
         var ignores = new List<string>();
 
-        // Ignora PK
-        ignores.Add($"            .ForMember(dest => dest.{info.PrimaryKeyProperty}, opt => opt.Ignore())");
+        // ✅ v4.7: Ignora PK(s) - no Update, SEMPRE ignora todas as PKs
+        if (info.HasCompositeKey)
+        {
+            foreach (var pkProp in info.CompositeKeyProperties)
+            {
+                ignores.Add($"            .ForMember(dest => dest.{pkProp}, opt => opt.Ignore())");
+            }
+        }
+        else
+        {
+            ignores.Add($"            .ForMember(dest => dest.{info.PrimaryKeyProperty}, opt => opt.Ignore())");
+        }
 
         // Ignora TenantId
         if (!info.IsLegacyTable)
@@ -162,7 +178,7 @@ public sealed class {{info.EntityName}}Profile : Profile
             }
         }
 
-        // Ignora TODOS campos de auditoria (criação + update)
+        // Ignora TODOS campos de auditoria
         if (!string.IsNullOrEmpty(info.CreatedAtField))
             ignores.Add($"            .ForMember(dest => dest.{info.CreatedAtField}, opt => opt.Ignore())");
 
@@ -182,9 +198,6 @@ public sealed class {{info.EntityName}}Profile : Profile
         return string.Join("\n", ignores);
     }
 
-    /// <summary>
-    /// Gera ignores para propriedades de navegação (elas não existem na entidade).
-    /// </summary>
     private static List<string> GenerateNavigationIgnores(EntityInfo info)
     {
         var ignores = new List<string>();
@@ -196,7 +209,6 @@ public sealed class {{info.EntityName}}Profile : Profile
 
         foreach (var nav in navWithDisplay)
         {
-            // Ignora a navegação em si (ex: Fornecedor)
             ignores.Add($"            .ForMember(dest => dest.{nav.Name}, opt => opt.Ignore())");
         }
 

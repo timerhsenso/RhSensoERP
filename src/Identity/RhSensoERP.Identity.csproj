@@ -3,23 +3,17 @@
 	<!-- ===========================================================================================
        RhSensoERP.Identity
        Target: .NET 8
-       Observações:
-       - Usa Source Generator (Analyzer) para auto-create (CRUD/DTO/etc.)
-       - Remove "Application/Requests/**" do build (pasta descontinuada/gerada)
+       ✅ MIGRAÇÃO: Adicionado ProjectReference para Segurança (entidades legadas)
        =========================================================================================== -->
 
 	<PropertyGroup>
 		<TargetFramework>net8.0</TargetFramework>
-
-		<!-- Convenções modernas de projeto -->
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 	</PropertyGroup>
 
 	<!-- ===========================================================================================
        SOURCE GENERATOR (Analyzer)
-       - OutputItemType="Analyzer" faz o projeto ser consumido como analyzer/source generator
-       - ReferenceOutputAssembly="false" evita referenciar o assembly do generator em runtime
        =========================================================================================== -->
 	<ItemGroup>
 		<ProjectReference Include="..\..\Generators\RhSensoERP.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
@@ -27,10 +21,6 @@
 
 	<!-- ===========================================================================================
        REGRAS DE BUILD
-       Remove a pasta Application/Requests do build.
-       Útil quando:
-       - a pasta é gerada/obsoleta, ou
-       - você quer impedir compilação/embutidos/itens "None" nessa árvore.
        =========================================================================================== -->
 	<ItemGroup>
 		<Compile Remove="Application\Requests\**" />
@@ -49,35 +39,32 @@
 	</ItemGroup>
 
 	<!-- ===========================================================================================
-       DEPENDÊNCIAS (NuGet)
-       Observação:
-       - Idealmente as versões ficam centralizadas via Directory.Packages.props
+       ✅ NOVO: Referência ao módulo Segurança (entidades legadas de controle de acesso)
+       Necessário para:
+       - Entidades: Tsistema, Funcao, BotaoFuncao, GrupoDeUsuario, GrupoFuncao, UserGroup
+       - Configurations: carregadas no IdentityDbContext via ApplyConfigurationsFromAssembly
        =========================================================================================== -->
 	<ItemGroup>
-		<!-- Segurança -->
+		<ProjectReference Include="..\Modules\Seguranca\RhSensoERP.Modules.Seguranca.csproj" />
+	</ItemGroup>
+
+	<!-- ===========================================================================================
+       DEPENDÊNCIAS (NuGet)
+       =========================================================================================== -->
+	<ItemGroup>
 		<PackageReference Include="BCrypt.Net-Next" />
-
-		<!-- CQRS / Mediator -->
 		<PackageReference Include="MediatR" />
-
-		<!-- Mapping -->
 		<PackageReference Include="AutoMapper" />
 		<PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" />
-
-		<!-- Validação -->
 		<PackageReference Include="FluentValidation" />
 		<PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
-
-		<!-- ✅ FASE 3: Integração Active Directory (Windows) -->
 		<PackageReference Include="System.DirectoryServices" />
 		<PackageReference Include="System.DirectoryServices.AccountManagement" />
-
-		<!-- EF Core tooling (design-time) -->
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" />
 	</ItemGroup>
 
 	<!-- ===========================================================================================
-       PASTAS (apenas organização no Solution Explorer)
+       PASTAS
        =========================================================================================== -->
 	<ItemGroup>
 		<Folder Include="Application\DTOs\Common\" />

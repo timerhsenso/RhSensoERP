@@ -1,12 +1,11 @@
 ﻿// =================================================================================================
-// RhSensoERP • Identity • Entity
+// RhSensoERP • Segurança • Entity
 // =================================================================================================
 // Entidade:        Funcao
 // Tabela:          dbo.fucn1
 // Natureza:        Legada
-// Chave primária:  (CdFuncao, CdSistema)
+// Chave primária:  (CdSistema, CdFuncao)
 // Finalidade:      Representa uma função/tela do sistema
-// Observações:     Estrutura baseada no banco bd_rhu_copenor
 // Compatibilidade: SQL Server 2019+
 // =================================================================================================
 
@@ -20,6 +19,7 @@ namespace RhSensoERP.Modules.Seguranca.Core.Entities;
 
 /// <summary>
 /// Entidade que representa uma função/tela do sistema (tabela fucn1).
+/// PK composta: (CdSistema, CdFuncao)
 /// </summary>
 [GenerateCrud(
     TableName = "fucn1",
@@ -27,10 +27,12 @@ namespace RhSensoERP.Modules.Seguranca.Core.Entities;
     CdSistema = "SEG",
     CdFuncao = "SEG_FM_FUNCAO",
     IsLegacyTable = true,
-    GenerateApiController = true
+    GenerateApiController = true,
+ //   ApiRoute = "seguranca/funcao",
+    SupportsBatchDelete = false
 )]
-[Table("fucn1", Schema = "dbo")]
-[PrimaryKey(nameof(CdSistema), nameof(CdFuncao))]  // ✅ mesma ordem do banco
+[Table("fucn1")]
+[PrimaryKey(nameof(CdSistema), nameof(CdFuncao))]
 public class Funcao
 {
     // =============================================================================================
@@ -40,6 +42,7 @@ public class Funcao
     /// <summary>
     /// SQL: dbo.fucn1.cdfuncao (varchar(30)) - parte da PK composta.
     /// </summary>
+    [Key]
     [Required, StringLength(30)]
     [Column("cdfuncao", TypeName = "varchar(30)")]
     public string CdFuncao { get; set; } = string.Empty;
@@ -47,6 +50,7 @@ public class Funcao
     /// <summary>
     /// SQL: dbo.fucn1.cdsistema (char(10)) - parte da PK composta.
     /// </summary>
+    [Key]
     [Required, StringLength(10)]
     [Column("cdsistema", TypeName = "char(10)")]
     public string CdSistema { get; set; } = string.Empty;
@@ -80,7 +84,18 @@ public class Funcao
     // RELACIONAMENTOS
     // =============================================================================================
 
-   // public virtual Tsistema Sistema { get; set; } = null!;
-   // public virtual ICollection<BotaoFuncao> Botoes { get; set; } = new List<BotaoFuncao>();
-   // public virtual ICollection<GrupoFuncao> GrupoFuncoes { get; set; } = new List<GrupoFuncao>();
+    /// <summary>
+    /// Sistema ao qual esta função pertence.
+    /// </summary>
+    public virtual Tsistema Sistema { get; set; } = null!;
+
+    /// <summary>
+    /// Botões desta função (btfuncao).
+    /// </summary>
+    public virtual ICollection<BotaoFuncao> Botoes { get; set; } = new List<BotaoFuncao>();
+
+    /// <summary>
+    /// Habilitações de grupo nesta função (hbrh1).
+    /// </summary>
+    public virtual ICollection<HabilitacaoGrupo> Habilitacoes { get; set; } = new List<HabilitacaoGrupo>();
 }

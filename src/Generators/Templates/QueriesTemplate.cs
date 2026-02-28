@@ -1,6 +1,7 @@
 // =============================================================================
-// RHSENSOERP GENERATOR v4.6 - QUERIES TEMPLATE
+// RHSENSOERP GENERATOR v4.7 - QUERIES TEMPLATE
 // =============================================================================
+// v4.7: ADICIONADO - Suporte a chave primária composta
 // v4.6: ADICIONADO - Includes automáticos para navegações
 // v4.0: Ordenação dinâmica ASC/DESC com SortBy/Desc
 // =============================================================================
@@ -14,19 +15,23 @@ public static class QueriesTemplate
 {
     /// <summary>
     /// Gera a Query GetById com validação de tenant e Includes.
+    /// v4.7: Suporte a PK composta
     /// </summary>
     public static string GenerateGetByIdQuery(EntityInfo info)
     {
-        var pkType = info.PrimaryKeyType;
         var tenantValidation = GenerateTenantValidationForQuery(info);
         var currentUserUsing = info.IsLegacyTable ? "" : "\nusing RhSensoERP.Shared.Core.Abstractions;";
         var currentUserField = info.IsLegacyTable ? "" : "\n    private readonly ICurrentUser _currentUser;";
         var currentUserParam = info.IsLegacyTable ? "" : ",\n        ICurrentUser currentUser";
         var currentUserAssign = info.IsLegacyTable ? "" : "\n        _currentUser = currentUser;";
 
-        // ✅ v4.6 NOVO: Includes para navegações
+        // ✅ v4.6: Includes para navegações
         var includesCode = GenerateIncludesForGetById(info);
         var includesUsing = includesCode.Contains("Include") ? "\nusing Microsoft.EntityFrameworkCore;" : "";
+
+        // ✅ v4.7: PK composta - record com múltiplos parâmetros
+        var queryRecordParams = GenerateQueryRecordParams(info);
+        var queryLogParams = GenerateQueryLogParams(info);
 
         return $$"""
 {{info.FileHeader}}
@@ -44,7 +49,7 @@ namespace {{info.QueriesNamespace}};
 /// <summary>
 /// Query para buscar {{info.DisplayName}} por ID.
 /// </summary>
-public sealed record GetBy{{info.EntityName}}IdQuery({{pkType}} Id)
+public sealed record GetBy{{info.EntityName}}IdQuery({{queryRecordParams}})
     : IRequest<Result<{{info.EntityName}}Dto>>;
 
 /// <summary>
@@ -73,13 +78,13 @@ public sealed class GetBy{{info.EntityName}}IdHandler
     {
         try
         {
-            _logger.LogDebug("Buscando {{info.DisplayName}} {Id}...", query.Id);
+            _logger.LogDebug("Buscando {{info.DisplayName}} {{queryLogParams}}...");
 
 {{includesCode}}
 
             if (entity == null)
             {
-                _logger.LogWarning("{{info.DisplayName}} {Id} não encontrado", query.Id);
+                _logger.LogWarning("{{info.DisplayName}} não encontrado");
                 return Result<{{info.EntityName}}Dto>.Failure(
                     Error.NotFound("{{info.EntityName}}.NotFound", "{{info.DisplayName}} não encontrado"));
             }
@@ -92,7 +97,7 @@ public sealed class GetBy{{info.EntityName}}IdHandler
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erro ao buscar {{info.DisplayName}} {Id}", query.Id);
+            _logger.LogError(ex, "Erro ao buscar {{info.DisplayName}}");
             return Result<{{info.EntityName}}Dto>.Failure(
                 Error.Failure("{{info.EntityName}}.Error", $"Erro ao buscar {{info.DisplayName}}: {ex.Message}"));
         }
@@ -103,6 +108,7 @@ public sealed class GetBy{{info.EntityName}}IdHandler
 
     /// <summary>
     /// Gera a Query GetPaged com filtro de tenant, ordenação dinâmica e Includes.
+    /// v4.7: Suporte a PK composta para OrderBy default
     /// </summary>
     public static string GenerateGetPagedQuery(EntityInfo info)
     {
@@ -127,8 +133,12 @@ public sealed class GetBy{{info.EntityName}}IdHandler
         var orderByAscCases = GenerateOrderByCases(info, ascending: true);
         var orderByDescCases = GenerateOrderByCases(info, ascending: false);
 
-        // ✅ v4.6 NOVO: Includes para navegações
+        // ✅ v4.6: Includes para navegações
         var includesForPaged = GenerateIncludesForPaged(info);
+
+        // ✅ v4.7: OrderBy default usa helper (com lambda)
+        var defaultOrderByProp = info.PrimaryKeyDefaultOrderBy; // ex: "e.Id" ou "e.CdSistema"
+        var defaultOrderByExpr = $"e => {defaultOrderByProp}";  // ex: "e => e.Id"
 
         return $$"""
 {{info.FileHeader}}
@@ -154,7 +164,7 @@ public sealed record Get{{info.PluralName}}PagedQuery(PagedRequest Request)
 
 /// <summary>
 /// Handler da query de listagem paginada.
-/// v4.6: Inclui navegações automaticamente.
+/// v4.7: Suporte a PK composta para OrderBy.
 /// </summary>
 public sealed class Get{{info.PluralName}}PagedHandler
     : IRequestHandler<Get{{info.PluralName}}PagedQuery, Result<PagedResult<{{info.EntityName}}Dto>>>
@@ -209,7 +219,7 @@ public sealed class Get{{info.PluralName}}PagedHandler
                     {
 {{orderByDescCases}}
                         default:
-                            queryable = queryable.OrderByDescending(e => e.{{info.PrimaryKeyProperty}});
+                            queryable = queryable.OrderByDescending({{defaultOrderByExpr}});
                             break;
                     }
                 }
@@ -219,14 +229,14 @@ public sealed class Get{{info.PluralName}}PagedHandler
                     {
 {{orderByAscCases}}
                         default:
-                            queryable = queryable.OrderBy(e => e.{{info.PrimaryKeyProperty}});
+                            queryable = queryable.OrderBy({{defaultOrderByExpr}});
                             break;
                     }
                 }
             }
             else
             {
-                queryable = queryable.OrderBy(e => e.{{info.PrimaryKeyProperty}});
+                queryable = queryable.OrderBy({{defaultOrderByExpr}});
             }
 
             // Paginação
@@ -257,11 +267,45 @@ public sealed class Get{{info.PluralName}}PagedHandler
     }
 
     // =========================================================================
-    // ✅ v4.6 NOVO: INCLUDES AUTOMÁTICOS
+    // ✅ v4.7: HELPERS PARA PK COMPOSTA
+    // =========================================================================
+
+    /// <summary>
+    /// Gera parâmetros do record da query GetById.
+    /// Simples: "int Id" | Composta: "string CdSistema, string CdFuncao"
+    /// </summary>
+    private static string GenerateQueryRecordParams(EntityInfo info)
+    {
+        if (!info.HasCompositeKey)
+            return $"{info.PrimaryKeyType} Id";
+
+        var parts = new List<string>();
+        for (int i = 0; i < info.CompositeKeyProperties.Count; i++)
+        {
+            parts.Add($"{info.CompositeKeyTypes[i]} {info.CompositeKeyProperties[i]}");
+        }
+        return string.Join(", ", parts);
+    }
+
+    /// <summary>
+    /// Gera expressão para log de PK.
+    /// Simples: "{Id}" | Composta: "{CdSistema}/{CdFuncao}"
+    /// </summary>
+    private static string GenerateQueryLogParams(EntityInfo info)
+    {
+        if (!info.HasCompositeKey)
+            return "{Id}";
+
+        return string.Join("/", info.CompositeKeyProperties.Select(p => $"{{{p}}}"));
+    }
+
+    // =========================================================================
+    // ✅ v4.6: INCLUDES AUTOMÁTICOS
     // =========================================================================
 
     /// <summary>
     /// Gera código para buscar entidade por ID com Includes.
+    /// v4.7: Suporte a PK composta no filtro
     /// </summary>
     private static string GenerateIncludesForGetById(EntityInfo info)
     {
@@ -270,10 +314,22 @@ public sealed class Get{{info.PluralName}}PagedHandler
                        n.RelationshipType == NavigationRelationshipType.ManyToOne)
             .ToList();
 
+        // ✅ v4.7: Gera filtro correto para PK composta
+        var filterExpr = GenerateGetByIdFilterExpression(info);
+
         if (!navWithDisplay.Any())
         {
-            // Sem navegações - usa método direto
-            return $"            var entity = await _repository.GetByIdAsync(query.Id, cancellationToken);";
+            if (!info.HasCompositeKey)
+            {
+                // Sem navegações, PK simples - usa método direto
+                return $"            var entity = await _repository.GetByIdAsync(query.Id, cancellationToken);";
+            }
+            else
+            {
+                // Sem navegações, PK composta - usa método direto com múltiplos params
+                var args = string.Join(", ", info.CompositeKeyProperties.Select(p => $"query.{p}"));
+                return $"            var entity = await _repository.GetByIdAsync({args}, cancellationToken);";
+            }
         }
 
         // Com navegações - usa Query() + Includes
@@ -285,7 +341,21 @@ public sealed class Get{{info.PluralName}}PagedHandler
 
         return $@"            var entity = await _repository.Query()
 {includesCode}
-                .FirstOrDefaultAsync(x => x.{info.PrimaryKeyProperty} == query.Id, cancellationToken);";
+                .FirstOrDefaultAsync(x => {filterExpr}, cancellationToken);";
+    }
+
+    /// <summary>
+    /// Gera expressão de filtro para GetById.
+    /// Simples: "x.Id == query.Id" | Composta: "x.CdSistema == query.CdSistema && x.CdFuncao == query.CdFuncao"
+    /// </summary>
+    private static string GenerateGetByIdFilterExpression(EntityInfo info)
+    {
+        if (!info.HasCompositeKey)
+            return $"x.{info.PrimaryKeyProperty} == query.Id";
+
+        var parts = info.CompositeKeyProperties
+            .Select(p => $"x.{p} == query.{p}");
+        return string.Join(" && ", parts);
     }
 
     /// <summary>
@@ -308,7 +378,6 @@ public sealed class Get{{info.PluralName}}PagedHandler
 
         var includesCode = string.Join("\n", includes);
 
-        // ✅ v3.6.3: ADICIONA AsNoTracking DEPOIS dos includes
         return $@"
             // ✅ Carrega navegações
 {includesCode}
@@ -321,11 +390,22 @@ public sealed class Get{{info.PluralName}}PagedHandler
         var cases = new List<string>();
         var orderMethod = ascending ? "OrderBy" : "OrderByDescending";
 
-        foreach (var prop in info.Properties.Where(p => !p.IsNavigation && p.Name != info.PrimaryKeyProperty))
+        foreach (var prop in info.Properties.Where(p => !p.IsNavigation && !p.IsPrimaryKey))
         {
             cases.Add($@"                        case ""{prop.Name}"":
                             queryable = queryable.{orderMethod}(e => e.{prop.Name});
                             break;");
+        }
+
+        // ✅ v4.7: Adiciona cases para cada coluna da PK composta também
+        if (info.HasCompositeKey)
+        {
+            foreach (var pkProp in info.CompositeKeyProperties)
+            {
+                cases.Add($@"                        case ""{pkProp}"":
+                            queryable = queryable.{orderMethod}(e => e.{pkProp});
+                            break;");
+            }
         }
 
         return string.Join("\n", cases);
@@ -341,9 +421,8 @@ public sealed class Get{{info.PluralName}}PagedHandler
             if (entity.TenantId != tenantId)
             {{
                 _logger.LogWarning(
-                    ""Acesso cross-tenant negado: Usuário {{UserId}} tentou acessar {{Id}}"",
-                    _currentUser.UserId,
-                    query.Id);
+                    ""Acesso cross-tenant negado: Usuário {{UserId}} tentou acessar recurso"",
+                    _currentUser.UserId);
                 
                 return Result<{info.EntityName}Dto>.Failure(
                     Error.Forbidden(""{info.EntityName}.Forbidden"", ""Acesso negado""));

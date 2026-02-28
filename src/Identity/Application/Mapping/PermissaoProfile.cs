@@ -1,6 +1,8 @@
 using AutoMapper;
 using RhSensoERP.Identity.Application.DTOs.Permissoes;
-using RhSensoERP.Identity.Core.Entities;
+
+// ✅ ALTERADO: BotaoFuncao agora está no módulo Segurança
+using RhSensoERP.Modules.Seguranca.Core.Entities;
 
 namespace RhSensoERP.Identity.Application.Mapping;
 
