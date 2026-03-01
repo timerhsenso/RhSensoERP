@@ -2,7 +2,7 @@
 // ARQUIVO GERADO POR GeradorFullStack v4.0
 // Entity: Tsistema
 // Module: Seguranca
-// Data: 2026-02-28 01:05:14
+// Data: 2026-02-28 19:16:10
 // =============================================================================
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

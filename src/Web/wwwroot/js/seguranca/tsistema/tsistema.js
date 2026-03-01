@@ -6,7 +6,7 @@
  * Módulo: Seguranca
  * Versão: 5.1 (NAVEGAÇÕES COM ORDENAÇÃO CORRETA)
  * Gerado por: GeradorFullStack v5.1
- * Data: 2026-02-28 01:05:14
+ * Data: 2026-02-28 19:16:10
  * 
  * Changelog v5.1:
  *   ✅ CORRIGIDO: Navegações agora respeitam Order configurado pelo usuário
@@ -287,21 +287,21 @@ $(document).ready(function () {
                 return `<input type="checkbox" class="form-check-input row-select dt-checkboxes" value="${id}" data-id="${id}" />`;
             }
         },
-        // Cdsi Stema (Order: 0)
+        // Código de Si Stema (Order: 0)
         {
             data: 'cdsiStema',
             name: 'CdsiStema',
-            title: 'Cdsi Stema',
+            title: 'Código de Si Stema',
             orderable: true,
             render: function (data, type, row) {
                 return data !== undefined && data !== null ? data : '';
             }
         },
-        // Dcsi Stema (Order: 1)
+        // Descrição de Si Stema (Order: 1)
         {
             data: 'dcsiStema',
             name: 'DcsiStema',
-            title: 'Dcsi Stema',
+            title: 'Descrição de Si Stema',
             orderable: true,
             render: function (data, type, row) {
                 return data !== undefined && data !== null ? data : '';

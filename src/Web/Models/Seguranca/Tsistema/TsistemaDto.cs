@@ -2,7 +2,7 @@
 // ARQUIVO GERADO POR GeradorFullStack v4.0
 // Entity: Tsistema
 // Module: Seguranca
-// Data: 2026-02-28 01:05:14
+// Data: 2026-02-28 19:16:10
 // =============================================================================
 
 namespace RhSensoERP.Web.Models.Seguranca.Tsistema;
@@ -14,12 +14,12 @@ namespace RhSensoERP.Web.Models.Seguranca.Tsistema;
 public class TsistemaDto
 {
     /// <summary>
-    /// Cdsi Stema
+    /// Código de Si Stema
     /// </summary>
     public string CdsiStema { get; set; } = string.Empty;
 
     /// <summary>
-    /// Dcsi Stema
+    /// Descrição de Si Stema
     /// </summary>
     public string DcsiStema { get; set; } = string.Empty;
 }

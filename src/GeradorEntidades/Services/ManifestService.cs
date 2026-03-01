@@ -264,6 +264,7 @@ public class ManifestService
         {
             Schema = entity.Schema ?? "dbo",
             NomeTabela = entity.TableName,
+            NomeEntidadeOverride = entity.EntityName,
             Descricao = entity.DisplayName
         };
 

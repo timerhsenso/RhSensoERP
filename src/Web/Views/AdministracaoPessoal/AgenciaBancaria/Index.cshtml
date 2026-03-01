@@ -1,0 +1,106 @@
+﻿@model RhSensoERP.Web.Models.AdministracaoPessoal.AgenciaBancaria.AgenciaBancariaListViewModel
+@{
+    ViewData["Title"] = Model.PageTitle;
+    Layout = "_CrudLayout";
+    ViewData["EntityName"] = "Tabela de Agências";
+    ViewData["IconClass"] = "fas fa-table";
+}
+
+@* ============================================================================
+   Permissões injetadas para JavaScript (ANTES do script específico)
+   ============================================================================ *@
+<script>
+    window.crudPermissions = {
+        canCreate: @Model.CanCreate.ToString().ToLower(),
+        canEdit: @Model.CanEdit.ToString().ToLower(),
+        canDelete: @Model.CanDelete.ToString().ToLower(),
+        canView: @Model.CanView.ToString().ToLower(),
+        actions: "@Model.UserPermissions"
+    };
+    
+    @* v3.4: Configuração para Toggle Ativo *@
+    window.crudConfig = {
+        hasAtivoField: false,
+        entityName: "AgenciaBancaria",
+        pkField: "Id"
+    };
+</script>
+
+@* ============================================================================
+   Tabela usando partial _CrudTable (toolbar + datatable)
+   ============================================================================ *@
+@await Html.PartialAsync("_CrudTable", Model)
+
+@* ============================================================================
+   Conteúdo do Modal (apenas campos do formulário)
+   O wrapper do modal está no _CrudLayout
+   ============================================================================ *@
+@section ModalContent {
+    <input type="hidden" id="Id" name="Id" />
+    <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="Cdbanco" class="form-label">
+                        Código Banco
+                    </label>
+                    <input type="text" class="form-control" id="Cdbanco" name="Cdbanco" 
+                           placeholder=""   maxlength="3" />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Cdagencia" class="form-label">
+                        Código Agência
+                    </label>
+                    <input type="text" class="form-control" id="Cdagencia" name="Cdagencia" 
+                           placeholder=""   maxlength="4" />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Dvagencia" class="form-label">
+                        Dígito
+                    </label>
+                    <input type="text" class="form-control" id="Dvagencia" name="Dvagencia" 
+                           placeholder=""   maxlength="1" />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Nmagencia" class="form-label">
+                        Nome
+                    </label>
+                    <input type="text" class="form-control" id="Nmagencia" name="Nmagencia" 
+                           placeholder=""   maxlength="40" />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Cdmunicip" class="form-label">
+                        Código Município
+                    </label>
+                    <input type="text" class="form-control" id="Cdmunicip" name="Cdmunicip" 
+                           placeholder=""   maxlength="5" />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Noconta" class="form-label">
+                        Conta
+                    </label>
+                    <input type="text" class="form-control" id="Noconta" name="Noconta" 
+                           placeholder=""   maxlength="15" />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Idbanco" class="form-label">
+                        Idbanco
+                    </label>
+                    <input type="text" class="form-control" id="Idbanco" name="Idbanco" 
+                           placeholder=""   />
+                    
+                </div>
+    </div>
+
+}
+
+@* ============================================================================
+   Script específico da entidade
+   ============================================================================ *@
+@section PageScripts {
+    <script src="~/js/administracaopessoal/agenciabancaria/agenciabancaria.js" asp-append-version="true"></script>
+}

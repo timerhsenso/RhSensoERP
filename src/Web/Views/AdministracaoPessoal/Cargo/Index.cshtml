@@ -1,0 +1,170 @@
+﻿@model RhSensoERP.Web.Models.AdministracaoPessoal.Cargo.CargoListViewModel
+@{
+    ViewData["Title"] = Model.PageTitle;
+    Layout = "_CrudLayout";
+    ViewData["EntityName"] = "Cargos";
+    ViewData["IconClass"] = "fas fa-table";
+}
+
+@* ============================================================================
+   Permissões injetadas para JavaScript (ANTES do script específico)
+   ============================================================================ *@
+<script>
+    window.crudPermissions = {
+        canCreate: @Model.CanCreate.ToString().ToLower(),
+        canEdit: @Model.CanEdit.ToString().ToLower(),
+        canDelete: @Model.CanDelete.ToString().ToLower(),
+        canView: @Model.CanView.ToString().ToLower(),
+        actions: "@Model.UserPermissions"
+    };
+    
+    @* v3.4: Configuração para Toggle Ativo *@
+    window.crudConfig = {
+        hasAtivoField: false,
+        entityName: "Cargo",
+        pkField: "Id"
+    };
+</script>
+
+@* ============================================================================
+   Tabela usando partial _CrudTable (toolbar + datatable)
+   ============================================================================ *@
+@await Html.PartialAsync("_CrudTable", Model)
+
+@* ============================================================================
+   Conteúdo do Modal (apenas campos do formulário)
+   O wrapper do modal está no _CrudLayout
+   ============================================================================ *@
+@section ModalContent {
+    <input type="hidden" id="Id" name="Id" />
+    <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="Cdcargo" class="form-label">
+                        Código
+                    </label>
+                    <input type="text" class="form-control" id="Cdcargo" name="Cdcargo" 
+                           placeholder=""   maxlength="5" />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Dccargo" class="form-label">
+                        Descrição
+                    </label>
+                    <input type="text" class="form-control" id="Dccargo" name="Dccargo" 
+                           placeholder=""   maxlength="50" />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Flativo" class="form-label">
+                        Ativo <span class="text-danger">*</span>
+                    </label>
+                    <input type="number" class="form-control" id="Flativo" name="Flativo" 
+                           placeholder="" required  />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Dtinival" class="form-label">
+                        Data Início Validade
+                    </label>
+                    <input type="text" class="form-control" id="Dtinival" name="Dtinival" 
+                           placeholder=""   />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Dtfimval" class="form-label">
+                        Data Fim Validade
+                    </label>
+                    <input type="text" class="form-control" id="Dtfimval" name="Dtfimval" 
+                           placeholder=""   />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Cdtabela" class="form-label">
+                        Código Tabela Salarial
+                    </label>
+                    <input type="text" class="form-control" id="Cdtabela" name="Cdtabela" 
+                           placeholder=""   maxlength="3" />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Cdniveini" class="form-label">
+                        Nível Inicial
+                    </label>
+                    <input type="text" class="form-control" id="Cdniveini" name="Cdniveini" 
+                           placeholder=""   maxlength="5" />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Cdnivefim" class="form-label">
+                        Nível Final
+                    </label>
+                    <input type="text" class="form-control" id="Cdnivefim" name="Cdnivefim" 
+                           placeholder=""   maxlength="5" />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="CdinStruc" class="form-label">
+                        Código Instrução
+                    </label>
+                    <input type="text" class="form-control" id="CdinStruc" name="CdinStruc" 
+                           placeholder=""   maxlength="2" />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Cdcbo" class="form-label">
+                        Código CBO (5 dígitos)
+                    </label>
+                    <input type="text" class="form-control" id="Cdcbo" name="Cdcbo" 
+                           placeholder=""   maxlength="5" />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Cdcbo6" class="form-label">
+                        Código CBO (6 dígitos)
+                    </label>
+                    <input type="text" class="form-control" id="Cdcbo6" name="Cdcbo6" 
+                           placeholder=""   maxlength="6" />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Cdgrprof" class="form-label">
+                        Grupo Profissional
+                    </label>
+                    <input type="text" class="form-control" id="Cdgrprof" name="Cdgrprof" 
+                           placeholder=""   maxlength="2" />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Idcbo" class="form-label">
+                        Idcbo
+                    </label>
+                    <input type="text" class="form-control" id="Idcbo" name="Idcbo" 
+                           placeholder=""   />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="IdgraudeinStrucao" class="form-label">
+                        Idgraudeinstrucao
+                    </label>
+                    <input type="text" class="form-control" id="IdgraudeinStrucao" name="IdgraudeinStrucao" 
+                           placeholder=""   />
+                    
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="Idtabelasalarial" class="form-label">
+                        Idtabelasalarial
+                    </label>
+                    <input type="text" class="form-control" id="Idtabelasalarial" name="Idtabelasalarial" 
+                           placeholder=""   />
+                    
+                </div>
+    </div>
+
+}
+
+@* ============================================================================
+   Script específico da entidade
+   ============================================================================ *@
+@section PageScripts {
+    <script src="~/js/administracaopessoal/cargo/cargo.js" asp-append-version="true"></script>
+}

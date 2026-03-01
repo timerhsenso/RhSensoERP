@@ -31,7 +31,7 @@ public class MenuItemAttribute : Attribute
     /// Módulo ao qual este item pertence.
     /// Determina em qual dropdown do menu o item aparecerá.
     /// </summary>
-    public MenuModule Module { get; set; } = MenuModule.eSocial;
+    public MenuModule Module { get; set; } = MenuModule.AdministracaoPessoal;
 
     /// <summary>
     /// Nome de exibição no menu.
@@ -171,35 +171,67 @@ public enum MenuModule
         */
 
 
-    [MenuModuleInfo("Gestão de Pessoas", "fas fa-cog", 6, "RHU")]
-    GestaoDePessoas,
+    // Exemplo: enum de módulos do menu (1 item por projeto em /Modules)
 
-    [MenuModuleInfo("Gestão de Terceiros", "fas fa-cog", 6, "GTC")]
-    GestaooDeTerceiros,
-    
-    [MenuModuleInfo("Controle Acesso Portaria", "fas fa-cog", 6, "CAP")]
-    ControleAcessoPortaria,
+    [MenuModuleInfo("Administração de Pessoal", "fas fa-users-cog", 6, "ADP")]
+    AdministracaoPessoal,
 
-    [MenuModuleInfo("Controle de Frequencia", "fas fa-cog", 6, "CPO")]
-    ControleDePonto,
+    [MenuModuleInfo("Cargos, Salários e Remuneração", "fas fa-money-check-alt", 6, "CSR")]
+    CargosSalariosRemuneracao,
 
-    [MenuModuleInfo("Treinamento", "fas fa-cog", 6, "TRE")]
-    Treinamento,
+    [MenuModuleInfo("Compliance Trabalhista / Jurídico", "fas fa-balance-scale", 6, "CTJ")]
+    ComplianceTrabalhistaJuridico,
 
-    [MenuModuleInfo("Saúde Ocupacional", "fas fa-cog", 6, "MSO")]
-    SaudeOcupacional,
+    [MenuModuleInfo("Folha, Pagamentos e Encargos", "fas fa-file-invoice-dollar", 6, "FOL")]
+    FolhaPagamentoEncargos,
 
-    [MenuModuleInfo("Segurança", "fas fa-cog", 6, "SEG")]
+    [MenuModuleInfo("Gestão de Benefícios", "fas fa-gift", 6, "BEN")]
+    GestaoBeneficios,
+
+    [MenuModuleInfo("Gestão Documental", "fas fa-folder-open", 6, "DOC")]
+    GestaoDocumental,
+
+    [MenuModuleInfo("Jornada e Ponto", "fas fa-user-clock", 6, "CPO")]
+    GestaoJornadaPonto,
+
+    [MenuModuleInfo("Portaria e Controle de Acesso", "fas fa-id-card", 6, "CAP")]
+    GestaoPortariaAcesso,
+
+    [MenuModuleInfo("Talentos e Desempenho", "fas fa-chart-line", 6, "TDE")]
+    GestaoTalentosDesempenho,
+
+    [MenuModuleInfo("Terceiros e Prestadores", "fas fa-people-carry", 6, "GTP")]
+    GestaoTerceirosPrestadores,
+
+    [MenuModuleInfo("Integrações e Mensageria", "fas fa-exchange-alt", 6, "IMS")]
+    IntegracoesMensageria,
+
+    [MenuModuleInfo("Multi-Tenant (SaaS)", "fas fa-sitemap", 6, "SAS")]
+    MultiTenant,
+
+    [MenuModuleInfo("People Analytics / BI", "fas fa-chart-pie", 6, "PBI")]
+    PeopleAnalyticsBI,
+
+    [MenuModuleInfo("Portal do Colaborador", "fas fa-user", 6, "PCO")]
+    PortalColaborador,
+
+    [MenuModuleInfo("Recrutamento e Seleção", "fas fa-user-plus", 6, "RSE")]
+    RecrutamentoSelecao,
+
+    [MenuModuleInfo("Saúde e Segurança do Trabalho", "fas fa-hard-hat", 6, "SST")]
+    SaudeSegurancaTrabalho,
+
+    [MenuModuleInfo("Segurança", "fas fa-shield-alt", 6, "SEG")]
     Seguranca,
 
-    [MenuModuleInfo("Avaliação360", "fas fa-cog", 6, "AVA")]
-    Avaliacao,
+    [MenuModuleInfo("Tabelas Compartilhadas", "fas fa-database", 6, "TBL")]
+    TabelasCompartilhadas,
 
-    [MenuModuleInfo("eSocial", "fas fa-cog", 6, "ESO")]
-    eSocial,
+    [MenuModuleInfo("Treinamento e Desenvolvimento", "fas fa-chalkboard-teacher", 6, "TRE")]
+    TreinamentoDesenvolvimento,
 
-    [MenuModuleInfo("Gestão de EPI", "fas fa-cog", 6, "EPI")]
-    GestaodeEPI
+    [MenuModuleInfo("Viagens e Despesas", "fas fa-plane", 6, "VDP")]
+    ViagensDespesas
 
 }
 

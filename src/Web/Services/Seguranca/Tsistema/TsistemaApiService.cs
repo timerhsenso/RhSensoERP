@@ -3,7 +3,7 @@
 // Entity: Tsistema
 // Module: Seguranca
 // ApiRoute: api/seguranca/tsistema
-// Data: 2026-02-28 01:05:14
+// Data: 2026-02-28 19:16:10
 // AUTO-REGISTRO: Compatível com AddCrudToolServicesAutomatically()
 // =============================================================================
 using System.Text;

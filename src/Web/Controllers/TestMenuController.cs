@@ -37,7 +37,7 @@ public class TestMenuController : Controller
 /// </summary>
 [Authorize]
 [MenuItem(
-    Module = MenuModule.GestaoDePessoas,
+    Module = MenuModule.AdministracaoPessoal,
     DisplayName = "🧪 Teste RHU",
     Icon = "fas fa-flask",
     Order = 1

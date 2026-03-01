@@ -2,7 +2,7 @@
 // ARQUIVO GERADO POR GeradorFullStack v4.0
 // Entity: Tsistema
 // Module: Seguranca
-// Data: 2026-02-28 01:05:14
+// Data: 2026-02-28 19:16:10
 // =============================================================================
 using System.ComponentModel.DataAnnotations;
 
@@ -15,19 +15,19 @@ namespace RhSensoERP.Web.Models.Seguranca.Tsistema;
 public class CreateTsistemaRequest
 {
     /// <summary>
-    /// Cdsi Stema
+    /// Código de Si Stema
     /// (Chave Primária - obrigatório na criação)
     /// </summary>
-    [Display(Name = "Cdsi Stema")]
-    [Required(ErrorMessage = "Cdsi Stema é obrigatório")]
-    [StringLength(10, ErrorMessage = "Cdsi Stema deve ter no máximo {1} caracteres")]
+    [Display(Name = "Código de Si Stema")]
+    [Required(ErrorMessage = "Código de Si Stema é obrigatório")]
+    [StringLength(10, ErrorMessage = "Código de Si Stema deve ter no máximo {1} caracteres")]
     public string CdsiStema { get; set; } = string.Empty;
 
     /// <summary>
-    /// Dcsi Stema
+    /// Descrição de Si Stema
     /// </summary>
-    [Display(Name = "Dcsi Stema")]
-    [Required(ErrorMessage = "Dcsi Stema é obrigatório")]
-    [StringLength(60, ErrorMessage = "Dcsi Stema deve ter no máximo {1} caracteres")]
+    [Display(Name = "Descrição de Si Stema")]
+    [Required(ErrorMessage = "Descrição de Si Stema é obrigatório")]
+    [StringLength(60, ErrorMessage = "Descrição de Si Stema deve ter no máximo {1} caracteres")]
     public string DcsiStema { get; set; } = string.Empty;
 }

@@ -19,11 +19,15 @@ public class TabelaInfo
     public string Schema { get; set; } = "dbo";
     public string NomeTabela { get; set; } = string.Empty;
     public string NomeLimpo => LimparNome(NomeTabela);
-    public string NomePascalCase => ToPascalCase(NomeLimpo);
+    //public string NomePascalCase => ToPascalCase(NomeLimpo);
+    public string NomePascalCase => NomeEntidadeOverride ?? ToPascalCase(NomeLimpo);
     public string NomePlural => Pluralizar(NomePascalCase);
     public string NomePluralLower => NomePlural.ToLowerInvariant();
     public string NomeLower => NomePascalCase.ToLowerInvariant();
     public string Descricao { get; set; } = string.Empty;
+
+    public string? NomeEntidadeOverride { get; set; }
+
     public List<ColunaInfo> Colunas { get; set; } = [];
     public List<ForeignKeyInfo> ForeignKeys { get; set; } = [];
     public List<IndexInfo> Indices { get; set; } = [];
