@@ -1,0 +1,232 @@
+@* =============================================================================
+    RHSENSOERP WEB - DYNAMIC MENU VIEW
+    =============================================================================
+    Arquivo: src/Web/Views/Shared/Components/DynamicMenu/Default.cshtml
+    Descrição: Renderiza o menu dinâmico no layout com suporte a favoritos
+    ============================================================================= *@
+
+@model IReadOnlyList<RhSensoERP.Web.Services.Menu.MenuModuleViewModel>
+
+@{
+    var currentArea = ViewContext.RouteData.Values["area"]?.ToString();
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+
+    // Coleta favoritos para seção especial
+    var favorites = Model
+        .SelectMany(m => m.Items)
+        .Where(i => i.IsFavorite && i.HasPermission)
+        .ToList();
+}
+
+@* ================== SEÇÃO DE FAVORITOS (SE HOUVER) ================== *@
+@if (favorites.Any())
+{
+    <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" 
+           href="#" 
+           id="menu-favorites" 
+           role="button"
+           data-bs-toggle="dropdown" 
+           aria-expanded="false">
+            <i class="fas fa-star text-warning me-1"></i>
+            Favoritos
+            <span class="badge bg-warning text-dark ms-1">@favorites.Count</span>
+        </a>
+
+        <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="menu-favorites">
+            @foreach (var fav in favorites.Take(10))
+            {
+                <li>
+                    <a class="dropdown-item" href="@fav.Url" title="@fav.Description">
+                        <i class="@fav.Icon me-2"></i>
+                        @fav.DisplayName
+                    </a>
+                </li>
+            }
+            @if (favorites.Count > 10)
+            {
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                    <span class="dropdown-item text-muted small">
+                        <i class="fas fa-ellipsis-h me-2"></i>
+                        + @(favorites.Count - 10) mais...
+                    </span>
+                </li>
+            }
+        </ul>
+    </li>
+}
+
+@* ================== MÓDULOS DO MENU ================== *@
+@foreach (var module in Model)
+{
+    // Módulo ativo se qualquer item do módulo bater (Area + Controller).
+    // Isso evita "active" incorreto quando há controllers com mesmo nome em áreas diferentes.
+    var isModuleActive = module.Items.Any(i =>
+        string.Equals(i.Controller, currentController, StringComparison.OrdinalIgnoreCase)
+        && string.Equals(i.Area ?? string.Empty, currentArea ?? string.Empty, StringComparison.OrdinalIgnoreCase));
+
+    <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle @(isModuleActive ? "active" : "")"
+           href="#"
+           id="menu-@module.Module"
+           role="button"
+           data-bs-toggle="dropdown"
+           aria-expanded="false">
+            <i class="@module.Icon me-1"></i>
+            @module.DisplayName
+        </a>
+
+        <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="menu-@module.Module">
+            @foreach (var item in module.Items)
+            {
+                var isActive =
+                    string.Equals(item.Controller, currentController, StringComparison.OrdinalIgnoreCase)
+                    && string.Equals(item.Area ?? string.Empty, currentArea ?? string.Empty, StringComparison.OrdinalIgnoreCase)
+                    && string.Equals(item.Action, currentAction, StringComparison.OrdinalIgnoreCase);
+
+                if (item.ComingSoon || !item.HasPermission)
+                {
+                    <li>
+                        <span class="dropdown-item disabled text-muted"
+                              title="@(item.ComingSoon ? "Funcionalidade em desenvolvimento" : "Sem permissão de acesso")">
+                            <i class="@item.Icon me-2 opacity-50"></i>
+                            @item.DisplayName
+                            @if (!string.IsNullOrEmpty(item.Badge))
+                            {
+                                <span class="badge bg-@item.BadgeColor ms-2">@item.Badge</span>
+                            }
+                        </span>
+                    </li>
+                }
+                else
+                {
+                    <li class="d-flex align-items-center">
+                        <a class="dropdown-item flex-grow-1 @(isActive ? "active" : "")"
+                           href="@item.Url"
+                           title="@item.Description">
+                            <i class="@item.Icon me-2"></i>
+                            @item.DisplayName
+                            @if (!string.IsNullOrEmpty(item.Badge))
+                            {
+                                <span class="badge bg-@item.BadgeColor ms-2">@item.Badge</span>
+                            }
+                        </a>
+                        @* Botão de favorito *@
+                        <button type="button" 
+                                class="btn btn-sm btn-link text-decoration-none px-2 favorite-toggle"
+                                data-screen-key="@item.ScreenKey"
+                                data-cd-sistema="@item.CdSistema"
+                                data-cd-funcao="@item.CdFuncao"
+                                data-area="@item.Area"
+                                data-controller="@item.Controller"
+                                data-action="@item.Action"
+                                data-display-name="@item.DisplayName"
+                                data-icon="@item.Icon"
+                                title="@(item.IsFavorite ? "Remover dos favoritos" : "Adicionar aos favoritos")">
+                            <i class="@(item.IsFavorite ? "fas" : "far") fa-star @(item.IsFavorite ? "text-warning" : "text-muted")"></i>
+                        </button>
+                    </li>
+                }
+            }
+        </ul>
+    </li>
+}
+
+@* ================== SCRIPT DE TOGGLE FAVORITOS ================== *@
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.favorite-toggle').forEach(function (btn) {
+            btn.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const button = this;
+                const icon = button.querySelector('i');
+                const screenKey = button.dataset.screenKey;
+
+                // Dados para persistência
+                const data = {
+                    screenKey: screenKey,
+                    cdSistema: button.dataset.cdSistema || null,
+                    cdFuncao: button.dataset.cdFuncao || null,
+                    area: button.dataset.area || null,
+                    controller: button.dataset.controller || null,
+                    action: button.dataset.action || null,
+                    displayName: button.dataset.displayName || null,
+                    icon: button.dataset.icon || null
+                };
+
+                // Pega token antiforgery
+                const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                           || document.querySelector('meta[name="csrf-token"]')?.content;
+
+                fetch('/api/favorites/toggle', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': token || ''
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.isFavorite !== undefined) {
+                        // Atualiza ícone
+                        icon.classList.toggle('fas', result.isFavorite);
+                        icon.classList.toggle('far', !result.isFavorite);
+                        icon.classList.toggle('text-warning', result.isFavorite);
+                        icon.classList.toggle('text-muted', !result.isFavorite);
+
+                        // Atualiza tooltip
+                        button.title = result.isFavorite 
+                            ? 'Remover dos favoritos' 
+                            : 'Adicionar aos favoritos';
+
+                        // Feedback visual
+                        if (typeof toastr !== 'undefined') {
+                            toastr.success(
+                                result.isFavorite 
+                                    ? 'Adicionado aos favoritos!' 
+                                    : 'Removido dos favoritos'
+                            );
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro ao toggle favorito:', error);
+                    if (typeof toastr !== 'undefined') {
+                        toastr.error('Erro ao atualizar favorito');
+                    }
+                });
+            });
+        });
+    });
+</script>
+
+@* ================== CSS ADICIONAL ================== *@
+<style>
+    .dropdown-menu .favorite-toggle {
+        opacity: 0.6;
+        transition: opacity 0.2s;
+    }
+    
+    .dropdown-menu li:hover .favorite-toggle {
+        opacity: 1;
+    }
+    
+    .favorite-toggle:hover {
+        transform: scale(1.1);
+    }
+    
+    .favorite-toggle .fa-star.text-warning {
+        animation: pulse-star 0.3s ease-in-out;
+    }
+    
+    @@keyframes pulse-star {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.3); }
+        100% { transform: scale(1); }
+    }
+</style>

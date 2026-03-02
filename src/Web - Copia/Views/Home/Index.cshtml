@@ -1,0 +1,140 @@
+@{
+    ViewData["Title"] = "Página Inicial";
+}
+
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h1 class="display-4 fw-bold text-primary mb-3">
+            <i class="fas fa-building me-3"></i>
+            RhSensoERP
+        </h1>
+        <p class="lead text-muted">Sistema de Gestão de Recursos Humanos</p>
+        <hr class="my-4">
+    </div>
+
+    <div class="row g-4">
+        <!-- Card: Dashboard de Permissões -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm h-100 border-0">
+                <div class="card-body text-center p-4">
+                    <div class="mb-3">
+                        <i class="fas fa-tachometer-alt fa-3x text-primary"></i>
+                    </div>
+                    <h5 class="card-title fw-bold">Dashboard de Permissões</h5>
+                    <p class="card-text text-muted">
+                        Visualize suas informações pessoais, grupos, funções e permissões no sistema.
+                    </p>
+                    <a asp-controller="Account" asp-action="Dashboard" class="btn btn-primary">
+                        <i class="fas fa-eye me-2"></i>Acessar Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card: Perfil do Usuário -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm h-100 border-0">
+                <div class="card-body text-center p-4">
+                    <div class="mb-3">
+                        <i class="fas fa-user-circle fa-3x text-success"></i>
+                    </div>
+                    <h5 class="card-title fw-bold">Meu Perfil</h5>
+                    <p class="card-text text-muted">
+                        Gerencie suas informações pessoais e preferências de conta.
+                    </p>
+                    <a href="#" class="btn btn-success disabled">
+                        <i class="fas fa-user-edit me-2"></i>Em Breve
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card: Configurações -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm h-100 border-0">
+                <div class="card-body text-center p-4">
+                    <div class="mb-3">
+                        <i class="fas fa-cog fa-3x text-info"></i>
+                    </div>
+                    <h5 class="card-title fw-bold">Configurações</h5>
+                    <p class="card-text text-muted">
+                        Ajuste as configurações do sistema de acordo com suas necessidades.
+                    </p>
+                    <a href="#" class="btn btn-info disabled">
+                        <i class="fas fa-sliders-h me-2"></i>Em Breve
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card: Relatórios -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm h-100 border-0">
+                <div class="card-body text-center p-4">
+                    <div class="mb-3">
+                        <i class="fas fa-chart-bar fa-3x text-warning"></i>
+                    </div>
+                    <h5 class="card-title fw-bold">Relatórios</h5>
+                    <p class="card-text text-muted">
+                        Acesse relatórios e análises de dados do sistema.
+                    </p>
+                    <a href="#" class="btn btn-warning disabled">
+                        <i class="fas fa-file-alt me-2"></i>Em Breve
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card: Ajuda -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm h-100 border-0">
+                <div class="card-body text-center p-4">
+                    <div class="mb-3">
+                        <i class="fas fa-question-circle fa-3x text-secondary"></i>
+                    </div>
+                    <h5 class="card-title fw-bold">Ajuda e Suporte</h5>
+                    <p class="card-text text-muted">
+                        Encontre documentação e suporte técnico para o sistema.
+                    </p>
+                    <a href="#" class="btn btn-secondary disabled">
+                        <i class="fas fa-life-ring me-2"></i>Em Breve
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card: Sair -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm h-100 border-0">
+                <div class="card-body text-center p-4">
+                    <div class="mb-3">
+                        <i class="fas fa-sign-out-alt fa-3x text-danger"></i>
+                    </div>
+                    <h5 class="card-title fw-bold">Sair do Sistema</h5>
+                    <p class="card-text text-muted">
+                        Encerre sua sessão de forma segura.
+                    </p>
+                    <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-power-off me-2"></i>Logout
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Informações do Usuário Logado -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="alert alert-info" role="alert">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>Usuário Logado:</strong> @User.Identity?.Name
+                <span class="ms-3">
+                    <strong>Código:</strong> @User.FindFirst("cdusuario")?.Value
+                </span>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,254 @@
+﻿/* ============================================================================
+   RHSENSOERP - COMPONENTES MODERNOS
+   ============================================================================
+   Arquivo: wwwroot/css/modern-components.css
+   Versão: 2.0 (Clean Corporate)
+   Descrição: Componentes UI focados em legibilidade e profissionalismo
+   ============================================================================ */
+
+/* ============================================================================
+   🎴 CARDS & COTAINERS
+   ============================================================================ */
+.modern-card {
+    background: var(--surface-0);
+    border: 1px solid var(--surface-3);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow var(--transition-base), border-color var(--transition-base);
+    position: relative;
+    overflow: hidden;
+}
+
+.modern-card:hover {
+    border-color: var(--primary-200);
+    box-shadow: var(--shadow-md);
+}
+
+[data-theme="dark"] .modern-card:hover {
+    border-color: var(--primary-800);
+}
+
+/* ===== SURFACE CARD (Flat) ===== */
+.surface-card {
+    background: var(--surface-0);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+}
+
+/* ============================================================================
+   🔘 BOTÕES MODERNOS
+   ============================================================================ */
+.btn-modern {
+    border-radius: var(--border-radius-md);
+    font-weight: 500;
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+    transition: all var(--transition-fast);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border: 1px solid transparent;
+}
+
+/* Primary Action */
+.btn-primary-modern {
+    background-color: var(--primary-600);
+    color: white;
+    border-color: transparent;
+}
+
+.btn-primary-modern:hover {
+    background-color: var(--primary-700);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+    color: white;
+}
+
+.btn-primary-modern:active {
+    background-color: var(--primary-800);
+    transform: translateY(0);
+}
+
+/* Secondary/Ghost Action */
+.btn-ghost-modern {
+    background-color: transparent;
+    color: var(--text-secondary);
+    border-color: var(--border-color);
+}
+
+.btn-ghost-modern:hover {
+    background-color: var(--surface-2);
+    color: var(--text-primary);
+    border-color: var(--gray-300);
+}
+
+/* Destructive Action */
+.btn-danger-modern {
+    background-color: var(--danger-bg);
+    color: var(--danger-text);
+    border-color: transparent;
+}
+
+.btn-danger-modern:hover {
+    background-color: #fee2e2;
+    border-color: #fecaca;
+}
+
+/* ============================================================================
+   📝 FORMULÁRIOS MODERNOS
+   ============================================================================ */
+.form-modern .form-label {
+    font-weight: 500;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.375rem;
+}
+
+.form-modern .form-control,
+.form-modern .form-select {
+    border-radius: var(--border-radius-md);
+    border: 1px solid var(--border-color);
+    padding: 0.625rem 0.875rem;
+    font-size: 0.9375rem;
+    background-color: var(--surface-0);
+    color: var(--text-primary);
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.form-modern .form-control:focus,
+.form-modern .form-select:focus {
+    border-color: var(--primary-500);
+    box-shadow: 0 0 0 3px var(--primary-100);
+    outline: none;
+}
+
+[data-theme="dark"] .form-modern .form-control:focus,
+[data-theme="dark"] .form-modern .form-select:focus {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+/* ============================================================================
+   📊 TABELAS MODERNAS (Clean SaaS Style)
+   ============================================================================ */
+.table-modern-wrapper {
+    background: var(--surface-0);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+}
+
+.table-modern {
+    width: 100%;
+    margin-bottom: 0;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.table-modern thead th {
+    background: var(--surface-1);
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.75rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    white-space: nowrap;
+}
+
+.table-modern tbody td {
+    padding: 1rem 1.5rem;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-primary);
+    font-size: 0.9375rem;
+}
+
+.table-modern tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.table-modern tbody tr:hover {
+    background-color: var(--surface-1);
+}
+
+/* ============================================================================
+   🎭 MODAIS MODERNOS
+   ============================================================================ */
+.modal-modern .modal-content {
+    border-radius: var(--border-radius-xl);
+    border: 1px solid var(--surface-3);
+    box-shadow: var(--shadow-lg);
+    background-color: var(--surface-0);
+}
+
+.modal-modern .modal-header {
+    border-bottom: 1px solid var(--border-color);
+    padding: 1.25rem 1.5rem;
+    background-color: var(--surface-0);
+}
+
+.modal-modern .modal-title {
+    font-weight: 600;
+    font-size: 1.125rem;
+    color: var(--text-primary);
+}
+
+.modal-modern .modal-body {
+    padding: 1.5rem;
+}
+
+.modal-modern .modal-footer {
+    border-top: 1px solid var(--border-color);
+    padding: 1rem 1.5rem;
+    background-color: var(--surface-1);
+}
+
+/* ============================================================================
+   📌 BADGES MODERNOS
+   ============================================================================ */
+.badge-modern {
+    padding: 0.25rem 0.625rem;
+    border-radius: 9999px;
+    /* Pill shape */
+    font-weight: 500;
+    font-size: 0.75rem;
+    line-height: 1;
+}
+
+.badge-success {
+    background: var(--success-bg);
+    color: var(--success-text);
+}
+
+.badge-warning {
+    background: var(--warning-bg);
+    color: var(--warning-text);
+}
+
+.badge-danger {
+    background: var(--danger-bg);
+    color: var(--danger-text);
+}
+
+.badge-info {
+    background: var(--info-bg);
+    color: var(--info-text);
+}
+
+/* ============================================================================
+   ⚡ UTILITÁRIOS
+   ============================================================================ */
+.text-gradient {
+    /* Subtle gradient for headings */
+    background: linear-gradient(135deg, var(--primary-600), var(--primary-800));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+[data-theme="dark"] .text-gradient {
+    background: linear-gradient(135deg, var(--primary-400), var(--primary-200));
+}

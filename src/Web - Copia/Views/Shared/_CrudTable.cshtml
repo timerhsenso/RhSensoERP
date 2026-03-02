@@ -1,0 +1,106 @@
+@model RhSensoERP.Web.Models.Base.BaseListViewModel
+
+@*
+    ============================================================================
+    PARTIAL VIEW REUTILIZÁVEL PARA CRUD
+    ============================================================================
+    Arquivo: Views/Shared/_CrudTable.cshtml
+    
+    Partial View genérica para exibir tabelas CRUD com DataTables.
+    Elimina duplicação de código entre diferentes entidades.
+    
+    USO:
+    ============================================================================
+    
+    // Na view Index.cshtml:
+    @model RhSensoERP.Web.Models.Sistemas.SistemasListViewModel
+    @{
+        ViewData["Title"] = Model.PageTitle;
+        Layout = "_CrudLayout";
+    }
+    
+    @await Html.PartialAsync("_CrudTable", Model)
+    
+    @section PageScripts {
+        <script src="~/js/pages/sistemas.js" asp-append-version="true"></script>
+    }
+    
+    ============================================================================
+*@
+
+<!-- Container Principal -->
+<div class="crud-container">
+    <!-- Header -->
+    <div class="crud-header">
+        <div class="crud-header-title">
+            <i class="@Model.PageIcon"></i>
+            <div>
+                <h2>@Model.PageTitle</h2>
+                @if (!string.IsNullOrEmpty(Model.PageSubtitle))
+                {
+                    <p>@Model.PageSubtitle</p>
+                }
+            </div>
+        </div>
+        <div class="crud-header-actions">
+            @if (Model.ShowCreateButton && Model.CanCreate)
+            {
+                <button type="button" class="btn btn-crud btn-crud-success" id="btnCreate">
+                    <i class="fas fa-plus"></i> Novo
+                </button>
+            }
+        </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="crud-toolbar">
+        <div class="crud-toolbar-left">
+            @if (Model.ShowDeleteMultipleButton && Model.CanDelete)
+            {
+                <button type="button" class="btn btn-danger btn-toolbar-action" id="btnDeleteSelected" disabled>
+                    <i class="fas fa-trash"></i> Excluir Selecionados
+                    <span class="badge bg-white text-danger" id="selectedCount">0</span>
+                </button>
+            }
+            @if (Model.ShowRefreshButton)
+            {
+                <button type="button" class="btn btn-info btn-toolbar-action" id="btnRefresh">
+                    <i class="fas fa-sync-alt"></i> Atualizar
+                </button>
+            }
+        </div>
+        <div class="crud-toolbar-right">
+            <div class="crud-search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" class="form-control" id="searchBox" placeholder="Pesquisar...">
+            </div>
+        </div>
+    </div>
+
+    <!-- Body com DataTable -->
+    <div class="crud-body">
+        <table id="tableCrud" class="table table-crud table-striped table-hover">
+            <thead>
+                <tr>
+                    <!-- Colunas serão definidas via JavaScript -->
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Dados carregados via AJAX -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Token antiforgery (necessário para requisições AJAX) -->
+@Html.AntiForgeryToken()
+
+<!-- Passa permissões para JavaScript -->
+<script>
+    window.crudPermissions = {
+        canCreate: @Model.CanCreate.ToString().ToLower(),
+        canEdit: @Model.CanEdit.ToString().ToLower(),
+        canDelete: @Model.CanDelete.ToString().ToLower(),
+        canView: @Model.CanView.ToString().ToLower()
+    };
+</script>
