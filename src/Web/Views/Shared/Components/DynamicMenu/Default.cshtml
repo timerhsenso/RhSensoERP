@@ -57,7 +57,7 @@
 @* ================== MÓDULOS DO MENU ================== *@
 @foreach (var module in Model)
 {
-    var moduleId = "submenu-" + (module.Module?.ToLower().Replace(" ", "-") ?? Guid.NewGuid().ToString("N").Substring(0, 8));
+    var moduleId = "submenu-" + (module.Module != null ? module.Module.ToLowerInvariant().Replace(" ", "-") : Guid.NewGuid().ToString("N").Substring(0, 8));
 
     var isModuleActive = module.Items.Any(i =>
         string.Equals(i.Controller, currentController, StringComparison.OrdinalIgnoreCase)
