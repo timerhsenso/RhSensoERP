@@ -61,8 +61,8 @@
 @* ================== MÓDULOS DO MENU ================== *@
 @foreach (var module in Model)
 {
-    // Módulo ativo se qualquer item do módulo bater (Area + Controller).
-    // Isso evita "active" incorreto quando há controllers com mesmo nome em áreas diferentes.
+    var moduleId = "submenu-" + (module.Module?.ToLower().Replace(" ", "-") ?? Guid.NewGuid().ToString("N").Substring(0, 8));
+
     var isModuleActive = module.Items.Any(i =>
         string.Equals(i.Controller, currentController, StringComparison.OrdinalIgnoreCase)
         && string.Equals(i.Area ?? string.Empty, currentArea ?? string.Empty, StringComparison.OrdinalIgnoreCase));
@@ -82,9 +82,9 @@
             @foreach (var item in module.Items)
             {
                 var isActive =
-                    string.Equals(item.Controller, currentController, StringComparison.OrdinalIgnoreCase)
-                    && string.Equals(item.Area ?? string.Empty, currentArea ?? string.Empty, StringComparison.OrdinalIgnoreCase)
-                    && string.Equals(item.Action, currentAction, StringComparison.OrdinalIgnoreCase);
+                string.Equals(item.Controller, currentController, StringComparison.OrdinalIgnoreCase)
+                && string.Equals(item.Area ?? string.Empty, currentArea ?? string.Empty, StringComparison.OrdinalIgnoreCase)
+                && string.Equals(item.Action, currentAction, StringComparison.OrdinalIgnoreCase);
 
                 if (item.ComingSoon || !item.HasPermission)
                 {
