@@ -1,5 +1,7 @@
 // =============================================================================
-// RHSENSOERP GENERATOR v3.7 - VALIDATORS TEMPLATE
+// RHSENSOERP GENERATOR v3.8 - VALIDATORS TEMPLATE
+// =============================================================================
+// v3.8: CORRIGIDO - PK texto/numérica não-identity incluída na validação do Create
 // =============================================================================
 using RhSensoERP.Generators.Models;
 using System.Collections.Generic;
@@ -14,6 +16,35 @@ public static class ValidatorsTemplate
         var validatableProps = info.CreateProperties
             .Where(p => !IsAuditOrTenantField(p.Name, info))
             .ToList();
+
+        // =====================================================================
+        // v3.8: Inclui PK na validação quando não é auto-gerada
+        // PK Identity/Guid = auto-gerada → NÃO validar
+        // PK texto/numérica não-identity = informada pelo usuário → VALIDAR
+        // PK composta = TODAS as colunas da PK devem ser validadas
+        // =====================================================================
+        if (info.HasCompositeKey)
+        {
+            var pkProps = info.Properties.Where(p => p.IsPrimaryKey).Reverse().ToList();
+            foreach (var pkProp in pkProps)
+            {
+                if (!validatableProps.Any(p => p.Name == pkProp.Name))
+                {
+                    validatableProps.Insert(0, pkProp);
+                }
+            }
+        }
+        else if (!info.HasCompositeKey)
+        {
+            var pkProp = info.Properties.FirstOrDefault(p => p.IsPrimaryKey);
+            if (pkProp != null && !pkProp.IsIdentity && !pkProp.IsGuid)
+            {
+                if (!validatableProps.Any(p => p.Name == pkProp.Name))
+                {
+                    validatableProps.Insert(0, pkProp);
+                }
+            }
+        }
 
         var rules = GenerateValidationRules(validatableProps, info);
 

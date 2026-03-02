@@ -1,6 +1,7 @@
 // =============================================================================
-// RHSENSOERP GENERATOR v4.6 - DTO TEMPLATE
+// RHSENSOERP GENERATOR v4.8 - DTO TEMPLATE
 // =============================================================================
+// v4.8: CORRIGIDO - PK texto/numérica não-identity incluída no CreateRequest
 // v4.6: ADICIONADO - Propriedades de navegação (ex: FornecedorRazaoSocial)
 // =============================================================================
 using RhSensoERP.Generators.Models;
@@ -55,6 +56,37 @@ public sealed class {{info.EntityName}}Dto
         var filteredProps = info.CreateProperties
             .Where(p => !IsAuditOrTenantField(p.Name, info))
             .ToList();
+
+        // =====================================================================
+        // v4.8: Inclui PK no CreateRequest quando não é auto-gerada
+        // PK Identity/Guid = auto-gerada pelo banco → NÃO incluir
+        // PK texto/numérica não-identity = informada pelo usuário → INCLUIR
+        // PK composta = TODAS as colunas da PK devem ser incluídas
+        // =====================================================================
+        if (info.HasCompositeKey)
+        {
+            // PK composta: inclui TODAS as colunas da PK
+            var pkProps = info.Properties.Where(p => p.IsPrimaryKey).Reverse().ToList();
+            foreach (var pkProp in pkProps)
+            {
+                if (!filteredProps.Any(p => p.Name == pkProp.Name))
+                {
+                    filteredProps.Insert(0, pkProp);
+                }
+            }
+        }
+        else
+        {
+            var pkProp = info.Properties.FirstOrDefault(p => p.IsPrimaryKey);
+            if (pkProp != null && !pkProp.IsIdentity && !pkProp.IsGuid)
+            {
+                // Só adiciona se ainda não estiver na lista
+                if (!filteredProps.Any(p => p.Name == pkProp.Name))
+                {
+                    filteredProps.Insert(0, pkProp); // PK primeiro
+                }
+            }
+        }
 
         var props = new List<string>();
         foreach (var p in filteredProps)

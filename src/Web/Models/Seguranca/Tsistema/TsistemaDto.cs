@@ -2,7 +2,7 @@
 // ARQUIVO GERADO POR GeradorFullStack v4.0
 // Entity: Tsistema
 // Module: Seguranca
-// Data: 2026-02-28 19:16:10
+// Data: 2026-03-01 16:07:47
 // =============================================================================
 
 namespace RhSensoERP.Web.Models.Seguranca.Tsistema;

@@ -1,6 +1,9 @@
 // =============================================================================
-// GERADOR FULL-STACK v5.1 - JAVASCRIPT TEMPLATE (NAVEGAÇÕES COM ORDENAÇÃO)
+// GERADOR FULL-STACK v5.4 - JAVASCRIPT TEMPLATE (COMPOSITE KEY GENÉRICO)
 // Baseado em RhSensoERP.CrudTool v2.5
+// ⭐ v5.4 - GENÉRICO: getRowId + getCompositeId para PK composta com N campos
+// ⭐ v5.3 - CORRIGIDO: Suporte a PK COMPOSTA - itera TODAS as PKs texto
+// ⭐ v5.2 - CORRIGIDO: PK de texto agora é incluída no cleanData na criação
 // ⭐ v5.1 - CORRIGIDO: Navegações agora respeitam Order configurado pelo usuário
 //      - ✅ CORRIGIDO: Unifica colunas normais + navegações antes de ordenar
 //      - ✅ CORRIGIDO: Ordena TUDO junto pelo campo Order
@@ -28,6 +31,7 @@ namespace GeradorEntidades.Templates;
 
 /// <summary>
 /// Gera JavaScript que estende a classe CrudBase existente.
+/// v5.2: CORRIGIDO - PK de texto incluída no cleanData na criação (!isEdit).
 /// v5.1: CORRIGIDO - Navegações agora respeitam Order configurado.
 /// v4.4: CORRIGIDO - Select2 agora funciona 100%
 /// v4.2: Corrige parâmetros para compatibilidade com CrudBase.
@@ -46,14 +50,73 @@ public static class JavaScriptTemplate
     {
         var modulePath = GetModulePath(entity.Module);
         var modulePathLower = modulePath.ToLowerInvariant();
-        var columns = GenerateColumns(entity);
         var beforeSubmitLogic = GenerateBeforeSubmitLogic(entity);
         var idField = entity.PrimaryKey?.Name ?? "Id";
         var idFieldLower = char.ToLower(idField[0]) + idField.Substring(1);
 
-        // Verifica se a PK é de texto (não Identity e não Guid)
-        var isPkTexto = entity.PrimaryKey != null && !entity.PrimaryKey.IsIdentity && !entity.PrimaryKey.IsGuid;
+        // Verifica se ALGUMA PK é de texto (não Identity e não Guid) - suporta PK composta
+        var allPkTextoFields = entity.Properties
+            .Where(p => p.IsPrimaryKey && !p.IsIdentity && !p.IsGuid && p.IsString)
+            .Select(p => p.Name)
+            .ToList();
+        var isPkTexto = allPkTextoFields.Any();
         var pkFieldId = entity.PrimaryKey?.Name ?? "Id";
+        var pkTextoFieldsJs = isPkTexto
+            ? "[" + string.Join(", ", allPkTextoFields.Select(f => $"'{f}'")) + "]"
+            : "[]";
+
+        // =====================================================================
+        // ⭐ v5.4: DETECÇÃO GENÉRICA DE PK COMPOSTA (N campos)
+        // =====================================================================
+        var allPkProps = entity.Properties
+            .Where(p => p.IsPrimaryKey && !p.IsIdentity && !p.IsGuid)
+            .ToList();
+        var hasCompositeKey = allPkProps.Count > 1;
+
+        // Pré-computa a função JS de extração de ID e a chamada
+        string getIdHelperFunc;
+        string getIdCall;
+
+        if (hasCompositeKey)
+        {
+            // Gera extração dinâmica de CADA PK e combinação com pipe
+            var extractLines = new StringBuilder();
+            foreach (var pk in allPkProps)
+            {
+                var pkCamel = char.ToLower(pk.Name[0]) + pk.Name.Substring(1);
+                extractLines.AppendLine($"        const _{pkCamel} = (row.{pkCamel} || row.{pk.Name} || '').toString().trim();");
+            }
+            var allPkVars = string.Join(" && ", allPkProps.Select(p => $"_{char.ToLower(p.Name[0]) + p.Name.Substring(1)}"));
+            var allPkTemplate = string.Join("|", allPkProps.Select(p => $"${{_{char.ToLower(p.Name[0]) + p.Name.Substring(1)}}}"));
+            var pkNamesComment = string.Join(" + ", allPkProps.Select(p => p.Name));
+
+            getIdHelperFunc = $@"    // ⭐ v5.4: Extrai ID COMPOSTO ({pkNamesComment}) - pipe separator
+    function getCompositeId(row) {{{{
+        if (!row) return '';
+{extractLines}        if ({allPkVars}) return `{allPkTemplate}`;
+        return row['id'] || row['Id'] || '';
+    }}}}";
+
+            getIdCall = "getCompositeId(row)";
+        }
+        else
+        {
+            getIdHelperFunc = $@"    function getCleanId(row, fieldName) {{{{
+        if (!row) return '';
+        let id = row[fieldName] || row[fieldName.toLowerCase()] || row[fieldName.toUpperCase()] || 
+                 row['id'] || row['Id'] || '';
+        id = String(id).trim();
+        if (!id) {{{{
+            console.warn('⚠️ [{entity.Name}] ID vazio para row:', row);
+        }}}}
+        return id;
+    }}}}";
+
+            getIdCall = $"getCleanId(row, '{idFieldLower}')";
+        }
+
+        // ⭐ v5.4: Gera colunas com o getIdCall correto (compositeId ou cleanId)
+        var columns = GenerateColumns(entity, getIdCall);
 
         // v4.1: Verifica se tem campo "Ativo"
         var hasAtivoField = entity.Properties.Any(p =>
@@ -62,13 +125,17 @@ public static class JavaScriptTemplate
 
         var content = $@"/**
  * ============================================================================
- * {entity.DisplayName.ToUpper()} - JavaScript com Ordenação de Navegações
+ * {entity.DisplayName.ToUpper()} - JavaScript com Fix PK Texto
  * ============================================================================
  * Arquivo: wwwroot/js/{modulePathLower}/{entity.NameLower}/{entity.NameLower}.js
  * Módulo: {entity.Module}
- * Versão: 5.1 (NAVEGAÇÕES COM ORDENAÇÃO CORRETA)
- * Gerado por: GeradorFullStack v5.1
+ * Versão: 5.4 (COMPOSITE KEY GENÉRICO)
+ * Gerado por: GeradorFullStack v5.4
  * Data: {DateTime.Now:yyyy-MM-dd HH:mm:ss}
+ * 
+ * Changelog v5.2:
+ *   ✅ CORRIGIDO: PK de texto agora é incluída no payload de criação (!isEdit)
+ *   ✅ CORRIGIDO: Entidades com PK string/int não-identity criam corretamente
  * 
  * Changelog v5.1:
  *   ✅ CORRIGIDO: Navegações agora respeitam Order configurado pelo usuário
@@ -106,9 +173,9 @@ class {entity.Name}Crud extends CrudBase {{
         super(config);
         
         // =====================================================================
-        // Identifica campos de PK de texto
+        // Identifica campos de PK de texto (suporta PK composta)
         // =====================================================================
-        this.pkTextoField = {(isPkTexto ? $"'{pkFieldId}'" : "null")};
+        this.pkTextoFields = {pkTextoFieldsJs};
         this.isPkTexto = {(isPkTexto ? "true" : "false")};
         
         // =====================================================================
@@ -124,21 +191,23 @@ class {entity.Name}Crud extends CrudBase {{
     enablePrimaryKeyFields(enable) {{
         if (!this.isPkTexto) return;
         
-        const $pkField = $('#' + this.pkTextoField);
-        if ($pkField.length === 0) return;
+        this.pkTextoFields.forEach(fieldName => {{
+            const $pkField = $('#' + fieldName);
+            if ($pkField.length === 0) return;
+            
+            if (enable) {{
+                $pkField.prop('readonly', false)
+                        .prop('disabled', false)
+                        .removeClass('bg-light');
+            }} else {{
+                $pkField.prop('readonly', true)
+                        .addClass('bg-light');
+            }}
+        }});
         
-        if (enable) {{
-            // Criação: campo editável
-            $pkField.prop('readonly', false)
-                    .prop('disabled', false)
-                    .removeClass('bg-light');
-            console.log('✏️ [{entity.Name}] Campo PK habilitado para edição (criação)');
-        }} else {{
-            // Edição: campo readonly
-            $pkField.prop('readonly', true)
-                    .addClass('bg-light');
-            console.log('🔒 [{entity.Name}] Campo PK desabilitado (edição)');
-        }}
+        console.log(enable 
+            ? '✏️ [{entity.Name}] Campos PK habilitados para edição (criação)'
+            : '🔒 [{entity.Name}] Campos PK desabilitados (edição)');
     }}
 
     /**
@@ -247,11 +316,37 @@ class {entity.Name}Crud extends CrudBase {{
     /**
      * Override do método getRowId para extrair ID corretamente.
      */
-    getRowId(row) {{
+    getRowId(row) {{";
+
+        // ⭐ v5.4: Gera getRowId baseado no tipo de PK (simples ou composta)
+        if (hasCompositeKey)
+        {
+            var extractLines2 = new StringBuilder();
+            foreach (var pk in allPkProps)
+            {
+                var pkCamel2 = char.ToLower(pk.Name[0]) + pk.Name.Substring(1);
+                extractLines2.AppendLine($"        const _{pkCamel2} = (row.{pkCamel2} || row.{pk.Name} || '').toString().trim();");
+            }
+            var allPkVars2 = string.Join(" && ", allPkProps.Select(p => $"_{char.ToLower(p.Name[0]) + p.Name.Substring(1)}"));
+            var allPkTemplate2 = string.Join("|", allPkProps.Select(p => $"${{_{char.ToLower(p.Name[0]) + p.Name.Substring(1)}}}"));
+
+            content += $@"
+{extractLines2}        if ({allPkVars2}) return `{allPkTemplate2}`;
         const id = row[this.config.idField] || row.id || row.Id || '';
         return typeof id === 'string' ? id.trim() : id;
     }}
-}}
+}}";
+        }
+        else
+        {
+            content += $@"
+        const id = row[this.config.idField] || row.id || row.Id || '';
+        return typeof id === 'string' ? id.trim() : id;
+    }}
+}}";
+        }
+
+        content += $@"
 
 // Inicialização quando o documento estiver pronto
 $(document).ready(function () {{
@@ -274,26 +369,10 @@ $(document).ready(function () {{
     console.log('🔐 [{entity.Name}] Permissões ativas:', window.crudPermissions);
 
     // =========================================================================
-    // FUNÇÃO AUXILIAR: Extrai ID com trim e validação
+    // ⭐ v5.4: FUNÇÃO AUXILIAR PARA ID (genérica - simples ou composta)
     // =========================================================================
 
-    function getCleanId(row, fieldName) {{
-        if (!row) return '';
-
-        // Tenta várias variações do nome do campo
-        let id = row[fieldName] || row[fieldName.toLowerCase()] || row[fieldName.toUpperCase()] || 
-                 row['id'] || row['Id'] || '';
-
-        // Converte para string e faz trim
-        id = String(id).trim();
-
-        // Log para debug
-        if (!id) {{
-            console.warn('⚠️ [{entity.Name}] ID vazio para row:', row);
-        }}
-
-        return id;
-    }}
+{getIdHelperFunc}
 
     // =========================================================================
     // ✅ v5.1: CONFIGURAÇÃO DAS COLUNAS (COM ORDENAÇÃO DE NAVEGAÇÕES)
@@ -556,7 +635,7 @@ $(document).ready(function () {{
     /// ✅ v5.1 FINAL: Gera colunas do DataTable com ordenação unificada.
     /// Unifica colunas normais + navegações e ordena tudo junto pelo Order.
     /// </summary>
-    private static string GenerateColumns(EntityConfig entity)
+    private static string GenerateColumns(EntityConfig entity, string getIdCall)
     {
         var sb = new StringBuilder();
         var idFieldLower = char.ToLower((entity.PrimaryKey?.Name ?? "Id")[0]) + (entity.PrimaryKey?.Name ?? "Id").Substring(1);
@@ -576,7 +655,7 @@ $(document).ready(function () {{
             width: '30px',
             className: 'text-center no-export',
             render: function (data, type, row) {{
-                const id = getCleanId(row, '{idFieldLower}');
+                const id = {getIdCall};
                 return `<input type=""checkbox"" class=""form-check-input row-select dt-checkboxes"" value=""${{id}}"" data-id=""${{id}}"" />`;
             }}
         }},");
@@ -672,7 +751,7 @@ $(document).ready(function () {{
             render: function (data, type, row) {{
                 if (type === 'display') {{
                     const checked = data ? 'checked' : '';
-                    const id = getCleanId(row, '{idFieldLower}');
+                    const id = {getIdCall};
                     return `
                         <div class=""form-check form-switch"">
                             <input class=""form-check-input toggle-ativo"" 
@@ -772,7 +851,7 @@ $(document).ready(function () {{
             width: '100px',
             className: 'text-center no-export',
             render: function (data, type, row) {{
-                const id = getCleanId(row, '{idFieldLower}');
+                const id = {getIdCall};
                 let actions = '';
                 
                 if (window.crudPermissions.canEdit) {{
@@ -819,6 +898,7 @@ $(document).ready(function () {{
 
     /// <summary>
     /// Gera lógica do beforeSubmit.
+    /// v5.2: CORRIGIDO - Inclui PK de texto no cleanData na criação (!isEdit).
     /// </summary>
     private static string GenerateBeforeSubmitLogic(EntityConfig entity)
     {
@@ -858,7 +938,38 @@ $(document).ready(function () {{
         const cleanData = {{}};
 ");
 
-        // Agrupa propriedades por tipo
+        // =====================================================================
+        // ⭐ v5.3 FIX: Inclui TODAS as PKs de texto na criação (!isEdit)
+        // Suporta PK simples E PK composta (ex: CdSistema + CdGrUser)
+        // PKs Identity/Guid são geradas pelo backend, mas PKs texto são digitadas
+        // =====================================================================
+        var allPkTextProps = entity.Properties
+            .Where(p => p.IsPrimaryKey && !p.IsIdentity && !p.IsGuid)
+            .ToList();
+
+        foreach (var pk in allPkTextProps)
+        {
+            var pkCamel = char.ToLower(pk.Name[0]) + pk.Name.Substring(1);
+
+            if (pk.IsString)
+            {
+                sb.AppendLine($@"
+        // ⭐ v5.3: PK texto '{pk.Name}' - inclui somente na criação (na edição vai na URL)
+        if (!isEdit) {{
+            cleanData.{pk.Name} = formData.{pkCamel} || formData.{pk.Name} || '';
+        }}");
+            }
+            else if (pk.IsInt || pk.IsLong)
+            {
+                sb.AppendLine($@"
+        // ⭐ v5.3: PK numérica não-identity '{pk.Name}' - inclui somente na criação
+        if (!isEdit) {{
+            cleanData.{pk.Name} = parseInt(formData.{pkCamel} || formData.{pk.Name} || 0, 10);
+        }}");
+            }
+        }
+
+        // Agrupa propriedades por tipo (mantém !p.IsPrimaryKey para os demais)
         var stringProps = entity.Properties.Where(p => p.IsString && !p.IsPrimaryKey && p.Form?.Show == true).ToList();
         var intProps = entity.Properties.Where(p => (p.IsInt || p.IsLong) && !p.IsPrimaryKey && p.Form?.Show == true).ToList();
         var boolProps = entity.Properties.Where(p => p.IsBool && !p.IsPrimaryKey && p.Form?.Show == true).ToList();

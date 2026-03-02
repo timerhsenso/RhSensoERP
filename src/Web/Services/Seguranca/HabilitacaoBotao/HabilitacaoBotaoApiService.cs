@@ -1,30 +1,30 @@
 ﻿// =============================================================================
 // ARQUIVO GERADO POR GeradorFullStack v6.1
-// Entity: Tsistema
+// Entity: HabilitacaoBotao
 // Module: Seguranca
-// ApiRoute: api/seguranca/tsistema
-// Data: 2026-03-01 16:07:47
+// ApiRoute: api/seguranca/habilitacaobotao
+// Data: 2026-03-01 13:35:46
 // AUTO-REGISTRO: Compatível com AddCrudToolServicesAutomatically()
 // =============================================================================
 using System.Text;
 using System.Text.Json;
-using RhSensoERP.Web.Models.Seguranca.Tsistema;
+using RhSensoERP.Web.Models.Seguranca.HabilitacaoBotao;
 using RhSensoERP.Web.Models.Common;
 using RhSensoERP.Web.Services.Base;
 
-namespace RhSensoERP.Web.Services.Seguranca.Tsistema;
+namespace RhSensoERP.Web.Services.Seguranca.HabilitacaoBotao;
 
 /// <summary>
-/// Serviço de API para Tabela de Sistemas.
+/// Serviço de API para Hab botao.
 /// Herda implementação base de BaseApiService.
 /// v6.1: CORRIGIDO - Lookup usa 'term' para Select2.
 /// v6.0: Adiciona implementações Select2 Lookup automáticas.
 /// </summary>
-public class TsistemaApiService 
-    : BaseApiService<TsistemaDto, CreateTsistemaRequest, UpdateTsistemaRequest, string>,
-      ITsistemaApiService
+public class HabilitacaoBotaoApiService 
+    : BaseApiService<HabilitacaoBotaoDto, CreateHabilitacaoBotaoRequest, UpdateHabilitacaoBotaoRequest, Guid>,
+      IHabilitacaoBotaoApiService
 {
-    private const string ApiRoute = "api/seguranca/tsistema";
+    private const string ApiRoute = "api/seguranca/habilitacaobotao";
     private static readonly JsonSerializerOptions _jsonOptions = new()
     {
         PropertyNameCaseInsensitive = true
@@ -33,9 +33,9 @@ public class TsistemaApiService
     // =========================================================================
     // CONSTRUTOR
     // =========================================================================
-    public TsistemaApiService(
+    public HabilitacaoBotaoApiService(
         HttpClient httpClient,
-        ILogger<TsistemaApiService> logger,
+        ILogger<HabilitacaoBotaoApiService> logger,
         IHttpContextAccessor httpContextAccessor) 
         : base(httpClient, logger, httpContextAccessor, ApiRoute)
     {
@@ -45,7 +45,7 @@ public class TsistemaApiService
     // IBatchDeleteService Implementation
     // =========================================================================
 
-    public async Task<ApiResponse<BatchDeleteResultDto>> DeleteBatchAsync(IEnumerable<string> ids)
+    public async Task<ApiResponse<BatchDeleteResultDto>> DeleteBatchAsync(IEnumerable<Guid> ids)
     {
         try
         {
@@ -53,7 +53,7 @@ public class TsistemaApiService
             var idsList = ids.ToList();
             var json = JsonSerializer.Serialize(idsList, _jsonOptions);
             
-            _logger.LogDebug("[TSISTEMA] DELETE {Route}/batch - Body: {Body}", _baseEndpoint, json);
+            _logger.LogDebug("[HABILITACAOBOTAO] DELETE {Route}/batch - Body: {Body}", _baseEndpoint, json);
             
             var request = new HttpRequestMessage(HttpMethod.Delete, $"{_baseEndpoint}/batch")
             {
@@ -96,7 +96,7 @@ public class TsistemaApiService
         }
         catch (HttpRequestException ex)
         {
-            _logger.LogError(ex, "[TSISTEMA] Erro de conexão em DeleteBatchAsync");
+            _logger.LogError(ex, "[HABILITACAOBOTAO] Erro de conexão em DeleteBatchAsync");
             return new ApiResponse<BatchDeleteResultDto>
             {
                 Success = false,
@@ -105,7 +105,7 @@ public class TsistemaApiService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "[TSISTEMA] Exceção em DeleteBatchAsync");
+            _logger.LogError(ex, "[HABILITACAOBOTAO] Exceção em DeleteBatchAsync");
             return new ApiResponse<BatchDeleteResultDto>
             {
                 Success = false,

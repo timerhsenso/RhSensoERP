@@ -1,15 +1,15 @@
 ﻿// =============================================================================
 // ARQUIVO GERADO POR GeradorFullStack v4.0
-// Entity: Tsistema
+// Entity: HabilitacaoBotao
 // Module: Seguranca
-// Data: 2026-03-01 16:07:47
+// Data: 2026-03-01 13:35:46
 // =============================================================================
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RhSensoERP.Web.Attributes;
 using RhSensoERP.Web.Controllers.Base;
-using RhSensoERP.Web.Models.Seguranca.Tsistema;
-using RhSensoERP.Web.Services.Seguranca.Tsistema;
+using RhSensoERP.Web.Models.Seguranca.HabilitacaoBotao;
+using RhSensoERP.Web.Services.Seguranca.HabilitacaoBotao;
 using RhSensoERP.Web.Services.Permissions;
 
 namespace RhSensoERP.Web.Controllers.Seguranca;
@@ -19,19 +19,19 @@ namespace RhSensoERP.Web.Controllers.Seguranca;
 // =============================================================================
 [MenuItem(
     Module = MenuModule.Seguranca,
-    DisplayName = "Tabela de Sistemas",
+    DisplayName = "Hab botao",
     Icon = "fas fa-table",
     Order = 10,
     CdFuncao = "SEG_FM_TSISTEMA"
 )]
 
 /// <summary>
-/// Controller para gerenciamento de Tabela de Sistemas.
+/// Controller para gerenciamento de Hab botao.
 /// Herda toda a funcionalidade CRUD de BaseCrudController.
 /// </summary>
 [Authorize]
-public class TsistemaController 
-    : BaseCrudController<TsistemaDto, CreateTsistemaRequest, UpdateTsistemaRequest, string>
+public class HabilitacaoBotaoController 
+    : BaseCrudController<HabilitacaoBotaoDto, CreateHabilitacaoBotaoRequest, UpdateHabilitacaoBotaoRequest, Guid>
 {
     // =========================================================================
     // CONFIGURAÇÃO DE PERMISSÕES
@@ -48,19 +48,19 @@ public class TsistemaController
     /// </summary>
     private const string CdSistema = "SEG";
 
-    private readonly ITsistemaApiService _tsistemaService;
+    private readonly IHabilitacaoBotaoApiService _habilitacaobotaoService;
 
     // =========================================================================
     // CONSTRUTOR
     // =========================================================================
 
-    public TsistemaController(
-        ITsistemaApiService apiService,
+    public HabilitacaoBotaoController(
+        IHabilitacaoBotaoApiService apiService,
         IUserPermissionsCacheService permissionsCache,
-        ILogger<TsistemaController> logger)
+        ILogger<HabilitacaoBotaoController> logger)
         : base(apiService, permissionsCache, logger)
     {
-        _tsistemaService = apiService;
+        _habilitacaobotaoService = apiService;
     }
 
     // =========================================================================
@@ -85,7 +85,7 @@ public class TsistemaController
 
         var permissions = await GetUserPermissionsAsync(CdFuncao, ct);
 
-        var viewModel = new TsistemaListViewModel
+        var viewModel = new HabilitacaoBotaoListViewModel
         {
             UserPermissions = permissions
         };
@@ -96,7 +96,7 @@ public class TsistemaController
             CdFuncao,
             permissions);
 
-        return View("~/Views/Seguranca/Tsistema/Index.cshtml", viewModel);
+        return View("~/Views/Seguranca/HabilitacaoBotao/Index.cshtml", viewModel);
     }
 
     // =========================================================================
@@ -104,7 +104,7 @@ public class TsistemaController
     // =========================================================================
 
     [HttpGet]
-    public override async Task<IActionResult> GetById(string id)
+    public override async Task<IActionResult> GetById(Guid id)
     {
         if (!await CanViewAsync(CdFuncao))
         {
@@ -120,7 +120,7 @@ public class TsistemaController
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public override async Task<IActionResult> Create([FromBody] CreateTsistemaRequest dto)
+    public override async Task<IActionResult> Create([FromBody] CreateHabilitacaoBotaoRequest dto)
     {
         if (!await CanCreateAsync(CdFuncao))
         {
@@ -146,9 +146,9 @@ public class TsistemaController
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit([FromQuery] string id, [FromBody] UpdateTsistemaRequest dto)
+    public async Task<IActionResult> Edit([FromQuery] Guid id, [FromBody] UpdateHabilitacaoBotaoRequest dto)
     {
-        if (EqualityComparer<string>.Default.Equals(id, default))
+        if (EqualityComparer<Guid>.Default.Equals(id, default))
         {
             return JsonError("ID do registro não informado.");
         }
@@ -178,7 +178,7 @@ public class TsistemaController
 
     [HttpPut]
     [ValidateAntiForgeryToken]
-    public override async Task<IActionResult> Update(string id, [FromBody] UpdateTsistemaRequest dto)
+    public override async Task<IActionResult> Update(Guid id, [FromBody] UpdateHabilitacaoBotaoRequest dto)
     {
         if (!await CanEditAsync(CdFuncao))
         {
@@ -195,7 +195,7 @@ public class TsistemaController
     [HttpPost]
     [HttpDelete]
     [ValidateAntiForgeryToken]
-    public override async Task<IActionResult> Delete(string id)
+    public override async Task<IActionResult> Delete(Guid id)
     {
         if (!await CanDeleteAsync(CdFuncao))
         {
@@ -222,7 +222,7 @@ public class TsistemaController
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public override async Task<IActionResult> DeleteMultiple([FromBody] List<string> ids)
+    public override async Task<IActionResult> DeleteMultiple([FromBody] List<Guid> ids)
     {
         if (ids == null || ids.Count == 0)
         {

@@ -1,5 +1,7 @@
 // =============================================================================
-// RHSENSOERP GENERATOR v3.1 - WEB MODELS TEMPLATE
+// RHSENSOERP GENERATOR v3.2 - WEB MODELS TEMPLATE
+// =============================================================================
+// v3.2: CORRIGIDO - PK texto/numérica não-identity incluída no CreateDto
 // =============================================================================
 using RhSensoERP.Generators.Models;
 using System.Collections.Generic;
@@ -36,8 +38,39 @@ public sealed class {{info.EntityName}}Dto
 
     public static string GenerateCreateDto(EntityInfo info)
     {
+        var createProps = info.CreateProperties.ToList();
+
+        // =====================================================================
+        // v3.2: Inclui PK no CreateDto quando não é auto-gerada
+        // PK Identity/Guid = auto-gerada → NÃO incluir
+        // PK texto/numérica não-identity = informada pelo usuário → INCLUIR
+        // PK composta = TODAS as colunas da PK devem ser incluídas
+        // =====================================================================
+        if (info.HasCompositeKey)
+        {
+            var pkProps = info.Properties.Where(p => p.IsPrimaryKey).Reverse().ToList();
+            foreach (var pkProp in pkProps)
+            {
+                if (!createProps.Any(p => p.Name == pkProp.Name))
+                {
+                    createProps.Insert(0, pkProp);
+                }
+            }
+        }
+        else if (!info.HasCompositeKey)
+        {
+            var pkProp = info.Properties.FirstOrDefault(p => p.IsPrimaryKey);
+            if (pkProp != null && !pkProp.IsIdentity && !pkProp.IsGuid)
+            {
+                if (!createProps.Any(p => p.Name == pkProp.Name))
+                {
+                    createProps.Insert(0, pkProp);
+                }
+            }
+        }
+
         var props = new List<string>();
-        foreach (global::RhSensoERP.Generators.Models.PropertyInfo p in info.CreateProperties)
+        foreach (global::RhSensoERP.Generators.Models.PropertyInfo p in createProps)
         {
             props.Add($"    public {p.Type} {p.Name} {{ get; set; }}{GetDefaultValue(p)}");
         }

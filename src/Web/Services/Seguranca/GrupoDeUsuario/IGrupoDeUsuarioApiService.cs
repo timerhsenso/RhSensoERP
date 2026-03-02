@@ -1,25 +1,25 @@
 ﻿// =============================================================================
-// ARQUIVO GERADO POR GeradorFullStack v6.1
-// Entity: Tsistema
+// ARQUIVO GERADO POR GeradorFullStack v6.2
+// Entity: GrupoDeUsuario
 // Module: Seguranca
-// Data: 2026-03-01 16:07:47
+// Data: 2026-03-01 22:11:05
 // AUTO-REGISTRO: Compatível com AddCrudToolServicesAutomatically()
 // =============================================================================
-using RhSensoERP.Web.Models.Seguranca.Tsistema;
+using RhSensoERP.Web.Models.Seguranca.GrupoDeUsuario;
 using RhSensoERP.Web.Models.Common;
 using RhSensoERP.Web.Services.Base;
 
-namespace RhSensoERP.Web.Services.Seguranca.Tsistema;
+namespace RhSensoERP.Web.Services.Seguranca.GrupoDeUsuario;
 
 /// <summary>
-/// Interface do serviço de API para Tabela de Sistemas.
+/// Interface do serviço de API para Grupo de Usuários.
 /// Herda de IApiService (já implementado por BaseApiService) e IBatchDeleteService.
 /// v6.1: CORRIGIDO - Lookup usa 'term' para Select2.
 /// v6.0: Adiciona métodos Select2 Lookup automáticos.
 /// v4.1: Adiciona ToggleAtivoAsync.
 /// </summary>
-public interface ITsistemaApiService 
-    : IApiService<TsistemaDto, CreateTsistemaRequest, UpdateTsistemaRequest, string>,
+public interface IGrupoDeUsuarioApiService 
+    : IApiService<GrupoDeUsuarioDto, CreateGrupoDeUsuarioRequest, UpdateGrupoDeUsuarioRequest, string>,
       IBatchDeleteService<string>
 {
 

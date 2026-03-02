@@ -1,5 +1,7 @@
 // =============================================================================
-// GERADOR FULL-STACK v6.1 - WEB SERVICES TEMPLATE
+// GERADOR FULL-STACK v6.2 - WEB SERVICES TEMPLATE
+// ⭐ v6.2 - GENÉRICO: Override automático para PK composta (N campos)
+//           Gera CompositeKeyToPath + overrides GetByIdAsync/UpdateAsync/DeleteAsync
 // ⭐ v6.1 - CORRIGIDO: Lookup usa 'term' para compatibilidade Select2
 // ⭐ v6.0 - SELECT2 LOOKUP AUTOMÁTICO
 // v5.2 - Logs corrigidos
@@ -45,7 +47,7 @@ public static class WebServicesTemplate
         var select2Methods = GenerateSelect2Methods(entity);
 
         var content = $@"// =============================================================================
-// ARQUIVO GERADO POR GeradorFullStack v6.1
+// ARQUIVO GERADO POR GeradorFullStack v6.2
 // Entity: {entity.Name}
 // Module: {entity.Module}
 // Data: {DateTime.Now:yyyy-MM-dd HH:mm:ss}
@@ -103,8 +105,19 @@ public interface I{entity.Name}ApiService
         // ⭐ v6.0: Gera implementações Select2
         var select2Implementations = GenerateSelect2Implementations(entity);
 
+        // =====================================================================
+        // ⭐ v6.2: DETECÇÃO DE PK COMPOSTA + GERAÇÃO DE OVERRIDES
+        // =====================================================================
+        var allPkProps = entity.Properties
+            .Where(p => p.IsPrimaryKey && !p.IsIdentity && !p.IsGuid)
+            .ToList();
+        var hasCompositeKey = allPkProps.Count > 1;
+        var compositeKeyOverrides = hasCompositeKey
+            ? GenerateCompositeKeyOverrides(entity, entityUpper, pkType)
+            : "";
+
         var content = $@"// =============================================================================
-// ARQUIVO GERADO POR GeradorFullStack v6.1
+// ARQUIVO GERADO POR GeradorFullStack v6.2
 // Entity: {entity.Name}
 // Module: {entity.Module}
 // ApiRoute: {apiRoute}
@@ -145,7 +158,7 @@ public class {entity.Name}ApiService
         : base(httpClient, logger, httpContextAccessor, ApiRoute)
     {{
     }}
-
+{compositeKeyOverrides}
     // =========================================================================
     // IBatchDeleteService Implementation
     // =========================================================================
@@ -424,6 +437,189 @@ public class {entity.Name}ApiService
         }
 
         return sb.ToString();
+    }
+
+    // =========================================================================
+    // ⭐ v6.2: COMPOSITE KEY - GERAÇÃO AUTOMÁTICA DE OVERRIDES
+    // =========================================================================
+
+    /// <summary>
+    /// ⭐ v6.2: Gera overrides de GetByIdAsync, UpdateAsync, DeleteAsync
+    /// para entidades com PK composta. Converte "PK1|PK2|PK3" → "PK1/PK2/PK3" na URL.
+    /// Funciona com 2, 3, N campos de PK compostas.
+    /// </summary>
+    private static string GenerateCompositeKeyOverrides(EntityConfig entity, string entityUpper, string pkType)
+    {
+        var dtoName = $"{entity.Name}Dto";
+        var updateReqName = $"Update{entity.Name}Request";
+
+        return $@"
+    // =========================================================================
+    // ⭐ v6.2: COMPOSITE KEY OVERRIDES
+    // Converte PK pipe-separated para path segments na URL.
+    // Ex: ""RHU|ADMIN"" → URL "".../RHU/ADMIN""
+    // Funciona com N campos de PK composta.
+    // =========================================================================
+
+    /// <summary>
+    /// Converte chave composta pipe-separated em path segments.
+    /// ""A|B|C"" → ""A/B/C""
+    /// </summary>
+    private static string CompositeKeyToPath({pkType} compositeKey)
+    {{
+        if (compositeKey is string strKey && !string.IsNullOrWhiteSpace(strKey))
+        {{
+            var parts = strKey.Split('|');
+            return string.Join(""/"", parts.Select(p => Uri.EscapeDataString(p.Trim())));
+        }}
+        return compositeKey?.ToString() ?? string.Empty;
+    }}
+
+    /// <summary>
+    /// ⭐ Override: GET com PK composta → path segments.
+    /// </summary>
+    public override async Task<ApiResponse<{dtoName}>> GetByIdAsync({pkType} id)
+    {{
+        try
+        {{
+            await AddAuthorizationHeaderAsync();
+            var path = CompositeKeyToPath(id);
+            var url = $""{{_baseEndpoint}}/{{path}}"";
+            _logger.LogDebug(""🔍 [{entityUpper}] GetByIdAsync - CompositeKey: {{Id}} → URL: {{Url}}"", id, url);
+
+            var response = await _httpClient.GetAsync(url);
+            var content = await response.Content.ReadAsStringAsync();
+
+            if (response.IsSuccessStatusCode)
+            {{
+                var result = JsonSerializer.Deserialize<ApiResponse<{dtoName}>>(content, _jsonOptions);
+                return result ?? new ApiResponse<{dtoName}>
+                {{
+                    Success = false,
+                    Error = new ApiError {{ Message = ""Erro ao deserializar resposta"" }}
+                }};
+            }}
+
+            _logger.LogWarning(""⚠️ [{entityUpper}] GetByIdAsync - ID: {{Id}}, Erro {{StatusCode}}"", id, response.StatusCode);
+            return new ApiResponse<{dtoName}>
+            {{
+                Success = false,
+                Error = new ApiError {{ Message = ""Erro ao buscar registro"" }}
+            }};
+        }}
+        catch (Exception ex)
+        {{
+            _logger.LogError(ex, ""❌ [{entityUpper}] Erro ao buscar registro {{Id}}"", id);
+            return new ApiResponse<{dtoName}>
+            {{
+                Success = false,
+                Error = new ApiError {{ Message = ""Erro ao buscar registro"" }}
+            }};
+        }}
+    }}
+
+    /// <summary>
+    /// ⭐ Override: PUT com PK composta → path segments.
+    /// </summary>
+    public override async Task<ApiResponse<{dtoName}>> UpdateAsync({pkType} id, {updateReqName} dto)
+    {{
+        try
+        {{
+            await AddAuthorizationHeaderAsync();
+            var json = JsonSerializer.Serialize(dto, _jsonOptions);
+            var httpContent = new StringContent(json, Encoding.UTF8, ""application/json"");
+            var path = CompositeKeyToPath(id);
+            var url = $""{{_baseEndpoint}}/{{path}}"";
+            _logger.LogDebug(""✏️ [{entityUpper}] UpdateAsync - CompositeKey: {{Id}} → URL: {{Url}}"", id, url);
+
+            var response = await _httpClient.PutAsync(url, httpContent);
+            var content = await response.Content.ReadAsStringAsync();
+
+            if (response.IsSuccessStatusCode)
+            {{
+                var resultBool = JsonSerializer.Deserialize<ApiResponse<bool>>(content, _jsonOptions);
+                if (resultBool != null && resultBool.Success)
+                {{
+                    return await GetByIdAsync(id);
+                }}
+                return new ApiResponse<{dtoName}>
+                {{
+                    Success = false,
+                    Error = resultBool?.Error ?? new ApiError {{ Message = ""Erro ao atualizar registro"" }},
+                    Errors = resultBool?.Errors
+                }};
+            }}
+
+            _logger.LogWarning(""⚠️ [{entityUpper}] UpdateAsync - ID: {{Id}}, Erro {{StatusCode}}"", id, response.StatusCode);
+            try
+            {{
+                var errorResponse = JsonSerializer.Deserialize<ApiResponse<{dtoName}>>(content, _jsonOptions);
+                if (errorResponse != null) return errorResponse;
+            }}
+            catch {{ }}
+
+            return new ApiResponse<{dtoName}>
+            {{
+                Success = false,
+                Error = new ApiError {{ Message = ""Erro ao atualizar registro"" }}
+            }};
+        }}
+        catch (Exception ex)
+        {{
+            _logger.LogError(ex, ""❌ [{entityUpper}] Erro ao atualizar registro {{Id}}"", id);
+            return new ApiResponse<{dtoName}>
+            {{
+                Success = false,
+                Error = new ApiError {{ Message = ""Erro ao atualizar registro"" }}
+            }};
+        }}
+    }}
+
+    /// <summary>
+    /// ⭐ Override: DELETE com PK composta → path segments.
+    /// </summary>
+    public override async Task<ApiResponse<bool>> DeleteAsync({pkType} id)
+    {{
+        try
+        {{
+            await AddAuthorizationHeaderAsync();
+            var path = CompositeKeyToPath(id);
+            var url = $""{{_baseEndpoint}}/{{path}}"";
+            _logger.LogDebug(""🗑️ [{entityUpper}] DeleteAsync - CompositeKey: {{Id}} → URL: {{Url}}"", id, url);
+
+            var response = await _httpClient.DeleteAsync(url);
+            var content = await response.Content.ReadAsStringAsync();
+
+            if (response.IsSuccessStatusCode)
+            {{
+                _logger.LogInformation(""✅ [{entityUpper}] Registro {{Id}} excluído"", id);
+                return new ApiResponse<bool> {{ Success = true, Data = true }};
+            }}
+
+            _logger.LogWarning(""⚠️ [{entityUpper}] DeleteAsync - ID: {{Id}}, Erro {{StatusCode}}"", id, response.StatusCode);
+            try
+            {{
+                var errorResponse = JsonSerializer.Deserialize<ApiResponse<bool>>(content, _jsonOptions);
+                if (errorResponse != null) return errorResponse;
+            }}
+            catch {{ }}
+
+            return new ApiResponse<bool>
+            {{
+                Success = false,
+                Error = new ApiError {{ Message = ""Erro ao excluir registro"" }}
+            }};
+        }}
+        catch (Exception ex)
+        {{
+            _logger.LogError(ex, ""❌ [{entityUpper}] Erro ao excluir registro {{Id}}"", id);
+            return new ApiResponse<bool>
+            {{
+                Success = false,
+                Error = new ApiError {{ Message = ""Erro ao excluir registro"" }}
+            }};
+        }}
+    }}";
     }
 
     /// <summary>

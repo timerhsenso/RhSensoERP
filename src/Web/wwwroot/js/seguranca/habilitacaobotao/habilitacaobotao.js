@@ -1,16 +1,12 @@
 ﻿/**
  * ============================================================================
- * TABELA DE SISTEMAS - JavaScript com Fix PK Texto
+ * HAB BOTAO - JavaScript com Ordenação de Navegações
  * ============================================================================
- * Arquivo: wwwroot/js/seguranca/tsistema/tsistema.js
+ * Arquivo: wwwroot/js/seguranca/habilitacaobotao/habilitacaobotao.js
  * Módulo: Seguranca
- * Versão: 5.2 (FIX PK TEXTO NO CREATE)
- * Gerado por: GeradorFullStack v5.2
- * Data: 2026-03-01 16:07:47
- * 
- * Changelog v5.2:
- *   ✅ CORRIGIDO: PK de texto agora é incluída no payload de criação (!isEdit)
- *   ✅ CORRIGIDO: Entidades com PK string/int não-identity criam corretamente
+ * Versão: 5.1 (NAVEGAÇÕES COM ORDENAÇÃO CORRETA)
+ * Gerado por: GeradorFullStack v5.1
+ * Data: 2026-03-01 13:35:46
  * 
  * Changelog v5.1:
  *   ✅ CORRIGIDO: Navegações agora respeitam Order configurado pelo usuário
@@ -38,20 +34,20 @@
  *   ✅ Toggle Switch dinâmico para campo Ativo (rate limit 500ms)
  *   ✅ Exclusão múltipla com contador
  * 
- * Implementação específica do CRUD de Tabela de Sistemas.
+ * Implementação específica do CRUD de Hab botao.
  * Estende a classe CrudBase com customizações necessárias.
  * ============================================================================
  */
 
-class TsistemaCrud extends CrudBase {
+class HabilitacaoBotaoCrud extends CrudBase {
     constructor(config) {
         super(config);
         
         // =====================================================================
         // Identifica campos de PK de texto
         // =====================================================================
-        this.pkTextoField = 'CdsiStema';
-        this.isPkTexto = true;
+        this.pkTextoField = null;
+        this.isPkTexto = false;
         
         // =====================================================================
         // v4.1: Debounce para Toggle Ativo
@@ -74,12 +70,12 @@ class TsistemaCrud extends CrudBase {
             $pkField.prop('readonly', false)
                     .prop('disabled', false)
                     .removeClass('bg-light');
-            console.log('✏️ [Tsistema] Campo PK habilitado para edição (criação)');
+            console.log('✏️ [HabilitacaoBotao] Campo PK habilitado para edição (criação)');
         } else {
             // Edição: campo readonly
             $pkField.prop('readonly', true)
                     .addClass('bg-light');
-            console.log('🔒 [Tsistema] Campo PK desabilitado (edição)');
+            console.log('🔒 [HabilitacaoBotao] Campo PK desabilitado (edição)');
         }
     }
 
@@ -168,7 +164,7 @@ class TsistemaCrud extends CrudBase {
      * Remove campos de auditoria, converte tipos e valida campos obrigatórios.
      */
     beforeSubmit(formData, isEdit) {
-        console.log('📥 [Tsistema] Dados ANTES:', JSON.parse(JSON.stringify(formData)));
+        console.log('📥 [HabilitacaoBotao] Dados ANTES:', JSON.parse(JSON.stringify(formData)));
 
         // =====================================================================
         // ⭐ CRÍTICO: Remove campos de auditoria (backend preenche automaticamente)
@@ -200,15 +196,13 @@ class TsistemaCrud extends CrudBase {
         const cleanData = {};
 
 
-        // ⭐ v5.2: PK de texto - inclui somente na criação (na edição vai na URL)
-        if (!isEdit) {
-            cleanData.CdsiStema = formData.cdsiStema || formData.CdsiStema || '';
-        }
-
         // String fields - PascalCase
-        cleanData.DcsiStema = formData.dcsiStema || formData.DcsiStema || '';
+        cleanData.Cdgruser = formData.cdgruser || formData.Cdgruser || '';
+        cleanData.Cdfuncao = formData.cdfuncao || formData.Cdfuncao || '';
+        cleanData.CdsiStema = formData.cdsiStema || formData.CdsiStema || '';
+        cleanData.Nmbotao = formData.nmbotao || formData.Nmbotao || '';
 
-        console.log('📤 [Tsistema] Dados DEPOIS (PascalCase):', JSON.parse(JSON.stringify(cleanData)));
+        console.log('📤 [HabilitacaoBotao] Dados DEPOIS (PascalCase):', JSON.parse(JSON.stringify(cleanData)));
         return cleanData;
     }
 
@@ -216,7 +210,7 @@ class TsistemaCrud extends CrudBase {
      * Customização após submeter.
      */
     afterSubmit(data, isEdit) {
-        console.log('✅ [Tsistema] Registro salvo:', data);
+        console.log('✅ [HabilitacaoBotao] Registro salvo:', data);
         
         // Atualiza a grid automaticamente
         if (this.dataTable) {
@@ -251,7 +245,7 @@ $(document).ready(function () {
         };
     }
 
-    console.log('🔐 [Tsistema] Permissões ativas:', window.crudPermissions);
+    console.log('🔐 [HabilitacaoBotao] Permissões ativas:', window.crudPermissions);
 
     // =========================================================================
     // FUNÇÃO AUXILIAR: Extrai ID com trim e validação
@@ -269,7 +263,7 @@ $(document).ready(function () {
 
         // Log para debug
         if (!id) {
-            console.warn('⚠️ [Tsistema] ID vazio para row:', row);
+            console.warn('⚠️ [HabilitacaoBotao] ID vazio para row:', row);
         }
 
         return id;
@@ -292,25 +286,45 @@ $(document).ready(function () {
             width: '30px',
             className: 'text-center no-export',
             render: function (data, type, row) {
-                const id = getCleanId(row, 'cdsiStema');
+                const id = getCleanId(row, 'id');
                 return `<input type="checkbox" class="form-check-input row-select dt-checkboxes" value="${id}" data-id="${id}" />`;
             }
         },
-        // Código de Si Stema (Order: 0)
+        // Código de Gr User (Order: 0)
         {
-            data: 'cdsiStema',
-            name: 'CdsiStema',
-            title: 'Código de Si Stema',
+            data: 'cdgruser',
+            name: 'Cdgruser',
+            title: 'Código de Gr User',
             orderable: true,
             render: function (data, type, row) {
                 return data !== undefined && data !== null ? data : '';
             }
         },
-        // Descrição de Si Stema (Order: 1)
+        // Código de Funcao (Order: 1)
         {
-            data: 'dcsiStema',
-            name: 'DcsiStema',
-            title: 'Descrição de Si Stema',
+            data: 'cdfuncao',
+            name: 'Cdfuncao',
+            title: 'Código de Funcao',
+            orderable: true,
+            render: function (data, type, row) {
+                return data !== undefined && data !== null ? data : '';
+            }
+        },
+        // Código de Sistema (Order: 2)
+        {
+            data: 'cdsiStema',
+            name: 'CdsiStema',
+            title: 'Código de Sistema',
+            orderable: true,
+            render: function (data, type, row) {
+                return data !== undefined && data !== null ? data : '';
+            }
+        },
+        // Nome de Botao (Order: 3)
+        {
+            data: 'nmbotao',
+            name: 'Nmbotao',
+            title: 'Nome de Botao',
             orderable: true,
             render: function (data, type, row) {
                 return data !== undefined && data !== null ? data : '';
@@ -326,7 +340,7 @@ $(document).ready(function () {
             width: '100px',
             className: 'text-center no-export',
             render: function (data, type, row) {
-                const id = getCleanId(row, 'cdsiStema');
+                const id = getCleanId(row, 'id');
                 let actions = '';
                 
                 if (window.crudPermissions.canEdit) {
@@ -351,12 +365,12 @@ $(document).ready(function () {
     // ✅ v4.2: INSTANCIA O CRUD (CORRIGIDO: TODOS OS PARÂMETROS)
     // =========================================================================
 
-    const crud = new TsistemaCrud({
-        controllerName: 'Tsistema',
-        apiRoute: '/api/seguranca/tsistema',
-        entityName: 'Tabela de Sistemas',
-        entityNamePlural: 'Tabela de Sistemass',
-        idField: 'cdsiStema',
+    const crud = new HabilitacaoBotaoCrud({
+        controllerName: 'HabilitacaoBotao',
+        apiRoute: '/api/seguranca/habilitacaobotao',
+        entityName: 'Hab botao',
+        entityNamePlural: 'Hab botaos',
+        idField: 'id',
         tableSelector: '#tableCrud',
         columns: columns,  // ✅ CORRIGIDO: era "dataTableColumns"
         permissions: window.crudPermissions,
@@ -366,7 +380,7 @@ $(document).ready(function () {
             pdf: true,
             csv: true,
             print: true,
-            filename: 'Tsistema'
+            filename: 'HabilitacaoBotao'
         }
     });
 
@@ -491,5 +505,5 @@ $(document).ready(function () {
         initSelect2();
     });
 
-    console.log('✅ [Tsistema] JavaScript inicializado com sucesso!');
+    console.log('✅ [HabilitacaoBotao] JavaScript inicializado com sucesso!');
 });

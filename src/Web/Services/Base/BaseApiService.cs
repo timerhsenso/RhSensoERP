@@ -258,6 +258,7 @@ public abstract class BaseApiService<TDto, TCreateDto, TUpdateDto, TKey>
             await AddAuthorizationHeaderAsync();
 
             var json = JsonSerializer.Serialize(dto, _jsonOptions);
+            _logger.LogWarning("📤 [CREATE] JSON enviado para API: {Json}", json);
             var httpContent = new StringContent(json, Encoding.UTF8, "application/json");
 
             var response = await _httpClient.PostAsync(_baseEndpoint, httpContent);

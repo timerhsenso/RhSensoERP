@@ -219,7 +219,7 @@ public class ColunaInfo
     // Prefixos conhecidos para melhor conversão PascalCase
     private static readonly string[] PrefixosConhecidos = new[]
     {
-        "cd", "dc", "dt", "nr", "nm", "fl", "vl", "qt", "sg", "no", "id", "tp", "st", "ds", "tx", "pc", "hr"
+        "cd", "dc", "dt", "nr", "nm", "fl", "vl", "qt", "sg", "no", "gr", "id", "tp", "st", "ds", "tx", "pc", "hr"
     };
 
     private static string ToPascalCase(string input)
@@ -268,25 +268,39 @@ public class ColunaInfo
         var result = new System.Text.StringBuilder();
         var i = 0;
 
+        // ⭐ v5.3: Flag de "word boundary"
+        // true  = posição 0 ou logo após um prefixo reconhecido → PODE detectar prefixo
+        // false = estamos no meio de uma palavra → NÃO busca prefixo
+        var atWordBoundary = true;
+
         while (i < part.Length)
         {
             var prefixoEncontrado = false;
-            foreach (var prefixo in PrefixosConhecidos)
+
+            // SÓ busca prefixos em word boundaries
+            if (atWordBoundary)
             {
-                if (i + prefixo.Length <= part.Length &&
-                    part.Substring(i, prefixo.Length) == prefixo)
+                foreach (var prefixo in PrefixosConhecidos)
                 {
-                    result.Append(char.ToUpper(prefixo[0]));
-                    result.Append(prefixo[1..]);
-                    i += prefixo.Length;
-                    prefixoEncontrado = true;
-                    break;
+                    if (i + prefixo.Length <= part.Length &&
+                        part.Substring(i, prefixo.Length) == prefixo)
+                    {
+                        result.Append(char.ToUpper(prefixo[0]));
+                        result.Append(prefixo[1..]);
+                        i += prefixo.Length;
+                        atWordBoundary = true;   // após prefixo → pode vir outro
+                        prefixoEncontrado = true;
+                        break;
+                    }
                 }
             }
 
             if (!prefixoEncontrado)
             {
-                result.Append(result.Length == 0 ? char.ToUpper(part[i]) : part[i]);
+                // Se em boundary → capitaliza (início de nova palavra)
+                // Se não → mantém minúscula (meio da palavra)
+                result.Append(atWordBoundary ? char.ToUpper(part[i]) : part[i]);
+                atWordBoundary = false;  // CRÍTICO: desliga boundary no meio da palavra
                 i++;
             }
         }

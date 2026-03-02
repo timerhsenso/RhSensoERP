@@ -1,26 +1,26 @@
 ﻿// =============================================================================
 // ARQUIVO GERADO POR GeradorFullStack v4.0
-// Entity: Tsistema
+// Entity: GrupoDeUsuario
 // Module: Seguranca
-// Data: 2026-03-01 16:07:47
+// Data: 2026-03-01 22:11:05
 // =============================================================================
 using RhSensoERP.Web.Models.Base;
 
-namespace RhSensoERP.Web.Models.Seguranca.Tsistema;
+namespace RhSensoERP.Web.Models.Seguranca.GrupoDeUsuario;
 
 /// <summary>
-/// ViewModel para listagem de Tabela de Sistemas.
+/// ViewModel para listagem de Grupo de Usuários.
 /// Herda de BaseListViewModel que já contém permissões e configurações de DataTables.
 /// </summary>
-public class TsistemaListViewModel : BaseListViewModel
+public class GrupoDeUsuarioListViewModel : BaseListViewModel
 {
-    public TsistemaListViewModel()
+    public GrupoDeUsuarioListViewModel()
     {
         // Inicializa propriedades padrão
-        InitializeDefaults("Tsistema", "Tabela de Sistemas");
+        InitializeDefaults("GrupoDeUsuario", "Grupo de Usuários");
         
         // Configurações específicas
-        PageTitle = "Tabela de Sistemas";
+        PageTitle = "Grupo de Usuários";
         PageIcon = "fas fa-table";
         CdFuncao = "SEG_FM_TSISTEMA";
     }
@@ -28,5 +28,5 @@ public class TsistemaListViewModel : BaseListViewModel
     /// <summary>
     /// Itens da listagem (para uso sem DataTables server-side).
     /// </summary>
-    public List<TsistemaDto> Items { get; set; } = new();
+    public List<GrupoDeUsuarioDto> Items { get; set; } = new();
 }

@@ -1,12 +1,12 @@
 ﻿/**
  * ============================================================================
- * TABELA DE SISTEMAS - JavaScript com Fix PK Texto
+ * GRUPO DE USUÁRIOS - JavaScript com Fix PK Texto
  * ============================================================================
- * Arquivo: wwwroot/js/seguranca/tsistema/tsistema.js
+ * Arquivo: wwwroot/js/seguranca/grupodeusuario/grupodeusuario.js
  * Módulo: Seguranca
- * Versão: 5.2 (FIX PK TEXTO NO CREATE)
- * Gerado por: GeradorFullStack v5.2
- * Data: 2026-03-01 16:07:47
+ * Versão: 5.4 (COMPOSITE KEY GENÉRICO)
+ * Gerado por: GeradorFullStack v5.4
+ * Data: 2026-03-01 22:11:05
  * 
  * Changelog v5.2:
  *   ✅ CORRIGIDO: PK de texto agora é incluída no payload de criação (!isEdit)
@@ -38,19 +38,19 @@
  *   ✅ Toggle Switch dinâmico para campo Ativo (rate limit 500ms)
  *   ✅ Exclusão múltipla com contador
  * 
- * Implementação específica do CRUD de Tabela de Sistemas.
+ * Implementação específica do CRUD de Grupo de Usuários.
  * Estende a classe CrudBase com customizações necessárias.
  * ============================================================================
  */
 
-class TsistemaCrud extends CrudBase {
+class GrupoDeUsuarioCrud extends CrudBase {
     constructor(config) {
         super(config);
         
         // =====================================================================
-        // Identifica campos de PK de texto
+        // Identifica campos de PK de texto (suporta PK composta)
         // =====================================================================
-        this.pkTextoField = 'CdsiStema';
+        this.pkTextoFields = ['CdSistema', 'CdGrUser'];
         this.isPkTexto = true;
         
         // =====================================================================
@@ -66,21 +66,23 @@ class TsistemaCrud extends CrudBase {
     enablePrimaryKeyFields(enable) {
         if (!this.isPkTexto) return;
         
-        const $pkField = $('#' + this.pkTextoField);
-        if ($pkField.length === 0) return;
+        this.pkTextoFields.forEach(fieldName => {
+            const $pkField = $('#' + fieldName);
+            if ($pkField.length === 0) return;
+            
+            if (enable) {
+                $pkField.prop('readonly', false)
+                        .prop('disabled', false)
+                        .removeClass('bg-light');
+            } else {
+                $pkField.prop('readonly', true)
+                        .addClass('bg-light');
+            }
+        });
         
-        if (enable) {
-            // Criação: campo editável
-            $pkField.prop('readonly', false)
-                    .prop('disabled', false)
-                    .removeClass('bg-light');
-            console.log('✏️ [Tsistema] Campo PK habilitado para edição (criação)');
-        } else {
-            // Edição: campo readonly
-            $pkField.prop('readonly', true)
-                    .addClass('bg-light');
-            console.log('🔒 [Tsistema] Campo PK desabilitado (edição)');
-        }
+        console.log(enable 
+            ? '✏️ [GrupoDeUsuario] Campos PK habilitados para edição (criação)'
+            : '🔒 [GrupoDeUsuario] Campos PK desabilitados (edição)');
     }
 
     /**
@@ -168,7 +170,7 @@ class TsistemaCrud extends CrudBase {
      * Remove campos de auditoria, converte tipos e valida campos obrigatórios.
      */
     beforeSubmit(formData, isEdit) {
-        console.log('📥 [Tsistema] Dados ANTES:', JSON.parse(JSON.stringify(formData)));
+        console.log('📥 [GrupoDeUsuario] Dados ANTES:', JSON.parse(JSON.stringify(formData)));
 
         // =====================================================================
         // ⭐ CRÍTICO: Remove campos de auditoria (backend preenche automaticamente)
@@ -200,15 +202,20 @@ class TsistemaCrud extends CrudBase {
         const cleanData = {};
 
 
-        // ⭐ v5.2: PK de texto - inclui somente na criação (na edição vai na URL)
+        // ⭐ v5.3: PK texto 'CdSistema' - inclui somente na criação (na edição vai na URL)
         if (!isEdit) {
-            cleanData.CdsiStema = formData.cdsiStema || formData.CdsiStema || '';
+            cleanData.CdSistema = formData.cdSistema || formData.CdSistema || '';
+        }
+
+        // ⭐ v5.3: PK texto 'CdGrUser' - inclui somente na criação (na edição vai na URL)
+        if (!isEdit) {
+            cleanData.CdGrUser = formData.cdGrUser || formData.CdGrUser || '';
         }
 
         // String fields - PascalCase
-        cleanData.DcsiStema = formData.dcsiStema || formData.DcsiStema || '';
+        cleanData.DcGrUser = formData.dcGrUser || formData.DcGrUser || '';
 
-        console.log('📤 [Tsistema] Dados DEPOIS (PascalCase):', JSON.parse(JSON.stringify(cleanData)));
+        console.log('📤 [GrupoDeUsuario] Dados DEPOIS (PascalCase):', JSON.parse(JSON.stringify(cleanData)));
         return cleanData;
     }
 
@@ -216,7 +223,7 @@ class TsistemaCrud extends CrudBase {
      * Customização após submeter.
      */
     afterSubmit(data, isEdit) {
-        console.log('✅ [Tsistema] Registro salvo:', data);
+        console.log('✅ [GrupoDeUsuario] Registro salvo:', data);
         
         // Atualiza a grid automaticamente
         if (this.dataTable) {
@@ -228,6 +235,9 @@ class TsistemaCrud extends CrudBase {
      * Override do método getRowId para extrair ID corretamente.
      */
     getRowId(row) {
+        const _cdSistema = (row.cdSistema || row.CdSistema || '').toString().trim();
+        const _cdGrUser = (row.cdGrUser || row.CdGrUser || '').toString().trim();
+        if (_cdSistema && _cdGrUser) return `${_cdSistema}|${_cdGrUser}`;
         const id = row[this.config.idField] || row.id || row.Id || '';
         return typeof id === 'string' ? id.trim() : id;
     }
@@ -251,29 +261,20 @@ $(document).ready(function () {
         };
     }
 
-    console.log('🔐 [Tsistema] Permissões ativas:', window.crudPermissions);
+    console.log('🔐 [GrupoDeUsuario] Permissões ativas:', window.crudPermissions);
 
     // =========================================================================
-    // FUNÇÃO AUXILIAR: Extrai ID com trim e validação
+    // ⭐ v5.4: FUNÇÃO AUXILIAR PARA ID (genérica - simples ou composta)
     // =========================================================================
 
-    function getCleanId(row, fieldName) {
+    // ⭐ v5.4: Extrai ID COMPOSTO (CdSistema + CdGrUser) - pipe separator
+    function getCompositeId(row) {{
         if (!row) return '';
-
-        // Tenta várias variações do nome do campo
-        let id = row[fieldName] || row[fieldName.toLowerCase()] || row[fieldName.toUpperCase()] || 
-                 row['id'] || row['Id'] || '';
-
-        // Converte para string e faz trim
-        id = String(id).trim();
-
-        // Log para debug
-        if (!id) {
-            console.warn('⚠️ [Tsistema] ID vazio para row:', row);
-        }
-
-        return id;
-    }
+        const _cdSistema = (row.cdSistema || row.CdSistema || '').toString().trim();
+        const _cdGrUser = (row.cdGrUser || row.CdGrUser || '').toString().trim();
+        if (_cdSistema && _cdGrUser) return `${_cdSistema}|${_cdGrUser}`;
+        return row['id'] || row['Id'] || '';
+    }}
 
     // =========================================================================
     // ✅ v5.1: CONFIGURAÇÃO DAS COLUNAS (COM ORDENAÇÃO DE NAVEGAÇÕES)
@@ -292,25 +293,35 @@ $(document).ready(function () {
             width: '30px',
             className: 'text-center no-export',
             render: function (data, type, row) {
-                const id = getCleanId(row, 'cdsiStema');
+                const id = getCompositeId(row);
                 return `<input type="checkbox" class="form-check-input row-select dt-checkboxes" value="${id}" data-id="${id}" />`;
             }
         },
-        // Código de Si Stema (Order: 0)
+        // Código de Sistema (Order: 0)
         {
-            data: 'cdsiStema',
-            name: 'CdsiStema',
-            title: 'Código de Si Stema',
+            data: 'cdSistema',
+            name: 'CdSistema',
+            title: 'Código de Sistema',
             orderable: true,
             render: function (data, type, row) {
                 return data !== undefined && data !== null ? data : '';
             }
         },
-        // Descrição de Si Stema (Order: 1)
+        // Código de Gr User (Order: 1)
         {
-            data: 'dcsiStema',
-            name: 'DcsiStema',
-            title: 'Descrição de Si Stema',
+            data: 'cdGrUser',
+            name: 'CdGrUser',
+            title: 'Código de Gr User',
+            orderable: true,
+            render: function (data, type, row) {
+                return data !== undefined && data !== null ? data : '';
+            }
+        },
+        // Descrição de Gr User (Order: 2)
+        {
+            data: 'dcGrUser',
+            name: 'DcGrUser',
+            title: 'Descrição de Gr User',
             orderable: true,
             render: function (data, type, row) {
                 return data !== undefined && data !== null ? data : '';
@@ -326,7 +337,7 @@ $(document).ready(function () {
             width: '100px',
             className: 'text-center no-export',
             render: function (data, type, row) {
-                const id = getCleanId(row, 'cdsiStema');
+                const id = getCompositeId(row);
                 let actions = '';
                 
                 if (window.crudPermissions.canEdit) {
@@ -351,12 +362,12 @@ $(document).ready(function () {
     // ✅ v4.2: INSTANCIA O CRUD (CORRIGIDO: TODOS OS PARÂMETROS)
     // =========================================================================
 
-    const crud = new TsistemaCrud({
-        controllerName: 'Tsistema',
-        apiRoute: '/api/seguranca/tsistema',
-        entityName: 'Tabela de Sistemas',
-        entityNamePlural: 'Tabela de Sistemass',
-        idField: 'cdsiStema',
+    const crud = new GrupoDeUsuarioCrud({
+        controllerName: 'GrupoDeUsuario',
+        apiRoute: '/api/seguranca/grupodeusuario',
+        entityName: 'Grupo de Usuários',
+        entityNamePlural: 'Grupo de Usuárioss',
+        idField: 'cdSistema',
         tableSelector: '#tableCrud',
         columns: columns,  // ✅ CORRIGIDO: era "dataTableColumns"
         permissions: window.crudPermissions,
@@ -366,7 +377,7 @@ $(document).ready(function () {
             pdf: true,
             csv: true,
             print: true,
-            filename: 'Tsistema'
+            filename: 'GrupoDeUsuario'
         }
     });
 
@@ -491,5 +502,5 @@ $(document).ready(function () {
         initSelect2();
     });
 
-    console.log('✅ [Tsistema] JavaScript inicializado com sucesso!');
+    console.log('✅ [GrupoDeUsuario] JavaScript inicializado com sucesso!');
 });

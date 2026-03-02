@@ -1,15 +1,15 @@
 ﻿// =============================================================================
 // ARQUIVO GERADO POR GeradorFullStack v4.0
-// Entity: Tsistema
+// Entity: GrupoDeUsuario
 // Module: Seguranca
-// Data: 2026-03-01 16:07:47
+// Data: 2026-03-01 22:11:05
 // =============================================================================
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RhSensoERP.Web.Attributes;
 using RhSensoERP.Web.Controllers.Base;
-using RhSensoERP.Web.Models.Seguranca.Tsistema;
-using RhSensoERP.Web.Services.Seguranca.Tsistema;
+using RhSensoERP.Web.Models.Seguranca.GrupoDeUsuario;
+using RhSensoERP.Web.Services.Seguranca.GrupoDeUsuario;
 using RhSensoERP.Web.Services.Permissions;
 
 namespace RhSensoERP.Web.Controllers.Seguranca;
@@ -19,19 +19,19 @@ namespace RhSensoERP.Web.Controllers.Seguranca;
 // =============================================================================
 [MenuItem(
     Module = MenuModule.Seguranca,
-    DisplayName = "Tabela de Sistemas",
+    DisplayName = "Grupo de Usuários",
     Icon = "fas fa-table",
     Order = 10,
     CdFuncao = "SEG_FM_TSISTEMA"
 )]
 
 /// <summary>
-/// Controller para gerenciamento de Tabela de Sistemas.
+/// Controller para gerenciamento de Grupo de Usuários.
 /// Herda toda a funcionalidade CRUD de BaseCrudController.
 /// </summary>
 [Authorize]
-public class TsistemaController 
-    : BaseCrudController<TsistemaDto, CreateTsistemaRequest, UpdateTsistemaRequest, string>
+public class GrupoDeUsuarioController 
+    : BaseCrudController<GrupoDeUsuarioDto, CreateGrupoDeUsuarioRequest, UpdateGrupoDeUsuarioRequest, string>
 {
     // =========================================================================
     // CONFIGURAÇÃO DE PERMISSÕES
@@ -48,19 +48,19 @@ public class TsistemaController
     /// </summary>
     private const string CdSistema = "SEG";
 
-    private readonly ITsistemaApiService _tsistemaService;
+    private readonly IGrupoDeUsuarioApiService _grupodeusuarioService;
 
     // =========================================================================
     // CONSTRUTOR
     // =========================================================================
 
-    public TsistemaController(
-        ITsistemaApiService apiService,
+    public GrupoDeUsuarioController(
+        IGrupoDeUsuarioApiService apiService,
         IUserPermissionsCacheService permissionsCache,
-        ILogger<TsistemaController> logger)
+        ILogger<GrupoDeUsuarioController> logger)
         : base(apiService, permissionsCache, logger)
     {
-        _tsistemaService = apiService;
+        _grupodeusuarioService = apiService;
     }
 
     // =========================================================================
@@ -85,7 +85,7 @@ public class TsistemaController
 
         var permissions = await GetUserPermissionsAsync(CdFuncao, ct);
 
-        var viewModel = new TsistemaListViewModel
+        var viewModel = new GrupoDeUsuarioListViewModel
         {
             UserPermissions = permissions
         };
@@ -96,7 +96,7 @@ public class TsistemaController
             CdFuncao,
             permissions);
 
-        return View("~/Views/Seguranca/Tsistema/Index.cshtml", viewModel);
+        return View("~/Views/Seguranca/GrupoDeUsuario/Index.cshtml", viewModel);
     }
 
     // =========================================================================
@@ -120,7 +120,7 @@ public class TsistemaController
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public override async Task<IActionResult> Create([FromBody] CreateTsistemaRequest dto)
+    public override async Task<IActionResult> Create([FromBody] CreateGrupoDeUsuarioRequest dto)
     {
         if (!await CanCreateAsync(CdFuncao))
         {
@@ -146,7 +146,7 @@ public class TsistemaController
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit([FromQuery] string id, [FromBody] UpdateTsistemaRequest dto)
+    public async Task<IActionResult> Edit([FromQuery] string id, [FromBody] UpdateGrupoDeUsuarioRequest dto)
     {
         if (EqualityComparer<string>.Default.Equals(id, default))
         {
@@ -178,7 +178,7 @@ public class TsistemaController
 
     [HttpPut]
     [ValidateAntiForgeryToken]
-    public override async Task<IActionResult> Update(string id, [FromBody] UpdateTsistemaRequest dto)
+    public override async Task<IActionResult> Update(string id, [FromBody] UpdateGrupoDeUsuarioRequest dto)
     {
         if (!await CanEditAsync(CdFuncao))
         {
