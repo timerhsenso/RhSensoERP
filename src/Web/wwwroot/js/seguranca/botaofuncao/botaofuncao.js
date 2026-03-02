@@ -1,12 +1,16 @@
 ﻿/**
  * ============================================================================
- * TABELA DE BOTÕES - JavaScript com Ordenação de Navegações
+ * BOTÕES DE FUNÇÃO - JavaScript com Fix PK Texto
  * ============================================================================
  * Arquivo: wwwroot/js/seguranca/botaofuncao/botaofuncao.js
  * Módulo: Seguranca
- * Versão: 5.1 (NAVEGAÇÕES COM ORDENAÇÃO CORRETA)
- * Gerado por: GeradorFullStack v5.1
- * Data: 2026-02-28 19:22:44
+ * Versão: 5.4 (COMPOSITE KEY GENÉRICO)
+ * Gerado por: GeradorFullStack v5.4
+ * Data: 2026-03-02 17:53:39
+ * 
+ * Changelog v5.2:
+ *   ✅ CORRIGIDO: PK de texto agora é incluída no payload de criação (!isEdit)
+ *   ✅ CORRIGIDO: Entidades com PK string/int não-identity criam corretamente
  * 
  * Changelog v5.1:
  *   ✅ CORRIGIDO: Navegações agora respeitam Order configurado pelo usuário
@@ -34,7 +38,7 @@
  *   ✅ Toggle Switch dinâmico para campo Ativo (rate limit 500ms)
  *   ✅ Exclusão múltipla com contador
  * 
- * Implementação específica do CRUD de Tabela de Botões.
+ * Implementação específica do CRUD de Botões de Função.
  * Estende a classe CrudBase com customizações necessárias.
  * ============================================================================
  */
@@ -44,9 +48,9 @@ class BotaoFuncaoCrud extends CrudBase {
         super(config);
         
         // =====================================================================
-        // Identifica campos de PK de texto
+        // Identifica campos de PK de texto (suporta PK composta)
         // =====================================================================
-        this.pkTextoField = 'CdsiStema';
+        this.pkTextoFields = ['CdSistema', 'CdFuncao', 'NmBotao'];
         this.isPkTexto = true;
         
         // =====================================================================
@@ -62,21 +66,23 @@ class BotaoFuncaoCrud extends CrudBase {
     enablePrimaryKeyFields(enable) {
         if (!this.isPkTexto) return;
         
-        const $pkField = $('#' + this.pkTextoField);
-        if ($pkField.length === 0) return;
+        this.pkTextoFields.forEach(fieldName => {
+            const $pkField = $('#' + fieldName);
+            if ($pkField.length === 0) return;
+            
+            if (enable) {
+                $pkField.prop('readonly', false)
+                        .prop('disabled', false)
+                        .removeClass('bg-light');
+            } else {
+                $pkField.prop('readonly', true)
+                        .addClass('bg-light');
+            }
+        });
         
-        if (enable) {
-            // Criação: campo editável
-            $pkField.prop('readonly', false)
-                    .prop('disabled', false)
-                    .removeClass('bg-light');
-            console.log('✏️ [BotaoFuncao] Campo PK habilitado para edição (criação)');
-        } else {
-            // Edição: campo readonly
-            $pkField.prop('readonly', true)
-                    .addClass('bg-light');
-            console.log('🔒 [BotaoFuncao] Campo PK desabilitado (edição)');
-        }
+        console.log(enable 
+            ? '✏️ [BotaoFuncao] Campos PK habilitados para edição (criação)'
+            : '🔒 [BotaoFuncao] Campos PK desabilitados (edição)');
     }
 
     /**
@@ -196,9 +202,24 @@ class BotaoFuncaoCrud extends CrudBase {
         const cleanData = {};
 
 
+        // ⭐ v5.3: PK texto 'CdSistema' - inclui somente na criação (na edição vai na URL)
+        if (!isEdit) {
+            cleanData.CdSistema = formData.cdSistema || formData.CdSistema || '';
+        }
+
+        // ⭐ v5.3: PK texto 'CdFuncao' - inclui somente na criação (na edição vai na URL)
+        if (!isEdit) {
+            cleanData.CdFuncao = formData.cdFuncao || formData.CdFuncao || '';
+        }
+
+        // ⭐ v5.3: PK texto 'NmBotao' - inclui somente na criação (na edição vai na URL)
+        if (!isEdit) {
+            cleanData.NmBotao = formData.nmBotao || formData.NmBotao || '';
+        }
+
         // String fields - PascalCase
-        cleanData.Dcbotao = formData.dcbotao || formData.Dcbotao || '';
-        cleanData.Cdacao = formData.cdacao || formData.Cdacao || '';
+        cleanData.DcBotao = formData.dcBotao || formData.DcBotao || '';
+        cleanData.CdAcao = formData.cdAcao || formData.CdAcao || '';
 
         console.log('📤 [BotaoFuncao] Dados DEPOIS (PascalCase):', JSON.parse(JSON.stringify(cleanData)));
         return cleanData;
@@ -220,6 +241,10 @@ class BotaoFuncaoCrud extends CrudBase {
      * Override do método getRowId para extrair ID corretamente.
      */
     getRowId(row) {
+        const _cdSistema = (row.cdSistema || row.CdSistema || '').toString().trim();
+        const _cdFuncao = (row.cdFuncao || row.CdFuncao || '').toString().trim();
+        const _nmBotao = (row.nmBotao || row.NmBotao || '').toString().trim();
+        if (_cdSistema && _cdFuncao && _nmBotao) return `${_cdSistema}|${_cdFuncao}|${_nmBotao}`;
         const id = row[this.config.idField] || row.id || row.Id || '';
         return typeof id === 'string' ? id.trim() : id;
     }
@@ -246,26 +271,18 @@ $(document).ready(function () {
     console.log('🔐 [BotaoFuncao] Permissões ativas:', window.crudPermissions);
 
     // =========================================================================
-    // FUNÇÃO AUXILIAR: Extrai ID com trim e validação
+    // ⭐ v5.4: FUNÇÃO AUXILIAR PARA ID (genérica - simples ou composta)
     // =========================================================================
 
-    function getCleanId(row, fieldName) {
+    // ⭐ v5.4: Extrai ID COMPOSTO (CdSistema + CdFuncao + NmBotao) - pipe separator
+    function getCompositeId(row) {{
         if (!row) return '';
-
-        // Tenta várias variações do nome do campo
-        let id = row[fieldName] || row[fieldName.toLowerCase()] || row[fieldName.toUpperCase()] || 
-                 row['id'] || row['Id'] || '';
-
-        // Converte para string e faz trim
-        id = String(id).trim();
-
-        // Log para debug
-        if (!id) {
-            console.warn('⚠️ [BotaoFuncao] ID vazio para row:', row);
-        }
-
-        return id;
-    }
+        const _cdSistema = (row.cdSistema || row.CdSistema || '').toString().trim();
+        const _cdFuncao = (row.cdFuncao || row.CdFuncao || '').toString().trim();
+        const _nmBotao = (row.nmBotao || row.NmBotao || '').toString().trim();
+        if (_cdSistema && _cdFuncao && _nmBotao) return `${_cdSistema}|${_cdFuncao}|${_nmBotao}`;
+        return row['id'] || row['Id'] || '';
+    }}
 
     // =========================================================================
     // ✅ v5.1: CONFIGURAÇÃO DAS COLUNAS (COM ORDENAÇÃO DE NAVEGAÇÕES)
@@ -284,14 +301,14 @@ $(document).ready(function () {
             width: '30px',
             className: 'text-center no-export',
             render: function (data, type, row) {
-                const id = getCleanId(row, 'cdsiStema');
+                const id = getCompositeId(row);
                 return `<input type="checkbox" class="form-check-input row-select dt-checkboxes" value="${id}" data-id="${id}" />`;
             }
         },
         // Código de Sistema (Order: 0)
         {
-            data: 'cdsiStema',
-            name: 'CdsiStema',
+            data: 'cdSistema',
+            name: 'CdSistema',
             title: 'Código de Sistema',
             orderable: true,
             render: function (data, type, row) {
@@ -300,8 +317,8 @@ $(document).ready(function () {
         },
         // Código de Funcao (Order: 1)
         {
-            data: 'cdfuncao',
-            name: 'Cdfuncao',
+            data: 'cdFuncao',
+            name: 'CdFuncao',
             title: 'Código de Funcao',
             orderable: true,
             render: function (data, type, row) {
@@ -310,8 +327,8 @@ $(document).ready(function () {
         },
         // Nome de Botao (Order: 2)
         {
-            data: 'nmbotao',
-            name: 'Nmbotao',
+            data: 'nmBotao',
+            name: 'NmBotao',
             title: 'Nome de Botao',
             orderable: true,
             render: function (data, type, row) {
@@ -320,8 +337,8 @@ $(document).ready(function () {
         },
         // Descrição de Botao (Order: 3)
         {
-            data: 'dcbotao',
-            name: 'Dcbotao',
+            data: 'dcBotao',
+            name: 'DcBotao',
             title: 'Descrição de Botao',
             orderable: true,
             render: function (data, type, row) {
@@ -330,8 +347,8 @@ $(document).ready(function () {
         },
         // Código de Acao (Order: 4)
         {
-            data: 'cdacao',
-            name: 'Cdacao',
+            data: 'cdAcao',
+            name: 'CdAcao',
             title: 'Código de Acao',
             orderable: true,
             render: function (data, type, row) {
@@ -348,7 +365,7 @@ $(document).ready(function () {
             width: '100px',
             className: 'text-center no-export',
             render: function (data, type, row) {
-                const id = getCleanId(row, 'cdsiStema');
+                const id = getCompositeId(row);
                 let actions = '';
                 
                 if (window.crudPermissions.canEdit) {
@@ -376,9 +393,9 @@ $(document).ready(function () {
     const crud = new BotaoFuncaoCrud({
         controllerName: 'BotaoFuncao',
         apiRoute: '/api/seguranca/botaofuncao',
-        entityName: 'Tabela de Botões',
-        entityNamePlural: 'Tabela de Botõess',
-        idField: 'cdsiStema',
+        entityName: 'Botões de Função',
+        entityNamePlural: 'Botões de Funçãos',
+        idField: 'cdSistema',
         tableSelector: '#tableCrud',
         columns: columns,  // ✅ CORRIGIDO: era "dataTableColumns"
         permissions: window.crudPermissions,

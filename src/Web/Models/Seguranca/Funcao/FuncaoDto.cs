@@ -2,7 +2,7 @@
 // ARQUIVO GERADO POR GeradorFullStack v4.0
 // Entity: Funcao
 // Module: Seguranca
-// Data: 2026-02-28 19:04:06
+// Data: 2026-03-02 19:25:55
 // =============================================================================
 
 namespace RhSensoERP.Web.Models.Seguranca.Funcao;
@@ -16,22 +16,22 @@ public class FuncaoDto
     /// <summary>
     /// Código de Funcao
     /// </summary>
-    public string Cdfuncao { get; set; } = string.Empty;
+    public string CdFuncao { get; set; } = string.Empty;
 
     /// <summary>
     /// Código de Sistema
     /// </summary>
-    public string CdsiStema { get; set; } = string.Empty;
+    public string CdSistema { get; set; } = string.Empty;
 
     /// <summary>
     /// Descrição de Funcao
     /// </summary>
-    public string Dcfuncao { get; set; } = string.Empty;
+    public string DcFuncao { get; set; } = string.Empty;
 
     /// <summary>
     /// Descrição de Modulo
     /// </summary>
-    public string Dcmodulo { get; set; } = string.Empty;
+    public string DcModulo { get; set; } = string.Empty;
 
     /// <summary>
     /// Descricao Modulo

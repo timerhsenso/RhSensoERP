@@ -22,7 +22,7 @@
     window.crudConfig = {
         hasAtivoField: false,
         entityName: "Funcao",
-        pkField: "Cdfuncao"
+        pkField: "CdFuncao"
     };
 </script>
 
@@ -39,34 +39,34 @@
     <input type="hidden" id="Id" name="Id" />
     <div class="row">
                 <div class="col-md-6 mb-3">
-                    <label for="Cdfuncao" class="form-label">
-                        Código de Funcao <span class="badge bg-primary">PK</span>
+                    <label for="CdFuncao" class="form-label">
+                        Código de Funcao <span class="text-danger">*</span> <span class="badge bg-primary">PK</span>
                     </label>
-                    <input type="text" class="form-control" id="Cdfuncao" name="Cdfuncao" 
-                           placeholder=""   maxlength="30" />
+                    <input type="text" class="form-control" id="CdFuncao" name="CdFuncao" 
+                           placeholder="" required  maxlength="30" />
                     
                 </div>
                 <div class="col-md-6 mb-3">
-                    <label for="CdsiStema" class="form-label">
-                        Código de Sistema <span class="badge bg-primary">PK</span>
+                    <label for="CdSistema" class="form-label">
+                        Código de Sistema <span class="text-danger">*</span> <span class="badge bg-primary">PK</span>
                     </label>
-                    <input type="text" class="form-control" id="CdsiStema" name="CdsiStema" 
-                           placeholder=""   maxlength="10" />
+                    <input type="text" class="form-control" id="CdSistema" name="CdSistema" 
+                           placeholder="" required  maxlength="10" />
                     
                 </div>
                 <div class="col-md-6 mb-3">
-                    <label for="Dcfuncao" class="form-label">
+                    <label for="DcFuncao" class="form-label">
                         Descrição de Funcao
                     </label>
-                    <input type="text" class="form-control" id="Dcfuncao" name="Dcfuncao" 
+                    <input type="text" class="form-control" id="DcFuncao" name="DcFuncao" 
                            placeholder=""   maxlength="80" />
                     
                 </div>
                 <div class="col-md-6 mb-3">
-                    <label for="Dcmodulo" class="form-label">
+                    <label for="DcModulo" class="form-label">
                         Descrição de Modulo
                     </label>
-                    <input type="text" class="form-control" id="Dcmodulo" name="Dcmodulo" 
+                    <input type="text" class="form-control" id="DcModulo" name="DcModulo" 
                            placeholder=""   maxlength="100" />
                     
                 </div>

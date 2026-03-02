@@ -1,8 +1,8 @@
 ﻿// =============================================================================
-// ARQUIVO GERADO POR GeradorFullStack v6.2
+// ARQUIVO GERADO POR GeradorFullStack v6.3
 // Entity: GrupoDeUsuario
 // Module: Seguranca
-// Data: 2026-03-01 22:11:05
+// Data: 2026-03-02 17:55:27
 // AUTO-REGISTRO: Compatível com AddCrudToolServicesAutomatically()
 // =============================================================================
 using RhSensoERP.Web.Models.Seguranca.GrupoDeUsuario;
@@ -12,7 +12,7 @@ using RhSensoERP.Web.Services.Base;
 namespace RhSensoERP.Web.Services.Seguranca.GrupoDeUsuario;
 
 /// <summary>
-/// Interface do serviço de API para Grupo de Usuários.
+/// Interface do serviço de API para Grupos de Usuário.
 /// Herda de IApiService (já implementado por BaseApiService) e IBatchDeleteService.
 /// v6.1: CORRIGIDO - Lookup usa 'term' para Select2.
 /// v6.0: Adiciona métodos Select2 Lookup automáticos.

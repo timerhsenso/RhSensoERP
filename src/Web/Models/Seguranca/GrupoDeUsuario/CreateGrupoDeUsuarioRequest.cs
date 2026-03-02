@@ -2,14 +2,14 @@
 // ARQUIVO GERADO POR GeradorFullStack v4.0
 // Entity: GrupoDeUsuario
 // Module: Seguranca
-// Data: 2026-03-01 22:11:05
+// Data: 2026-03-02 17:55:27
 // =============================================================================
 using System.ComponentModel.DataAnnotations;
 
 namespace RhSensoERP.Web.Models.Seguranca.GrupoDeUsuario;
 
 /// <summary>
-/// Request para criação de Grupo de Usuários.
+/// Request para criação de Grupos de Usuário.
 /// Compatível com backend: CreateGrupoDeUsuarioRequest
 /// </summary>
 public class CreateGrupoDeUsuarioRequest

@@ -4,9 +4,9 @@
  * ============================================================================
  * Arquivo: wwwroot/js/seguranca/tsistema/tsistema.js
  * Módulo: Seguranca
- * Versão: 5.2 (FIX PK TEXTO NO CREATE)
- * Gerado por: GeradorFullStack v5.2
- * Data: 2026-03-01 16:07:47
+ * Versão: 5.4 (COMPOSITE KEY GENÉRICO)
+ * Gerado por: GeradorFullStack v5.4
+ * Data: 2026-03-02 19:22:34
  * 
  * Changelog v5.2:
  *   ✅ CORRIGIDO: PK de texto agora é incluída no payload de criação (!isEdit)
@@ -48,9 +48,9 @@ class TsistemaCrud extends CrudBase {
         super(config);
         
         // =====================================================================
-        // Identifica campos de PK de texto
+        // Identifica campos de PK de texto (suporta PK composta)
         // =====================================================================
-        this.pkTextoField = 'CdsiStema';
+        this.pkTextoFields = ['CdSistema'];
         this.isPkTexto = true;
         
         // =====================================================================
@@ -66,21 +66,23 @@ class TsistemaCrud extends CrudBase {
     enablePrimaryKeyFields(enable) {
         if (!this.isPkTexto) return;
         
-        const $pkField = $('#' + this.pkTextoField);
-        if ($pkField.length === 0) return;
+        this.pkTextoFields.forEach(fieldName => {
+            const $pkField = $('#' + fieldName);
+            if ($pkField.length === 0) return;
+            
+            if (enable) {
+                $pkField.prop('readonly', false)
+                        .prop('disabled', false)
+                        .removeClass('bg-light');
+            } else {
+                $pkField.prop('readonly', true)
+                        .addClass('bg-light');
+            }
+        });
         
-        if (enable) {
-            // Criação: campo editável
-            $pkField.prop('readonly', false)
-                    .prop('disabled', false)
-                    .removeClass('bg-light');
-            console.log('✏️ [Tsistema] Campo PK habilitado para edição (criação)');
-        } else {
-            // Edição: campo readonly
-            $pkField.prop('readonly', true)
-                    .addClass('bg-light');
-            console.log('🔒 [Tsistema] Campo PK desabilitado (edição)');
-        }
+        console.log(enable 
+            ? '✏️ [Tsistema] Campos PK habilitados para edição (criação)'
+            : '🔒 [Tsistema] Campos PK desabilitados (edição)');
     }
 
     /**
@@ -200,13 +202,13 @@ class TsistemaCrud extends CrudBase {
         const cleanData = {};
 
 
-        // ⭐ v5.2: PK de texto - inclui somente na criação (na edição vai na URL)
+        // ⭐ v5.3: PK texto 'CdSistema' - inclui somente na criação (na edição vai na URL)
         if (!isEdit) {
-            cleanData.CdsiStema = formData.cdsiStema || formData.CdsiStema || '';
+            cleanData.CdSistema = formData.cdSistema || formData.CdSistema || '';
         }
 
         // String fields - PascalCase
-        cleanData.DcsiStema = formData.dcsiStema || formData.DcsiStema || '';
+        cleanData.DcSistema = formData.dcSistema || formData.DcSistema || '';
 
         console.log('📤 [Tsistema] Dados DEPOIS (PascalCase):', JSON.parse(JSON.stringify(cleanData)));
         return cleanData;
@@ -254,26 +256,19 @@ $(document).ready(function () {
     console.log('🔐 [Tsistema] Permissões ativas:', window.crudPermissions);
 
     // =========================================================================
-    // FUNÇÃO AUXILIAR: Extrai ID com trim e validação
+    // ⭐ v5.4: FUNÇÃO AUXILIAR PARA ID (genérica - simples ou composta)
     // =========================================================================
 
-    function getCleanId(row, fieldName) {
+    function getCleanId(row, fieldName) {{
         if (!row) return '';
-
-        // Tenta várias variações do nome do campo
         let id = row[fieldName] || row[fieldName.toLowerCase()] || row[fieldName.toUpperCase()] || 
                  row['id'] || row['Id'] || '';
-
-        // Converte para string e faz trim
         id = String(id).trim();
-
-        // Log para debug
-        if (!id) {
+        if (!id) {{
             console.warn('⚠️ [Tsistema] ID vazio para row:', row);
-        }
-
+        }}
         return id;
-    }
+    }}
 
     // =========================================================================
     // ✅ v5.1: CONFIGURAÇÃO DAS COLUNAS (COM ORDENAÇÃO DE NAVEGAÇÕES)
@@ -292,14 +287,14 @@ $(document).ready(function () {
             width: '30px',
             className: 'text-center no-export',
             render: function (data, type, row) {
-                const id = getCleanId(row, 'cdsiStema');
+                const id = getCleanId(row, 'cdSistema');
                 return `<input type="checkbox" class="form-check-input row-select dt-checkboxes" value="${id}" data-id="${id}" />`;
             }
         },
         // Código de Si Stema (Order: 0)
         {
-            data: 'cdsiStema',
-            name: 'CdsiStema',
+            data: 'cdSistema',
+            name: 'CdSistema',
             title: 'Código de Si Stema',
             orderable: true,
             render: function (data, type, row) {
@@ -308,8 +303,8 @@ $(document).ready(function () {
         },
         // Descrição de Si Stema (Order: 1)
         {
-            data: 'dcsiStema',
-            name: 'DcsiStema',
+            data: 'dcSistema',
+            name: 'DcSistema',
             title: 'Descrição de Si Stema',
             orderable: true,
             render: function (data, type, row) {
@@ -326,7 +321,7 @@ $(document).ready(function () {
             width: '100px',
             className: 'text-center no-export',
             render: function (data, type, row) {
-                const id = getCleanId(row, 'cdsiStema');
+                const id = getCleanId(row, 'cdSistema');
                 let actions = '';
                 
                 if (window.crudPermissions.canEdit) {
@@ -356,7 +351,7 @@ $(document).ready(function () {
         apiRoute: '/api/seguranca/tsistema',
         entityName: 'Tabela de Sistemas',
         entityNamePlural: 'Tabela de Sistemass',
-        idField: 'cdsiStema',
+        idField: 'cdSistema',
         tableSelector: '#tableCrud',
         columns: columns,  // ✅ CORRIGIDO: era "dataTableColumns"
         permissions: window.crudPermissions,

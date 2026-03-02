@@ -1,12 +1,12 @@
 ﻿/**
  * ============================================================================
- * GRUPO DE USUÁRIOS - JavaScript com Fix PK Texto
+ * GRUPOS DE USUÁRIO - JavaScript com Fix PK Texto
  * ============================================================================
  * Arquivo: wwwroot/js/seguranca/grupodeusuario/grupodeusuario.js
  * Módulo: Seguranca
  * Versão: 5.4 (COMPOSITE KEY GENÉRICO)
  * Gerado por: GeradorFullStack v5.4
- * Data: 2026-03-01 22:11:05
+ * Data: 2026-03-02 17:55:27
  * 
  * Changelog v5.2:
  *   ✅ CORRIGIDO: PK de texto agora é incluída no payload de criação (!isEdit)
@@ -38,7 +38,7 @@
  *   ✅ Toggle Switch dinâmico para campo Ativo (rate limit 500ms)
  *   ✅ Exclusão múltipla com contador
  * 
- * Implementação específica do CRUD de Grupo de Usuários.
+ * Implementação específica do CRUD de Grupos de Usuário.
  * Estende a classe CrudBase com customizações necessárias.
  * ============================================================================
  */
@@ -365,8 +365,8 @@ $(document).ready(function () {
     const crud = new GrupoDeUsuarioCrud({
         controllerName: 'GrupoDeUsuario',
         apiRoute: '/api/seguranca/grupodeusuario',
-        entityName: 'Grupo de Usuários',
-        entityNamePlural: 'Grupo de Usuárioss',
+        entityName: 'Grupos de Usuário',
+        entityNamePlural: 'Grupos de Usuários',
         idField: 'cdSistema',
         tableSelector: '#tableCrud',
         columns: columns,  // ✅ CORRIGIDO: era "dataTableColumns"

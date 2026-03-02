@@ -1,12 +1,16 @@
 ﻿/**
  * ============================================================================
- * HAB BOTAO - JavaScript com Ordenação de Navegações
+ * HABILITAÇÃO DE BOTÃO - JavaScript com Fix PK Texto
  * ============================================================================
  * Arquivo: wwwroot/js/seguranca/habilitacaobotao/habilitacaobotao.js
  * Módulo: Seguranca
- * Versão: 5.1 (NAVEGAÇÕES COM ORDENAÇÃO CORRETA)
- * Gerado por: GeradorFullStack v5.1
- * Data: 2026-03-01 13:35:46
+ * Versão: 5.4 (COMPOSITE KEY GENÉRICO)
+ * Gerado por: GeradorFullStack v5.4
+ * Data: 2026-03-02 17:56:12
+ * 
+ * Changelog v5.2:
+ *   ✅ CORRIGIDO: PK de texto agora é incluída no payload de criação (!isEdit)
+ *   ✅ CORRIGIDO: Entidades com PK string/int não-identity criam corretamente
  * 
  * Changelog v5.1:
  *   ✅ CORRIGIDO: Navegações agora respeitam Order configurado pelo usuário
@@ -34,7 +38,7 @@
  *   ✅ Toggle Switch dinâmico para campo Ativo (rate limit 500ms)
  *   ✅ Exclusão múltipla com contador
  * 
- * Implementação específica do CRUD de Hab botao.
+ * Implementação específica do CRUD de Habilitação de Botão.
  * Estende a classe CrudBase com customizações necessárias.
  * ============================================================================
  */
@@ -44,9 +48,9 @@ class HabilitacaoBotaoCrud extends CrudBase {
         super(config);
         
         // =====================================================================
-        // Identifica campos de PK de texto
+        // Identifica campos de PK de texto (suporta PK composta)
         // =====================================================================
-        this.pkTextoField = null;
+        this.pkTextoFields = [];
         this.isPkTexto = false;
         
         // =====================================================================
@@ -62,21 +66,23 @@ class HabilitacaoBotaoCrud extends CrudBase {
     enablePrimaryKeyFields(enable) {
         if (!this.isPkTexto) return;
         
-        const $pkField = $('#' + this.pkTextoField);
-        if ($pkField.length === 0) return;
+        this.pkTextoFields.forEach(fieldName => {
+            const $pkField = $('#' + fieldName);
+            if ($pkField.length === 0) return;
+            
+            if (enable) {
+                $pkField.prop('readonly', false)
+                        .prop('disabled', false)
+                        .removeClass('bg-light');
+            } else {
+                $pkField.prop('readonly', true)
+                        .addClass('bg-light');
+            }
+        });
         
-        if (enable) {
-            // Criação: campo editável
-            $pkField.prop('readonly', false)
-                    .prop('disabled', false)
-                    .removeClass('bg-light');
-            console.log('✏️ [HabilitacaoBotao] Campo PK habilitado para edição (criação)');
-        } else {
-            // Edição: campo readonly
-            $pkField.prop('readonly', true)
-                    .addClass('bg-light');
-            console.log('🔒 [HabilitacaoBotao] Campo PK desabilitado (edição)');
-        }
+        console.log(enable 
+            ? '✏️ [HabilitacaoBotao] Campos PK habilitados para edição (criação)'
+            : '🔒 [HabilitacaoBotao] Campos PK desabilitados (edição)');
     }
 
     /**
@@ -197,10 +203,10 @@ class HabilitacaoBotaoCrud extends CrudBase {
 
 
         // String fields - PascalCase
-        cleanData.Cdgruser = formData.cdgruser || formData.Cdgruser || '';
-        cleanData.Cdfuncao = formData.cdfuncao || formData.Cdfuncao || '';
-        cleanData.CdsiStema = formData.cdsiStema || formData.CdsiStema || '';
-        cleanData.Nmbotao = formData.nmbotao || formData.Nmbotao || '';
+        cleanData.CdGrUser = formData.cdGrUser || formData.CdGrUser || '';
+        cleanData.CdFuncao = formData.cdFuncao || formData.CdFuncao || '';
+        cleanData.CdSistema = formData.cdSistema || formData.CdSistema || '';
+        cleanData.NmBotao = formData.nmBotao || formData.NmBotao || '';
 
         console.log('📤 [HabilitacaoBotao] Dados DEPOIS (PascalCase):', JSON.parse(JSON.stringify(cleanData)));
         return cleanData;
@@ -248,26 +254,19 @@ $(document).ready(function () {
     console.log('🔐 [HabilitacaoBotao] Permissões ativas:', window.crudPermissions);
 
     // =========================================================================
-    // FUNÇÃO AUXILIAR: Extrai ID com trim e validação
+    // ⭐ v5.4: FUNÇÃO AUXILIAR PARA ID (genérica - simples ou composta)
     // =========================================================================
 
-    function getCleanId(row, fieldName) {
+    function getCleanId(row, fieldName) {{
         if (!row) return '';
-
-        // Tenta várias variações do nome do campo
         let id = row[fieldName] || row[fieldName.toLowerCase()] || row[fieldName.toUpperCase()] || 
                  row['id'] || row['Id'] || '';
-
-        // Converte para string e faz trim
         id = String(id).trim();
-
-        // Log para debug
-        if (!id) {
+        if (!id) {{
             console.warn('⚠️ [HabilitacaoBotao] ID vazio para row:', row);
-        }
-
+        }}
         return id;
-    }
+    }}
 
     // =========================================================================
     // ✅ v5.1: CONFIGURAÇÃO DAS COLUNAS (COM ORDENAÇÃO DE NAVEGAÇÕES)
@@ -292,8 +291,8 @@ $(document).ready(function () {
         },
         // Código de Gr User (Order: 0)
         {
-            data: 'cdgruser',
-            name: 'Cdgruser',
+            data: 'cdGrUser',
+            name: 'CdGrUser',
             title: 'Código de Gr User',
             orderable: true,
             render: function (data, type, row) {
@@ -302,8 +301,8 @@ $(document).ready(function () {
         },
         // Código de Funcao (Order: 1)
         {
-            data: 'cdfuncao',
-            name: 'Cdfuncao',
+            data: 'cdFuncao',
+            name: 'CdFuncao',
             title: 'Código de Funcao',
             orderable: true,
             render: function (data, type, row) {
@@ -312,8 +311,8 @@ $(document).ready(function () {
         },
         // Código de Sistema (Order: 2)
         {
-            data: 'cdsiStema',
-            name: 'CdsiStema',
+            data: 'cdSistema',
+            name: 'CdSistema',
             title: 'Código de Sistema',
             orderable: true,
             render: function (data, type, row) {
@@ -322,8 +321,8 @@ $(document).ready(function () {
         },
         // Nome de Botao (Order: 3)
         {
-            data: 'nmbotao',
-            name: 'Nmbotao',
+            data: 'nmBotao',
+            name: 'NmBotao',
             title: 'Nome de Botao',
             orderable: true,
             render: function (data, type, row) {
@@ -368,8 +367,8 @@ $(document).ready(function () {
     const crud = new HabilitacaoBotaoCrud({
         controllerName: 'HabilitacaoBotao',
         apiRoute: '/api/seguranca/habilitacaobotao',
-        entityName: 'Hab botao',
-        entityNamePlural: 'Hab botaos',
+        entityName: 'Habilitação de Botão',
+        entityNamePlural: 'Habilitação de Botãos',
         idField: 'id',
         tableSelector: '#tableCrud',
         columns: columns,  // ✅ CORRIGIDO: era "dataTableColumns"

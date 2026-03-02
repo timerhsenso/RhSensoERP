@@ -2,7 +2,7 @@
 // ARQUIVO GERADO POR GeradorFullStack v4.0
 // Entity: GrupoDeUsuario
 // Module: Seguranca
-// Data: 2026-03-01 22:11:05
+// Data: 2026-03-02 17:55:27
 // =============================================================================
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -19,14 +19,14 @@ namespace RhSensoERP.Web.Controllers.Seguranca;
 // =============================================================================
 [MenuItem(
     Module = MenuModule.Seguranca,
-    DisplayName = "Grupo de Usuários",
+    DisplayName = "Grupos de Usuário",
     Icon = "fas fa-table",
     Order = 10,
     CdFuncao = "SEG_FM_TSISTEMA"
 )]
 
 /// <summary>
-/// Controller para gerenciamento de Grupo de Usuários.
+/// Controller para gerenciamento de Grupos de Usuário.
 /// Herda toda a funcionalidade CRUD de BaseCrudController.
 /// </summary>
 [Authorize]

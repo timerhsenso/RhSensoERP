@@ -1,8 +1,8 @@
 ﻿// =============================================================================
-// ARQUIVO GERADO POR GeradorFullStack v6.1
+// ARQUIVO GERADO POR GeradorFullStack v6.3
 // Entity: HabilitacaoBotao
 // Module: Seguranca
-// Data: 2026-03-01 13:35:46
+// Data: 2026-03-02 17:56:12
 // AUTO-REGISTRO: Compatível com AddCrudToolServicesAutomatically()
 // =============================================================================
 using RhSensoERP.Web.Models.Seguranca.HabilitacaoBotao;
@@ -12,7 +12,7 @@ using RhSensoERP.Web.Services.Base;
 namespace RhSensoERP.Web.Services.Seguranca.HabilitacaoBotao;
 
 /// <summary>
-/// Interface do serviço de API para Hab botao.
+/// Interface do serviço de API para Habilitação de Botão.
 /// Herda de IApiService (já implementado por BaseApiService) e IBatchDeleteService.
 /// v6.1: CORRIGIDO - Lookup usa 'term' para Select2.
 /// v6.0: Adiciona métodos Select2 Lookup automáticos.

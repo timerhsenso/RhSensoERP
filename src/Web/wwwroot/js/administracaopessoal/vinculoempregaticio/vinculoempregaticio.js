@@ -1,12 +1,16 @@
 ﻿/**
  * ============================================================================
- * VINCULO EMPREGATICIO - JavaScript com Ordenação de Navegações
+ * VÍNCULO EMPREGATÍCIO - JavaScript com Fix PK Texto
  * ============================================================================
  * Arquivo: wwwroot/js/administracaopessoal/vinculoempregaticio/vinculoempregaticio.js
  * Módulo: AdministracaoPessoal
- * Versão: 5.1 (NAVEGAÇÕES COM ORDENAÇÃO CORRETA)
- * Gerado por: GeradorFullStack v5.1
- * Data: 2026-02-28 21:06:39
+ * Versão: 5.4 (COMPOSITE KEY GENÉRICO)
+ * Gerado por: GeradorFullStack v5.4
+ * Data: 2026-03-02 18:00:36
+ * 
+ * Changelog v5.2:
+ *   ✅ CORRIGIDO: PK de texto agora é incluída no payload de criação (!isEdit)
+ *   ✅ CORRIGIDO: Entidades com PK string/int não-identity criam corretamente
  * 
  * Changelog v5.1:
  *   ✅ CORRIGIDO: Navegações agora respeitam Order configurado pelo usuário
@@ -34,7 +38,7 @@
  *   ✅ Toggle Switch dinâmico para campo Ativo (rate limit 500ms)
  *   ✅ Exclusão múltipla com contador
  * 
- * Implementação específica do CRUD de Vinculo Empregaticio.
+ * Implementação específica do CRUD de Vínculo Empregatício.
  * Estende a classe CrudBase com customizações necessárias.
  * ============================================================================
  */
@@ -44,9 +48,9 @@ class VinculoEmpregaticioCrud extends CrudBase {
         super(config);
         
         // =====================================================================
-        // Identifica campos de PK de texto
+        // Identifica campos de PK de texto (suporta PK composta)
         // =====================================================================
-        this.pkTextoField = null;
+        this.pkTextoFields = [];
         this.isPkTexto = false;
         
         // =====================================================================
@@ -62,21 +66,23 @@ class VinculoEmpregaticioCrud extends CrudBase {
     enablePrimaryKeyFields(enable) {
         if (!this.isPkTexto) return;
         
-        const $pkField = $('#' + this.pkTextoField);
-        if ($pkField.length === 0) return;
+        this.pkTextoFields.forEach(fieldName => {
+            const $pkField = $('#' + fieldName);
+            if ($pkField.length === 0) return;
+            
+            if (enable) {
+                $pkField.prop('readonly', false)
+                        .prop('disabled', false)
+                        .removeClass('bg-light');
+            } else {
+                $pkField.prop('readonly', true)
+                        .addClass('bg-light');
+            }
+        });
         
-        if (enable) {
-            // Criação: campo editável
-            $pkField.prop('readonly', false)
-                    .prop('disabled', false)
-                    .removeClass('bg-light');
-            console.log('✏️ [VinculoEmpregaticio] Campo PK habilitado para edição (criação)');
-        } else {
-            // Edição: campo readonly
-            $pkField.prop('readonly', true)
-                    .addClass('bg-light');
-            console.log('🔒 [VinculoEmpregaticio] Campo PK desabilitado (edição)');
-        }
+        console.log(enable 
+            ? '✏️ [VinculoEmpregaticio] Campos PK habilitados para edição (criação)'
+            : '🔒 [VinculoEmpregaticio] Campos PK desabilitados (edição)');
     }
 
     /**
@@ -197,15 +203,15 @@ class VinculoEmpregaticioCrud extends CrudBase {
 
 
         // String fields - PascalCase
-        cleanData.Cdvincul = formData.cdvincul || formData.Cdvincul || '';
-        cleanData.Dcvincul = formData.dcvincul || formData.Dcvincul || '';
-        cleanData.Cdsefip = formData.cdsefip || formData.Cdsefip || '';
-        cleanData.Cdclasse = formData.cdclasse || formData.Cdclasse || '';
+        cleanData.CdVincul = formData.cdVincul || formData.CdVincul || '';
+        cleanData.DcVincul = formData.dcVincul || formData.DcVincul || '';
+        cleanData.CdSefip = formData.cdSefip || formData.CdSefip || '';
+        cleanData.CdClasse = formData.cdClasse || formData.CdClasse || '';
 
 
         // Integer required fields - PascalCase
-        cleanData.Flrais = parseInt(formData.flrais || formData.Flrais || 0, 10);
-        cleanData.NatativIdade = parseInt(formData.natativIdade || formData.NatativIdade || 0, 10);
+        cleanData.FlRais = parseInt(formData.flRais || formData.FlRais || 0, 10);
+        cleanData.Natatividade = parseInt(formData.natatividade || formData.Natatividade || 0, 10);
 
         console.log('📤 [VinculoEmpregaticio] Dados DEPOIS (PascalCase):', JSON.parse(JSON.stringify(cleanData)));
         return cleanData;
@@ -253,26 +259,19 @@ $(document).ready(function () {
     console.log('🔐 [VinculoEmpregaticio] Permissões ativas:', window.crudPermissions);
 
     // =========================================================================
-    // FUNÇÃO AUXILIAR: Extrai ID com trim e validação
+    // ⭐ v5.4: FUNÇÃO AUXILIAR PARA ID (genérica - simples ou composta)
     // =========================================================================
 
-    function getCleanId(row, fieldName) {
+    function getCleanId(row, fieldName) {{
         if (!row) return '';
-
-        // Tenta várias variações do nome do campo
         let id = row[fieldName] || row[fieldName.toLowerCase()] || row[fieldName.toUpperCase()] || 
                  row['id'] || row['Id'] || '';
-
-        // Converte para string e faz trim
         id = String(id).trim();
-
-        // Log para debug
-        if (!id) {
+        if (!id) {{
             console.warn('⚠️ [VinculoEmpregaticio] ID vazio para row:', row);
-        }
-
+        }}
         return id;
-    }
+    }}
 
     // =========================================================================
     // ✅ v5.1: CONFIGURAÇÃO DAS COLUNAS (COM ORDENAÇÃO DE NAVEGAÇÕES)
@@ -297,8 +296,8 @@ $(document).ready(function () {
         },
         // Código (Order: 0)
         {
-            data: 'cdvincul',
-            name: 'Cdvincul',
+            data: 'cdVincul',
+            name: 'CdVincul',
             title: 'Código',
             orderable: true,
             render: function (data, type, row) {
@@ -307,8 +306,8 @@ $(document).ready(function () {
         },
         // Descrição (Order: 1)
         {
-            data: 'dcvincul',
-            name: 'Dcvincul',
+            data: 'dcVincul',
+            name: 'DcVincul',
             title: 'Descrição',
             orderable: true,
             render: function (data, type, row) {
@@ -353,8 +352,8 @@ $(document).ready(function () {
     const crud = new VinculoEmpregaticioCrud({
         controllerName: 'VinculoEmpregaticio',
         apiRoute: '/api/administracaopessoal/vinculoempregaticio',
-        entityName: 'Vinculo Empregaticio',
-        entityNamePlural: 'Vinculo Empregaticios',
+        entityName: 'Vínculo Empregatício',
+        entityNamePlural: 'Vínculo Empregatícios',
         idField: 'id',
         tableSelector: '#tableCrud',
         columns: columns,  // ✅ CORRIGIDO: era "dataTableColumns"

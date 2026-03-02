@@ -1,9 +1,9 @@
 ﻿// =============================================================================
-// ARQUIVO GERADO POR GeradorFullStack v6.2
+// ARQUIVO GERADO POR GeradorFullStack v6.3
 // Entity: GrupoDeUsuario
 // Module: Seguranca
 // ApiRoute: api/seguranca/grupodeusuario
-// Data: 2026-03-01 22:11:05
+// Data: 2026-03-02 17:55:27
 // AUTO-REGISTRO: Compatível com AddCrudToolServicesAutomatically()
 // =============================================================================
 using System.Text;
@@ -15,8 +15,9 @@ using RhSensoERP.Web.Services.Base;
 namespace RhSensoERP.Web.Services.Seguranca.GrupoDeUsuario;
 
 /// <summary>
-/// Serviço de API para Grupo de Usuários.
+/// Serviço de API para Grupos de Usuário.
 /// Herda implementação base de BaseApiService.
+/// ⭐ v6.3: CamelCase + logging detalhado + BackendResult para erros.
 /// v6.1: CORRIGIDO - Lookup usa 'term' para Select2.
 /// v6.0: Adiciona implementações Select2 Lookup automáticas.
 /// </summary>
@@ -25,9 +26,17 @@ public class GrupoDeUsuarioApiService
       IGrupoDeUsuarioApiService
 {
     private const string ApiRoute = "api/seguranca/grupodeusuario";
+
+    // =========================================================================
+    // ⭐ v6.3 FIX: CamelCase OBRIGATÓRIO
+    // Sem isso, Serialize envia PascalCase (ex: "DcGrUser")
+    // mas backend espera camelCase (ex: "dcGrUser") e ignora os campos.
+    // BaseApiService já usa CamelCase - o override deve ser consistente.
+    // =========================================================================
     private static readonly JsonSerializerOptions _jsonOptions = new()
     {
-        PropertyNameCaseInsensitive = true
+        PropertyNameCaseInsensitive = true,
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
 
     // =========================================================================
@@ -42,10 +51,9 @@ public class GrupoDeUsuarioApiService
     }
 
     // =========================================================================
-    // ⭐ v6.2: COMPOSITE KEY OVERRIDES
+    // ⭐ v6.3: COMPOSITE KEY OVERRIDES (COM LOGGING DETALHADO)
     // Converte PK pipe-separated para path segments na URL.
     // Ex: "RHU|ADMIN" → URL ".../RHU/ADMIN"
-    // Funciona com N campos de PK composta.
     // =========================================================================
 
     /// <summary>
@@ -72,7 +80,7 @@ public class GrupoDeUsuarioApiService
             await AddAuthorizationHeaderAsync();
             var path = CompositeKeyToPath(id);
             var url = $"{_baseEndpoint}/{path}";
-            _logger.LogDebug("🔍 [GRUPODEUSUARIO] GetByIdAsync - CompositeKey: {Id} → URL: {Url}", id, url);
+            _logger.LogDebug("🔍 [GRUPODEUSUARIO] GetByIdAsync - Key: {Id} → URL: {Url}", id, url);
 
             var response = await _httpClient.GetAsync(url);
             var content = await response.Content.ReadAsStringAsync();
@@ -87,7 +95,8 @@ public class GrupoDeUsuarioApiService
                 };
             }
 
-            _logger.LogWarning("⚠️ [GRUPODEUSUARIO] GetByIdAsync - ID: {Id}, Erro {StatusCode}", id, response.StatusCode);
+            _logger.LogWarning("⚠️ [GRUPODEUSUARIO] GetByIdAsync - ID: {Id}, Status: {Status}, Body: {Body}",
+                id, response.StatusCode, content);
             return new ApiResponse<GrupoDeUsuarioDto>
             {
                 Success = false,
@@ -96,7 +105,7 @@ public class GrupoDeUsuarioApiService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "❌ [GRUPODEUSUARIO] Erro ao buscar registro {Id}", id);
+            _logger.LogError(ex, "❌ [GRUPODEUSUARIO] Erro GetByIdAsync {Id}", id);
             return new ApiResponse<GrupoDeUsuarioDto>
             {
                 Success = false,
@@ -106,7 +115,7 @@ public class GrupoDeUsuarioApiService
     }
 
     /// <summary>
-    /// ⭐ Override: PUT com PK composta → path segments.
+    /// ⭐ v6.3: Override: PUT com PK composta + logging detalhado + BackendResult.
     /// </summary>
     public override async Task<ApiResponse<GrupoDeUsuarioDto>> UpdateAsync(string id, UpdateGrupoDeUsuarioRequest dto)
     {
@@ -117,43 +126,63 @@ public class GrupoDeUsuarioApiService
             var httpContent = new StringContent(json, Encoding.UTF8, "application/json");
             var path = CompositeKeyToPath(id);
             var url = $"{_baseEndpoint}/{path}";
-            _logger.LogDebug("✏️ [GRUPODEUSUARIO] UpdateAsync - CompositeKey: {Id} → URL: {Url}", id, url);
+
+            // ⭐ v6.3: Loga request body para debugging
+            _logger.LogWarning("✏️ [GRUPODEUSUARIO] UpdateAsync - ID: {Id} → URL: {Url} | Body: {Body}", id, url, json);
 
             var response = await _httpClient.PutAsync(url, httpContent);
             var content = await response.Content.ReadAsStringAsync();
 
+            // ⭐ v6.3: Loga response raw
+            _logger.LogDebug("✏️ [GRUPODEUSUARIO] UpdateAsync - Status: {Status} | Response: {Body}",
+                response.StatusCode, content);
+
             if (response.IsSuccessStatusCode)
             {
-                var resultBool = JsonSerializer.Deserialize<ApiResponse<bool>>(content, _jsonOptions);
-                if (resultBool != null && resultBool.Success)
+                // ⭐ v6.3: Usa BackendResult<bool> (formato real do backend)
+                var backendResult = JsonSerializer.Deserialize<BackendResult<bool>>(content, _jsonOptions);
+                if (backendResult?.IsSuccess == true)
                 {
                     return await GetByIdAsync(id);
                 }
                 return new ApiResponse<GrupoDeUsuarioDto>
                 {
                     Success = false,
-                    Error = resultBool?.Error ?? new ApiError { Message = "Erro ao atualizar registro" },
-                    Errors = resultBool?.Errors
+                    Error = new ApiError { Message = backendResult?.Error?.Message ?? "Erro ao atualizar registro" }
                 };
             }
 
-            _logger.LogWarning("⚠️ [GRUPODEUSUARIO] UpdateAsync - ID: {Id}, Erro {StatusCode}", id, response.StatusCode);
+            // ⭐ v6.3: Extrai erro real do Result<T> do backend
+            _logger.LogWarning("⚠️ [GRUPODEUSUARIO] UpdateAsync FALHOU - ID: {Id}, Status: {Status}, Response: {Body}",
+                id, response.StatusCode, content);
+
             try
             {
-                var errorResponse = JsonSerializer.Deserialize<ApiResponse<GrupoDeUsuarioDto>>(content, _jsonOptions);
-                if (errorResponse != null) return errorResponse;
+                var errorResult = JsonSerializer.Deserialize<BackendResult<bool>>(content, _jsonOptions);
+                if (errorResult?.Error != null)
+                {
+                    return new ApiResponse<GrupoDeUsuarioDto>
+                    {
+                        Success = false,
+                        Error = new ApiError
+                        {
+                            Code = errorResult.Error.Code ?? string.Empty,
+                            Message = errorResult.Error.Message ?? "Erro ao atualizar registro"
+                        }
+                    };
+                }
             }
             catch { }
 
             return new ApiResponse<GrupoDeUsuarioDto>
             {
                 Success = false,
-                Error = new ApiError { Message = "Erro ao atualizar registro" }
+                Error = new ApiError { Message = $"Erro ao atualizar registro (HTTP {(int)response.StatusCode})" }
             };
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "❌ [GRUPODEUSUARIO] Erro ao atualizar registro {Id}", id);
+            _logger.LogError(ex, "❌ [GRUPODEUSUARIO] Erro UpdateAsync {Id}", id);
             return new ApiResponse<GrupoDeUsuarioDto>
             {
                 Success = false,
@@ -163,7 +192,7 @@ public class GrupoDeUsuarioApiService
     }
 
     /// <summary>
-    /// ⭐ Override: DELETE com PK composta → path segments.
+    /// ⭐ v6.3: Override: DELETE com PK composta + BackendResult para erros.
     /// </summary>
     public override async Task<ApiResponse<bool>> DeleteAsync(string id)
     {
@@ -172,7 +201,7 @@ public class GrupoDeUsuarioApiService
             await AddAuthorizationHeaderAsync();
             var path = CompositeKeyToPath(id);
             var url = $"{_baseEndpoint}/{path}";
-            _logger.LogDebug("🗑️ [GRUPODEUSUARIO] DeleteAsync - CompositeKey: {Id} → URL: {Url}", id, url);
+            _logger.LogDebug("🗑️ [GRUPODEUSUARIO] DeleteAsync - Key: {Id} → URL: {Url}", id, url);
 
             var response = await _httpClient.DeleteAsync(url);
             var content = await response.Content.ReadAsStringAsync();
@@ -183,23 +212,37 @@ public class GrupoDeUsuarioApiService
                 return new ApiResponse<bool> { Success = true, Data = true };
             }
 
-            _logger.LogWarning("⚠️ [GRUPODEUSUARIO] DeleteAsync - ID: {Id}, Erro {StatusCode}", id, response.StatusCode);
+            _logger.LogWarning("⚠️ [GRUPODEUSUARIO] DeleteAsync - ID: {Id}, Status: {Status}, Body: {Body}",
+                id, response.StatusCode, content);
+
+            // ⭐ v6.3: Usa BackendResult para extrair mensagem de erro real
             try
             {
-                var errorResponse = JsonSerializer.Deserialize<ApiResponse<bool>>(content, _jsonOptions);
-                if (errorResponse != null) return errorResponse;
+                var errorResult = JsonSerializer.Deserialize<BackendResult<bool>>(content, _jsonOptions);
+                if (errorResult?.Error != null)
+                {
+                    return new ApiResponse<bool>
+                    {
+                        Success = false,
+                        Error = new ApiError
+                        {
+                            Code = errorResult.Error.Code ?? string.Empty,
+                            Message = errorResult.Error.Message ?? "Erro ao excluir registro"
+                        }
+                    };
+                }
             }
             catch { }
 
             return new ApiResponse<bool>
             {
                 Success = false,
-                Error = new ApiError { Message = "Erro ao excluir registro" }
+                Error = new ApiError { Message = $"Erro ao excluir registro (HTTP {(int)response.StatusCode})" }
             };
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "❌ [GRUPODEUSUARIO] Erro ao excluir registro {Id}", id);
+            _logger.LogError(ex, "❌ [GRUPODEUSUARIO] Erro DeleteAsync {Id}", id);
             return new ApiResponse<bool>
             {
                 Success = false,

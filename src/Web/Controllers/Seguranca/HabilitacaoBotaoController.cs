@@ -2,7 +2,7 @@
 // ARQUIVO GERADO POR GeradorFullStack v4.0
 // Entity: HabilitacaoBotao
 // Module: Seguranca
-// Data: 2026-03-01 13:35:46
+// Data: 2026-03-02 17:56:12
 // =============================================================================
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -19,14 +19,14 @@ namespace RhSensoERP.Web.Controllers.Seguranca;
 // =============================================================================
 [MenuItem(
     Module = MenuModule.Seguranca,
-    DisplayName = "Hab botao",
+    DisplayName = "Habilitação de Botão",
     Icon = "fas fa-table",
     Order = 10,
     CdFuncao = "SEG_FM_TSISTEMA"
 )]
 
 /// <summary>
-/// Controller para gerenciamento de Hab botao.
+/// Controller para gerenciamento de Habilitação de Botão.
 /// Herda toda a funcionalidade CRUD de BaseCrudController.
 /// </summary>
 [Authorize]

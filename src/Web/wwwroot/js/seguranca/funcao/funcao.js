@@ -1,12 +1,16 @@
 ﻿/**
  * ============================================================================
- * FUNÇÕES DO SISTEMA - JavaScript com Ordenação de Navegações
+ * FUNÇÕES DO SISTEMA - JavaScript com Fix PK Texto
  * ============================================================================
  * Arquivo: wwwroot/js/seguranca/funcao/funcao.js
  * Módulo: Seguranca
- * Versão: 5.1 (NAVEGAÇÕES COM ORDENAÇÃO CORRETA)
- * Gerado por: GeradorFullStack v5.1
- * Data: 2026-02-28 19:04:06
+ * Versão: 5.4 (COMPOSITE KEY GENÉRICO)
+ * Gerado por: GeradorFullStack v5.4
+ * Data: 2026-03-02 19:25:55
+ * 
+ * Changelog v5.2:
+ *   ✅ CORRIGIDO: PK de texto agora é incluída no payload de criação (!isEdit)
+ *   ✅ CORRIGIDO: Entidades com PK string/int não-identity criam corretamente
  * 
  * Changelog v5.1:
  *   ✅ CORRIGIDO: Navegações agora respeitam Order configurado pelo usuário
@@ -44,9 +48,9 @@ class FuncaoCrud extends CrudBase {
         super(config);
         
         // =====================================================================
-        // Identifica campos de PK de texto
+        // Identifica campos de PK de texto (suporta PK composta)
         // =====================================================================
-        this.pkTextoField = 'Cdfuncao';
+        this.pkTextoFields = ['CdFuncao', 'CdSistema'];
         this.isPkTexto = true;
         
         // =====================================================================
@@ -62,21 +66,23 @@ class FuncaoCrud extends CrudBase {
     enablePrimaryKeyFields(enable) {
         if (!this.isPkTexto) return;
         
-        const $pkField = $('#' + this.pkTextoField);
-        if ($pkField.length === 0) return;
+        this.pkTextoFields.forEach(fieldName => {
+            const $pkField = $('#' + fieldName);
+            if ($pkField.length === 0) return;
+            
+            if (enable) {
+                $pkField.prop('readonly', false)
+                        .prop('disabled', false)
+                        .removeClass('bg-light');
+            } else {
+                $pkField.prop('readonly', true)
+                        .addClass('bg-light');
+            }
+        });
         
-        if (enable) {
-            // Criação: campo editável
-            $pkField.prop('readonly', false)
-                    .prop('disabled', false)
-                    .removeClass('bg-light');
-            console.log('✏️ [Funcao] Campo PK habilitado para edição (criação)');
-        } else {
-            // Edição: campo readonly
-            $pkField.prop('readonly', true)
-                    .addClass('bg-light');
-            console.log('🔒 [Funcao] Campo PK desabilitado (edição)');
-        }
+        console.log(enable 
+            ? '✏️ [Funcao] Campos PK habilitados para edição (criação)'
+            : '🔒 [Funcao] Campos PK desabilitados (edição)');
     }
 
     /**
@@ -196,9 +202,19 @@ class FuncaoCrud extends CrudBase {
         const cleanData = {};
 
 
+        // ⭐ v5.3: PK texto 'CdFuncao' - inclui somente na criação (na edição vai na URL)
+        if (!isEdit) {
+            cleanData.CdFuncao = formData.cdFuncao || formData.CdFuncao || '';
+        }
+
+        // ⭐ v5.3: PK texto 'CdSistema' - inclui somente na criação (na edição vai na URL)
+        if (!isEdit) {
+            cleanData.CdSistema = formData.cdSistema || formData.CdSistema || '';
+        }
+
         // String fields - PascalCase
-        cleanData.Dcfuncao = formData.dcfuncao || formData.Dcfuncao || '';
-        cleanData.Dcmodulo = formData.dcmodulo || formData.Dcmodulo || '';
+        cleanData.DcFuncao = formData.dcFuncao || formData.DcFuncao || '';
+        cleanData.DcModulo = formData.dcModulo || formData.DcModulo || '';
         cleanData.Descricaomodulo = formData.descricaomodulo || formData.Descricaomodulo || '';
 
         console.log('📤 [Funcao] Dados DEPOIS (PascalCase):', JSON.parse(JSON.stringify(cleanData)));
@@ -221,6 +237,9 @@ class FuncaoCrud extends CrudBase {
      * Override do método getRowId para extrair ID corretamente.
      */
     getRowId(row) {
+        const _cdFuncao = (row.cdFuncao || row.CdFuncao || '').toString().trim();
+        const _cdSistema = (row.cdSistema || row.CdSistema || '').toString().trim();
+        if (_cdFuncao && _cdSistema) return `${_cdFuncao}|${_cdSistema}`;
         const id = row[this.config.idField] || row.id || row.Id || '';
         return typeof id === 'string' ? id.trim() : id;
     }
@@ -247,26 +266,17 @@ $(document).ready(function () {
     console.log('🔐 [Funcao] Permissões ativas:', window.crudPermissions);
 
     // =========================================================================
-    // FUNÇÃO AUXILIAR: Extrai ID com trim e validação
+    // ⭐ v5.4: FUNÇÃO AUXILIAR PARA ID (genérica - simples ou composta)
     // =========================================================================
 
-    function getCleanId(row, fieldName) {
+    // ⭐ v5.4: Extrai ID COMPOSTO (CdFuncao + CdSistema) - pipe separator
+    function getCompositeId(row) {{
         if (!row) return '';
-
-        // Tenta várias variações do nome do campo
-        let id = row[fieldName] || row[fieldName.toLowerCase()] || row[fieldName.toUpperCase()] || 
-                 row['id'] || row['Id'] || '';
-
-        // Converte para string e faz trim
-        id = String(id).trim();
-
-        // Log para debug
-        if (!id) {
-            console.warn('⚠️ [Funcao] ID vazio para row:', row);
-        }
-
-        return id;
-    }
+        const _cdFuncao = (row.cdFuncao || row.CdFuncao || '').toString().trim();
+        const _cdSistema = (row.cdSistema || row.CdSistema || '').toString().trim();
+        if (_cdFuncao && _cdSistema) return `${_cdFuncao}|${_cdSistema}`;
+        return row['id'] || row['Id'] || '';
+    }}
 
     // =========================================================================
     // ✅ v5.1: CONFIGURAÇÃO DAS COLUNAS (COM ORDENAÇÃO DE NAVEGAÇÕES)
@@ -285,14 +295,14 @@ $(document).ready(function () {
             width: '30px',
             className: 'text-center no-export',
             render: function (data, type, row) {
-                const id = getCleanId(row, 'cdfuncao');
+                const id = getCompositeId(row);
                 return `<input type="checkbox" class="form-check-input row-select dt-checkboxes" value="${id}" data-id="${id}" />`;
             }
         },
         // Código de Funcao (Order: 0)
         {
-            data: 'cdfuncao',
-            name: 'Cdfuncao',
+            data: 'cdFuncao',
+            name: 'CdFuncao',
             title: 'Código de Funcao',
             orderable: true,
             render: function (data, type, row) {
@@ -301,8 +311,8 @@ $(document).ready(function () {
         },
         // Código de Sistema (Order: 1)
         {
-            data: 'cdsiStema',
-            name: 'CdsiStema',
+            data: 'cdSistema',
+            name: 'CdSistema',
             title: 'Código de Sistema',
             orderable: true,
             render: function (data, type, row) {
@@ -311,29 +321,9 @@ $(document).ready(function () {
         },
         // Descrição de Funcao (Order: 2)
         {
-            data: 'dcfuncao',
-            name: 'Dcfuncao',
+            data: 'dcFuncao',
+            name: 'DcFuncao',
             title: 'Descrição de Funcao',
-            orderable: true,
-            render: function (data, type, row) {
-                return data !== undefined && data !== null ? data : '';
-            }
-        },
-        // Descrição de Modulo (Order: 3)
-        {
-            data: 'dcmodulo',
-            name: 'Dcmodulo',
-            title: 'Descrição de Modulo',
-            orderable: true,
-            render: function (data, type, row) {
-                return data !== undefined && data !== null ? data : '';
-            }
-        },
-        // Descricao Modulo (Order: 4)
-        {
-            data: 'descricaomodulo',
-            name: 'Descricaomodulo',
-            title: 'Descricao Modulo',
             orderable: true,
             render: function (data, type, row) {
                 return data !== undefined && data !== null ? data : '';
@@ -349,7 +339,7 @@ $(document).ready(function () {
             width: '100px',
             className: 'text-center no-export',
             render: function (data, type, row) {
-                const id = getCleanId(row, 'cdfuncao');
+                const id = getCompositeId(row);
                 let actions = '';
                 
                 if (window.crudPermissions.canEdit) {
@@ -379,7 +369,7 @@ $(document).ready(function () {
         apiRoute: '/api/seguranca/funcao',
         entityName: 'Funções do Sistema',
         entityNamePlural: 'Funções do Sistemas',
-        idField: 'cdfuncao',
+        idField: 'cdFuncao',
         tableSelector: '#tableCrud',
         columns: columns,  // ✅ CORRIGIDO: era "dataTableColumns"
         permissions: window.crudPermissions,

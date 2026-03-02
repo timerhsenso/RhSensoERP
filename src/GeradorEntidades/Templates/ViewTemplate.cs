@@ -230,9 +230,10 @@ public static class ViewTemplate
 
         var placeholder = config.Placeholder ?? prop.DisplayName;
 
-        // ✅ CORRIGIDO: prop.Required (PropertyConfig)
-        var required = prop.Required ? "required" : "";
-        var requiredStar = prop.Required ? @" <span class=""text-danger"">*</span>" : "";
+        // ✅ v4.4: PK composta (não auto-gerada) é SEMPRE required
+        var isRequired = prop.Required || (prop.IsPrimaryKey && !prop.IsGuid && !prop.IsIdentity);
+        var required = isRequired ? "required" : "";
+        var requiredStar = isRequired ? @" <span class=""text-danger"">*</span>" : "";
 
         var disabled = config.Disabled ? "disabled" : "";
         var maxLength = prop.MaxLength > 0 ? $@" maxlength=""{prop.MaxLength}""" : "";

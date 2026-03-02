@@ -2,7 +2,7 @@
 // ARQUIVO GERADO POR GeradorFullStack v4.0
 // Entity: TabelaSalarial
 // Module: AdministracaoPessoal
-// Data: 2026-02-28 22:03:43
+// Data: 2026-03-02 18:01:50
 // =============================================================================
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

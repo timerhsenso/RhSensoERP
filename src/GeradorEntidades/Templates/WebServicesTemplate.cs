@@ -1,5 +1,7 @@
 // =============================================================================
-// GERADOR FULL-STACK v6.2 - WEB SERVICES TEMPLATE
+// GERADOR FULL-STACK v6.3 - WEB SERVICES TEMPLATE
+// ⭐ v6.3 - FIX: CamelCase em _jsonOptions + logging detalhado + BackendResult<T>
+//           no UpdateAsync. Sem CamelCase, backend recebe PascalCase e ignora campos.
 // ⭐ v6.2 - GENÉRICO: Override automático para PK composta (N campos)
 //           Gera CompositeKeyToPath + overrides GetByIdAsync/UpdateAsync/DeleteAsync
 // ⭐ v6.1 - CORRIGIDO: Lookup usa 'term' para compatibilidade Select2
@@ -16,6 +18,7 @@ namespace GeradorEntidades.Templates;
 
 /// <summary>
 /// Gera Services que herdam de BaseApiService e implementam IBatchDeleteService.
+/// v6.3: FIX CamelCase + error handling.
 /// v6.1: CORRIGIDO - Lookup usa parâmetro 'term' em vez de 'search'.
 /// v6.0: Geração automática de métodos Select2 Lookup.
 /// </summary>
@@ -47,7 +50,7 @@ public static class WebServicesTemplate
         var select2Methods = GenerateSelect2Methods(entity);
 
         var content = $@"// =============================================================================
-// ARQUIVO GERADO POR GeradorFullStack v6.2
+// ARQUIVO GERADO POR GeradorFullStack v6.3
 // Entity: {entity.Name}
 // Module: {entity.Module}
 // Data: {DateTime.Now:yyyy-MM-dd HH:mm:ss}
@@ -117,7 +120,7 @@ public interface I{entity.Name}ApiService
             : "";
 
         var content = $@"// =============================================================================
-// ARQUIVO GERADO POR GeradorFullStack v6.2
+// ARQUIVO GERADO POR GeradorFullStack v6.3
 // Entity: {entity.Name}
 // Module: {entity.Module}
 // ApiRoute: {apiRoute}
@@ -135,6 +138,7 @@ namespace RhSensoERP.Web.Services.{modulePath}.{entity.Name};
 /// <summary>
 /// Serviço de API para {entity.DisplayName}.
 /// Herda implementação base de BaseApiService.
+/// ⭐ v6.3: CamelCase + logging detalhado + BackendResult para erros.
 /// v6.1: CORRIGIDO - Lookup usa 'term' para Select2.
 /// v6.0: Adiciona implementações Select2 Lookup automáticas.
 /// </summary>
@@ -143,9 +147,17 @@ public class {entity.Name}ApiService
       I{entity.Name}ApiService
 {{
     private const string ApiRoute = ""{apiRoute}"";
+
+    // =========================================================================
+    // ⭐ v6.3 FIX: CamelCase OBRIGATÓRIO
+    // Sem isso, Serialize envia PascalCase (ex: ""DcGrUser"")
+    // mas backend espera camelCase (ex: ""dcGrUser"") e ignora os campos.
+    // BaseApiService já usa CamelCase - o override deve ser consistente.
+    // =========================================================================
     private static readonly JsonSerializerOptions _jsonOptions = new()
     {{
-        PropertyNameCaseInsensitive = true
+        PropertyNameCaseInsensitive = true,
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     }};
 
     // =========================================================================
@@ -440,13 +452,18 @@ public class {entity.Name}ApiService
     }
 
     // =========================================================================
-    // ⭐ v6.2: COMPOSITE KEY - GERAÇÃO AUTOMÁTICA DE OVERRIDES
+    // ⭐ v6.3: COMPOSITE KEY - GERAÇÃO AUTOMÁTICA DE OVERRIDES (MELHORADO)
     // =========================================================================
 
     /// <summary>
-    /// ⭐ v6.2: Gera overrides de GetByIdAsync, UpdateAsync, DeleteAsync
+    /// ⭐ v6.3: Gera overrides de GetByIdAsync, UpdateAsync, DeleteAsync
     /// para entidades com PK composta. Converte "PK1|PK2|PK3" → "PK1/PK2/PK3" na URL.
-    /// Funciona com 2, 3, N campos de PK compostas.
+    /// 
+    /// MELHORIAS v6.3 sobre v6.2:
+    /// 1. UpdateAsync: Loga body enviado e response raw para debugging
+    /// 2. UpdateAsync: Usa BackendResult&lt;T&gt; para extrair mensagem de erro real
+    /// 3. DeleteAsync: Usa BackendResult&lt;T&gt; para erros (FK violation, NotFound, etc.)
+    /// 4. Todos: Inclui HTTP status code na mensagem de erro genérica
     /// </summary>
     private static string GenerateCompositeKeyOverrides(EntityConfig entity, string entityUpper, string pkType)
     {
@@ -455,10 +472,9 @@ public class {entity.Name}ApiService
 
         return $@"
     // =========================================================================
-    // ⭐ v6.2: COMPOSITE KEY OVERRIDES
+    // ⭐ v6.3: COMPOSITE KEY OVERRIDES (COM LOGGING DETALHADO)
     // Converte PK pipe-separated para path segments na URL.
     // Ex: ""RHU|ADMIN"" → URL "".../RHU/ADMIN""
-    // Funciona com N campos de PK composta.
     // =========================================================================
 
     /// <summary>
@@ -485,7 +501,7 @@ public class {entity.Name}ApiService
             await AddAuthorizationHeaderAsync();
             var path = CompositeKeyToPath(id);
             var url = $""{{_baseEndpoint}}/{{path}}"";
-            _logger.LogDebug(""🔍 [{entityUpper}] GetByIdAsync - CompositeKey: {{Id}} → URL: {{Url}}"", id, url);
+            _logger.LogDebug(""🔍 [{entityUpper}] GetByIdAsync - Key: {{Id}} → URL: {{Url}}"", id, url);
 
             var response = await _httpClient.GetAsync(url);
             var content = await response.Content.ReadAsStringAsync();
@@ -500,7 +516,8 @@ public class {entity.Name}ApiService
                 }};
             }}
 
-            _logger.LogWarning(""⚠️ [{entityUpper}] GetByIdAsync - ID: {{Id}}, Erro {{StatusCode}}"", id, response.StatusCode);
+            _logger.LogWarning(""⚠️ [{entityUpper}] GetByIdAsync - ID: {{Id}}, Status: {{Status}}, Body: {{Body}}"",
+                id, response.StatusCode, content);
             return new ApiResponse<{dtoName}>
             {{
                 Success = false,
@@ -509,7 +526,7 @@ public class {entity.Name}ApiService
         }}
         catch (Exception ex)
         {{
-            _logger.LogError(ex, ""❌ [{entityUpper}] Erro ao buscar registro {{Id}}"", id);
+            _logger.LogError(ex, ""❌ [{entityUpper}] Erro GetByIdAsync {{Id}}"", id);
             return new ApiResponse<{dtoName}>
             {{
                 Success = false,
@@ -519,7 +536,7 @@ public class {entity.Name}ApiService
     }}
 
     /// <summary>
-    /// ⭐ Override: PUT com PK composta → path segments.
+    /// ⭐ v6.3: Override: PUT com PK composta + logging detalhado + BackendResult.
     /// </summary>
     public override async Task<ApiResponse<{dtoName}>> UpdateAsync({pkType} id, {updateReqName} dto)
     {{
@@ -530,43 +547,63 @@ public class {entity.Name}ApiService
             var httpContent = new StringContent(json, Encoding.UTF8, ""application/json"");
             var path = CompositeKeyToPath(id);
             var url = $""{{_baseEndpoint}}/{{path}}"";
-            _logger.LogDebug(""✏️ [{entityUpper}] UpdateAsync - CompositeKey: {{Id}} → URL: {{Url}}"", id, url);
+
+            // ⭐ v6.3: Loga request body para debugging
+            _logger.LogWarning(""✏️ [{entityUpper}] UpdateAsync - ID: {{Id}} → URL: {{Url}} | Body: {{Body}}"", id, url, json);
 
             var response = await _httpClient.PutAsync(url, httpContent);
             var content = await response.Content.ReadAsStringAsync();
 
+            // ⭐ v6.3: Loga response raw
+            _logger.LogDebug(""✏️ [{entityUpper}] UpdateAsync - Status: {{Status}} | Response: {{Body}}"",
+                response.StatusCode, content);
+
             if (response.IsSuccessStatusCode)
             {{
-                var resultBool = JsonSerializer.Deserialize<ApiResponse<bool>>(content, _jsonOptions);
-                if (resultBool != null && resultBool.Success)
+                // ⭐ v6.3: Usa BackendResult<bool> (formato real do backend)
+                var backendResult = JsonSerializer.Deserialize<BackendResult<bool>>(content, _jsonOptions);
+                if (backendResult?.IsSuccess == true)
                 {{
                     return await GetByIdAsync(id);
                 }}
                 return new ApiResponse<{dtoName}>
                 {{
                     Success = false,
-                    Error = resultBool?.Error ?? new ApiError {{ Message = ""Erro ao atualizar registro"" }},
-                    Errors = resultBool?.Errors
+                    Error = new ApiError {{ Message = backendResult?.Error?.Message ?? ""Erro ao atualizar registro"" }}
                 }};
             }}
 
-            _logger.LogWarning(""⚠️ [{entityUpper}] UpdateAsync - ID: {{Id}}, Erro {{StatusCode}}"", id, response.StatusCode);
+            // ⭐ v6.3: Extrai erro real do Result<T> do backend
+            _logger.LogWarning(""⚠️ [{entityUpper}] UpdateAsync FALHOU - ID: {{Id}}, Status: {{Status}}, Response: {{Body}}"",
+                id, response.StatusCode, content);
+
             try
             {{
-                var errorResponse = JsonSerializer.Deserialize<ApiResponse<{dtoName}>>(content, _jsonOptions);
-                if (errorResponse != null) return errorResponse;
+                var errorResult = JsonSerializer.Deserialize<BackendResult<bool>>(content, _jsonOptions);
+                if (errorResult?.Error != null)
+                {{
+                    return new ApiResponse<{dtoName}>
+                    {{
+                        Success = false,
+                        Error = new ApiError
+                        {{
+                            Code = errorResult.Error.Code ?? string.Empty,
+                            Message = errorResult.Error.Message ?? ""Erro ao atualizar registro""
+                        }}
+                    }};
+                }}
             }}
             catch {{ }}
 
             return new ApiResponse<{dtoName}>
             {{
                 Success = false,
-                Error = new ApiError {{ Message = ""Erro ao atualizar registro"" }}
+                Error = new ApiError {{ Message = $""Erro ao atualizar registro (HTTP {{(int)response.StatusCode}})"" }}
             }};
         }}
         catch (Exception ex)
         {{
-            _logger.LogError(ex, ""❌ [{entityUpper}] Erro ao atualizar registro {{Id}}"", id);
+            _logger.LogError(ex, ""❌ [{entityUpper}] Erro UpdateAsync {{Id}}"", id);
             return new ApiResponse<{dtoName}>
             {{
                 Success = false,
@@ -576,7 +613,7 @@ public class {entity.Name}ApiService
     }}
 
     /// <summary>
-    /// ⭐ Override: DELETE com PK composta → path segments.
+    /// ⭐ v6.3: Override: DELETE com PK composta + BackendResult para erros.
     /// </summary>
     public override async Task<ApiResponse<bool>> DeleteAsync({pkType} id)
     {{
@@ -585,7 +622,7 @@ public class {entity.Name}ApiService
             await AddAuthorizationHeaderAsync();
             var path = CompositeKeyToPath(id);
             var url = $""{{_baseEndpoint}}/{{path}}"";
-            _logger.LogDebug(""🗑️ [{entityUpper}] DeleteAsync - CompositeKey: {{Id}} → URL: {{Url}}"", id, url);
+            _logger.LogDebug(""🗑️ [{entityUpper}] DeleteAsync - Key: {{Id}} → URL: {{Url}}"", id, url);
 
             var response = await _httpClient.DeleteAsync(url);
             var content = await response.Content.ReadAsStringAsync();
@@ -596,23 +633,37 @@ public class {entity.Name}ApiService
                 return new ApiResponse<bool> {{ Success = true, Data = true }};
             }}
 
-            _logger.LogWarning(""⚠️ [{entityUpper}] DeleteAsync - ID: {{Id}}, Erro {{StatusCode}}"", id, response.StatusCode);
+            _logger.LogWarning(""⚠️ [{entityUpper}] DeleteAsync - ID: {{Id}}, Status: {{Status}}, Body: {{Body}}"",
+                id, response.StatusCode, content);
+
+            // ⭐ v6.3: Usa BackendResult para extrair mensagem de erro real
             try
             {{
-                var errorResponse = JsonSerializer.Deserialize<ApiResponse<bool>>(content, _jsonOptions);
-                if (errorResponse != null) return errorResponse;
+                var errorResult = JsonSerializer.Deserialize<BackendResult<bool>>(content, _jsonOptions);
+                if (errorResult?.Error != null)
+                {{
+                    return new ApiResponse<bool>
+                    {{
+                        Success = false,
+                        Error = new ApiError
+                        {{
+                            Code = errorResult.Error.Code ?? string.Empty,
+                            Message = errorResult.Error.Message ?? ""Erro ao excluir registro""
+                        }}
+                    }};
+                }}
             }}
             catch {{ }}
 
             return new ApiResponse<bool>
             {{
                 Success = false,
-                Error = new ApiError {{ Message = ""Erro ao excluir registro"" }}
+                Error = new ApiError {{ Message = $""Erro ao excluir registro (HTTP {{(int)response.StatusCode}})"" }}
             }};
         }}
         catch (Exception ex)
         {{
-            _logger.LogError(ex, ""❌ [{entityUpper}] Erro ao excluir registro {{Id}}"", id);
+            _logger.LogError(ex, ""❌ [{entityUpper}] Erro DeleteAsync {{Id}}"", id);
             return new ApiResponse<bool>
             {{
                 Success = false,

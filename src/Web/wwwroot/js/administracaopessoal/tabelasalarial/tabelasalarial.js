@@ -1,12 +1,16 @@
 ﻿/**
  * ============================================================================
- * TABELA SALARIAL - JavaScript com Ordenação de Navegações
+ * TABELA SALARIAL - JavaScript com Fix PK Texto
  * ============================================================================
  * Arquivo: wwwroot/js/administracaopessoal/tabelasalarial/tabelasalarial.js
  * Módulo: AdministracaoPessoal
- * Versão: 5.1 (NAVEGAÇÕES COM ORDENAÇÃO CORRETA)
- * Gerado por: GeradorFullStack v5.1
- * Data: 2026-02-28 22:03:43
+ * Versão: 5.4 (COMPOSITE KEY GENÉRICO)
+ * Gerado por: GeradorFullStack v5.4
+ * Data: 2026-03-02 18:01:50
+ * 
+ * Changelog v5.2:
+ *   ✅ CORRIGIDO: PK de texto agora é incluída no payload de criação (!isEdit)
+ *   ✅ CORRIGIDO: Entidades com PK string/int não-identity criam corretamente
  * 
  * Changelog v5.1:
  *   ✅ CORRIGIDO: Navegações agora respeitam Order configurado pelo usuário
@@ -44,9 +48,9 @@ class TabelaSalarialCrud extends CrudBase {
         super(config);
         
         // =====================================================================
-        // Identifica campos de PK de texto
+        // Identifica campos de PK de texto (suporta PK composta)
         // =====================================================================
-        this.pkTextoField = null;
+        this.pkTextoFields = [];
         this.isPkTexto = false;
         
         // =====================================================================
@@ -62,21 +66,23 @@ class TabelaSalarialCrud extends CrudBase {
     enablePrimaryKeyFields(enable) {
         if (!this.isPkTexto) return;
         
-        const $pkField = $('#' + this.pkTextoField);
-        if ($pkField.length === 0) return;
+        this.pkTextoFields.forEach(fieldName => {
+            const $pkField = $('#' + fieldName);
+            if ($pkField.length === 0) return;
+            
+            if (enable) {
+                $pkField.prop('readonly', false)
+                        .prop('disabled', false)
+                        .removeClass('bg-light');
+            } else {
+                $pkField.prop('readonly', true)
+                        .addClass('bg-light');
+            }
+        });
         
-        if (enable) {
-            // Criação: campo editável
-            $pkField.prop('readonly', false)
-                    .prop('disabled', false)
-                    .removeClass('bg-light');
-            console.log('✏️ [TabelaSalarial] Campo PK habilitado para edição (criação)');
-        } else {
-            // Edição: campo readonly
-            $pkField.prop('readonly', true)
-                    .addClass('bg-light');
-            console.log('🔒 [TabelaSalarial] Campo PK desabilitado (edição)');
-        }
+        console.log(enable 
+            ? '✏️ [TabelaSalarial] Campos PK habilitados para edição (criação)'
+            : '🔒 [TabelaSalarial] Campos PK desabilitados (edição)');
     }
 
     /**
@@ -197,19 +203,19 @@ class TabelaSalarialCrud extends CrudBase {
 
 
         // String fields - PascalCase
-        cleanData.Cdtabela = formData.cdtabela || formData.Cdtabela || '';
-        cleanData.Dctabela = formData.dctabela || formData.Dctabela || '';
-        cleanData.Flseq = formData.flseq || formData.Flseq || '';
+        cleanData.CdTabela = formData.cdTabela || formData.CdTabela || '';
+        cleanData.DcTabela = formData.dcTabela || formData.DcTabela || '';
+        cleanData.FlSeq = formData.flSeq || formData.FlSeq || '';
 
 
         // Decimal fields - PascalCase
-        cleanData.Vlsalinicial = parseFloat(formData.vlsalinicial || formData.Vlsalinicial || 0);
-        cleanData.Vlsalmediana = parseFloat(formData.vlsalmediana || formData.Vlsalmediana || 0);
-        cleanData.Vlsalmaximo = parseFloat(formData.vlsalmaximo || formData.Vlsalmaximo || 0);
+        cleanData.VlSalinicial = parseFloat(formData.vlSalinicial || formData.VlSalinicial || 0);
+        cleanData.VlSalmediana = parseFloat(formData.vlSalmediana || formData.VlSalmediana || 0);
+        cleanData.VlSalmaximo = parseFloat(formData.vlSalmaximo || formData.VlSalmaximo || 0);
 
 
         // DateTime fields - PascalCase
-        cleanData.DtvalIdade = formData.dtvalIdade || formData.DtvalIdade || null;
+        cleanData.DtValidade = formData.dtValidade || formData.DtValidade || null;
 
         console.log('📤 [TabelaSalarial] Dados DEPOIS (PascalCase):', JSON.parse(JSON.stringify(cleanData)));
         return cleanData;
@@ -257,26 +263,19 @@ $(document).ready(function () {
     console.log('🔐 [TabelaSalarial] Permissões ativas:', window.crudPermissions);
 
     // =========================================================================
-    // FUNÇÃO AUXILIAR: Extrai ID com trim e validação
+    // ⭐ v5.4: FUNÇÃO AUXILIAR PARA ID (genérica - simples ou composta)
     // =========================================================================
 
-    function getCleanId(row, fieldName) {
+    function getCleanId(row, fieldName) {{
         if (!row) return '';
-
-        // Tenta várias variações do nome do campo
         let id = row[fieldName] || row[fieldName.toLowerCase()] || row[fieldName.toUpperCase()] || 
                  row['id'] || row['Id'] || '';
-
-        // Converte para string e faz trim
         id = String(id).trim();
-
-        // Log para debug
-        if (!id) {
+        if (!id) {{
             console.warn('⚠️ [TabelaSalarial] ID vazio para row:', row);
-        }
-
+        }}
         return id;
-    }
+    }}
 
     // =========================================================================
     // ✅ v5.1: CONFIGURAÇÃO DAS COLUNAS (COM ORDENAÇÃO DE NAVEGAÇÕES)
@@ -301,8 +300,8 @@ $(document).ready(function () {
         },
         // Código (Order: 0)
         {
-            data: 'cdtabela',
-            name: 'Cdtabela',
+            data: 'cdTabela',
+            name: 'CdTabela',
             title: 'Código',
             orderable: true,
             render: function (data, type, row) {
@@ -311,8 +310,8 @@ $(document).ready(function () {
         },
         // Descrição (Order: 1)
         {
-            data: 'dctabela',
-            name: 'Dctabela',
+            data: 'dcTabela',
+            name: 'DcTabela',
             title: 'Descrição',
             orderable: true,
             render: function (data, type, row) {
@@ -321,8 +320,8 @@ $(document).ready(function () {
         },
         // Data Validade (Order: 2)
         {
-            data: 'dtvalIdade',
-            name: 'DtvalIdade',
+            data: 'dtValidade',
+            name: 'DtValidade',
             title: 'Data Validade',
             orderable: true,
             render: function (data, type, row) {

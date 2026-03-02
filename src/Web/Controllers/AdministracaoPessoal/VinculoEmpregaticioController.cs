@@ -2,7 +2,7 @@
 // ARQUIVO GERADO POR GeradorFullStack v4.0
 // Entity: VinculoEmpregaticio
 // Module: AdministracaoPessoal
-// Data: 2026-02-28 21:06:39
+// Data: 2026-03-02 18:00:36
 // =============================================================================
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -19,14 +19,14 @@ namespace RhSensoERP.Web.Controllers.AdministracaoPessoal;
 // =============================================================================
 [MenuItem(
     Module = MenuModule.AdministracaoPessoal,
-    DisplayName = "Vinculo Empregaticio",
+    DisplayName = "Vínculo Empregatício",
     Icon = "fas fa-table",
     Order = 10,
     CdFuncao = "SEG_FM_TSISTEMA"
 )]
 
 /// <summary>
-/// Controller para gerenciamento de Vinculo Empregaticio.
+/// Controller para gerenciamento de Vínculo Empregatício.
 /// Herda toda a funcionalidade CRUD de BaseCrudController.
 /// </summary>
 [Authorize]

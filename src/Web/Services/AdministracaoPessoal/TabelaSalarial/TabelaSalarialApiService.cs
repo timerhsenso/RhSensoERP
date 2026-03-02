@@ -1,9 +1,9 @@
 ﻿// =============================================================================
-// ARQUIVO GERADO POR GeradorFullStack v6.1
+// ARQUIVO GERADO POR GeradorFullStack v6.3
 // Entity: TabelaSalarial
 // Module: AdministracaoPessoal
 // ApiRoute: api/administracaopessoal/tabelasalarial
-// Data: 2026-02-28 22:03:43
+// Data: 2026-03-02 18:01:50
 // AUTO-REGISTRO: Compatível com AddCrudToolServicesAutomatically()
 // =============================================================================
 using System.Text;
@@ -17,6 +17,7 @@ namespace RhSensoERP.Web.Services.AdministracaoPessoal.TabelaSalarial;
 /// <summary>
 /// Serviço de API para Tabela Salarial.
 /// Herda implementação base de BaseApiService.
+/// ⭐ v6.3: CamelCase + logging detalhado + BackendResult para erros.
 /// v6.1: CORRIGIDO - Lookup usa 'term' para Select2.
 /// v6.0: Adiciona implementações Select2 Lookup automáticas.
 /// </summary>
@@ -25,9 +26,17 @@ public class TabelaSalarialApiService
       ITabelaSalarialApiService
 {
     private const string ApiRoute = "api/administracaopessoal/tabelasalarial";
+
+    // =========================================================================
+    // ⭐ v6.3 FIX: CamelCase OBRIGATÓRIO
+    // Sem isso, Serialize envia PascalCase (ex: "DcGrUser")
+    // mas backend espera camelCase (ex: "dcGrUser") e ignora os campos.
+    // BaseApiService já usa CamelCase - o override deve ser consistente.
+    // =========================================================================
     private static readonly JsonSerializerOptions _jsonOptions = new()
     {
-        PropertyNameCaseInsensitive = true
+        PropertyNameCaseInsensitive = true,
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
 
     // =========================================================================

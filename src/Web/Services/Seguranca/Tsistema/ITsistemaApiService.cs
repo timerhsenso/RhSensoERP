@@ -1,8 +1,8 @@
 ﻿// =============================================================================
-// ARQUIVO GERADO POR GeradorFullStack v6.1
+// ARQUIVO GERADO POR GeradorFullStack v6.3
 // Entity: Tsistema
 // Module: Seguranca
-// Data: 2026-03-01 16:07:47
+// Data: 2026-03-02 19:22:34
 // AUTO-REGISTRO: Compatível com AddCrudToolServicesAutomatically()
 // =============================================================================
 using RhSensoERP.Web.Models.Seguranca.Tsistema;

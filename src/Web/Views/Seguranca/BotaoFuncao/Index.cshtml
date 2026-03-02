@@ -2,7 +2,7 @@
 @{
     ViewData["Title"] = Model.PageTitle;
     Layout = "_CrudLayout";
-    ViewData["EntityName"] = "Tabela de Botões";
+    ViewData["EntityName"] = "Botões de Função";
     ViewData["IconClass"] = "fas fa-table";
 }
 
@@ -22,7 +22,7 @@
     window.crudConfig = {
         hasAtivoField: false,
         entityName: "BotaoFuncao",
-        pkField: "CdsiStema"
+        pkField: "CdSistema"
     };
 </script>
 
@@ -39,42 +39,42 @@
     <input type="hidden" id="Id" name="Id" />
     <div class="row">
                 <div class="col-md-6 mb-3">
-                    <label for="CdsiStema" class="form-label">
+                    <label for="CdSistema" class="form-label">
                         Código de Sistema <span class="badge bg-primary">PK</span>
                     </label>
-                    <input type="text" class="form-control" id="CdsiStema" name="CdsiStema" 
+                    <input type="text" class="form-control" id="CdSistema" name="CdSistema" 
                            placeholder=""   maxlength="10" />
                     
                 </div>
                 <div class="col-md-6 mb-3">
-                    <label for="Cdfuncao" class="form-label">
+                    <label for="CdFuncao" class="form-label">
                         Código de Funcao <span class="badge bg-primary">PK</span>
                     </label>
-                    <input type="text" class="form-control" id="Cdfuncao" name="Cdfuncao" 
+                    <input type="text" class="form-control" id="CdFuncao" name="CdFuncao" 
                            placeholder=""   maxlength="30" />
                     
                 </div>
                 <div class="col-md-6 mb-3">
-                    <label for="Nmbotao" class="form-label">
+                    <label for="NmBotao" class="form-label">
                         Nome de Botao <span class="badge bg-primary">PK</span>
                     </label>
-                    <input type="text" class="form-control" id="Nmbotao" name="Nmbotao" 
+                    <input type="text" class="form-control" id="NmBotao" name="NmBotao" 
                            placeholder=""   maxlength="30" />
                     
                 </div>
                 <div class="col-md-6 mb-3">
-                    <label for="Dcbotao" class="form-label">
+                    <label for="DcBotao" class="form-label">
                         Descrição de Botao <span class="text-danger">*</span>
                     </label>
-                    <input type="text" class="form-control" id="Dcbotao" name="Dcbotao" 
+                    <input type="text" class="form-control" id="DcBotao" name="DcBotao" 
                            placeholder="" required  maxlength="60" />
                     
                 </div>
                 <div class="col-md-6 mb-3">
-                    <label for="Cdacao" class="form-label">
+                    <label for="CdAcao" class="form-label">
                         Código de Acao <span class="text-danger">*</span>
                     </label>
-                    <input type="text" class="form-control" id="Cdacao" name="Cdacao" 
+                    <input type="text" class="form-control" id="CdAcao" name="CdAcao" 
                            placeholder="" required  />
                     
                 </div>

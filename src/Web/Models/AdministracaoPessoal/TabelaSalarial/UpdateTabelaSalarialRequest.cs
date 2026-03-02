@@ -2,7 +2,7 @@
 // ARQUIVO GERADO POR GeradorFullStack v4.0
 // Entity: TabelaSalarial
 // Module: AdministracaoPessoal
-// Data: 2026-02-28 22:03:43
+// Data: 2026-03-02 18:01:50
 // =============================================================================
 using System.ComponentModel.DataAnnotations;
 
@@ -19,55 +19,55 @@ public class UpdateTabelaSalarialRequest
     /// </summary>
     [Display(Name = "Código")]
     [StringLength(3, ErrorMessage = "Código deve ter no máximo {1} caracteres")]
-    public string Cdtabela { get; set; } = string.Empty;
+    public string CdTabela { get; set; } = string.Empty;
 
     /// <summary>
     /// Descrição
     /// </summary>
     [Display(Name = "Descrição")]
     [StringLength(220, ErrorMessage = "Descrição deve ter no máximo {1} caracteres")]
-    public string Dctabela { get; set; } = string.Empty;
+    public string DcTabela { get; set; } = string.Empty;
 
     /// <summary>
     /// Sequencial
     /// </summary>
     [Display(Name = "Sequencial")]
     [StringLength(1, ErrorMessage = "Sequencial deve ter no máximo {1} caracteres")]
-    public string Flseq { get; set; } = string.Empty;
+    public string FlSeq { get; set; } = string.Empty;
 
     /// <summary>
     /// Salário Inicial
     /// </summary>
     [Display(Name = "Salário Inicial")]
-    public decimal? Vlsalinicial { get; set; }
+    public decimal? VlSalinicial { get; set; }
 
     /// <summary>
     /// Salário Mediana
     /// </summary>
     [Display(Name = "Salário Mediana")]
-    public decimal? Vlsalmediana { get; set; }
+    public decimal? VlSalmediana { get; set; }
 
     /// <summary>
     /// Salário Máximo
     /// </summary>
     [Display(Name = "Salário Máximo")]
-    public decimal? Vlsalmaximo { get; set; }
+    public decimal? VlSalmaximo { get; set; }
 
     /// <summary>
     /// Data Validade
     /// </summary>
     [Display(Name = "Data Validade")]
-    public DateTime? DtvalIdade { get; set; }
+    public DateTime? DtValidade { get; set; }
 
     /// <summary>
-    /// Idtsalvalidade
+    /// Tsalvalidade
     /// </summary>
-    [Display(Name = "Idtsalvalidade")]
-    public Guid? IdtsalvalIdade { get; set; }
+    [Display(Name = "Tsalvalidade")]
+    public Guid? IdTsalvalidade { get; set; }
 
     /// <summary>
-    /// Tsalval Idade Id
+    /// Tsalvalidade Id
     /// </summary>
-    [Display(Name = "Tsalval Idade Id")]
-    public decimal? TsalvalIdadeId { get; set; }
+    [Display(Name = "Tsalvalidade Id")]
+    public decimal? TsalvalidadeId { get; set; }
 }

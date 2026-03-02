@@ -1,8 +1,12 @@
 // =============================================================================
-// RHSENSOERP GENERATOR v4.7 - REPOSITORY TEMPLATE
+// RHSENSOERP GENERATOR v4.8 - REPOSITORY TEMPLATE
 // =============================================================================
 // Arquivo: src/Generators/Templates/RepositoryTemplate.cs
-// Versão: 4.7 - ADICIONADO: Suporte a chave primária composta
+// v4.8: FIX - Removido EntityState.Modified no UpdateAsync.
+//       Entidade já é tracked (buscada pelo Handler sem AsNoTracking).
+//       EntityState.Modified forçava UPDATE em TODAS as colunas (inclusive PK),
+//       causando erro no SQL Server para PK composta e Id auto-gerado.
+// v4.7: ADICIONADO - Suporte a chave primária composta
 // =============================================================================
 using RhSensoERP.Generators.Models;
 
@@ -151,8 +155,24 @@ public sealed class {{info.EntityName}}Repository : I{{info.EntityName}}Reposito
     /// <inheritdoc/>
     public async Task UpdateAsync({{info.EntityName}} entity, CancellationToken ct = default)
     {
-        // ✅ Marca explicitamente como modificado para garantir tracking correto
-        _context.Entry(entity).State = EntityState.Modified;
+        // =====================================================================
+        // ⭐ v4.8 FIX: NÃO usar EntityState.Modified em entidade já tracked.
+        //
+        // O fluxo correto é:
+        // 1. Handler busca entidade via GetByIdAsync (tracked pelo DbContext)
+        // 2. AutoMapper altera APENAS as propriedades do Request na entidade
+        // 3. EF Core Change Tracker detecta automaticamente quais props mudaram
+        // 4. SaveChanges gera UPDATE apenas nas colunas alteradas
+        //
+        // Problema do EntityState.Modified:
+        // - Marca TODAS as propriedades como modificadas (incluindo PK, Id, TenantId)
+        // - Gera SQL UPDATE com SET em TODAS as colunas
+        // - Para PK composta: SQL Server não permite UPDATE na PK → DbUpdateException
+        // - Para Id (Guid): pode sobrescrever com Guid.Empty se AutoMapper mapeou errado
+        //
+        // Se a entidade NÃO estiver tracked (cenário Detached), EF vai lançar
+        // exceção no SaveChanges → comportamento correto que obriga buscar primeiro.
+        // =====================================================================
         await _context.SaveChangesAsync(ct);
 
         _logger.LogDebug("{{info.DisplayName}} atualizado: {Id}", {{logExpression}});

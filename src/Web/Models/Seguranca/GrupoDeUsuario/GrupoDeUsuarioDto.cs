@@ -2,13 +2,13 @@
 // ARQUIVO GERADO POR GeradorFullStack v4.0
 // Entity: GrupoDeUsuario
 // Module: Seguranca
-// Data: 2026-03-01 22:11:05
+// Data: 2026-03-02 17:55:27
 // =============================================================================
 
 namespace RhSensoERP.Web.Models.Seguranca.GrupoDeUsuario;
 
 /// <summary>
-/// DTO de leitura para Grupo de Usuários.
+/// DTO de leitura para Grupos de Usuário.
 /// Compatível com backend: RhSensoERP.Modules.Seguranca.Application.DTOs.GrupoDeUsuarioDto
 /// </summary>
 public class GrupoDeUsuarioDto

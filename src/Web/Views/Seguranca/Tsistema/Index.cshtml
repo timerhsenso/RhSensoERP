@@ -22,7 +22,7 @@
     window.crudConfig = {
         hasAtivoField: false,
         entityName: "Tsistema",
-        pkField: "CdsiStema"
+        pkField: "CdSistema"
     };
 </script>
 
@@ -39,18 +39,18 @@
     <input type="hidden" id="Id" name="Id" />
     <div class="row">
                 <div class="col-md-6 mb-3">
-                    <label for="CdsiStema" class="form-label">
-                        Código de Si Stema <span class="badge bg-primary">PK</span>
+                    <label for="CdSistema" class="form-label">
+                        Código de Si Stema <span class="text-danger">*</span> <span class="badge bg-primary">PK</span>
                     </label>
-                    <input type="text" class="form-control" id="CdsiStema" name="CdsiStema" 
-                           placeholder=""   maxlength="10" />
+                    <input type="text" class="form-control" id="CdSistema" name="CdSistema" 
+                           placeholder="" required  maxlength="10" />
                     
                 </div>
                 <div class="col-md-6 mb-3">
-                    <label for="DcsiStema" class="form-label">
+                    <label for="DcSistema" class="form-label">
                         Descrição de Si Stema <span class="text-danger">*</span>
                     </label>
-                    <input type="text" class="form-control" id="DcsiStema" name="DcsiStema" 
+                    <input type="text" class="form-control" id="DcSistema" name="DcSistema" 
                            placeholder="" required  maxlength="60" />
                     
                 </div>

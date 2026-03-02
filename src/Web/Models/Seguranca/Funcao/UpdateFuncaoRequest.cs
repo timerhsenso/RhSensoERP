@@ -2,7 +2,7 @@
 // ARQUIVO GERADO POR GeradorFullStack v4.0
 // Entity: Funcao
 // Module: Seguranca
-// Data: 2026-02-28 19:04:06
+// Data: 2026-03-02 19:25:55
 // =============================================================================
 using System.ComponentModel.DataAnnotations;
 
@@ -19,14 +19,14 @@ public class UpdateFuncaoRequest
     /// </summary>
     [Display(Name = "Descrição de Funcao")]
     [StringLength(80, ErrorMessage = "Descrição de Funcao deve ter no máximo {1} caracteres")]
-    public string Dcfuncao { get; set; } = string.Empty;
+    public string DcFuncao { get; set; } = string.Empty;
 
     /// <summary>
     /// Descrição de Modulo
     /// </summary>
     [Display(Name = "Descrição de Modulo")]
     [StringLength(100, ErrorMessage = "Descrição de Modulo deve ter no máximo {1} caracteres")]
-    public string Dcmodulo { get; set; } = string.Empty;
+    public string DcModulo { get; set; } = string.Empty;
 
     /// <summary>
     /// Descricao Modulo

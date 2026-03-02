@@ -1,9 +1,9 @@
 ﻿// =============================================================================
-// ARQUIVO GERADO POR GeradorFullStack v6.1
+// ARQUIVO GERADO POR GeradorFullStack v6.3
 // Entity: HabilitacaoBotao
 // Module: Seguranca
 // ApiRoute: api/seguranca/habilitacaobotao
-// Data: 2026-03-01 13:35:46
+// Data: 2026-03-02 17:56:12
 // AUTO-REGISTRO: Compatível com AddCrudToolServicesAutomatically()
 // =============================================================================
 using System.Text;
@@ -15,8 +15,9 @@ using RhSensoERP.Web.Services.Base;
 namespace RhSensoERP.Web.Services.Seguranca.HabilitacaoBotao;
 
 /// <summary>
-/// Serviço de API para Hab botao.
+/// Serviço de API para Habilitação de Botão.
 /// Herda implementação base de BaseApiService.
+/// ⭐ v6.3: CamelCase + logging detalhado + BackendResult para erros.
 /// v6.1: CORRIGIDO - Lookup usa 'term' para Select2.
 /// v6.0: Adiciona implementações Select2 Lookup automáticas.
 /// </summary>
@@ -25,9 +26,17 @@ public class HabilitacaoBotaoApiService
       IHabilitacaoBotaoApiService
 {
     private const string ApiRoute = "api/seguranca/habilitacaobotao";
+
+    // =========================================================================
+    // ⭐ v6.3 FIX: CamelCase OBRIGATÓRIO
+    // Sem isso, Serialize envia PascalCase (ex: "DcGrUser")
+    // mas backend espera camelCase (ex: "dcGrUser") e ignora os campos.
+    // BaseApiService já usa CamelCase - o override deve ser consistente.
+    // =========================================================================
     private static readonly JsonSerializerOptions _jsonOptions = new()
     {
-        PropertyNameCaseInsensitive = true
+        PropertyNameCaseInsensitive = true,
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
 
     // =========================================================================

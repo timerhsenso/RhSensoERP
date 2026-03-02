@@ -1,8 +1,8 @@
 ﻿// =============================================================================
-// ARQUIVO GERADO POR GeradorFullStack v6.1
+// ARQUIVO GERADO POR GeradorFullStack v6.3
 // Entity: TabelaSalarial
 // Module: AdministracaoPessoal
-// Data: 2026-02-28 22:03:43
+// Data: 2026-03-02 18:01:50
 // AUTO-REGISTRO: Compatível com AddCrudToolServicesAutomatically()
 // =============================================================================
 using RhSensoERP.Web.Models.AdministracaoPessoal.TabelaSalarial;

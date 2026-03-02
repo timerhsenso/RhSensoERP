@@ -2,13 +2,13 @@
 // ARQUIVO GERADO POR GeradorFullStack v4.0
 // Entity: HabilitacaoBotao
 // Module: Seguranca
-// Data: 2026-03-01 13:35:46
+// Data: 2026-03-02 17:56:12
 // =============================================================================
 
 namespace RhSensoERP.Web.Models.Seguranca.HabilitacaoBotao;
 
 /// <summary>
-/// DTO de leitura para Hab botao.
+/// DTO de leitura para Habilitação de Botão.
 /// Compatível com backend: RhSensoERP.Modules.Seguranca.Application.DTOs.HabilitacaoBotaoDto
 /// </summary>
 public class HabilitacaoBotaoDto
@@ -21,25 +21,25 @@ public class HabilitacaoBotaoDto
     /// <summary>
     /// Código de Gr User
     /// </summary>
-    public string Cdgruser { get; set; } = string.Empty;
+    public string CdGrUser { get; set; } = string.Empty;
 
     /// <summary>
     /// Código de Funcao
     /// </summary>
-    public string Cdfuncao { get; set; } = string.Empty;
+    public string CdFuncao { get; set; } = string.Empty;
 
     /// <summary>
     /// Código de Sistema
     /// </summary>
-    public string CdsiStema { get; set; } = string.Empty;
+    public string CdSistema { get; set; } = string.Empty;
 
     /// <summary>
     /// Nome de Botao
     /// </summary>
-    public string Nmbotao { get; set; } = string.Empty;
+    public string NmBotao { get; set; } = string.Empty;
 
     /// <summary>
-    /// Idgrupodeusuariofuncao
+    /// Gr Upodeusuariofuncao
     /// </summary>
-    public Guid? Idgrupodeusuariofuncao { get; set; }
+    public Guid? IdGrUpodeusuariofuncao { get; set; }
 }

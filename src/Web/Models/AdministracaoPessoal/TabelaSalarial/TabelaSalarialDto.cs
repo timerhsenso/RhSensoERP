@@ -2,7 +2,7 @@
 // ARQUIVO GERADO POR GeradorFullStack v4.0
 // Entity: TabelaSalarial
 // Module: AdministracaoPessoal
-// Data: 2026-02-28 22:03:43
+// Data: 2026-03-02 18:01:50
 // =============================================================================
 
 namespace RhSensoERP.Web.Models.AdministracaoPessoal.TabelaSalarial;
@@ -21,45 +21,45 @@ public class TabelaSalarialDto
     /// <summary>
     /// Código
     /// </summary>
-    public string Cdtabela { get; set; } = string.Empty;
+    public string CdTabela { get; set; } = string.Empty;
 
     /// <summary>
     /// Descrição
     /// </summary>
-    public string Dctabela { get; set; } = string.Empty;
+    public string DcTabela { get; set; } = string.Empty;
 
     /// <summary>
     /// Sequencial
     /// </summary>
-    public string Flseq { get; set; } = string.Empty;
+    public string FlSeq { get; set; } = string.Empty;
 
     /// <summary>
     /// Salário Inicial
     /// </summary>
-    public decimal? Vlsalinicial { get; set; }
+    public decimal? VlSalinicial { get; set; }
 
     /// <summary>
     /// Salário Mediana
     /// </summary>
-    public decimal? Vlsalmediana { get; set; }
+    public decimal? VlSalmediana { get; set; }
 
     /// <summary>
     /// Salário Máximo
     /// </summary>
-    public decimal? Vlsalmaximo { get; set; }
+    public decimal? VlSalmaximo { get; set; }
 
     /// <summary>
     /// Data Validade
     /// </summary>
-    public DateTime? DtvalIdade { get; set; }
+    public DateTime? DtValidade { get; set; }
 
     /// <summary>
-    /// Idtsalvalidade
+    /// Tsalvalidade
     /// </summary>
-    public Guid? IdtsalvalIdade { get; set; }
+    public Guid? IdTsalvalidade { get; set; }
 
     /// <summary>
-    /// Tsalval Idade Id
+    /// Tsalvalidade Id
     /// </summary>
-    public decimal? TsalvalIdadeId { get; set; }
+    public decimal? TsalvalidadeId { get; set; }
 }

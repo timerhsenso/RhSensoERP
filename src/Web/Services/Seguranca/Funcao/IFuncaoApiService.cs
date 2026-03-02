@@ -1,8 +1,8 @@
 ﻿// =============================================================================
-// ARQUIVO GERADO POR GeradorFullStack v6.1
+// ARQUIVO GERADO POR GeradorFullStack v6.3
 // Entity: Funcao
 // Module: Seguranca
-// Data: 2026-02-28 19:04:06
+// Data: 2026-03-02 19:25:55
 // AUTO-REGISTRO: Compatível com AddCrudToolServicesAutomatically()
 // =============================================================================
 using RhSensoERP.Web.Models.Seguranca.Funcao;

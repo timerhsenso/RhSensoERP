@@ -1,8 +1,8 @@
 ﻿// =============================================================================
-// ARQUIVO GERADO POR GeradorFullStack v6.1
+// ARQUIVO GERADO POR GeradorFullStack v6.3
 // Entity: VinculoEmpregaticio
 // Module: AdministracaoPessoal
-// Data: 2026-02-28 21:06:39
+// Data: 2026-03-02 18:00:36
 // AUTO-REGISTRO: Compatível com AddCrudToolServicesAutomatically()
 // =============================================================================
 using RhSensoERP.Web.Models.AdministracaoPessoal.VinculoEmpregaticio;
@@ -12,7 +12,7 @@ using RhSensoERP.Web.Services.Base;
 namespace RhSensoERP.Web.Services.AdministracaoPessoal.VinculoEmpregaticio;
 
 /// <summary>
-/// Interface do serviço de API para Vinculo Empregaticio.
+/// Interface do serviço de API para Vínculo Empregatício.
 /// Herda de IApiService (já implementado por BaseApiService) e IBatchDeleteService.
 /// v6.1: CORRIGIDO - Lookup usa 'term' para Select2.
 /// v6.0: Adiciona métodos Select2 Lookup automáticos.

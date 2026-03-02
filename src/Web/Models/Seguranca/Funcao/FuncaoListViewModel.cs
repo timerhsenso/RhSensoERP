@@ -2,7 +2,7 @@
 // ARQUIVO GERADO POR GeradorFullStack v4.0
 // Entity: Funcao
 // Module: Seguranca
-// Data: 2026-02-28 19:04:06
+// Data: 2026-03-02 19:25:55
 // =============================================================================
 using RhSensoERP.Web.Models.Base;
 
