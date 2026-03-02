@@ -1,0 +1,721 @@
+/* ============================================================================
+   RHSENSOERP - SIDEBAR VERTICAL COLAPSÁVEL
+   ============================================================================
+   Arquivo: wwwroot/css/sidebar.css
+   Versão: 1.0
+   Descrição: Estilos do menu lateral vertical com suporte a colapsar/expandir,
+              responsividade mobile e integração com o sistema de temas.
+   ============================================================================ */
+
+/* ============================================================================
+   🏗️ ESTRUTURA PRINCIPAL DO APP
+   ============================================================================ */
+
+/* Wrapper que envolve sidebar + conteúdo principal */
+.app-wrapper {
+    display: flex;
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+/* ============================================================================
+   📌 SIDEBAR
+   ============================================================================ */
+.app-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: var(--sidebar-width);
+    background-color: var(--sidebar-bg);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    z-index: 1040;
+    transition: width var(--transition-base), transform var(--transition-base);
+    overflow: hidden;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Estado colapsado */
+.app-sidebar.collapsed {
+    width: var(--sidebar-width-collapsed);
+}
+
+/* ===== CABEÇALHO DA SIDEBAR (Logo) ===== */
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1rem;
+    height: var(--topbar-height);
+    border-bottom: 1px solid var(--sidebar-border);
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    text-decoration: none;
+    overflow: hidden;
+    white-space: nowrap;
+    flex: 1;
+    min-width: 0;
+}
+
+.sidebar-brand-icon {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: var(--border-radius-md);
+}
+
+.sidebar-brand-icon i {
+    color: #ffffff;
+    font-size: 1rem;
+}
+
+.sidebar-brand-text {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #ffffff;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+    overflow: hidden;
+    transition: opacity var(--transition-base), width var(--transition-base);
+}
+
+/* Ocultar texto quando colapsado */
+.app-sidebar.collapsed .sidebar-brand-text {
+    opacity: 0;
+    width: 0;
+    overflow: hidden;
+}
+
+/* Botão de toggle (seta) */
+.sidebar-toggle-btn {
+    background: transparent;
+    border: none;
+    color: var(--sidebar-text-muted);
+    cursor: pointer;
+    padding: 0.375rem;
+    border-radius: var(--border-radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: color var(--transition-fast), background-color var(--transition-fast),
+                transform var(--transition-base);
+    line-height: 1;
+}
+
+.sidebar-toggle-btn:hover {
+    color: #ffffff;
+    background-color: var(--sidebar-item-hover-bg);
+}
+
+/* Rotaciona a seta quando colapsado */
+.app-sidebar.collapsed .sidebar-toggle-btn {
+    transform: rotate(180deg);
+}
+
+/* ===== CONTEÚDO SCROLLÁVEL DA SIDEBAR ===== */
+.sidebar-body {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 0.75rem 0;
+}
+
+.sidebar-body::-webkit-scrollbar {
+    width: 4px;
+}
+
+.sidebar-body::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+}
+
+/* ===== RÓTULO DE SEÇÃO ===== */
+.sidebar-section-label {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--sidebar-text-muted);
+    padding: 0.75rem 1.125rem 0.375rem;
+    white-space: nowrap;
+    overflow: hidden;
+    transition: opacity var(--transition-base);
+}
+
+.app-sidebar.collapsed .sidebar-section-label {
+    opacity: 0;
+    height: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+/* ===== ITENS DE NAVEGAÇÃO ===== */
+.sidebar-nav {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar-nav-item {
+    position: relative;
+}
+
+/* Link principal do item */
+.sidebar-nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5625rem 1.125rem;
+    color: var(--sidebar-text-muted);
+    text-decoration: none;
+    border-radius: 0;
+    transition: background-color var(--transition-fast), color var(--transition-fast);
+    white-space: nowrap;
+    overflow: hidden;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    width: 100%;
+    text-align: left;
+    font-size: 0.9rem;
+    font-weight: 400;
+}
+
+.sidebar-nav-link:hover {
+    background-color: var(--sidebar-item-hover-bg);
+    color: #ffffff;
+    text-decoration: none;
+}
+
+.sidebar-nav-link.active {
+    background-color: var(--sidebar-item-active-bg);
+    color: var(--sidebar-item-active-text);
+    font-weight: 600;
+}
+
+/* Ícone do item */
+.sidebar-nav-icon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+}
+
+/* Texto do item */
+.sidebar-nav-text {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transition: opacity var(--transition-base);
+}
+
+.app-sidebar.collapsed .sidebar-nav-text {
+    opacity: 0;
+    width: 0;
+    overflow: hidden;
+}
+
+/* Badge do item (ex: "Novo") */
+.sidebar-nav-badge {
+    flex-shrink: 0;
+    transition: opacity var(--transition-base);
+}
+
+.app-sidebar.collapsed .sidebar-nav-badge {
+    opacity: 0;
+    width: 0;
+    overflow: hidden;
+}
+
+/* Seta de submenu */
+.sidebar-nav-arrow {
+    flex-shrink: 0;
+    font-size: 0.75rem;
+    color: var(--sidebar-text-muted);
+    transition: transform var(--transition-base), opacity var(--transition-base);
+    margin-left: auto;
+}
+
+.app-sidebar.collapsed .sidebar-nav-arrow {
+    opacity: 0;
+    width: 0;
+    overflow: hidden;
+}
+
+/* Rotação da seta quando submenu aberto */
+.sidebar-nav-link[aria-expanded="true"] .sidebar-nav-arrow {
+    transform: rotate(90deg);
+}
+
+/* ===== SUBMENU (ACCORDION) ===== */
+.sidebar-submenu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    background-color: rgba(0, 0, 0, 0.12);
+    overflow: hidden;
+}
+
+.sidebar-submenu-item {
+    position: relative;
+}
+
+.sidebar-submenu-link {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.4375rem 1.125rem 0.4375rem 2.75rem;
+    color: var(--sidebar-text-muted);
+    text-decoration: none;
+    font-size: 0.875rem;
+    transition: background-color var(--transition-fast), color var(--transition-fast);
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.sidebar-submenu-link:hover {
+    background-color: var(--sidebar-item-hover-bg);
+    color: #ffffff;
+    text-decoration: none;
+}
+
+.sidebar-submenu-link.active {
+    color: #ffffff;
+    font-weight: 600;
+    background-color: var(--sidebar-item-active-bg);
+}
+
+.sidebar-submenu-icon {
+    width: 16px;
+    flex-shrink: 0;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sidebar-submenu-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: opacity var(--transition-base);
+}
+
+/* Botão de favorito no submenu */
+.sidebar-submenu-favorite {
+    margin-left: auto;
+    flex-shrink: 0;
+    background: transparent;
+    border: none;
+    color: var(--sidebar-text-muted);
+    padding: 0.125rem 0.25rem;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity var(--transition-fast), color var(--transition-fast);
+    line-height: 1;
+    font-size: 0.75rem;
+}
+
+.sidebar-submenu-item:hover .sidebar-submenu-favorite {
+    opacity: 1;
+}
+
+.sidebar-submenu-favorite:hover {
+    color: #ffc107;
+}
+
+.sidebar-submenu-favorite .fa-star.text-warning {
+    color: #ffc107 !important;
+    opacity: 1;
+}
+
+/* Quando colapsado: ocultar submenu e mostrar tooltip */
+.app-sidebar.collapsed .sidebar-submenu {
+    display: none !important;
+}
+
+/* ===== SEÇÃO DE FAVORITOS ===== */
+.sidebar-favorites-section {
+    border-bottom: 1px solid var(--sidebar-border);
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
+}
+
+/* ===== TOOLTIP NO MODO COLAPSADO ===== */
+.app-sidebar.collapsed .sidebar-nav-item {
+    position: relative;
+}
+
+/* Tooltip nativo via title - reforçado com CSS */
+.app-sidebar.collapsed [title] {
+    cursor: pointer;
+}
+
+/* ===== RODAPÉ DA SIDEBAR (Usuário) ===== */
+.sidebar-footer {
+    border-top: 1px solid var(--sidebar-border);
+    padding: 0.75rem 1rem;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.sidebar-user-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    width: 100%;
+    background: transparent;
+    border: none;
+    color: var(--sidebar-text-muted);
+    padding: 0.375rem 0.25rem;
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    text-align: left;
+    transition: background-color var(--transition-fast), color var(--transition-fast);
+    text-decoration: none;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.sidebar-user-btn:hover {
+    background-color: var(--sidebar-item-hover-bg);
+    color: #ffffff;
+    text-decoration: none;
+}
+
+.sidebar-user-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.25);
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.sidebar-user-info {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    transition: opacity var(--transition-base);
+}
+
+.app-sidebar.collapsed .sidebar-user-info {
+    opacity: 0;
+    width: 0;
+    overflow: hidden;
+}
+
+.sidebar-user-name {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #ffffff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sidebar-user-code {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--sidebar-text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ============================================================================
+   🔝 TOPBAR (Barra Superior)
+   ============================================================================ */
+.app-topbar {
+    height: var(--topbar-height);
+    background-color: var(--topbar-bg);
+    border-bottom: 1px solid var(--topbar-border);
+    display: flex;
+    align-items: center;
+    padding: 0 1.25rem;
+    gap: 0.75rem;
+    position: sticky;
+    top: 0;
+    z-index: 1030;
+    box-shadow: var(--shadow-sm);
+    flex-shrink: 0;
+}
+
+/* Botão de toggle da sidebar (visível na topbar para mobile) */
+.topbar-sidebar-toggle {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 0.375rem 0.5rem;
+    border-radius: var(--border-radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color var(--transition-fast), background-color var(--transition-fast);
+    font-size: 1.1rem;
+    line-height: 1;
+}
+
+.topbar-sidebar-toggle:hover {
+    color: var(--primary-500);
+    background-color: var(--primary-50);
+}
+
+/* Breadcrumb na topbar */
+.topbar-breadcrumb {
+    flex: 1;
+    min-width: 0;
+}
+
+.topbar-breadcrumb .breadcrumb {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    font-size: 0.875rem;
+}
+
+.topbar-breadcrumb .breadcrumb-item a {
+    color: var(--text-secondary);
+}
+
+.topbar-breadcrumb .breadcrumb-item.active {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+/* Título da página na topbar */
+.topbar-page-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Ações da topbar (direita) */
+.topbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+.topbar-action-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 0.375rem 0.5rem;
+    border-radius: var(--border-radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color var(--transition-fast), background-color var(--transition-fast);
+    font-size: 1rem;
+    line-height: 1;
+    text-decoration: none;
+}
+
+.topbar-action-btn:hover {
+    color: var(--primary-500);
+    background-color: var(--primary-50);
+    text-decoration: none;
+}
+
+/* Dropdown do usuário na topbar */
+.topbar-user-dropdown .dropdown-toggle::after {
+    display: none;
+}
+
+.topbar-user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: var(--primary-500);
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 0.8125rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+/* ============================================================================
+   📄 ÁREA DE CONTEÚDO PRINCIPAL
+   ============================================================================ */
+.app-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 100vh;
+    margin-left: var(--sidebar-width);
+    transition: margin-left var(--transition-base);
+}
+
+/* Ajuste quando sidebar está colapsada */
+.app-sidebar.collapsed ~ .app-main {
+    margin-left: var(--sidebar-width-collapsed);
+}
+
+/* Conteúdo das páginas */
+.app-content {
+    flex: 1;
+    padding: 1.5rem;
+    overflow-x: hidden;
+}
+
+/* ============================================================================
+   🦶 FOOTER
+   ============================================================================ */
+.app-footer {
+    background-color: var(--surface-0);
+    border-top: 1px solid var(--border-color);
+    padding: 0.75rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8125rem;
+    color: var(--text-tertiary);
+    flex-shrink: 0;
+}
+
+.app-footer a {
+    color: var(--text-tertiary);
+    text-decoration: none;
+}
+
+.app-footer a:hover {
+    color: var(--primary-500);
+}
+
+/* ============================================================================
+   📱 OVERLAY MOBILE
+   ============================================================================ */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1039;
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+}
+
+.sidebar-overlay.active {
+    display: block;
+}
+
+/* ============================================================================
+   📱 RESPONSIVIDADE MOBILE
+   ============================================================================ */
+@media (max-width: 991.98px) {
+    /* Em mobile, sidebar fica fora da tela por padrão */
+    .app-sidebar {
+        transform: translateX(-100%);
+        width: var(--sidebar-width) !important; /* Sempre largura completa em mobile */
+    }
+
+    /* Sidebar visível quando aberta em mobile */
+    .app-sidebar.mobile-open {
+        transform: translateX(0);
+    }
+
+    /* Conteúdo ocupa 100% em mobile */
+    .app-main {
+        margin-left: 0 !important;
+    }
+
+    /* Topbar sempre visível em mobile */
+    .app-topbar {
+        position: sticky;
+        top: 0;
+    }
+}
+
+@media (min-width: 992px) {
+    /* Em desktop, o botão de toggle da topbar fica oculto */
+    .topbar-sidebar-toggle {
+        display: none;
+    }
+}
+
+/* ============================================================================
+   🎨 DARK MODE - AJUSTES ESPECÍFICOS
+   ============================================================================ */
+[data-theme="dark"] .app-topbar {
+    background-color: var(--topbar-bg);
+    border-bottom-color: var(--topbar-border);
+}
+
+[data-theme="dark"] .app-footer {
+    background-color: var(--surface-0);
+    border-top-color: var(--border-color);
+}
+
+[data-theme="dark"] .topbar-action-btn:hover {
+    background-color: rgba(0, 153, 204, 0.15);
+}
+
+[data-theme="dark"] .topbar-sidebar-toggle:hover {
+    background-color: rgba(0, 153, 204, 0.15);
+}
+
+/* ============================================================================
+   🔄 ANIMAÇÕES
+   ============================================================================ */
+@keyframes fadeInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.sidebar-submenu.collapsing {
+    transition: height 0.2s ease;
+}
+
+/* ============================================================================
+   🖨️ PRINT - Ocultar sidebar ao imprimir
+   ============================================================================ */
+@media print {
+    .app-sidebar,
+    .app-topbar,
+    .sidebar-overlay {
+        display: none !important;
+    }
+
+    .app-main {
+        margin-left: 0 !important;
+    }
+}
