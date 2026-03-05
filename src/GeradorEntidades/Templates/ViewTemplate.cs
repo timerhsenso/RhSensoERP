@@ -352,14 +352,19 @@ public static class ViewTemplate
         // =====================================================================
         // INPUT padrão (text, email, number, date, etc)
         // =====================================================================
+        // ✅ v4.5: "datetime-local" agora é reconhecido diretamente.
+        // Antes, Form.InputType = "datetime-local" caía no _ => "text" e gerava type="text".
         var inputTypeAttr = inputType switch
         {
             "email" => "email",
             "number" => "number",
             "date" => "date",
             "time" => "time",
-            "datetime" => "datetime-local",
+            "datetime" => "datetime-local",   // compatibilidade com valores legados
+            "datetime-local" => "datetime-local",   // ✅ valor correto do JSON manifesto
             "decimal" => "number",
+            "checkbox" => "checkbox",
+            "textarea" => "text",              // textarea tratado antes deste switch
             _ => "text"
         };
 

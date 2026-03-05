@@ -144,7 +144,7 @@ public class ManifestService
             _logger.LogInformation("📡 Buscando metadados reais em: {Url}", url);
 
             var response = await _httpClient.GetAsync(url);
-            
+
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogWarning("⚠️ Falha ao buscar metadata em {Url}. Status: {Status}", url, response.StatusCode);
@@ -195,21 +195,21 @@ public class ManifestService
                         // =====================================================================
                         // ⭐ MERGE SEGURO: Preserva a integridade dos tipos do Manifesto
                         // =====================================================================
-                        
+
                         // 1. Preserva dados do Módulo (que não vêm no metadata)
-                        metadataEntity.ModuleName = !string.IsNullOrEmpty(metadataEntity.ModuleName) 
-                            ? metadataEntity.ModuleName 
+                        metadataEntity.ModuleName = !string.IsNullOrEmpty(metadataEntity.ModuleName)
+                            ? metadataEntity.ModuleName
                             : entity.ModuleName;
-                            
-                        metadataEntity.ModuleDisplayName = !string.IsNullOrEmpty(metadataEntity.ModuleDisplayName) 
-                            ? metadataEntity.ModuleDisplayName 
+
+                        metadataEntity.ModuleDisplayName = !string.IsNullOrEmpty(metadataEntity.ModuleDisplayName)
+                            ? metadataEntity.ModuleDisplayName
                             : entity.ModuleDisplayName;
 
                         // 2. CORREÇÃO DE TIPOS: Se o manifesto tem tipos ricos (int, bool, DateTime)
                         // e o metadata trouxe tudo como "string", PRESERVA O MANIFESTO.
                         foreach (var metaProp in metadataEntity.Properties)
                         {
-                            var originalProp = entity.Properties.FirstOrDefault(p => 
+                            var originalProp = entity.Properties.FirstOrDefault(p =>
                                 p.Name.Equals(metaProp.Name, StringComparison.OrdinalIgnoreCase));
 
                             if (originalProp != null)
@@ -219,9 +219,9 @@ public class ManifestService
                                 if ((metaProp.Type == "string" && originalProp.Type != "string") ||
                                     (metaProp.Type == "string" && originalProp.IsNullable))
                                 {
-                                    _logger.LogWarning("⚠️ Corrigindo tipo da propriedade '{Prop}': Metadata='{bad}', Manifesto='{good}'", 
+                                    _logger.LogWarning("⚠️ Corrigindo tipo da propriedade '{Prop}': Metadata='{bad}', Manifesto='{good}'",
                                         metaProp.Name, metaProp.Type, originalProp.Type);
-                                    
+
                                     metaProp.Type = originalProp.Type;
                                     metaProp.IsNullable = originalProp.IsNullable;
                                     metaProp.IsPrimaryKey = originalProp.IsPrimaryKey;
@@ -402,7 +402,15 @@ public class ManifestService
                 InputType = DetermineInputType(prop),
                 ColSize = DetermineColSize(prop),
                 Required = prop.IsRequired && !prop.IsNullable,
-                Placeholder = $"Digite {(prop.DisplayName ?? prop.Name).ToLowerInvariant()}..."
+                Placeholder = $"Digite {(prop.DisplayName ?? prop.Name).ToLowerInvariant()}...",
+
+                // ✅ v4.4: Select2 automático quando o JSON traz lookup
+                IsSelect2Ajax = prop.Lookup != null,
+                SelectApiRoute = prop.Lookup?.Route,
+                SelectEndpoint = prop.Lookup?.Endpoint
+                                   ?? (prop.Lookup?.Route != null ? $"/{prop.Lookup.Route}" : null),
+                SelectValueField = prop.Lookup?.ValueField ?? "id",
+                SelectTextField = prop.Lookup?.TextField ?? "nome"
             });
         }
 
@@ -559,6 +567,14 @@ public class ManifestService
 
     private static string DetermineInputType(PropertyManifestItem prop)
     {
+        // ✅ v4.4: Prioridade 1 - InputType explícito do JSON (não é "text" default)
+        if (!string.IsNullOrEmpty(prop.InputType) && prop.InputType != "text")
+            return prop.InputType;
+
+        // ✅ v4.4: Prioridade 2 - Lookup → sempre select (Select2)
+        if (prop.Lookup != null) return "select";
+
+        // Prioridade 3 - Inferência pelo tipo C#
         if (prop.Type.Contains("DateTime")) return "datetime-local";
         if (prop.Type.Contains("DateOnly")) return "date";
         if (prop.Type.Contains("TimeOnly")) return "time";
@@ -590,5 +606,3 @@ public class ManifestService
 
     #endregion
 }
-
-

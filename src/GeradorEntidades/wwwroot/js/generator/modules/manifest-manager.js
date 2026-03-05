@@ -486,7 +486,9 @@ const ManifestManager = {
                     type: this.normalizeType(prop.type || prop.Type || prop.clrType || prop.ClrType),
                     displayName: prop.displayName || prop.DisplayName || prop.name || prop.Name,
                     columnName: prop.columnName || prop.ColumnName || prop.name || prop.Name,
-                    inputType: prop.inputType || prop.InputType || 'text',
+                    // ✅ v4.4: Prioridade form.inputType (JSON v4.3) > inputType raiz
+                    inputType: (prop.form && prop.form.inputType) || (prop.Form && prop.Form.inputType)
+                        || prop.inputType || prop.InputType || 'text',
                     isNullable: prop.isNullable ?? prop.IsNullable ?? prop.nullable ?? prop.Nullable ?? true,
                     isPrimaryKey: prop.isPrimaryKey || prop.IsPrimaryKey || false,
                     isRequired: prop.isRequired ?? prop.IsRequired ?? !(prop.isNullable ?? true),

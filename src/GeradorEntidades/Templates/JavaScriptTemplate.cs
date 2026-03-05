@@ -1027,16 +1027,28 @@ $(document).ready(function () {{
             }
         }
 
-        // DateTime fields
+        // DateTime fields — converte para ISO antes de enviar ao backend
         if (dateProps.Any())
         {
+            // ✅ v4.5: Gera helper parseDateToIso UMA vez, antes do cleanData
             sb.AppendLine($@"
-
-        // DateTime fields - PascalCase");
+        // ✅ v4.5: Helper - converte dd/MM/yyyy ou yyyy-MM-dd para ISO (backend DateTime binding)
+        const parseDateToIso = (val) => {{
+            if (!val) return null;
+            if (/^\\d{{4}}-\\d{{2}}-\\d{{2}}/.test(val)) return val;  // já ISO (type=date/datetime-local)
+            const parts = val.split('/');
+            if (parts.length === 3) return `${{parts[2]}}-${{parts[1].padStart(2,'0')}}-${{parts[0].padStart(2,'0')}}`;
+            return val;
+        }};
+");
+            sb.AppendLine($@"
+        // DateTime fields - PascalCase (ISO 8601)");
             foreach (var prop in dateProps)
             {
                 var propNameCamel = char.ToLower(prop.Name[0]) + prop.Name.Substring(1);
-                sb.AppendLine($@"        cleanData.{prop.Name} = formData.{propNameCamel} || formData.{prop.Name} || null;");
+                var isNullable = prop.IsNullable;
+                var fallback = isNullable ? "null" : "null";
+                sb.AppendLine($@"        cleanData.{prop.Name} = parseDateToIso(formData.{propNameCamel} || formData.{prop.Name}) || {fallback};");
             }
         }
 

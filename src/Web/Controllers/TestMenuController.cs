@@ -1,4 +1,5 @@
-﻿// =============================================================================
+﻿/*
+// =============================================================================
 // RHSENSOERP WEB - CONTROLLER DE TESTE PARA MENU
 // =============================================================================
 // Arquivo: src/Web/Controllers/TestMenuController.cs
@@ -48,4 +49,4 @@ public class TestRhuController : Controller
     {
         return Content("✅ Controller de Gestão de Pessoas funcionando!");
     }
-}
+}*/

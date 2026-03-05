@@ -189,10 +189,13 @@ const Utils = {
     },
 
     getDefaultInputType(type) {
+        // ✅ v4.4: Mapa completo - PascalCase (C#/JSON manifesto) + lowercase
         const typeMap = {
+            // lowercase
             'string': 'text',
             'int': 'number',
             'long': 'number',
+            'short': 'number',
             'decimal': 'number',
             'float': 'number',
             'double': 'number',
@@ -202,9 +205,28 @@ const Utils = {
             'bool': 'checkbox',
             'boolean': 'checkbox',
             'guid': 'text',
-            'email': 'email'
+            'email': 'email',
+            // ✅ PascalCase (como vem do JSON do manifesto C#)
+            'DateTime': 'datetime-local',
+            'DateOnly': 'date',
+            'TimeOnly': 'time',
+            'Boolean': 'checkbox',
+            'Guid': 'text',
+            // ✅ Nullable (C# T?)
+            'int?': 'number',
+            'long?': 'number',
+            'short?': 'number',
+            'decimal?': 'number',
+            'float?': 'number',
+            'double?': 'number',
+            'bool?': 'checkbox',
+            'Guid?': 'text',
+            'DateTime?': 'datetime-local',
+            'DateOnly?': 'date',
+            'TimeOnly?': 'time'
         };
-        return typeMap[type?.toLowerCase()] || 'text';
+        // Tenta match exato primeiro, depois lowercase
+        return typeMap[type] || typeMap[type?.toLowerCase()] || 'text';
     },
 
     mapToCSharpType(type) {
