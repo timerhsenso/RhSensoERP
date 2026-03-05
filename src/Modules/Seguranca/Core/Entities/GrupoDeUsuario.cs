@@ -26,7 +26,7 @@ namespace RhSensoERP.Modules.Seguranca.Core.Entities;
     TableName = "gurh1",
     DisplayName = "Grupos de Usuário",
     CdSistema = "SEG",
-    CdFuncao = "SEG_FM_GRUPOUSUARIO",
+    CdFuncao = "SEG_FM_TSISTEMA",
     IsLegacyTable = true,
     GenerateApiController = true,
     SupportsBatchDelete = false

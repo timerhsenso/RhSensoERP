@@ -24,7 +24,7 @@ namespace RhSensoERP.Modules.Seguranca.Core.Entities;
     TableName = "btfuncao",
     DisplayName = "Botões de Função",
     CdSistema = "SEG",
-    CdFuncao = "SEG_FM_BOTAOFUNCAO",
+    CdFuncao = "SEG_FM_TSISTEMA",
     IsLegacyTable = true,
     GenerateApiController = true,
    // ApiRoute = "seguranca/botaofuncao",

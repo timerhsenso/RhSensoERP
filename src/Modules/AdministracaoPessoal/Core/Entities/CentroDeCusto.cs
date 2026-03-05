@@ -35,10 +35,10 @@ public class CentroDeCusto
     [Display(Name = "Descrição")]
     public string Dcccusto { get; set; } = string.Empty;
 
-    [Column("sgccusto")]
+    [Column("GTP_custo")]
     [StringLength(20)]
     [Display(Name = "Sigla")]
-    public string? Sgccusto { get; set; }
+    public string? GTP_custo { get; set; }
 
     [Column("noccusto")]
     [StringLength(20)]

@@ -1,4 +1,6 @@
-﻿// =============================================================================
+﻿/*
+
+// =============================================================================
 // RHSENSOERP - ENTITY CAPFORNECEDORES
 // =============================================================================
 // Módulo: Gestão de Terceiros e Prestadores (CAP)
@@ -188,3 +190,5 @@ public class CapFornecedores
     [InverseProperty(nameof(CapContratosFornecedor.Fornecedor))]
     public virtual ICollection<CapContratosFornecedor> Contratos { get; set; } = new List<CapContratosFornecedor>();
 }
+
+*/

@@ -1,0 +1,531 @@
+﻿/**
+ * ============================================================================
+ * TABELA AUXILIAR - JavaScript com Fix PK Texto
+ * ============================================================================
+ * Arquivo: wwwroot/js/tabelascompartilhadas/tabelaauxiliar/tabelaauxiliar.js
+ * Módulo: TabelasCompartilhadas
+ * Versão: 5.4 (COMPOSITE KEY GENÉRICO)
+ * Gerado por: GeradorFullStack v5.4
+ * Data: 2026-03-04 16:27:03
+ * 
+ * Changelog v5.2:
+ *   ✅ CORRIGIDO: PK de texto agora é incluída no payload de criação (!isEdit)
+ *   ✅ CORRIGIDO: Entidades com PK string/int não-identity criam corretamente
+ * 
+ * Changelog v5.1:
+ *   ✅ CORRIGIDO: Navegações agora respeitam Order configurado pelo usuário
+ *   ✅ CORRIGIDO: Colunas normais + navegações unificadas e ordenadas juntas
+ *   ✅ CORRIGIDO: Order = 0 agora coloca coluna na primeira posição
+ * 
+ * Changelog v4.4:
+ *   ✅ CORRIGIDO: Select2 agora usa data-select2-url (não data-endpoint)
+ *   ✅ CORRIGIDO: Validação de resposta da API
+ *   ✅ CORRIGIDO: Pré-carregamento de labels funcional
+ *   ✅ NOVO: Re-inicialização do Select2 quando modal é aberto
+ * 
+ * Changelog v4.3:
+ *   ✅ CRÍTICO: Geração automática inteligente de colunas (não depende de Grid)
+ *   ✅ CRÍTICO: Resolve 100% do erro "aDataSort" do DataTables
+ *   ✅ CRÍTICO: Heurísticas: Form.Show, tipos comuns, ordem alfabética
+ * 
+ * Changelog v4.2:
+ *   ✅ CORRIGIDO: dataTableColumns → columns (compatível com CrudBase)
+ *   ✅ CORRIGIDO: Parâmetros obrigatórios do CrudBase adicionados
+ *   ✅ CORRIGIDO: idField em lowercase, classes CSS corretas
+ * 
+ * Changelog v4.1:
+ *   ✅ Checkbox "Selecionar Todos" no header da DataTable
+ *   ✅ Toggle Switch dinâmico para campo Ativo (rate limit 500ms)
+ *   ✅ Exclusão múltipla com contador
+ * 
+ * Implementação específica do CRUD de Tabela Auxiliar.
+ * Estende a classe CrudBase com customizações necessárias.
+ * ============================================================================
+ */
+
+class TabelaAuxiliarCrud extends CrudBase {
+    constructor(config) {
+        super(config);
+        
+        // =====================================================================
+        // Identifica campos de PK de texto (suporta PK composta)
+        // =====================================================================
+        this.pkTextoFields = ['CdTpTabela', 'CdSituacao'];
+        this.isPkTexto = true;
+        
+        // =====================================================================
+        // v4.1: Debounce para Toggle Ativo
+        // =====================================================================
+        this.toggleDebounceTimer = null;
+    }
+
+    /**
+     * Habilita/desabilita campos de chave primária.
+     * PKs de texto são editáveis apenas na criação.
+     */
+    enablePrimaryKeyFields(enable) {
+        if (!this.isPkTexto) return;
+        
+        this.pkTextoFields.forEach(fieldName => {
+            const $pkField = $('#' + fieldName);
+            if ($pkField.length === 0) return;
+            
+            if (enable) {
+                $pkField.prop('readonly', false)
+                        .prop('disabled', false)
+                        .removeClass('bg-light');
+            } else {
+                $pkField.prop('readonly', true)
+                        .addClass('bg-light');
+            }
+        });
+        
+        console.log(enable 
+            ? '✏️ [TabelaAuxiliar] Campos PK habilitados para edição (criação)'
+            : '🔒 [TabelaAuxiliar] Campos PK desabilitados (edição)');
+    }
+
+    /**
+     * Override: Abre modal para NOVO registro.
+     * Habilita PK de texto na criação.
+     */
+    openCreateModal() {
+        super.openCreateModal();
+        
+        // Habilita PK de texto para digitação
+        if (this.isPkTexto) {
+            this.enablePrimaryKeyFields(true);
+        }
+    }
+
+    /**
+     * Override: Abre modal para EDIÇÃO.
+     * Desabilita PK de texto na edição.
+     */
+    async openEditModal(id) {
+        await super.openEditModal(id);
+        
+        // Desabilita PK de texto (não pode alterar chave)
+        if (this.isPkTexto) {
+            this.enablePrimaryKeyFields(false);
+        }
+
+        // ⭐ v4.4: Pré-carrega Labels do Select2
+        this.loadSelect2Labels();
+    }
+
+    /**
+     * ⭐ v4.4 CORRIGIDO: Carrega labels dos campos Select2 Ajax (Recupera texto do ID selecionado)
+     * Agora usa data-select2-url em vez de data-endpoint
+     */
+    loadSelect2Labels() {
+        $('.select2-ajax').each(function() {
+            const $select = $(this);
+            const val = $select.val();
+            const endpoint = $select.data('select2-url');  // ✅ v4.4 CORRIGIDO: data-select2-url
+            const valueField = $select.data('value-field') || 'id';
+            const textField = $select.data('text-field') || 'nome';
+
+            if (val && endpoint && val !== '0') {
+                // ⭐ v4.4: Endpoint para buscar um item por ID
+                const detailEndpoint = endpoint.replace(/\/$/, '') + '/' + val;
+                
+                $.ajax({
+                    url: detailEndpoint,
+                    type: 'GET',
+                    headers: {
+                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                    },
+                    success: function(response) {
+                        if (response) {
+                            // ⭐ v4.4: Suporta Datawrapper (Result<T>) e resposta direta
+                            const data = response.data || response;
+                            
+                            const id = data[valueField];
+                            const text = data[textField];
+
+                            if (id && text) {
+                                // ⭐ v4.4: Validação adicional
+                                if ($select.find("option[value='" + id + "']").length === 0) {
+                                    const newOption = new Option(text, id, true, true);
+                                    $select.append(newOption).trigger('change');
+                                } else {
+                                    $select.val(id).trigger('change');
+                                }
+                            } else {
+                                console.warn(`[Select2] Campos obrigatórios não encontrados:`, { valueField, textField, data });
+                            }
+                        }
+                    },
+                    error: function(xhr) {
+                       console.warn(`[Select2] Falha ao carregar label de ${detailEndpoint}:`, xhr);
+                    }
+                });
+            }
+        });
+    }
+
+    /**
+     * ⭐ v3.9 CORRIGIDO: Retorna objeto em PascalCase
+     * Remove campos de auditoria, converte tipos e valida campos obrigatórios.
+     */
+    beforeSubmit(formData, isEdit) {
+        console.log('📥 [TabelaAuxiliar] Dados ANTES:', JSON.parse(JSON.stringify(formData)));
+
+        // =====================================================================
+        // ⭐ CRÍTICO: Remove campos de auditoria (backend preenche automaticamente)
+        // =====================================================================
+        delete formData.createdAtUtc;
+        delete formData.updatedAtUtc;
+        delete formData.createdByUserId;
+        delete formData.updatedByUserId;
+        delete formData.tenantId;
+        delete formData.id;
+        delete formData.CreatedAtUtc;
+        delete formData.UpdatedAtUtc;
+        delete formData.CreatedByUserId;
+        delete formData.UpdatedByUserId;
+        delete formData.TenantId;
+        delete formData.Id;
+        delete formData.dataCriacao;
+        delete formData.dataAtualizacao;
+        delete formData.usuarioCriacao;
+        delete formData.usuarioAtualizacao;
+        delete formData.createdAt;
+        delete formData.updatedAt;
+        delete formData.createdBy;
+        delete formData.updatedBy;
+
+        // =====================================================================
+        // ⭐ v3.9: CRIA OBJETO LIMPO EM PASCALCASE (model binding ASP.NET Core)
+        // =====================================================================
+        const cleanData = {};
+
+
+        // ⭐ v5.3: PK texto 'CdTpTabela' - inclui somente na criação (na edição vai na URL)
+        if (!isEdit) {
+            cleanData.CdTpTabela = formData.cdTpTabela || formData.CdTpTabela || '';
+        }
+
+        // ⭐ v5.3: PK texto 'CdSituacao' - inclui somente na criação (na edição vai na URL)
+        if (!isEdit) {
+            cleanData.CdSituacao = formData.cdSituacao || formData.CdSituacao || '';
+        }
+
+        // String fields - PascalCase
+        cleanData.DcSituacao = formData.dcSituacao || formData.DcSituacao || '';
+        cleanData.FlAtivoaux = formData.flAtivoaux || formData.FlAtivoaux || '';
+
+
+        // Integer required fields - PascalCase
+        cleanData.NoOrdem = parseInt(formData.noOrdem || formData.NoOrdem || 0, 10);
+
+        console.log('📤 [TabelaAuxiliar] Dados DEPOIS (PascalCase):', JSON.parse(JSON.stringify(cleanData)));
+        return cleanData;
+    }
+
+    /**
+     * Customização após submeter.
+     */
+    afterSubmit(data, isEdit) {
+        console.log('✅ [TabelaAuxiliar] Registro salvo:', data);
+        
+        // Atualiza a grid automaticamente
+        if (this.dataTable) {
+            this.dataTable.ajax.reload(null, false); // Mantém paginação
+        }
+    }
+
+    /**
+     * Override do método getRowId para extrair ID corretamente.
+     */
+    getRowId(row) {
+        const _cdTpTabela = (row.cdTpTabela || row.CdTpTabela || '').toString().trim();
+        const _cdSituacao = (row.cdSituacao || row.CdSituacao || '').toString().trim();
+        if (_cdTpTabela && _cdSituacao) return `${_cdTpTabela}|${_cdSituacao}`;
+        const id = row[this.config.idField] || row.id || row.Id || '';
+        return typeof id === 'string' ? id.trim() : id;
+    }
+}
+
+// Inicialização quando o documento estiver pronto
+$(document).ready(function () {
+
+    // =========================================================================
+    // VERIFICAÇÃO DE PERMISSÕES
+    // =========================================================================
+
+    // Verifica se as permissões foram injetadas pela View
+    if (typeof window.crudPermissions === 'undefined') {
+        console.error('❌ Permissões não foram carregadas! Usando valores padrão.');
+        window.crudPermissions = {
+            canCreate: false,
+            canEdit: false,
+            canDelete: false,
+            canView: true
+        };
+    }
+
+    console.log('🔐 [TabelaAuxiliar] Permissões ativas:', window.crudPermissions);
+
+    // =========================================================================
+    // ⭐ v5.4: FUNÇÃO AUXILIAR PARA ID (genérica - simples ou composta)
+    // =========================================================================
+
+    // ⭐ v5.4: Extrai ID COMPOSTO (CdTpTabela + CdSituacao) - pipe separator
+    function getCompositeId(row) {{
+        if (!row) return '';
+        const _cdTpTabela = (row.cdTpTabela || row.CdTpTabela || '').toString().trim();
+        const _cdSituacao = (row.cdSituacao || row.CdSituacao || '').toString().trim();
+        if (_cdTpTabela && _cdSituacao) return `${_cdTpTabela}|${_cdSituacao}`;
+        return row['id'] || row['Id'] || '';
+    }}
+
+    // =========================================================================
+    // ✅ v5.1: CONFIGURAÇÃO DAS COLUNAS (COM ORDENAÇÃO DE NAVEGAÇÕES)
+    // =========================================================================
+
+    const columns = [
+        // =====================================================================
+        // v4.1: COLUNA DE SELEÇÃO (CHECKBOX)
+        // =====================================================================
+        {
+            data: null,
+            name: 'Select',
+            title: '<input type="checkbox" id="selectAll" class="form-check-input" />',
+            orderable: false,
+            searchable: false,
+            width: '30px',
+            className: 'text-center no-export',
+            render: function (data, type, row) {
+                const id = getCompositeId(row);
+                return `<input type="checkbox" class="form-check-input row-select dt-checkboxes" value="${id}" data-id="${id}" />`;
+            }
+        },
+        // Código Tipo Tabela (Order: 0)
+        {
+            data: 'cdTpTabela',
+            name: 'CdTpTabela',
+            title: 'Código Tipo Tabela',
+            orderable: true,
+            render: function (data, type, row) {
+                return data !== undefined && data !== null ? data : '';
+            }
+        },
+        // Código Situação (Order: 1)
+        {
+            data: 'cdSituacao',
+            name: 'CdSituacao',
+            title: 'Código Situação',
+            orderable: true,
+            render: function (data, type, row) {
+                return data !== undefined && data !== null ? data : '';
+            }
+        },
+        // Descrição Situação (Order: 2)
+        {
+            data: 'dcSituacao',
+            name: 'DcSituacao',
+            title: 'Descrição Situação',
+            orderable: true,
+            render: function (data, type, row) {
+                return data !== undefined && data !== null ? data : '';
+            }
+        },
+        // Ordem (Order: 3)
+        {
+            data: 'noOrdem',
+            name: 'NoOrdem',
+            title: 'Ordem',
+            orderable: true,
+            render: function (data, type, row) {
+                return data !== undefined && data !== null ? data : '';
+            }
+        },
+        // Ativo (Order: 4)
+        {
+            data: 'flAtivoaux',
+            name: 'FlAtivoaux',
+            title: 'Ativo',
+            orderable: true,
+            render: function (data, type, row) {
+                return data !== undefined && data !== null ? data : '';
+            }
+        },
+        // Ações
+        {
+            data: null,
+            name: 'Actions',
+            title: 'Ações',
+            orderable: false,
+            searchable: false,
+            width: '100px',
+            className: 'text-center no-export',
+            render: function (data, type, row) {
+                const id = getCompositeId(row);
+                let actions = '';
+                
+                if (window.crudPermissions.canEdit) {
+                    actions += `<button class="btn btn-sm btn-primary btn-edit" data-id="${id}" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </button> `;
+                }
+                
+                if (window.crudPermissions.canDelete) {
+                    actions += `<button class="btn btn-sm btn-danger btn-delete" data-id="${id}" title="Excluir">
+                                    <i class="fas fa-trash"></i>
+                                </button>`;
+                }
+                
+                return actions || '<span class="text-muted">Sem ações</span>';
+            }
+        }
+
+    ];
+
+    // =========================================================================
+    // ✅ v4.2: INSTANCIA O CRUD (CORRIGIDO: TODOS OS PARÂMETROS)
+    // =========================================================================
+
+    const crud = new TabelaAuxiliarCrud({
+        controllerName: 'TabelaAuxiliar',
+        apiRoute: '/api/tabelascompartilhadas/tabelaauxiliar',
+        entityName: 'Tabela Auxiliar',
+        entityNamePlural: 'Tabela Auxiliars',
+        idField: 'cdTpTabela',
+        tableSelector: '#tableCrud',
+        columns: columns,  // ✅ CORRIGIDO: era "dataTableColumns"
+        permissions: window.crudPermissions,
+        exportConfig: {
+            enabled: true,
+            excel: true,
+            pdf: true,
+            csv: true,
+            print: true,
+            filename: 'TabelaAuxiliar'
+        }
+    });
+
+    // =========================================================================
+    // v4.1: HANDLER - CHECKBOX "SELECIONAR TODOS"
+    // =========================================================================
+
+    $('#tableCrud').on('click', '#selectAll', function () {
+        const isChecked = $(this).prop('checked');
+        $('.row-select').prop('checked', isChecked);
+        crud.updateSelectedCount();
+        console.log(`${isChecked ? '✅' : '❌'} Selecionou todos os registros`);
+    });
+
+    // =========================================================================
+    // v4.1: HANDLER - CHECKBOX INDIVIDUAL
+    // =========================================================================
+
+    $(document).on('change', '.row-select', function () {
+        const totalCheckboxes = $('.row-select').length;
+        const checkedCheckboxes = $('.row-select:checked').length;
+        
+        // Atualiza estado do "Selecionar Todos"
+        $('#selectAll').prop('checked', totalCheckboxes === checkedCheckboxes);
+        
+        crud.updateSelectedCount();
+    });
+
+
+
+    // =========================================================================
+    // ⭐ v4.4: INICIALIZAÇÃO DO SELECT2 (AJAX) - CORRIGIDO
+    // =========================================================================
+    initSelect2();
+
+    function initSelect2() {
+        $('.select2-ajax').each(function () {
+            const $select = $(this);
+            const endpoint = $select.data('select2-url');  // ✅ v4.4 CORRIGIDO: data-select2-url
+            const valueField = $select.data('value-field') || 'id';
+            const textField = $select.data('text-field') || 'nome';
+            const placeholder = $select.attr('placeholder') || 'Selecione...';
+
+            if (!endpoint) {
+                console.error('[Select2] Endpoint não configurado para campo:', $select.attr('id'));
+                return;
+            }
+
+            $select.select2({
+                theme: 'bootstrap-5',
+                placeholder: placeholder,
+                allowClear: true,
+                dropdownParent: $('#modalCrud'), // Importante para funcionar dentro do modal bootstrap
+                width: '100%',
+                ajax: {
+                    url: endpoint,
+                    dataType: 'json',
+                    delay: 250, // Debounce
+                    headers: {
+                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                    },
+                    data: function (params) {
+                        return {
+                            search: params.term, // Termo de busca
+                            page: params.page || 1,
+                            pageSize: 20
+                        };
+                    },
+                    processResults: function (data) {
+                        // ⭐ v4.4 CORRIGIDO: Mapeia o retorno da API para o formato do Select2
+                        // Suporta: { items: [] }, { data: [] }, { results: [] } ou []
+                        const items = data.items || data.data || data.results || data || [];
+                        
+                        // ⭐ v4.4: Validação de resposta
+                        if (!Array.isArray(items)) {
+                            console.error('[Select2] Resposta não é um array:', data);
+                            return { results: [] };
+                        }
+                        
+                        console.log('[Select2] Dados recebidos:', data);
+                        console.log('[Select2] Itens extraídos:', items);
+                        console.log('[Select2] Config:', { valueField, textField });
+
+                        return {
+                            results: items.map(function (item) {
+                                const id = item[valueField];
+                                const text = item[textField];
+                                
+                                // ⭐ v4.4: Validação de campos obrigatórios
+                                if (!id || !text) {
+                                    console.warn('[Select2] Item sem campos obrigatórios:', item, { valueField, textField });
+                                }
+                                
+                                return {
+                                    id: id || '',
+                                    text: text || 'Sem descrição',
+                                    originalItem: item // Guarda item original se precisar
+                                };
+                            })
+                        };
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        console.error('[Select2] Erro na requisição:', textStatus, errorThrown);
+                        console.error('Endpoint:', endpoint);
+                    },
+                    cache: true
+                },
+                language: {
+                    noResults: function () { return "Nenhum resultado encontrado"; },
+                    searching: function () { return "Buscando..."; },
+                    inputTooShort: function () { return "Digite para buscar..."; }
+                }
+            });
+        });
+    }
+
+    // =========================================================================
+    // ⭐ v4.4: RE-INICIALIZAÇÃO DO SELECT2 QUANDO MODAL É ABERTO
+    // =========================================================================
+    $(document).on('shown.bs.modal', '#modalCrud', function () {
+        console.log('[Select2] Modal aberto - reinicializando Select2');
+        initSelect2();
+    });
+
+    console.log('✅ [TabelaAuxiliar] JavaScript inicializado com sucesso!');
+});

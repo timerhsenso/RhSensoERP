@@ -28,12 +28,12 @@ namespace RhSensoERP.Modules.Seguranca.Core.Entities;
     TableName = "usrh1",
     DisplayName = "Vínculo Usuário-Grupo",
     CdSistema = "SEG",
-    CdFuncao = "SEG_FM_USUARIOGRUPO",
+    CdFuncao = "SEG_FM_TSISTEMA",
     IsLegacyTable = false,
     GenerateApiController = true
  //   ApiRoute = "seguranca/usuariogrupo"
 )]
-[Table("usrh1", Schema = "dbo")]
+[Table("usrh1")]
 public class UsuarioGrupo
 {
     // =============================================================================================

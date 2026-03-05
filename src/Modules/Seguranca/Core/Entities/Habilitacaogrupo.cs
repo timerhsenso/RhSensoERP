@@ -28,7 +28,7 @@ namespace RhSensoERP.Modules.Seguranca.Core.Entities;
     TableName = "hbrh1",
     DisplayName = "Habilitação de Grupo",
     CdSistema = "SEG",
-    CdFuncao = "SEG_FM_HABILITACAOGRUPO",
+    CdFuncao = "SEG_FM_TSISTEMA",
     IsLegacyTable = false,
     GenerateApiController = true
    // ApiRoute = "seguranca/habilitacaogrupo"
